@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/star-pivot.iml" filepath="$PROJECT_DIR$/.idea/star-pivot.iml" />
       <module fileurl="file://$PROJECT_DIR$/star-pivot-ui.iml" filepath="$PROJECT_DIR$/star-pivot-ui.iml" />
     </modules>
   </component>
