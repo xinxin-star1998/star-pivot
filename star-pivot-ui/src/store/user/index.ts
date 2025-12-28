@@ -81,9 +81,6 @@ export const useUserStore = defineStore('user', () => {
   const roles = ref<UserInfo['roles']>([]);
   const permissions = ref<UserInfo['permissions']>([]);
   const token = ref<string | null>(null);
-  // 添加菜单折叠状态
-  const isMenuCollapse = ref(false);
-
   // 登录
   const login = async (loginData: LoginRequest) => {
     try {
@@ -100,7 +97,7 @@ export const useUserStore = defineStore('user', () => {
         
         return response;
       } else {
-        throw new Error(response.message || response.msg || '登录失败');
+        throw new Error(response.message || response.message || '登录失败');
       }
     } catch (error: any) {
       console.error('登录失败:', error);
@@ -119,7 +116,7 @@ export const useUserStore = defineStore('user', () => {
         permissions.value = data.permissions;
         return response;
       } else {
-        throw new Error(response.message || response.msg || '获取用户信息失败');
+        throw new Error(response.message || response.message || '获取用户信息失败');
       }
     } catch (error: any) {
       console.error('获取用户信息失败:', error);
@@ -153,23 +150,15 @@ export const useUserStore = defineStore('user', () => {
   const hasRole = (role: string) => {
     return roles.value.some(r => r.roleName === role);
   };
-
-  // 切换菜单折叠状态
-  const toggleMenuCollapse = () => {
-    isMenuCollapse.value = !isMenuCollapse.value;
-  };
-
   return {
     userInfo,
     roles,
     permissions,
     token,
-    isMenuCollapse,
     login,
     getUserInfo,
     logout,
     hasPermission,
     hasRole,
-    toggleMenuCollapse
   };
 });

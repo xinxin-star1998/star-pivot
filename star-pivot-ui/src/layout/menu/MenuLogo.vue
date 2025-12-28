@@ -37,18 +37,26 @@ watch(
   text-align: center;
   cursor: pointer;
   align-items: center;
-  img{
-    width: 50px;
-    height: 50px;
-    margin-right: 5px;
-    margin-left: 5px;
+  justify-content: center;
+  transition: all 0.3s;
+  overflow: hidden;
+  
+  img {
+    width: 40px;
+    height: 40px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    transition: all 0.3s;
   }
-  .logo-title{
+  
+  .logo-title {
     color: #FFF;
     font-weight: 800;
-    line-height: 60px;
-    font-size: 22px;
+    font-size: 18px;
     font-family: FangSong, serif;
+    white-space: nowrap;
+    transition: opacity 0.3s;
+    opacity: 1;
   }
 }
 </style>

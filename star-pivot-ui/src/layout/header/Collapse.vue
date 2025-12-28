@@ -10,18 +10,18 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Fold, Expand } from '@element-plus/icons-vue';
-import { useUserStore } from '@/store/user';
+import { useMenuStore } from '@/store/menu/index.ts';
 
-const userStore = useUserStore();
+const menuStore = useMenuStore();
 
 // 根据折叠状态显示不同的图标
 const isCollapse = computed(() => {
-  return userStore.isMenuCollapse;
+  return menuStore.collapse;
 });
 
 // 切换菜单折叠状态
 const toggleCollapse = () => {
-  userStore.toggleMenuCollapse();
+  menuStore.toggleCollapse();
 };
 </script>
 
@@ -30,11 +30,19 @@ const toggleCollapse = () => {
   display: flex;
   align-items: center;
   cursor: pointer;
+  padding: 0 10px;
+  height: 100%;
+  transition: all 0.3s;
+}
+
+.collapse-container:hover {
+  background-color: rgba(64, 158, 255, 0.1);
 }
 
 .collapse-icon {
-  font-size: 18px;
+  font-size: 20px;
   color: #606266;
+  transition: color 0.3s;
 }
 
 .collapse-icon:hover {

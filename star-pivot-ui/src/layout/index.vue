@@ -1,21 +1,14 @@
 <template>
   <el-container class="layout-container">
     <!-- 侧边栏 -->
-    <el-aside width="200px" class="aside-container">
-      <div class="logo">
-        <h3>StarPivot</h3>
-      </div>
+    <el-aside :width="asideWidth" class="aside-container" :class="{ 'is-collapse': isCollapse }">
       <MenuBar />
     </el-aside>
 
     <el-container>
       <!-- 头部 -->
       <el-header class="header-container">
-        <div class="header-content">
-          <Collapse />
-          <BreadCrumb />
-          <LoginOut />
-        </div>
+        <Header></Header>
       </el-header>
 
       <!-- 主要内容 -->
@@ -28,13 +21,17 @@
 
 <script setup lang="ts">
 import MenuBar from './menu/MenuBar.vue'
-import Collapse from './header/Collapse.vue'
-import BreadCrumb from './header/BreadCrumb.vue'
-import LoginOut from './header/LoginOut.vue'
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import { useUserStore } from '@/store/user';
+import { useMenuStore } from '@/store/menu';
+import Header from "@/layout/header/Header.vue";
 
 const userStore = useUserStore();
+const menuStore = useMenuStore();
+
+// 根据折叠状态计算侧边栏宽度
+const isCollapse = computed(() => menuStore.collapse);
+const asideWidth = computed(() => isCollapse.value ? '64px' : '250px');
 
 // 组件挂载时获取用户信息
 onMounted(async () => {
@@ -56,47 +53,35 @@ onMounted(async () => {
 <style scoped>
 .layout-container {
   height: 100vh;
+  overflow: hidden;
 }
 
 .aside-container {
-  background-color: #545c64;
+  background-color: #304156;
   color: #fff;
   box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+  transition: width 0.3s ease;
+  overflow: hidden;
+  position: relative;
 }
 
-.logo {
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #4a5056;
-  border-bottom: 1px solid #444a51;
-}
-
-.logo h3 {
-  color: #fff;
-  margin: 0;
-  font-weight: 600;
-  font-size: 18px;
+.aside-container.is-collapse {
+  width: 64px !important;
 }
 
 .header-container {
   padding: 0;
   background-color: #fff;
   box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
-}
-
-.header-content {
+  height: 60px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  height: 100%;
 }
 
 .main-container {
   background-color: #f0f2f5;
   padding: 20px;
-  min-height: calc(100vh - 120px);
+  overflow-y: auto;
+  height: calc(100vh - 60px);
 }
 </style>

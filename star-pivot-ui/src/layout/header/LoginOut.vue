@@ -21,6 +21,7 @@
 import { useUserStore } from '@/store/user';
 import { useRouter } from 'vue-router';
 import { computed } from 'vue';
+import { SwitchButton } from '@element-plus/icons-vue';
 
 const userStore = useUserStore();
 const router = useRouter();
