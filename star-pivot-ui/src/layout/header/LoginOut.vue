@@ -1,64 +1,62 @@
 <template>
-  <el-dropdown placement="bottom-start">
-    <span class="el-dropdown-link">
-      <img class="user" src="@/assets/image/user2.png" />
-    </span>
-    <template #dropdown>
-      <el-dropdown-menu>
-        <el-dropdown-item>修改密码</el-dropdown-item>
-        <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
-      </el-dropdown-menu>
-    </template>
-  </el-dropdown>
+  <div class="login-out">
+    <el-dropdown>
+      <span class="el-dropdown-link">
+        <el-avatar :size="30" :src="userAvatar" />
+        <span style="margin-left: 8px;">{{ userInfo?.nickName || userInfo?.userName || '用户' }}</span>
+      </span>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item @click="handleLogout">
+            <el-icon><SwitchButton /></el-icon>
+            退出登录
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/store/user'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { useUserStore } from '@/store/user';
+import { useRouter } from 'vue-router';
+import { computed } from 'vue';
 
-const router = useRouter()
-const userStore = useUserStore()
+const userStore = useUserStore();
+const router = useRouter();
 
+// 获取用户信息
+const userInfo = computed(() => userStore.userInfo);
+
+// 获取用户头像
+const userAvatar = computed(() => {
+  if (userStore.userInfo?.avatar) {
+    return userStore.userInfo.avatar;
+  }
+  return 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'; // 默认头像
+});
+
+// 处理登出
 const handleLogout = async () => {
   try {
-    await ElMessageBox.confirm(
-      '确定要退出登录吗?',
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
-    
-    // 清除用户信息（包括持久化数据）
-    userStore.clearUser()
-    
-    // 清除token
-    localStorage.removeItem('token')
-    sessionStorage.removeItem('token')
-    
-    ElMessage.success('已退出登录')
-    
+    await userStore.logout();
     // 跳转到登录页
-    router.push('/login')
+    router.push('/login');
   } catch (error) {
-    // 用户取消登出
-    console.log('用户取消登出')
+    console.error('登出失败:', error);
   }
-}
+};
 </script>
 
-<style scoped lang="scss">
-.el-dropdown-link:focus{
-  outline: none;
-}
-.user{
-  height: 45px;
-  width: 45px;
-  border-radius: 50%;
+<style scoped>
+.login-out {
+  display: flex;
+  align-items: center;
   cursor: pointer;
-  background-color: #FFF;
+}
+
+.el-dropdown-link {
+  display: flex;
+  align-items: center;
 }
 </style>

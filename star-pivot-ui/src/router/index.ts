@@ -35,4 +35,26 @@ const router = createRouter({
     routes
 })
 
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  // 如果用户访问登录页，且已有token，则跳转到首页
+  if (to.path === '/login') {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (token) {
+      next({ path: '/' });
+    } else {
+      next();
+    }
+  } else {
+    // 如果访问非登录页，检查是否有token
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) {
+      // 没有token，跳转到登录页
+      next({ path: '/login' });
+    } else {
+      next();
+    }
+  }
+});
+
 export default router

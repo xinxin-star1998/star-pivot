@@ -3,15 +3,16 @@ import { ElMessage } from 'element-plus';
 
 // axios请求配置
 const config: AxiosRequestConfig = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',  // 添加/api路径前缀
   timeout: 10000
 }
 
 // 定义返回值类型
 export interface Result<T = any> {
   code: number;
-  msg: string;
+  message: string;  // 后端返回的是message字段，不是msg
   data: T;
+  timestamp?: number;
 }
 
 // 定义错误消息映射
@@ -55,7 +56,7 @@ class Http {
       },
       (error: any) => {
         error.data = {};
-        error.data.msg = '服务器异常，请联系管理员!';
+        error.data.message = '服务器异常，请联系管理员!';  // 使用message字段
         return Promise.reject(error);
       }
     );
@@ -66,9 +67,9 @@ class Http {
         if (res.data.code === 200) {
           return res.data;
         } else {
-          const msg = res.data.msg || '服务器出错!';
-          ElMessage.error(msg);
-          return Promise.reject(new Error(msg));
+          const message = res.data.message || res.data.msg || '服务器出错!';  // 优先使用message字段
+          ElMessage.error(message);
+          return Promise.reject(new Error(message));
         }
       },
       (error) => {
@@ -78,10 +79,10 @@ class Http {
         if (error && error.response) {
           const status = error.response.status;
           const errorMsg = ERROR_MESSAGES[status] || `连接错误${status}`;
-          error.data.msg = errorMsg;
+          error.data.message = errorMsg;  // 使用message字段
           ElMessage.error(errorMsg);
         } else {
-          error.data.msg = '连接到服务器失败';
+          error.data.message = '连接到服务器失败';  // 使用message字段
           ElMessage.error('连接到服务器失败');
         }
 

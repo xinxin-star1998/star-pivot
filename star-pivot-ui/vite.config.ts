@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     host: '0.0.0.0',
-    port: 8080,
+    port: 3000,  // 修改端口为5173，避免与后端端口冲突
     hmr: true,
     open: true
   },
