@@ -3,9 +3,13 @@ package com.star.pivot.config;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.common.exception.ServiceException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -68,21 +72,53 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 运行时异常处理
+     * 访问拒绝异常处理
      */
-    @ExceptionHandler(RuntimeException.class)
-    public Result<Void> handleRuntimeException(RuntimeException e) {
-        log.error("运行时异常：", e);
-        return Result.error(500, "系统异常：" + e.getMessage());
+    @ExceptionHandler(AccessDeniedException.class)
+    public Result<Void> handleAccessDeniedException(AccessDeniedException e) {
+        log.warn("访问拒绝：{}", e.getMessage());
+        return Result.error(403, "没有权限访问该资源");
     }
 
     /**
-     * 通用异常处理
+     * 数据库访问异常处理
+     */
+    @ExceptionHandler(DataAccessException.class)
+    public Result<Void> handleDataAccessException(DataAccessException e) {
+        log.error("数据库访问异常：", e);
+        return Result.error(500, "数据库操作失败，请联系管理员");
+    }
+
+    /**
+     * HTTP方法不支持异常处理
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public Result<Void> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        log.warn("HTTP方法不支持：{}", e.getMessage());
+        return Result.error(405, "请求方法不支持：" + e.getMethod());
+    }
+
+    /**
+     * IllegalArgumentException 参数非法异常处理
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Result<Void> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.warn("参数非法：{}", e.getMessage());
+        return Result.error(400, "参数错误：" + e.getMessage());
+    }
+
+    /**
+     * 通用异常处理（放在最后，作为兜底）
      */
     @ExceptionHandler(Exception.class)
     public Result<Void> handleException(Exception e) {
         log.error("系统异常：", e);
-        return Result.error(500, "系统异常，请联系管理员");
+        // 生产环境不暴露详细错误信息
+        String message = "系统异常，请联系管理员";
+        if (log.isDebugEnabled()) {
+            message = "系统异常：" + e.getMessage();
+        }
+        return Result.error(500, message);
     }
 }
 

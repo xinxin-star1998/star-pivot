@@ -44,7 +44,9 @@ const handleLogout = async () => {
     // 跳转到登录页
     router.push('/login');
   } catch (error) {
-    console.error('登出失败:', error);
+    if (import.meta.env.DEV) {
+      console.error('登出失败:', error);
+    }
   }
 };
 </script>

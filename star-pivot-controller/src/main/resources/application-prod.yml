@@ -1,0 +1,61 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: permission-system
+  profiles:
+    active: prod
+  
+  # 数据源配置 - 生产环境必须使用环境变量
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 生产环境必须启用SSL
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  # Jackson 配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    # 生产环境使用SLF4J日志实现，不输出SQL到控制台
+    log-impl: ${MYBATIS_LOG_IMPL:org.apache.ibatis.logging.slf4j.Slf4jImpl}
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.star.pivot.system.domain
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT 配置 - 生产环境必须使用环境变量
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000} # 24小时，单位：毫秒
+
+# CORS 配置 - 生产环境必须配置具体域名
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+# 日志配置
+logging:
+  level:
+    root: info
+    com.star.pivot: ${LOG_LEVEL:info}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:warn}
+    org.apache.ibatis: ${SQL_LOG_LEVEL:OFF}
+  # 生产环境日志文件配置
+  file:
+    name: logs/star-pivot.log
+    max-size: 10MB
+    max-history: 30
+

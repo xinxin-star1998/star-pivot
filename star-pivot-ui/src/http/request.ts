@@ -1,11 +1,19 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import { ElMessage } from 'element-plus';
+import router from '@/router';
 
 // axios请求配置
 const config: AxiosRequestConfig = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',  // 添加/api路径前缀
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
   timeout: 10000
 }
+
+// 请求重试配置
+const MAX_RETRY_COUNT = 3; // 最大重试次数
+const RETRY_DELAY = 1000; // 重试延迟（毫秒）
+
+// 需要重试的状态码
+const RETRY_STATUS_CODES = [408, 500, 502, 503, 504];
 
 // 定义返回值类型
 export interface Result<T = any> {
@@ -34,12 +42,55 @@ const ERROR_MESSAGES: Record<number, string> = {
 class Http {
   // axios实例
   private instance: AxiosInstance;
+  // 请求取消控制器Map
+  private cancelTokenMap: Map<string, AbortController> = new Map();
 
   // 构造函数里面初始化
   constructor(config: AxiosRequestConfig) {
     this.instance = axios.create(config);
     // 定义拦截器
     this.interceptors();
+  }
+
+  /**
+   * 取消请求
+   */
+  cancelRequest(url: string): void {
+    const controller = this.cancelTokenMap.get(url);
+    if (controller) {
+      controller.abort();
+      this.cancelTokenMap.delete(url);
+    }
+  }
+
+  /**
+   * 取消所有请求
+   */
+  cancelAllRequests(): void {
+    this.cancelTokenMap.forEach(controller => controller.abort());
+    this.cancelTokenMap.clear();
+  }
+
+  /**
+   * 延迟函数
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * 检查是否需要重试
+   */
+  private shouldRetry(error: any, retryCount: number): boolean {
+    if (retryCount >= MAX_RETRY_COUNT) {
+      return false;
+    }
+    // 网络错误或特定状态码需要重试
+    if (!error.response) {
+      return true; // 网络错误，需要重试
+    }
+    const status = error.response.status;
+    return RETRY_STATUS_CODES.includes(status);
   }
 
   // 拦截器
@@ -52,6 +103,13 @@ class Http {
         if (token) {
           config.headers!['Authorization'] = `Bearer ${token}`;
         }
+        
+        // 创建AbortController用于取消请求
+        const url = config.url || '';
+        const controller = new AbortController();
+        config.signal = controller.signal;
+        this.cancelTokenMap.set(url, controller);
+        
         return config;
       },
       (error: any) => {
@@ -64,6 +122,10 @@ class Http {
     // axios请求返回之后的处理
     this.instance.interceptors.response.use(
       (res: AxiosResponse) => {
+        // 请求成功后移除取消控制器
+        const url = res.config.url || '';
+        this.cancelTokenMap.delete(url);
+        
         if (res.data.code === 200) {
           return res.data;
         } else {
@@ -72,8 +134,54 @@ class Http {
           return Promise.reject(new Error(message));
         }
       },
-      (error) => {
-        console.error('请求错误:', error);
+      async (error) => {
+        // 请求失败后移除取消控制器
+        const url = error.config?.url || '';
+        this.cancelTokenMap.delete(url);
+        
+        // 如果是取消请求，直接返回
+        if (axios.isCancel(error)) {
+          return Promise.reject(error);
+        }
+        
+        // 开发环境输出错误日志，生产环境可通过构建工具移除
+        if (import.meta.env.DEV) {
+          console.error('请求错误:', error);
+        }
+        
+        const config = error.config as InternalAxiosRequestConfig & { __retryCount?: number };
+        
+        // 401未授权，清除token并跳转登录页
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
+          // 避免重复跳转
+          if (router.currentRoute.value.path !== '/login') {
+            ElMessage.error('登录已过期，请重新登录');
+            router.push('/login');
+          }
+          return Promise.reject(error);
+        }
+
+        // 初始化重试次数
+        if (!config.__retryCount) {
+          config.__retryCount = 0;
+        }
+
+        // 检查是否需要重试
+        if (this.shouldRetry(error, config.__retryCount)) {
+          config.__retryCount += 1;
+          
+          // 延迟后重试
+          await this.delay(RETRY_DELAY * config.__retryCount);
+          
+          if (import.meta.env.DEV) {
+            console.log(`请求重试第 ${config.__retryCount} 次:`, config.url);
+          }
+          
+          return this.instance(config);
+        }
+
         error.data = {};
 
         if (error && error.response) {

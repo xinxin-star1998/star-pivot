@@ -17,97 +17,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import {useMenuStore} from '@/store/menu/index.ts'
+import { useMenuStore } from '@/store/menu/index.ts'
 import MenuItem from '@/layout/menu/MenuItem.vue';
 import MenuLogo from "@/layout/menu/MenuLogo.vue";
 
-// 菜单数据 - 这里可以替换为从后端获取的动态菜单
-const menuData = ref([
-  {
-    path: '/dashboard',
-    name: 'dashboard',
-    meta: { title: '首页', icon: 'House' },
-  },
-  {
-    path: "/system",
-    component: "Layout",
-    name: "system",
-    meta: {
-      title: "系统管理",
-      icon: "Setting",
-      roles: ["sys:manage"],
-    },
-    children: [
-      {
-        path: "/userList",
-        component: "/system/User/UserList",
-        name: "userList",
-        meta: {
-          title: "用户管理",
-          icon: "UserFilled",
-          roles: ["sys:user"],
-        },
-      },
-      {
-        path: "/roleList",
-        component: "/system/Role/RoleList",
-        name: "roleList",
-        meta: {
-          title: "角色管理",
-          icon: "Wallet",
-          roles: ["sys:role"],
-        },
-      },
-      {
-        path: "/menuList",
-        component: "/system/Menu/MenuList",
-        name: "menuList",
-        meta: {
-          title: "菜单管理",
-          icon: "Menu",
-          roles: ["sys:menu"],
-        },
-      },
-    ],
-  },
-  {
-    path: "/goodsRoot",
-    component: "Layout",
-    name: "goodsRoot",
-    meta: {
-      title: "商品管理",
-      icon: "Setting",
-      roles: ["sys:goodsRoot"],
-    },
-    children: [
-      {
-        path: "/category",
-        component: "/goods/Category",
-        name: "category",
-        meta: {
-          title: "商品类型",
-          icon: "UserFilled",
-          roles: ["sys:category"],
-        },
-      },
-      {
-        path: "/goodsList",
-        component: "/goods/GoodsList",
-        name: "goodsList",
-        meta: {
-          title: "商品信息",
-          icon: "Wallet",
-          roles: ["sys:goodsList"],
-        },
-      }
-    ]
-  }
-]);
-
 const route = useRoute();
 const menuStore = useMenuStore();
+
+// 从store获取菜单数据
+const menuData = computed(() => {
+  // 如果菜单数据为空，返回默认首页菜单（作为fallback）
+  if (!menuStore.menuData || menuStore.menuData.length === 0) {
+    return [{
+      path: '/dashboard',
+      name: 'dashboard',
+      meta: { title: '首页', icon: 'House' },
+    }];
+  }
+  return menuStore.menuData;
+});
+
+// 组件挂载时加载菜单
+onMounted(async () => {
+  // 如果菜单数据为空，则加载菜单
+  if (!menuStore.menuData || menuStore.menuData.length === 0) {
+    await menuStore.loadMenus();
+  }
+});
 
 // 监听路由变化，设置当前激活的菜单项
 const activeMenu = computed(() => {
@@ -120,10 +58,16 @@ const isCollapse = computed(() => {
   return menuStore.collapse;
 });
 const handleOpen = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath)
+  // 菜单展开事件处理（可根据需要添加逻辑）
+  if (import.meta.env.DEV) {
+    console.log('菜单展开:', key, keyPath);
+  }
 }
 const handleClose = (key: string, keyPath: string[]) => {
-  console.log(key, keyPath)
+  // 菜单收起事件处理（可根据需要添加逻辑）
+  if (import.meta.env.DEV) {
+    console.log('菜单收起:', key, keyPath);
+  }
 }
 </script>
 

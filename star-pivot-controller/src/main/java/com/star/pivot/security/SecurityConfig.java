@@ -2,6 +2,7 @@ package com.star.pivot.security;
 
 import com.star.pivot.system.utils.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +22,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Spring Security 配置
  */
@@ -33,6 +37,13 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+
+    /**
+     * CORS允许的域名，多个用逗号分隔
+     * 生产环境建议通过环境变量配置：CORS_ALLOWED_ORIGINS=https://example.com,https://www.example.com
+     */
+    @Value("${cors.allowed-origins:*}")
+    private String allowedOrigins;
 
     /**
      * 密码编码器
@@ -96,15 +107,24 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 允许所有域名进行跨域调用（开发环境）
-        // 生产环境建议配置具体的域名，例如：configuration.setAllowedOrigins(Arrays.asList("https://example.com"));
-        configuration.addAllowedOriginPattern("*");
+        
+        // 根据配置决定使用允许的域名列表还是允许所有域名
+        if ("*".equals(allowedOrigins)) {
+            // 开发环境：允许所有域名
+            configuration.addAllowedOriginPattern("*");
+        } else {
+            // 生产环境：配置具体的允许域名
+            List<String> origins = Arrays.asList(allowedOrigins.split(","));
+            configuration.setAllowedOrigins(origins);
+        }
+        
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         // 允许携带凭证
         configuration.setAllowCredentials(true);
         // 预检请求的缓存时间（秒）
         configuration.setMaxAge(3600L);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

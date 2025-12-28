@@ -56,8 +56,8 @@ const userStore = useUserStore();
 const loginFormRef = ref();
 
 const loginForm = reactive<LoginFormData>({
-  username: 'admin',
-  password: 'admin123'
+  username: '',
+  password: ''
 });
 
 const loginRules = {
@@ -84,7 +84,10 @@ const handleLogin = async () => {
     // 跳转到首页
     router.push('/dashboard');
   } catch (error: any) {
-    console.error('登录失败:', error);
+    // 错误信息已由request拦截器处理，这里只处理特殊逻辑
+    if (import.meta.env.DEV) {
+      console.error('登录失败:', error);
+    }
     ElMessage.error(error.message || '登录失败');
   } finally {
     loading.value = false;

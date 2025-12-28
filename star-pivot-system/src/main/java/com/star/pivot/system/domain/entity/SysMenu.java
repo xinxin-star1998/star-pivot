@@ -3,6 +3,7 @@ package com.star.pivot.system.domain.entity;
 import java.util.Date;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -11,6 +12,7 @@ import com.star.pivot.common.domain.BaseEntity;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 菜单权限表(SysMenu)表实体类
@@ -104,5 +106,6 @@ public class SysMenu implements Serializable {
      * 备注
      */
     private String remark;
+    @TableField(exist = false)
+    private List<SysMenu> children;
 }
-

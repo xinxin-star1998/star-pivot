@@ -1,79 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import authApi from '@/http/api/login/auth';
-
-// 定义类型，避免循环导入
-interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-interface LoginResponse {
-  token: string;
-  username?: string;
-  nickname?: string;
-}
-
-interface UserInfo {
-  user: {
-    userId: number;
-    userName: string;
-    nickName: string;
-    email?: string;
-    phonenumber?: string;
-    sex?: string;
-    avatar?: string;
-    status: string;
-    loginIp?: string;
-    loginDate?: string;
-    createTime?: string;
-    updateTime?: string;
-    createBy?: string;
-    updateBy?: string;
-    remark?: string;
-    deptId?: number;
-    userType?: string;
-    delFlag?: number;
-    pwdUpdateDate?: string;
-  };
-  roles: Array<{
-    roleId: number;
-    roleName: string;
-    roleKey?: string;
-    roleSort?: number;
-    dataScope?: string;
-    status?: string;
-    delFlag?: string;
-    createBy?: string;
-    createTime?: string;
-    updateBy?: string;
-    updateTime?: string;
-    remark?: string;
-  }>;
-  permissions: Array<{
-    menuId: number;
-    menuName: string;
-    perms: string;
-    menuType?: string;
-    visible?: string;
-    status?: string;
-    parentId?: number;
-    orderNum?: number;
-    path?: string;
-    component?: string;
-    query?: string;
-    routeName?: string;
-    isFrame?: number;
-    isCache?: number;
-    icon?: string;
-    delFlag?: string;
-    createBy?: string;
-    createTime?: string;
-    updateBy?: string;
-    updateTime?: string;
-    remark?: string;
-  }>;
-}
+import type { LoginRequest, LoginResponse, UserInfo } from '@/types/api';
 
 export const useUserStore = defineStore('user', () => {
   // 用户状态
@@ -100,7 +28,9 @@ export const useUserStore = defineStore('user', () => {
         throw new Error(response.message || response.message || '登录失败');
       }
     } catch (error: any) {
-      console.error('登录失败:', error);
+      if (import.meta.env.DEV) {
+        console.error('登录失败:', error);
+      }
       throw error;
     }
   };
@@ -119,7 +49,9 @@ export const useUserStore = defineStore('user', () => {
         throw new Error(response.message || response.message || '获取用户信息失败');
       }
     } catch (error: any) {
-      console.error('获取用户信息失败:', error);
+      if (import.meta.env.DEV) {
+        console.error('获取用户信息失败:', error);
+      }
       throw error;
     }
   };
@@ -129,7 +61,9 @@ export const useUserStore = defineStore('user', () => {
     try {
       await authApi.logout();
     } catch (error) {
-      console.error('登出失败:', error);
+      if (import.meta.env.DEV) {
+        console.error('登出失败:', error);
+      }
     } finally {
       // 清除本地存储和状态
       token.value = null;

@@ -1,8 +1,12 @@
 package com.star.pivot.system.utils;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SecurityException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +18,7 @@ import java.util.Map;
 /**
  * JWT 工具类
  */
+@Slf4j
 @Component
 public class JwtUtil {
 
@@ -79,7 +84,20 @@ public class JwtUtil {
         try {
             Claims claims = getClaimsFromToken(token);
             return !claims.getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            log.debug("Token已过期：{}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException e) {
+            log.warn("Token格式错误：{}", e.getMessage());
+            return false;
+        } catch (SecurityException e) {
+            log.warn("Token签名验证失败：{}", e.getMessage());
+            return false;
+        } catch (IllegalArgumentException e) {
+            log.warn("Token为空或格式不正确：{}", e.getMessage());
+            return false;
         } catch (Exception e) {
+            log.error("Token验证异常：", e);
             return false;
         }
     }
@@ -91,7 +109,11 @@ public class JwtUtil {
         try {
             Claims claims = getClaimsFromToken(token);
             return claims.getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            log.debug("Token已过期：{}", e.getMessage());
+            return true;
         } catch (Exception e) {
+            log.warn("判断Token是否过期时发生异常：{}", e.getMessage());
             return true;
         }
     }

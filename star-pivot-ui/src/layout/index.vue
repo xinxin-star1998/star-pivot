@@ -33,16 +33,20 @@ const menuStore = useMenuStore();
 const isCollapse = computed(() => menuStore.collapse);
 const asideWidth = computed(() => isCollapse.value ? '64px' : '250px');
 
-// 组件挂载时获取用户信息
+// 组件挂载时获取用户信息和菜单
 onMounted(async () => {
   try {
-    // 如果有token，获取用户信息
+    // 如果有token，获取用户信息和菜单
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (token) {
       await userStore.getUserInfo();
+      // 加载菜单数据
+      await menuStore.loadMenus();
     }
   } catch (error) {
-    console.error('获取用户信息失败:', error);
+    if (import.meta.env.DEV) {
+      console.error('获取用户信息失败:', error);
+    }
     // 如果获取用户信息失败，可能是token过期，跳转到登录页
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');

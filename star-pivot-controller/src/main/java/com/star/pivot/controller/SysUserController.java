@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2025-12-28 17:28:11
  */
 @RestController
-@RequestMapping("/system/user")
+@RequestMapping("/sys/user")
 public class SysUserController {
     /**
      * 服务对象
