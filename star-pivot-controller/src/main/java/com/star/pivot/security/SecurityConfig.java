@@ -95,7 +95,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/login", "/api/auth/login").permitAll()
                         // 允许 Swagger 相关路径匿名访问
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
-                        // 其他请求需要认证
+                        // 其他请求需要认证（包括菜单接口，根据用户权限返回菜单）
                         .anyRequest().authenticated()
                 )
                 // 添加 JWT 过滤器

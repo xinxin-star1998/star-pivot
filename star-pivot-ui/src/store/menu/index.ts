@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import menuApi, { transformMenu, type FrontendMenu, type BackendMenu } from '@/http/api/menu/menu'
-import { registerRoutes } from '@/utils/route'
 
 export const useMenuStore = defineStore('menuStore', () => {
   // 菜单折叠状态
@@ -31,16 +30,17 @@ export const useMenuStore = defineStore('menuStore', () => {
 
   /**
    * 加载菜单数据
+   * 后端为主：后端根据用户权限返回菜单数据
+   * 前端为辅：前端只负责渲染菜单，不动态注册路由
    */
   async function loadMenus(): Promise<void> {
     try {
       loading.value = true
+      // 调用后端接口获取当前用户有权限的菜单树
       const backendMenus = await menuApi.getUserMenus()
+      // 转换为前端菜单格式
       const transformedMenus = transformMenu(backendMenus)
       menuData.value = transformedMenus
-      
-      // 动态注册路由
-      registerRoutes(transformedMenus)
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('加载菜单失败:', error)
@@ -59,10 +59,6 @@ export const useMenuStore = defineStore('menuStore', () => {
     collapse.value = false
     menuData.value = []
     localStorage.removeItem('menu-store')
-    // 移除动态路由
-    import('@/utils/route').then(({ removeDynamicRoutes }) => {
-      removeDynamicRoutes()
-    })
   }
 
   return {

@@ -13,6 +13,17 @@ import java.util.List;
  */
 public interface SysMenuService extends IService<SysMenu> {
 
+    /**
+     * 查询所有菜单树
+     * @return 菜单树列表
+     */
     List<SysMenu> menuTree();
+
+    /**
+     * 根据用户ID查询菜单树（仅返回用户有权限的菜单）
+     * @param userId 用户ID
+     * @return 菜单树列表
+     */
+    List<SysMenu> getUserMenuTree(Long userId);
 }
 

@@ -3,8 +3,20 @@ import { ElMessage } from 'element-plus';
 import router from '@/router';
 
 // axios请求配置
+// 开发环境：如果配置了Vite代理，使用相对路径；否则使用完整URL
+// 生产环境：使用环境变量配置的API地址
+const getBaseURL = () => {
+  if (import.meta.env.PROD) {
+    // 生产环境使用环境变量配置的完整URL
+    return import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+  } else {
+    // 开发环境：优先使用代理（相对路径），如果没有配置代理则使用完整URL
+    return import.meta.env.VITE_API_BASE_URL || '/api';
+  }
+};
+
 const config: AxiosRequestConfig = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api',
+  baseURL: getBaseURL(),
   timeout: 10000
 }
 
@@ -185,13 +197,25 @@ class Http {
         error.data = {};
 
         if (error && error.response) {
+          // 有响应，说明连接成功但返回了错误状态码
           const status = error.response.status;
           const errorMsg = ERROR_MESSAGES[status] || `连接错误${status}`;
-          error.data.message = errorMsg;  // 使用message字段
+          error.data.message = errorMsg;
           ElMessage.error(errorMsg);
+        } else if (error.code === 'ERR_NETWORK' || error.message === 'Network Error' || error.message?.includes('ERR_CONNECTION_REFUSED')) {
+          // 网络连接错误，可能是后端服务未启动
+          error.data.message = '无法连接到服务器';
+          const tips = '请检查：\n1. 后端服务是否已启动（端口8080）\n2. 后端服务是否正常运行\n3. 网络连接是否正常';
+          ElMessage.error('无法连接到服务器');
+          if (import.meta.env.DEV) {
+            console.error('后端服务连接失败:', tips);
+            console.error('请确保后端服务已启动: http://localhost:8080');
+            console.error('当前请求URL:', error.config?.baseURL + error.config?.url);
+          }
         } else {
-          error.data.message = '连接到服务器失败';  // 使用message字段
-          ElMessage.error('连接到服务器失败');
+          // 其他错误
+          error.data.message = error.message || '连接到服务器失败';
+          ElMessage.error(error.data.message);
         }
 
         return Promise.reject(error);

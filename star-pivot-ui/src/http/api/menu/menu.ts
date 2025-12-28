@@ -75,20 +75,20 @@ export function transformMenu(backendMenus: BackendMenu[]): FrontendMenu[] {
 // 菜单相关API
 const menuApi = {
   /**
-   * 获取用户菜单树
-   * 调用后端菜单树接口获取树形结构的菜单数据
+   * 获取当前用户的菜单树（根据用户权限）
+   * 后端为主：后端根据用户权限返回菜单数据
    */
   getUserMenus: async (): Promise<BackendMenu[]> => {
     try {
-      const response = await request.get<Result<BackendMenu[]>>('/sys/menu/menuTree');
+      const response = await request.get<Result<BackendMenu[]>>('/sys/menu/userMenuTree');
       if (response.code === 200 && response.data) {
-        // 后端返回的data就是菜单树数组
+        // 后端返回的data就是当前用户有权限的菜单树数组
         return response.data as BackendMenu[];
       }
       return [];
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('获取菜单树失败:', error);
+        console.error('获取用户菜单树失败:', error);
       }
       return [];
     }
