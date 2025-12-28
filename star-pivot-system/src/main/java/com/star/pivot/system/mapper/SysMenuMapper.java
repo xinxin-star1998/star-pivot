@@ -1,10 +1,9 @@
 package com.star.pivot.system.mapper;
 
-import java.util.List;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.star.pivot.system.domain.entity.SysMenu;
-import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * 菜单权限表(SysMenu)表数据库访问层

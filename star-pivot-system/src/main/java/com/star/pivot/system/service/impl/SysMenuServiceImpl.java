@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -48,7 +47,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         if (userMenus == null || userMenus.isEmpty()) {
             return new ArrayList<>();
         }
-        List<SysMenu> allMenu = new ArrayList<>();
+        List<SysMenu> allMenu = null;
         //获取用户角色对应的菜单 roleKey == admin 时，查询全部菜单
         if (roles.stream().anyMatch(role -> "admin".equals(role.getRoleKey()))) {
             // 查询所有菜单（用于构建树结构）
@@ -74,7 +73,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         // 筛选出指定父级ID的菜单
         List<SysMenu> children = allMenu.stream()
                 .filter(menu -> menu.getParentId() != null && menu.getParentId().equals(parentId))
-                .collect(Collectors.toList());
+                .toList();
 
         // 递归构建子树
         for (SysMenu menu : children) {

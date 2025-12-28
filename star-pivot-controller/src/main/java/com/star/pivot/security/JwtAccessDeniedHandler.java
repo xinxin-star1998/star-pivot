@@ -23,7 +23,7 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request,
                       HttpServletResponse response,
-                      AccessDeniedException accessDeniedException) throws IOException, ServletException {
+                      AccessDeniedException accessDeniedException) throws IOException {
         log.error("权限不足: {}", accessDeniedException.getMessage());
         
         response.setContentType("application/json;charset=UTF-8");
