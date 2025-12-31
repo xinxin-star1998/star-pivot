@@ -1,8 +1,8 @@
 import type { RouteRecordRaw } from 'vue-router';
 
 /**
- * 完整的静态路由配置
- * 前端为辅：前端配置完整的路由表，路由守卫检查权限
+ * 基础静态路由配置
+ * 后端为主：前端只配置基础路由，权限由后端控制
  */
 export const staticRoutes: Array<RouteRecordRaw> = [
   {
@@ -36,8 +36,7 @@ export const staticRoutes: Array<RouteRecordRaw> = [
         name: 'system',
         meta: {
           title: '系统管理',
-          icon: 'Setting',
-          roles: ['sys:manage']
+          icon: 'Setting'
         },
         children: [
           {
@@ -46,8 +45,7 @@ export const staticRoutes: Array<RouteRecordRaw> = [
             name: 'systemUser',
             meta: {
               title: '用户管理',
-              icon: 'UserFilled',
-              roles: ['sys:user']
+              icon: 'UserFilled'
             }
           },
           {
@@ -56,8 +54,7 @@ export const staticRoutes: Array<RouteRecordRaw> = [
             name: 'systemRole',
             meta: {
               title: '角色管理',
-              icon: 'Wallet',
-              roles: ['sys:role']
+              icon: 'User'
             }
           },
           {
@@ -66,28 +63,45 @@ export const staticRoutes: Array<RouteRecordRaw> = [
             name: 'systemMenu',
             meta: {
               title: '菜单管理',
-              icon: 'Menu',
-              roles: ['sys:menu']
+              icon: 'Menu'
             }
           }
         ]
       },
-      // 404页面
+      // 错误页面
+      {
+        path: '/403',
+        name: '403',
+        component: () => import('@/views/error/403/index.vue'),
+        meta: { 
+          title: '403', 
+          hideLayout: true 
+        }
+      },
       {
         path: '/404',
+        name: '404',
         component: () => import('@/views/error/404/index.vue'),
-        name: 'NotFound',
-        meta: {
-          title: '页面不存在',
-          hideLayout: true
+        meta: { 
+          title: '404', 
+          hideLayout: true 
+        }
+      },
+      {
+        path: '/500',
+        name: '500',
+        component: () => import('@/views/error/500/index.vue'),
+        meta: { 
+          title: '500', 
+          hideLayout: true 
         }
       }
     ]
-  },
-  // 404重定向
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: '/404'
   }
 ];
 
+// 通配符路由，始终指向404
+export const notFoundRoute: RouteRecordRaw = {
+  path: '/:pathMatch(.*)*',
+  redirect: '/404'
+};

@@ -14,5 +14,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class StarPivotApplication {
     public static void main(String[] args) {
         SpringApplication.run(StarPivotApplication.class, args);
+        System.out.println("""
+                
+                ========================================
+                StarPivot权限管理系统启动成功！
+                访问地址: http://localhost:8080
+                API文档: http://localhost:8080/doc.html
+                ========================================
+                """);
     }
 }

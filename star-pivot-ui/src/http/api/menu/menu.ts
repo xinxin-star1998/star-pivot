@@ -29,7 +29,6 @@ export interface FrontendMenu {
   meta: {
     title: string;
     icon?: string;
-    roles?: string[];
     hideLayout?: boolean;
   };
   children?: FrontendMenu[];
@@ -37,8 +36,7 @@ export interface FrontendMenu {
 
 /**
  * 将后端菜单数据转换为前端菜单格式
- * 后端返回的已经是树形结构，直接递归转换即可
- * 后端已经按orderNum排序，保持原有顺序
+ * 后端为主：后端已过滤权限，前端只需转换格式用于显示
  */
 export function transformMenu(backendMenus: BackendMenu[]): FrontendMenu[] {
   if (!backendMenus || backendMenus.length === 0) {
@@ -61,7 +59,6 @@ export function transformMenu(backendMenus: BackendMenu[]): FrontendMenu[] {
         meta: {
           title: menu.menuName,
           icon: menu.icon,
-          roles: menu.perms ? [menu.perms] : undefined,
         },
         // 递归转换子菜单
         children: menu.children && menu.children.length > 0 
@@ -96,4 +93,3 @@ const menuApi = {
 };
 
 export default menuApi;
-

@@ -30,8 +30,7 @@ export const useMenuStore = defineStore('menuStore', () => {
 
   /**
    * 加载菜单数据
-   * 后端为主：后端根据用户权限返回菜单数据
-   * 前端为辅：前端只负责渲染菜单，不动态注册路由
+   * 后端为主：后端根据用户权限返回菜单数据，前端只负责显示
    */
   async function loadMenus(): Promise<void> {
     try {

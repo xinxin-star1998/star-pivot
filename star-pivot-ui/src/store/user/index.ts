@@ -75,12 +75,12 @@ export const useUserStore = defineStore('user', () => {
     }
   };
 
-  // 检查是否有权限
+  // 检查是否有权限 - 保留此方法但不用于前端权限控制
   const hasPermission = (permission: string) => {
     return permissions.value.some(perm => perm.perms === permission);
   };
 
-  // 检查是否有角色
+  // 检查是否有角色 - 保留此方法但不用于前端权限控制
   const hasRole = (role: string) => {
     return roles.value.some(r => r.roleName === role);
   };

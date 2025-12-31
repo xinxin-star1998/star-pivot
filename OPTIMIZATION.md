@@ -137,6 +137,7 @@ VITE_API_BASE_URL=https://api.yourdomain.com/api
   - 创建全局加载状态管理store
   - 支持多个加载任务计数
   - 提供开始/结束/重置加载状态的方法
+  - 提供开始/结束/重置加载状态的方法
 
 ## 第三轮优化（已完成）
 
@@ -178,6 +179,18 @@ VITE_API_BASE_URL=https://api.yourdomain.com/api
   - 根据用户权限控制路由访问
   - 无权限时显示提示并跳转
   - 自动加载用户信息
+
+## 第四轮优化（已完成）
+
+### 1. 移除前端路由权限认证 ✅
+- **位置**：`router/index.ts`, `routes.ts`, `http/api/menu/menu.ts`, `store/user/index.ts`, `utils/route.ts`
+- **实现**：
+  - 移除路由守卫中的权限检查逻辑
+  - 移除静态路由中的roles配置
+  - 移除菜单转换中的权限相关字段
+  - 简化用户store中的权限检查方法
+  - 采用"后端为主，前端只显示"的架构模式
+  - 后端根据用户权限返回菜单，前端只负责显示
 
 ## 待优化项（建议）
 

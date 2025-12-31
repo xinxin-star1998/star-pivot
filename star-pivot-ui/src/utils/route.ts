@@ -34,7 +34,6 @@ export function menuToRoute(menu: FrontendMenu, parentPath = ''): RouteRecordRaw
     meta: {
       title: menu.meta.title,
       icon: menu.meta.icon,
-      roles: menu.meta.roles,
       hideLayout: menu.meta.hideLayout
     }
   };
@@ -94,4 +93,3 @@ export function removeDynamicRoutes(): void {
     }
   });
 }
-
