@@ -23,5 +23,21 @@
         inner join sys_user_role ur on r.role_id = ur.role_id
         where ur.user_id = #{userId}
     </select>
+    <select id="selectPageList" resultType="com.star.pivot.system.domain.entity.SysRole">
+        select r.* from sys_role r
+       <where>
+           1=1
+           <if test="param.roleName != null and param.roleName != ''">
+               and r.role_name like concat('%',#{param.roleName},'%')
+           </if>
+           <if test="param.roleKey != null and param.roleKey != ''">
+               and r.role_key like concat('%',#{param.roleKey},'%')
+           </if>
+           <if test="param.status != null and param.status != ''">
+               and r.status = #{param.status}
+           </if>
+       </where>
+        order by r.role_sort
+    </select>
 </mapper>
 

@@ -1,4 +1,5 @@
 package com.star.pivot.system.service.impl;
+import com.star.pivot.common.constants.Constants;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
@@ -34,9 +35,17 @@ public class CustomerUserDetailService implements UserDetailsService {
         }
         // 查询用户角色
         List<SysRole> roles = roleMapper.selectRolesByUserId(user.getUserId());
-
+        //遍历roles，如果roleKey === admin ,查询所有权限菜单
+        List<SysMenu> permissions = null;
+        if (roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()))) {
+            // 获取所有菜单（用于构建树结构）
+            permissions = sysMenuMapper.selectList(null);
+        }else{
+            // 获取用户权限
+            permissions = sysMenuMapper.selectPermissionsByUserId(user.getUserId());
+        }
         // 查询用户权限
-        List<SysMenu> permissions = sysMenuMapper.selectPermissionsByUserId(user.getUserId());
+//        List<SysMenu> permissions = sysMenuMapper.selectPermissionsByUserId(user.getUserId());
 
         // 构建权限列表，过滤掉null和空字符串的权限标识
         List<GrantedAuthority> authorities = permissions.stream()

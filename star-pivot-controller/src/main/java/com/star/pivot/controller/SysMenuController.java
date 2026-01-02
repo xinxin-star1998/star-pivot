@@ -1,15 +1,17 @@
 package com.star.pivot.controller;
 
 import com.star.pivot.common.domain.Result;
+import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -56,5 +58,31 @@ public class SysMenuController {
         // 查询用户有权限的菜单树
         List<SysMenu> menuTree = sysMenuService.getUserMenuTree(user.getUserId());
         return Result.success(menuTree);
+    }
+
+    /**
+     * 新增菜单
+     */
+    @PostMapping
+    public Result<?> add(@Valid @RequestBody MenuDTO menuDTO) {
+        boolean success = sysMenuService.insertMenu(menuDTO);
+        return success ? Result.success("新增菜单成功") : Result.error("新增菜单失败");
+    }
+    /**
+     * 修改菜单
+     */
+    @PutMapping
+    public Result<?> edit(@Valid @RequestBody MenuDTO menuDTO) {
+        boolean success = sysMenuService.updateMenu(menuDTO);
+        return success ? Result.success("修改菜单成功") : Result.error("修改菜单失败");
+    }
+
+    /**
+     * 删除菜单
+     */
+    @DeleteMapping("/{menuId}")
+    public Result<?> remove(@PathVariable Long menuId) {
+        boolean success = sysMenuService.deleteMenu(menuId);
+        return success ? Result.success("删除菜单成功") : Result.error("删除菜单失败");
     }
 }

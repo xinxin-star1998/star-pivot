@@ -34,7 +34,7 @@ public class SysUserController {
      * @param userReqBo 用户查询参数
      * @return 分页结果
      */
-    @PostMapping("pageList")
+    @PostMapping("/pageList")
     public Result<PageResponse<SysUser>> pageList(@RequestBody UserReqBo userReqBo) {
         PageResponse<SysUser> pageResponse = sysUserService.pageList(userReqBo);
         return Result.success(pageResponse);

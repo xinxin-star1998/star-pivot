@@ -7,6 +7,7 @@ import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.AuthService;
+import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 认证控制器
@@ -30,6 +32,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final SysUserService sysUserService;
+    private final SysMenuService sysMenuService;
 
     /**
      * 用户登录
@@ -83,7 +86,16 @@ public class AuthController {
 
         // 查询用户的角色和权限
         List<SysRole> roles = sysUserService.getRolesByUserId(user.getUserId());
-        List<SysMenu> permissions = sysUserService.getMenuByUserId(user.getUserId());
+        
+        List<SysMenu> permissions;
+        // 检查用户是否拥有admin角色，如果有则查询所有菜单树
+        if (roles.stream().anyMatch(role -> "admin".equals(role.getRoleKey()))) {
+            // 如果用户角色包含admin，则查询所有菜单树
+            permissions = sysMenuService.menuTree();
+        } else {
+            // 否则只查询用户有权限的菜单
+            permissions = sysUserService.getMenuByUserId(user.getUserId());
+        }
 
         // 组装返回数据
         Map<String, Object> userInfo = new HashMap<>();
