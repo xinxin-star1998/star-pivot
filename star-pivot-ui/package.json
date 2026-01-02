@@ -14,7 +14,6 @@
     "fix": "eslint --fix",
     "lint:prettier": "prettier --write \"**/*.{js,cjs,ts,json,tsx,css,less,scss,vue,html,md}\"",
     "lint:stylelint": "stylelint  \"**/*.{css,scss,vue}\" --fix",
-,
     "generate:menu": "node scripts/generate-menu-data.js"
   },
 

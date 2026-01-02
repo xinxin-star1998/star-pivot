@@ -36,6 +36,15 @@
            <if test="param.status != null and param.status != ''">
                and r.status = #{param.status}
            </if>
+           <!-- 如果传入了开始时间，则查询创建时间大于等于开始时间的记录 -->
+           <if test="param.startTime != null">
+               and r.create_time &gt;= #{param.startTime}
+           </if>
+
+           <!-- 如果传入了结束时间，则查询创建时间小于等于结束时间的记录 -->
+           <if test="param.endTime != null">
+               and r.create_time &lt;= #{param.endTime}
+           </if>
        </where>
         order by r.role_sort
     </select>

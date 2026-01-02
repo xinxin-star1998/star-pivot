@@ -35,7 +35,7 @@
 declare namespace Api {
   /** 通用类型 */
   namespace Common {
-    /** 分页参数 */
+    /** 分页参数（前端内部使用，Element Plus 标准字段） */
     interface PaginationParams {
       /** 当前页码 */
       current: number
@@ -45,14 +45,19 @@ declare namespace Api {
       total: number
     }
 
-    /** 通用搜索参数 */
-    type CommonSearchParams = Pick<PaginationParams, 'current' | 'size'>
+    /** 通用搜索参数（发送给后端的参数，使用 pageNum 和 pageSize） */
+    interface CommonSearchParams {
+      /** 当前页码，默认值为 1 */
+      pageNum?: number
+      /** 每页条数，默认值为 10 */
+      pageSize?: number
+    }
 
-    /** 分页响应基础结构 */
+    /** 分页响应基础结构（后端返回的数据结构） */
     interface PaginatedResponse<T = any> {
       records: T[]
-      current: number
-      size: number
+      pageNum?: number
+      pageSize?: number
       total: number
     }
 
@@ -120,13 +125,12 @@ declare namespace Api {
 
     /** 用户搜索参数 */
     type UserSearchParams = Partial<
-      Pick<UserListItem, 'userId' | 'userName' | 'nickName' | 'sex' | 'phonenumber' | 'email' | 'status'> &
-        Api.Common.CommonSearchParams
-    > & {
-      /** 分页参数映射：后端使用 pageNum 和 pageSize */
-      pageNum?: number
-      pageSize?: number
-    }
+      Pick<
+        UserListItem,
+        'userId' | 'userName' | 'nickName' | 'sex' | 'phonenumber' | 'email' | 'status'
+      >
+    > &
+      Api.Common.CommonSearchParams
 
     /** 角色列表 */
     type RoleList = Api.Common.PaginatedResponse<RoleListItem>
@@ -137,14 +141,14 @@ declare namespace Api {
       roleName: string
       roleKey: string
       remark: string
-      status: boolean
+      status: number
       createTime: string
     }
 
     /** 角色搜索参数 */
     type RoleSearchParams = Partial<
-      Pick<RoleListItem, 'roleId' | 'roleName' | 'roleKey' | 'remark' | 'status'> &
-        Api.Common.CommonSearchParams
-    >
+      Pick<RoleListItem, 'roleId' | 'roleName' | 'roleKey' | 'remark' | 'status'>
+    > &
+      Api.Common.CommonSearchParams
   }
 }
