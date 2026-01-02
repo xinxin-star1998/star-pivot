@@ -2,15 +2,17 @@ package com.star.pivot.common.domain;
 
 import lombok.Data;
 
-import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 统一响应结果
+ * 统一响应结果类
+ *
+ * @author stardust
+ * @date 2024-01-01
  */
 @Data
 public class Result<T> implements Serializable {
-    @Serial
+
     private static final long serialVersionUID = 1L;
 
     /**
@@ -19,12 +21,12 @@ public class Result<T> implements Serializable {
     private Integer code;
 
     /**
-     * 提示信息
+     * 响应消息
      */
     private String message;
 
     /**
-     * 数据
+     * 响应数据
      */
     private T data;
 
@@ -95,6 +97,34 @@ public class Result<T> implements Serializable {
      */
     public static <T> Result<T> error(Integer code, String message) {
         return new Result<>(code, message);
+    }
+
+    /**
+     * 未授权响应
+     */
+    public static <T> Result<T> unauthorized() {
+        return new Result<>(401, "未授权，请先登录");
+    }
+
+    /**
+     * 未授权响应（自定义消息）
+     */
+    public static <T> Result<T> unauthorized(String message) {
+        return new Result<>(401, message);
+    }
+
+    /**
+     * 无权限响应
+     */
+    public static <T> Result<T> forbidden() {
+        return new Result<>(403, "无权限访问");
+    }
+
+    /**
+     * 无权限响应（自定义消息）
+     */
+    public static <T> Result<T> forbidden(String message) {
+        return new Result<>(403, message);
     }
 }
 

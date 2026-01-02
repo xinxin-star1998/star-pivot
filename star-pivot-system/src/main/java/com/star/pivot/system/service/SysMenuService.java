@@ -1,6 +1,7 @@
 package com.star.pivot.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 
 import java.util.List;
@@ -25,5 +26,11 @@ public interface SysMenuService extends IService<SysMenu> {
      * @return 菜单树列表
      */
     List<SysMenu> getUserMenuTree(Long userId);
+
+    boolean insertMenu(MenuDTO menuDTO);
+
+    boolean updateMenu(MenuDTO menuDTO);
+
+    boolean deleteMenu(Long menuId);
 }
 
