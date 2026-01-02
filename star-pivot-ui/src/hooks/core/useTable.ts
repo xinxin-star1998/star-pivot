@@ -63,9 +63,9 @@ export interface UseTableConfig<
     /** 自定义分页字段映射 */
     paginationKey?: {
       /** 当前页码字段名，默认为 'current' */
-      current?: string
+      pageNum?: string
       /** 每页条数字段名，默认为 'size' */
-      size?: string
+      pageSize?: string
     }
   }
 
@@ -155,8 +155,8 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
   } = config
 
   // 分页字段名配置：优先使用传入的配置，否则使用全局配置
-  const pageKey = paginationKey?.current || tableConfig.paginationKey.current
-  const sizeKey = paginationKey?.size || tableConfig.paginationKey.size
+  const pageKey = paginationKey?.pageNum || tableConfig.paginationKey.pageNum
+  const sizeKey = paginationKey?.pageSize || tableConfig.paginationKey.pageSize
 
   // 响应式触发器，用于手动更新缓存统计信息
   const cacheUpdateTrigger = ref(0)

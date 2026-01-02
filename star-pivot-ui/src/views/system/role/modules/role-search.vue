@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+
   interface Props {
     modelValue: Record<string, any>
   }
@@ -60,21 +62,21 @@
     },
     {
       label: '角色编码',
-      key: 'roleCode',
+      key: 'roleKey',
       type: 'input',
       placeholder: '请输入角色编码',
       clearable: true
     },
     {
       label: '角色描述',
-      key: 'description',
+      key: 'remark',
       type: 'input',
       placeholder: '请输入角色描述',
       clearable: true
     },
     {
       label: '角色状态',
-      key: 'enabled',
+      key: 'status',
       type: 'select',
       props: {
         placeholder: '请选择状态',

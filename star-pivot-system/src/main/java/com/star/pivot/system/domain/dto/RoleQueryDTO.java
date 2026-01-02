@@ -1,6 +1,10 @@
 package com.star.pivot.system.domain.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.star.pivot.common.utils.DateDeserializer;
 import lombok.Data;
+
+import java.util.Date;
 
 /**
  * 角色查询DTO
@@ -35,5 +39,14 @@ public class RoleQueryDTO {
      * 角色状态（0正常 1停用）
      */
     private String status;
+    /**
+     * 开始时间
+     */
+    @JsonDeserialize(using = DateDeserializer.class)
+    private Date startTime;
+    /**
+     * 结束时间
+     */
+    @JsonDeserialize(using = DateDeserializer.class)
+    private Date endTime;
 }
-

@@ -55,10 +55,13 @@
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import type { AppRouteRecord } from '@/types/router'
   import MenuDialog from './modules/menu-dialog.vue'
-  import { fetchGetMenuList, type SysMenu } from '@/api/system-manage'
+  import { fetchGetMenuList } from '@/api/menu/menu'
   import { ElTag, ElMessageBox } from 'element-plus'
   import { MenuProcessor } from '@/router/core/MenuProcessor'
   import type { MenuFormData } from './types'
+  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
 
   defineOptions({ name: 'Menus' })
 

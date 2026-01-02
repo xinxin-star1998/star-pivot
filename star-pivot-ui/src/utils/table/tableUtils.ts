@@ -42,8 +42,8 @@
 import type { ApiResponse } from './tableCache'
 import { tableConfig } from './tableConfig'
 
-// 请求参数基础接口，扩展分页参数
-export interface BaseRequestParams extends Api.Common.PaginationParams {
+// 请求参数基础接口，扩展分页参数（发送给后端使用 pageNum 和 pageSize）
+export interface BaseRequestParams extends Api.Common.CommonSearchParams {
   [key: string]: unknown
 }
 

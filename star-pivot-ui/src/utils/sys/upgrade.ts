@@ -198,8 +198,13 @@ class VersionManager {
     legacyStorage: ReturnType<typeof this.findLegacyStorage>
   ): Promise<void> {
     try {
+      // 如果没有升级日志，静默处理（仅更新版本号和清理旧数据）
       if (!upgradeLogList.value.length) {
-        console.warn('[Upgrade] 升级日志列表为空')
+        // 更新版本号
+        this.setStoredVersion(StorageConfig.CURRENT_VERSION)
+        // 清理旧数据
+        this.cleanupLegacyData(legacyStorage.oldSysKey, legacyStorage.oldVersionKeys)
+        console.info(`[Upgrade] 升级完成（无升级日志）: ${storedVersion} → ${StorageConfig.CURRENT_VERSION}`)
         return
       }
 

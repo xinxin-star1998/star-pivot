@@ -10,19 +10,19 @@
       <ElFormItem label="角色名称" prop="roleName">
         <ElInput v-model="form.roleName" placeholder="请输入角色名称" />
       </ElFormItem>
-      <ElFormItem label="角色编码" prop="roleCode">
-        <ElInput v-model="form.roleCode" placeholder="请输入角色编码" />
+      <ElFormItem label="角色编码" prop="roleKey">
+        <ElInput v-model="form.roleKey" placeholder="请输入角色编码" />
       </ElFormItem>
       <ElFormItem label="描述" prop="description">
         <ElInput
-          v-model="form.description"
+          v-model="form.remark"
           type="textarea"
           :rows="3"
           placeholder="请输入角色描述"
         />
       </ElFormItem>
       <ElFormItem label="启用">
-        <ElSwitch v-model="form.enabled" />
+        <ElSwitch v-model="statusSwitch" />
       </ElFormItem>
     </ElForm>
     <template #footer>
@@ -67,6 +67,21 @@
   })
 
   /**
+   * 状态开关双向绑定
+   * status为0时选中（true），为1时不选中（false）
+   */
+  const statusSwitch = computed({
+    get: () => {
+      // 兼容字符串和数字类型
+      const status = Number(form.status)
+      return status === 0
+    },
+    set: (value: boolean) => {
+      ;(form as any).status = value ? 0 : 1
+    }
+  })
+
+  /**
    * 表单验证规则
    */
   const rules = reactive<FormRules>({
@@ -74,24 +89,24 @@
       { required: true, message: '请输入角色名称', trigger: 'blur' },
       { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
     ],
-    roleCode: [
+    roleKey: [
       { required: true, message: '请输入角色编码', trigger: 'blur' },
       { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
     ],
-    description: [{ required: true, message: '请输入角色描述', trigger: 'blur' }]
+    remark: [{ required: true, message: '请输入角色描述', trigger: 'blur' }]
   })
 
   /**
    * 表单数据
    */
-  const form = reactive<RoleListItem>({
+  const form = reactive({
     roleId: 0,
     roleName: '',
-    roleCode: '',
-    description: '',
+    roleKey: '',
+    remark: '',
     createTime: '',
-    enabled: true
-  })
+    status: 0
+  } as unknown as RoleListItem)
 
   /**
    * 监听弹窗打开，初始化表单数据
@@ -120,15 +135,20 @@
    */
   const initForm = () => {
     if (props.dialogType === 'edit' && props.roleData) {
-      Object.assign(form, props.roleData)
+      // 确保 status 字段被正确赋值，兼容字符串和数字类型
+      const status = props.roleData.status != null ? Number(props.roleData.status) : 0
+      Object.assign(form, {
+        ...props.roleData,
+        status: isNaN(status) ? 0 : status
+      })
     } else {
       Object.assign(form, {
         roleId: 0,
         roleName: '',
-        roleCode: '',
-        description: '',
+        roleKey: '',
+        remark: '',
         createTime: '',
-        enabled: true
+        status: 0
       })
     }
   }

@@ -131,6 +131,7 @@
   import { useI18n } from 'vue-i18n'
   import type { ColumnOption } from '@/types/component'
   import { ElScrollbar } from 'element-plus'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
 
   defineOptions({ name: 'ArtTableHeader' })
 
