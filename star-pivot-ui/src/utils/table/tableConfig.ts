@@ -48,8 +48,8 @@ export const tableConfig = {
   // useTable 组合式函数传递分页参数的时候 用 current 跟 size
   paginationKey: {
     // 当前页码
-    current: 'current',
+    pageNum: 'pageNum',
     // 每页大小
-    size: 'size'
+    pageSize: 'pageSize'
   }
 }

@@ -45,7 +45,7 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { ACCOUNT_TABLE_DATA } from '@/mock/temp/formData'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetUserList } from '@/api/system-manage'
+  import { fetchGetUserList } from '@/api/user/user'
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
   import { ElTag, ElMessageBox, ElImage } from 'element-plus'
@@ -107,8 +107,8 @@
     core: {
       apiFn: fetchGetUserList,
       apiParams: {
-        current: 1,
-        size: 20,
+        pageNum: 1,
+        pageSize: 20,
         ...searchForm.value
       },
       // 自定义分页字段映射，后端使用 pageNum 和 pageSize

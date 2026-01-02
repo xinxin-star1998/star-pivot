@@ -8,7 +8,7 @@
  */
 
 import type { AppRouteRecord } from '@/types/router'
-import { fetchGetMenuList, type SysMenu } from '@/api/system-manage'
+import { fetchGetMenuList, type SysMenu } from '@/api/menu/menu'
 import { RoutesAlias } from '../routesAlias'
 import { formatMenuTitle } from '@/utils'
 

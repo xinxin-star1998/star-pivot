@@ -7,7 +7,7 @@
     <ElTable
       ref="elTableRef"
       v-loading="!!loading"
-      v-bind="{ ...$attrs, ...props, height, stripe, border, size, headerCellStyle }"
+      v-bind="{ ...$attrs, ...props, height, stripe, border, size, tableLayout: props.tableLayout, headerCellStyle }"
     >
       <template v-for="col in columns" :key="col.prop || col.type">
         <!-- 渲染全局序号列 -->
@@ -130,7 +130,9 @@
   }
 
   /** ArtTable 组件的 Props 接口 */
-  interface ArtTableProps extends TableProps<Record<string, any>> {
+  interface ArtTableProps extends Omit<TableProps<Record<string, any>>, 'tableLayout'> {
+    /** 表格布局方式 */
+    tableLayout?: 'auto' | 'fixed'
     /** 加载状态 */
     loading?: boolean
     /** 列渲染配置 */
@@ -154,6 +156,7 @@
     stripe: undefined,
     border: undefined,
     size: undefined,
+    tableLayout: 'auto', // Element Plus Table 的默认布局方式
     emptyHeight: '100%',
     emptyText: '暂无数据',
     showTableHeader: true

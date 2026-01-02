@@ -8,8 +8,8 @@ import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import ElementPlus from 'unplugin-element-plus/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import tailwindcss from '@tailwindcss/vite'
 // import { visualizer } from 'rollup-plugin-visualizer'
-// Tailwind CSS is now integrated differently
 
 export default ({ mode }: { mode: string }) => {
   const root = process.cwd()
@@ -49,24 +49,45 @@ export default ({ mode }: { mode: string }) => {
     build: {
       target: 'es2015',
       outDir: 'dist',
-      chunkSizeWarningLimit: 2000,
+      // 代码分割配置
+      chunkSizeWarningLimit: 2000, // 单个chunk大小警告阈值（KB）
+      // 压缩配置
       minify: 'terser',
       terserOptions: {
         compress: {
-          // 生产环境去除 console
+          // 生产环境去除 console（注意：vite.config.ts 中的 console.log 不会被移除）
           drop_console: true,
           // 生产环境去除 debugger
-          drop_debugger: true
+          drop_debugger: true,
+          // 移除未使用的代码
+          dead_code: true,
+          // 移除未使用的函数参数
+          unused: true
         }
       },
+      // 动态导入变量配置
       dynamicImportVarsOptions: {
         warnOnError: true,
         exclude: [],
-        include: ['src/views/**/*.vue']
+        include: ['src/views/**/*.vue'] // 仅对视图文件启用动态导入
+      },
+      // 代码分割策略优化
+      rollupOptions: {
+        output: {
+          // 手动分包，将第三方库单独打包
+          manualChunks: {
+            'vue-vendor': ['vue', 'vue-router', 'pinia'],
+            'element-plus': ['element-plus'],
+            'echarts': ['echarts'],
+            'utils': ['axios', '@vueuse/core']
+          }
+        }
       }
     },
     plugins: [
       vue(),
+      // Tailwind CSS 4.x 插件（必须在其他插件之前）
+      tailwindcss(),
       // 自动按需导入 API
       AutoImport({
         imports: ['vue', 'vue-router', 'pinia', '@vueuse/core'],

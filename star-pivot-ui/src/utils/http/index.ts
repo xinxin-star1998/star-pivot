@@ -24,8 +24,8 @@ import { BaseResponse } from '@/types'
 /** 请求配置常量 */
 const REQUEST_TIMEOUT = 15000
 const LOGOUT_DELAY = 500
-const MAX_RETRIES = 0
-const RETRY_DELAY = 1000
+const MAX_RETRIES = 3 // 最大重试次数，0表示不重试
+const RETRY_DELAY = 1000 // 重试延迟（毫秒）
 const UNAUTHORIZED_DEBOUNCE_TIME = 3000
 
 /** 401防抖状态 */
@@ -74,9 +74,16 @@ axiosInstance.interceptors.request.use(
         accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
       )
 
+    // 设置 Content-Type（仅当未设置且数据不是 FormData 时）
+    // 注意：axios 会自动将 JavaScript 对象序列化为 JSON，无需手动 stringify
     if (request.data && !(request.data instanceof FormData) && !request.headers['Content-Type']) {
-      request.headers.set('Content-Type', 'application/json')
-      request.data = JSON.stringify(request.data)
+      // 如果 data 已经是字符串，直接使用；否则让 axios 自动处理
+      if (typeof request.data === 'string') {
+        request.headers.set('Content-Type', 'application/json')
+      } else {
+        // axios 会自动处理对象类型的数据，设置 Content-Type
+        request.headers.set('Content-Type', 'application/json')
+      }
     }
 
     return request
@@ -149,17 +156,20 @@ function shouldRetry(statusCode: number) {
   ].includes(statusCode)
 }
 
-/** 请求重试逻辑 */
+/** 请求重试逻辑（使用指数退避策略） */
 async function retryRequest<T>(
   config: ExtendedAxiosRequestConfig,
-  retries: number = MAX_RETRIES
+  retries: number = MAX_RETRIES,
+  baseDelay: number = RETRY_DELAY
 ): Promise<T> {
   try {
     return await request<T>(config)
   } catch (error) {
     if (retries > 0 && error instanceof HttpError && shouldRetry(error.code)) {
-      await delay(RETRY_DELAY)
-      return retryRequest<T>(config, retries - 1)
+      // 指数退避：延迟时间 = 基础延迟 * 2^(总重试次数 - 当前剩余重试次数)
+      const delayTime = baseDelay * Math.pow(2, MAX_RETRIES - retries)
+      await delay(delayTime)
+      return retryRequest<T>(config, retries - 1, baseDelay)
     }
     throw error
   }

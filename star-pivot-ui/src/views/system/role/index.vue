@@ -58,12 +58,14 @@
 <script setup lang="ts">
   import { ButtonMoreItem } from '@/components/core/forms/art-button-more/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetRoleList } from '@/api/system-manage'
+  import { fetchGetRoleList } from '@/api/role/role'
   import ArtButtonMore from '@/components/core/forms/art-button-more/index.vue'
   import RoleSearch from './modules/role-search.vue'
   import RoleEditDialog from './modules/role-edit-dialog.vue'
   import RolePermissionDialog from './modules/role-permission-dialog.vue'
   import { ElTag, ElMessageBox } from 'element-plus'
+  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
 
   defineOptions({ name: 'Role' })
 
@@ -72,9 +74,9 @@
   // 搜索表单
   const searchForm = ref({
     roleName: undefined,
-    roleCode: undefined,
-    description: undefined,
-    enabled: undefined,
+    roleKey: undefined,
+    remark: undefined,
+    status: undefined,
     daterange: undefined
   })
 
@@ -101,8 +103,8 @@
     core: {
       apiFn: fetchGetRoleList,
       apiParams: {
-        current: 1,
-        size: 20
+        pageNum: 1,
+        pageSize: 10
       },
       // 排除 apiParams 中的属性
       excludeParams: ['date range'],
@@ -133,14 +135,11 @@
           label: '角色状态',
           width: 100,
           formatter: (row) => {
-            const statusConfig = row.status
-              ? { type: '0', text: '启用' }
-              : { type: '1', text: '禁用' }
-            return h(
-              ElTag,
-              { type: statusConfig.type as '0' | '1' },
-              () => statusConfig.text
-            )
+            const status = row.status
+            const isEnabled = status === 0 || status === '0'
+            const tagType = isEnabled ? 'success' : 'danger'
+            const text = isEnabled ? '启用' : '禁用'
+            return h(ElTag, { type: tagType }, () => text)
           }
         },
         {
