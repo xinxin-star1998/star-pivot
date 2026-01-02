@@ -6,3 +6,10 @@ export function fetchGetRoleList(params: Api.SystemManage.RoleSearchParams) {
     params
   })
 }
+//新增角色
+export function fetchAddRole(data: Api.SystemManage.RoleListItem) {
+  return request.post<Api.SystemManage.RoleListItem>({
+    url: '/api/sys/role/add',
+    data
+  })
+}

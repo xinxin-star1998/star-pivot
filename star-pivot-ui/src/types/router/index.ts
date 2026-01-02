@@ -77,4 +77,14 @@ export interface AppRouteRecord extends Omit<RouteRecordRaw, 'meta' | 'children'
   meta: RouteMeta
   children?: AppRouteRecord[]
   component?: string | (() => Promise<any>)
+  /** 创建时间 */
+  createTime?: string
+  /** 更新时间 */
+  updateTime?: string
+  /** 菜单状态（0正常 1停用） */
+  status?: string
+  /** 显示顺序 */
+  orderNum?: number
+  /** 备注 */
+  remark?: string
 }

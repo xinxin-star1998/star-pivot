@@ -1,6 +1,7 @@
 package com.star.pivot.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.star.pivot.system.domain.bo.MenuParentVo;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 
@@ -32,5 +33,7 @@ public interface SysMenuService extends IService<SysMenu> {
     boolean updateMenu(MenuDTO menuDTO);
 
     boolean deleteMenu(Long menuId);
+
+    List<SysMenu> getParent();
 }
 

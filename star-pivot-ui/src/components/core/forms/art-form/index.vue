@@ -37,8 +37,9 @@
                 <template v-if="item.type === 'select' && getProps(item)?.options">
                   <ElOption
                     v-for="option in getProps(item).options"
-                    v-bind="option"
                     :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
                   />
                 </template>
 

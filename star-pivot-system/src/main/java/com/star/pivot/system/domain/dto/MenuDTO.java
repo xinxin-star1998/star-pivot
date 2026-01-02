@@ -8,7 +8,7 @@ import lombok.Data;
  * 菜单DTO
  *
  * @author stardust
- * @date 2024-01-01
+ * &#064;date  2024-01-01
  */
 @Data
 public class MenuDTO {

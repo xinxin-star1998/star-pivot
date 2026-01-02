@@ -1,8 +1,10 @@
 package com.star.pivot.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.common.exception.BusinessException;
+import com.star.pivot.system.domain.bo.MenuParentVo;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.RoleMenu;
 import com.star.pivot.system.domain.entity.SysMenu;
@@ -21,7 +23,9 @@ import org.springframework.util.StringUtils;
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -143,6 +147,46 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         }
 
         return this.removeById(menuId);
+    }
+
+    @Override
+    public List<SysMenu> getParent() {
+        String[] type = {"M","C"};
+        List<String> strings = Arrays.asList(type);
+        QueryWrapper<SysMenu> query = new QueryWrapper<>();
+        query.lambda().in(SysMenu::getMenuType,strings).orderByAsc(SysMenu::getOrderNum);
+        List<SysMenu> menuList = this.baseMapper.selectList(query);
+        //组装顶级树
+        SysMenu menu = new SysMenu();
+        menu.setMenuName("顶级菜单");
+        menu.setLabel("顶级菜单");
+        menu.setParentId(-1L);
+        menu.setMenuId(0L);
+        menu.setValue(0L);
+        menuList.add(menu);
+        //组装菜单树
+        List<SysMenu> tree = makeMenuTree(menuList, -1L);
+        return tree;
+    }
+
+    private List<SysMenu> makeMenuTree(List<SysMenu> menuList, long pid) {
+        //存放组装的树数据
+        List<SysMenu> list = new ArrayList<>();
+        //组装树
+        Optional.ofNullable(menuList).orElse(new ArrayList<>())
+                .stream()
+                .filter(item -> item != null && item.getParentId().equals(pid))
+                .forEach(item -> {
+                    SysMenu menu = new SysMenu();
+                    BeanUtils.copyProperties(item, menu);
+                    menu.setLabel(item.getMenuName());
+                    menu.setValue(item.getMenuId());
+                    //查找下级：递归调用；自己调用自己
+                    List<SysMenu> children = makeMenuTree(menuList, item.getMenuId());
+                    menu.setChildren(children);
+                    list.add(menu);
+                });
+        return list;
     }
 
     public boolean checkMenuNameUnique(String menuName, Long parentId, Long menuId) {

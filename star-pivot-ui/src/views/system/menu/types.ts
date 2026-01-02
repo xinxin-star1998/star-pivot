@@ -3,33 +3,24 @@
  */
 
 /**
- * 菜单表单数据类型
+ * 菜单表单数据类型（与后端MenuDTO对应）
  */
 export interface MenuFormData {
-  menuType: 'menu' | 'button'
-  id: number
-  name: string
-  path: string
-  label: string
-  component: string
-  icon: string
-  isEnable: boolean
-  sort: number
-  isMenu: boolean
-  keepAlive: boolean
-  isHide: boolean
-  isHideTab: boolean
-  link: string
-  isIframe: boolean
-  showBadge: boolean
-  showTextBadge: string
-  fixedTab: boolean
-  activePath: string
-  roles: string[]
-  isFullPage: boolean
-  authName: string
-  authLabel: string
-  authIcon: string
-  authSort: number
+  menuId?: number
+  menuName: string
+  parentId?: number
+  orderNum?: number
+  path?: string
+  component?: string
+  query?: string
+  routeName?: string
+  isFrame?: number // 0是外链/iframe, 1否
+  isCache?: number // 0缓存, 1不缓存
+  menuType: 'M' | 'C' | 'F' // M目录 C菜单 F按钮
+  visible?: string // 0显示 1隐藏
+  status?: string // 0正常 1停用
+  perms?: string
+  icon?: string
+  remark?: string
 }
 

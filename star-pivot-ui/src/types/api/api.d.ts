@@ -140,6 +140,11 @@ declare namespace Api {
       roleId: number
       roleName: string
       roleKey: string
+      roleSort: number;
+      dataScope: string;
+      menuCheckStrictly: number;
+      deptCheckStrictly: number;
+
       remark: string
       status: number
       createTime: string

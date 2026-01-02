@@ -1,6 +1,7 @@
 package com.star.pivot.controller;
 
 import com.star.pivot.common.domain.Result;
+import com.star.pivot.system.domain.bo.MenuParentVo;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysUser;
@@ -63,7 +64,7 @@ public class SysMenuController {
     /**
      * 新增菜单
      */
-    @PostMapping
+    @PostMapping("/add")
     public Result<?> add(@Valid @RequestBody MenuDTO menuDTO) {
         boolean success = sysMenuService.insertMenu(menuDTO);
         return success ? Result.success("新增菜单成功") : Result.error("新增菜单失败");
@@ -84,5 +85,22 @@ public class SysMenuController {
     public Result<?> remove(@PathVariable Long menuId) {
         boolean success = sysMenuService.deleteMenu(menuId);
         return success ? Result.success("删除菜单成功") : Result.error("删除菜单失败");
+    }
+    /**
+     * 获取上级菜单树
+     */
+    //上级菜单
+    @GetMapping("/getParent")
+    public Result<List<SysMenu>> getParent(){
+        List<SysMenu> list = sysMenuService.getParent();
+        return Result.success("查询成功",list);
+    }
+    /**
+     * 根据id获取菜单
+     */
+    @GetMapping("/getById/{menuId}")
+    public Result<SysMenu> getById(@PathVariable Long menuId){
+        SysMenu menu = sysMenuService.getById(menuId);
+        return Result.success("查询成功",menu);
     }
 }

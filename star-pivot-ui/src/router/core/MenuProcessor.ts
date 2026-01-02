@@ -90,6 +90,18 @@ export class MenuProcessor {
           }
         }
 
+        // 将 perms 字符串转换为 authList 数组格式
+        // perms 可能是单个权限标识，也可能是逗号分隔的多个权限标识
+        let authList: Array<{ title: string; authMark: string }> | undefined
+        if (menu.perms) {
+          // 如果 perms 是逗号分隔的字符串，拆分成数组
+          const permsArray = menu.perms.split(',').map((p) => p.trim()).filter(Boolean)
+          authList = permsArray.map((perm) => ({
+            title: perm, // 使用权限标识作为标题
+            authMark: perm // 权限标识
+          }))
+        }
+
         const routeRecord: AppRouteRecord = {
           id: menu.menuId,
           name: menu.routeName || undefined,
@@ -105,8 +117,16 @@ export class MenuProcessor {
             // visible: 0显示, 1隐藏 -> isHide: true隐藏, false显示
             isHide: menu.visible === '1',
             // 如果是外链，设置 link
-            link: isExternalLink ? path : undefined
+            link: isExternalLink ? path : undefined,
+            // 将 perms 转换为 authList 格式
+            authList: authList
           },
+          // 保留菜单的额外信息
+          createTime: menu.createTime,
+          updateTime: menu.updateTime,
+          status: menu.status,
+          orderNum: menu.orderNum,
+          remark: menu.remark,
           children: menu.children && menu.children.length > 0
             ? this.convertSysMenuToRouteRecord(menu.children, level + 1)
             : undefined
