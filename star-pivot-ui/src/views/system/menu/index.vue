@@ -57,8 +57,8 @@
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import type { AppRouteRecord } from '@/types/router'
   import MenuDialog from './modules/menu-dialog.vue'
-  import { fetchGetMenuList, fetchGetMenuTree, fetchAddMenu, fetchUpdateMenu, fetchDeleteMenu, type SysMenu } from '@/api/menu/menu'
-  import { ElTag, ElMessageBox, ElMessage } from 'element-plus'
+  import { fetchAddMenu, fetchDeleteMenu, fetchGetMenuTree, fetchUpdateMenu, type SysMenu } from '@/api/menu/menu'
+  import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
   import { MenuProcessor } from '@/router/core/MenuProcessor'
   import type { MenuFormData } from './types'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
@@ -176,8 +176,7 @@
       const convertedList = processor.convertSysMenuToRouteRecord(sysMenuList, 0)
       const filteredList = processor.filterEmptyMenus(convertedList)
       processor.validateMenuPaths(filteredList)
-      const normalizedList = processor.normalizeMenuPaths(filteredList)
-      tableData.value = normalizedList
+      tableData.value = processor.normalizeMenuPaths(filteredList)
     } catch (error) {
       console.error('获取菜单列表失败:', error)
       ElMessage.error('获取菜单列表失败')
@@ -307,12 +306,12 @@
       }
     },
     {
-      prop: 'updateTime',
-      label: '更新时间',
+      prop: 'createTime',
+      label: '创建时间',
       width: 180,
       formatter: (row: AppRouteRecord) => {
-        if (row.updateTime) {
-          return row.updateTime
+        if (row.createTime) {
+          return row.createTime
         }
         if (row.createTime) {
           return row.createTime
