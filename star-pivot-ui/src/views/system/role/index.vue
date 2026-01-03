@@ -159,7 +159,7 @@
                 list: [
                   {
                     key: 'permission',
-                    label: '菜单权限',
+                    label: '分配菜单',
                     icon: 'ri:user-3-line'
                   },
                   {
