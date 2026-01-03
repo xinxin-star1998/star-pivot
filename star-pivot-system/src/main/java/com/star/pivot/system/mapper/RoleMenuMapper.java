@@ -2,7 +2,10 @@ package com.star.pivot.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.star.pivot.system.domain.entity.RoleMenu;
+import com.star.pivot.system.domain.entity.SysMenu;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 /**
  * 角色菜单关联Mapper接口

@@ -30,5 +30,11 @@
         inner join sys_user_role ur on um.role_id = ur.role_id
         where ur.user_id = #{userId}
     </select>
+    <select id="getMenuByRoleId" resultType="com.star.pivot.system.domain.entity.SysMenu">
+        select m.* from sys_menu m
+        inner join sys_role_menu rm on m.menu_id = rm.menu_id
+        where rm.role_id = #{roleId} and m.status = '0' and m.menu_type in ('M', 'C') and m.visible = '0'
+        order by m.order_num
+    </select>
 </mapper>
 

@@ -1,10 +1,10 @@
 package com.star.pivot.config;
 
 import com.star.pivot.common.domain.Result;
+import com.star.pivot.common.exception.BusinessException;
 import com.star.pivot.common.exception.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
@@ -26,7 +26,20 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     /**
-     * 业务异常处理
+     * 业务异常处理（BusinessException）
+     */
+    @ExceptionHandler(BusinessException.class)
+    public Result<Void> handleBusinessException(BusinessException e) {
+        log.error("业务异常：{}", e.getMessage(), e);
+        Integer code = e.getCode();
+        if (code == null) {
+            code = 500;
+        }
+        return Result.error(code, e.getMessage());
+    }
+
+    /**
+     * 业务异常处理（ServiceException）
      */
     @ExceptionHandler(ServiceException.class)
     public Result<Void> handleServiceException(ServiceException e) {

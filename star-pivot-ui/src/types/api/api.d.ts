@@ -144,10 +144,13 @@ declare namespace Api {
       dataScope: string;
       menuCheckStrictly: number;
       deptCheckStrictly: number;
-
       remark: string
       status: number
       createTime: string
+      delFlag: number
+      createBy: string
+      updateTime: string
+      updateBy: string
     }
 
     /** 角色搜索参数 */

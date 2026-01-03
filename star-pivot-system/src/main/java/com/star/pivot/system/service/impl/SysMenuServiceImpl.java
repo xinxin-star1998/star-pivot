@@ -3,6 +3,7 @@ package com.star.pivot.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.star.pivot.common.constants.Constants;
 import com.star.pivot.common.exception.BusinessException;
 import com.star.pivot.system.domain.bo.MenuParentVo;
 import com.star.pivot.system.domain.dto.MenuDTO;
@@ -11,7 +12,9 @@ import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.mapper.RoleMenuMapper;
 import com.star.pivot.system.mapper.SysMenuMapper;
+import com.star.pivot.system.mapper.SysRoleMapper;
 import com.star.pivot.system.service.SysMenuService;
+import com.star.pivot.system.service.SysRoleService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +43,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     private final SysUserService sysUserService;
     private final RoleMenuMapper roleMenuMapper;
+    private final SysMenuMapper sysMenuMapper;
+    private final SysRoleMapper sysRoleMapper;
     @Override
     public List<SysMenu> menuTree() {
         // 查询所有权限
@@ -167,6 +172,18 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         //组装菜单树
         List<SysMenu> tree = makeMenuTree(menuList, -1L);
         return tree;
+    }
+
+    @Override
+    public List<SysMenu> getMenuByRoleId(Long roleId) {
+        SysRole sysRole = sysRoleMapper.selectById(roleId);
+        List<SysMenu> menuList = null;
+        if(sysRole.getRoleKey().equals(Constants.ADMIN_ROLE_KEY)){
+            menuList = sysMenuMapper.selectList(null);
+        }else{
+            menuList =  sysMenuMapper.getMenuByRoleId(roleId);
+        }
+        return menuList;
     }
 
     private List<SysMenu> makeMenuTree(List<SysMenu> menuList, long pid) {

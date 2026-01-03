@@ -2,6 +2,7 @@ package com.star.pivot.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.star.pivot.system.domain.entity.SysMenu;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -13,6 +14,8 @@ import java.util.List;
  */
 public interface SysMenuMapper extends BaseMapper<SysMenu> {
 
-    List<SysMenu> selectPermissionsByUserId(Long userId);
+    List<SysMenu> selectPermissionsByUserId(@Param("userId") Long userId);
+
+    List<SysMenu> getMenuByRoleId(@Param("roleId") Long roleId);
 }
 

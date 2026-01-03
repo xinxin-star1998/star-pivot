@@ -19,14 +19,16 @@ import java.util.List;
  */
 @Slf4j
 @RestController
-@RequestMapping("/system/dept")
+@RequestMapping("/sys/dept")
 @RequiredArgsConstructor
 public class SysDeptController {
 
     private final SysDeptService deptService;
 
     /**
-     * 查询部门树列表
+     * 查询部门树列表接口
+     * 
+     * @return 部门树列表，包含所有部门及其层级关系
      */
     @GetMapping("/tree")
     public Result<List<DeptVO>> tree() {
@@ -35,16 +37,22 @@ public class SysDeptController {
     }
 
     /**
-     * 根据部门ID查询部门详情
+     * 根据部门ID查询部门详情接口
+     * 
+     * @param deptId 部门ID
+     * @return 指定ID的部门详细信息
      */
     @GetMapping("/{deptId}")
-    public Result<DeptVO> getInfo(@PathVariable Long deptId) {
+    public Result<DeptVO> getInfo(@PathVariable("deptId") Long deptId) {
         DeptVO deptVO = deptService.selectDeptById(deptId);
         return Result.success(deptVO);
     }
 
     /**
-     * 新增部门
+     * 新增部门接口
+     * 
+     * @param deptDTO 部门数据传输对象
+     * @return 操作结果，成功或失败的响应
      */
     @PostMapping
     public Result<?> add(@Valid @RequestBody DeptDTO deptDTO) {
@@ -53,7 +61,10 @@ public class SysDeptController {
     }
 
     /**
-     * 修改部门
+     * 修改部门接口
+     * 
+     * @param deptDTO 部门数据传输对象
+     * @return 操作结果，成功或失败的响应
      */
     @PutMapping
     public Result<?> edit(@Valid @RequestBody DeptDTO deptDTO) {
@@ -62,10 +73,13 @@ public class SysDeptController {
     }
 
     /**
-     * 删除部门
+     * 删除部门接口
+     * 
+     * @param deptId 部门ID
+     * @return 操作结果，成功或失败的响应
      */
     @DeleteMapping("/{deptId}")
-    public Result<?> remove(@PathVariable Long deptId) {
+    public Result<?> remove(@PathVariable("deptId") Long deptId) {
         boolean success = deptService.deleteDept(deptId);
         return success ? Result.success("删除部门成功") : Result.error("删除部门失败");
     }

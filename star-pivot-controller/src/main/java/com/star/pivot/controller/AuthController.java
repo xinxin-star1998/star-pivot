@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 认证控制器
@@ -35,7 +34,10 @@ public class AuthController {
     private final SysMenuService sysMenuService;
 
     /**
-     * 用户登录
+     * 用户登录接口
+     * 
+     * @param request 登录请求参数，包含用户名和密码
+     * @return 登录响应结果，包含用户信息和认证令牌
      */
     @PostMapping("/login")
     public Result<LoginResponse> login(@RequestBody LoginRequest request) {
@@ -44,7 +46,9 @@ public class AuthController {
     }
 
     /**
-     * 用户登出
+     * 用户登出接口
+     * 
+     * @return 登出结果响应
      */
     @PostMapping("/logout")
     public Result<Void> logout() {
@@ -66,8 +70,10 @@ public class AuthController {
     }
 
     /**
-     * 获取当前用户信息
-     * 从Spring Security的Authentication中获取用户名，而不是通过请求参数传递
+     * 获取当前用户信息接口
+     * 
+     * @param authentication Spring Security认证对象
+     * @return 当前用户信息，包含用户基本信息、角色列表和权限菜单
      */
     @GetMapping("/userinfo")
     public Result<Map<String, Object>> getCurrentUser(Authentication authentication) {

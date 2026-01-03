@@ -1,4 +1,4 @@
-package com.star.pivot.system.service.impl;
+  package com.star.pivot.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -13,10 +13,7 @@ import com.star.pivot.system.domain.entity.RoleDept;
 import com.star.pivot.system.domain.entity.RoleMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.UserRole;
-import com.star.pivot.system.mapper.RoleDeptMapper;
-import com.star.pivot.system.mapper.RoleMenuMapper;
-import com.star.pivot.system.mapper.SysRoleMapper;
-import com.star.pivot.system.mapper.UserRoleMapper;
+import com.star.pivot.system.mapper.*;
 import com.star.pivot.system.service.SysRoleService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import org.springframework.beans.BeanUtils;
@@ -44,6 +41,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     private RoleDeptMapper roleDeptMapper;
     @Autowired
     private UserRoleMapper userRoleMapper;
+    @Autowired
+    private SysDeptMapper sysDeptMapper;
     @Override
     public PageResponse<SysRole> selectRoleList(RoleQueryDTO roleQueryDTO) {
         PageResponse<SysRole> pageResponse = new PageResponse<>();
@@ -207,6 +206,23 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         role.setUpdateTime(LocalDateTime.now());
 
         return this.updateById(role);
+    }
+
+    /**
+     * 查询角色部门权限  deptIds
+     * @param roleId 角色ID
+     * @return 部门ID列表
+     */
+    @Override
+    public List<Long> selectDeptIdsByRoleId(Long roleId) {
+        SysRole sysRole = this.sysRoleMapper.selectById(roleId);
+        List<Long> deptIds = null;
+        if(sysRole.getRoleKey().equals(Constants.ADMIN_ROLE_KEY)){
+            deptIds = sysDeptMapper.selectAllDeptIds();
+        }else{
+            deptIds = sysDeptMapper.selectDeptIdsByRoleId(roleId);
+        }
+        return deptIds;
     }
 
     /**
