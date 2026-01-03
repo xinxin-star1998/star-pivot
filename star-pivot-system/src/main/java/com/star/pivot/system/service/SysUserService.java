@@ -3,6 +3,7 @@ package com.star.pivot.system.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.system.domain.bo.UserReqBo;
+import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
@@ -29,5 +30,7 @@ public interface SysUserService extends IService<SysUser> {
     List<SysRole> getRolesByUserId(Long userId);
 
     List<SysMenu> getMenuByUserId(Long userId);
+
+    boolean addUser(UserDTO userDTO);
 }
 

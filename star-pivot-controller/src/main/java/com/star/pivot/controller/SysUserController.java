@@ -3,6 +3,7 @@ package com.star.pivot.controller;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.UserReqBo;
+import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.SysUserService;
 import org.springframework.web.bind.annotation.*;
@@ -54,12 +55,12 @@ public class SysUserController {
     /**
      * 新增用户接口
      * 
-     * @param user 用户数据对象
+     * @param userDTO 用户数据对象
      * @return 操作结果，成功或失败的响应
      */
     @PostMapping
-    public Result<?> addUser(@RequestBody SysUser user) {
-        boolean success = sysUserService.save(user);
+    public Result<?> addUser(@RequestBody UserDTO userDTO) {
+        boolean success = sysUserService.addUser(userDTO);
         return success ? Result.success("新增用户成功") : Result.error("新增用户失败");
     }
 

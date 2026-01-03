@@ -159,4 +159,31 @@ declare namespace Api {
     > &
       Api.Common.CommonSearchParams
   }
+
+  namespace post{
+    type PostList = Api.Common.PaginatedResponse<PostListItem>
+    interface PostListItem {
+      postId: number
+      postName: string
+      postCode: string
+      postSort: number
+      status: number
+      remark: string
+      createTime: string
+      updateTime: string
+      createBy: string
+      updateBy: string
+    }
+    type PostSearchParams = Partial<
+      Pick<PostListItem, 'postId' | 'postName' | 'postCode' | 'status'>
+    > &
+      Api.Common.CommonSearchParams
+
+    interface PostBo {
+      postId : number
+      postCode: string
+      postName: string
+    }
+  }
+
 }
