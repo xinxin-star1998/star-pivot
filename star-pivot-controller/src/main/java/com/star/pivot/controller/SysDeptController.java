@@ -15,7 +15,6 @@ import java.util.List;
  * 部门管理控制器
  *
  * @author stardust
- * @date 2024-01-01
  */
 @Slf4j
 @RestController

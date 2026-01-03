@@ -11,7 +11,6 @@ import java.util.List;
  * 部门Mapper接口
  *
  * @author stardust
- * @date 2024-01-01
  */
 @Mapper
 public interface SysDeptMapper extends BaseMapper<SysDept> {

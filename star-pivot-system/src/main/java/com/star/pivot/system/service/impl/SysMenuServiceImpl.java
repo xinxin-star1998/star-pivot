@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.common.constants.Constants;
 import com.star.pivot.common.exception.BusinessException;
-import com.star.pivot.system.domain.bo.MenuParentVo;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.RoleMenu;
 import com.star.pivot.system.domain.entity.SysMenu;
@@ -14,7 +13,6 @@ import com.star.pivot.system.mapper.RoleMenuMapper;
 import com.star.pivot.system.mapper.SysMenuMapper;
 import com.star.pivot.system.mapper.SysRoleMapper;
 import com.star.pivot.system.service.SysMenuService;
-import com.star.pivot.system.service.SysRoleService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 菜单权限表(SysMenu)表服务实现类
@@ -170,8 +166,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         menu.setValue(0L);
         menuList.add(menu);
         //组装菜单树
-        List<SysMenu> tree = makeMenuTree(menuList, -1L);
-        return tree;
+        return makeMenuTree(menuList, -1L);
     }
 
     @Override

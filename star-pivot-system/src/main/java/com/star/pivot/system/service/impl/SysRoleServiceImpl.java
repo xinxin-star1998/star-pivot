@@ -216,7 +216,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Override
     public List<Long> selectDeptIdsByRoleId(Long roleId) {
         SysRole sysRole = this.sysRoleMapper.selectById(roleId);
-        List<Long> deptIds = null;
+        List<Long> deptIds;
         if(sysRole.getRoleKey().equals(Constants.ADMIN_ROLE_KEY)){
             deptIds = sysDeptMapper.selectAllDeptIds();
         }else{

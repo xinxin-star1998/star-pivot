@@ -1,7 +1,6 @@
 package com.star.pivot.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.star.pivot.system.domain.bo.MenuParentVo;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 

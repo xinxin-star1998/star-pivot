@@ -1,7 +1,6 @@
 package com.star.pivot.controller;
 
 import com.star.pivot.common.domain.Result;
-import com.star.pivot.system.domain.bo.MenuParentVo;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysUser;
@@ -9,8 +8,6 @@ import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
