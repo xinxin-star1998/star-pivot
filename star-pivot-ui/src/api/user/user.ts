@@ -22,9 +22,9 @@ export function fetchGetUserById(userId: number) {
 /**
  * 新增用户
  */
-export function fetchAddUser(data: Api.SystemManage.UserListItem) {
+export function fetchAddUser(data: Api.SystemManage.UserBo) {
   return request.post({
-    url: '/api/sys/user',
+    url: '/api/sys/user/add',
     data
   })
 }
@@ -33,8 +33,8 @@ export function fetchAddUser(data: Api.SystemManage.UserListItem) {
  * 修改用户
  */
 export function fetchUpdateUser(data: Api.SystemManage.UserListItem) {
-  return request.put({
-    url: '/api/sys/user',
+  return request.post({
+    url: '/api/sys/user/update',
     data
   })
 }
@@ -45,5 +45,18 @@ export function fetchUpdateUser(data: Api.SystemManage.UserListItem) {
 export function fetchDeleteUser(userIds: number[]) {
   return request.del({
     url: `/api/sys/user/${userIds}`
+  })
+}
+
+/**
+ * 修改用户状态
+ */
+export function fetchUpdateUserStatus(userId: number, status: number) {
+  return request.post({
+    url: '/api/sys/user/changeStatus',
+    data: {
+      userId,
+      status
+    }
   })
 }

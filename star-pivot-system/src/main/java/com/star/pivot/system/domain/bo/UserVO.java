@@ -1,0 +1,112 @@
+package com.star.pivot.system.domain.bo;
+
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * 用户VO
+ *
+ * @author stardust
+ * @date 2024-01-01
+ */
+@Data
+public class UserVO {
+
+    /**
+     * 用户ID
+     */
+    private Long userId;
+
+    /**
+     * 部门ID
+     */
+    private Long deptId;
+
+    /**
+     * 部门名称
+     */
+    private String deptName;
+
+    /**
+     * 用户账号
+     */
+    private String userName;
+
+    /**
+     * 用户昵称
+     */
+    private String nickName;
+
+    /**
+     * 用户类型
+     */
+    private String userType;
+
+    /**
+     * 用户邮箱
+     */
+    private String email;
+
+    /**
+     * 手机号码
+     */
+    private String phonenumber;
+
+    /**
+     * 用户性别（0男 1女 2未知）
+     */
+    private String sex;
+
+    /**
+     * 头像地址
+     */
+    private String avatar;
+
+    /**
+     * 账号状态（0正常 1停用）
+     */
+    private String status;
+
+    /**
+     * 最后登录IP
+     */
+    private String loginIp;
+
+    /**
+     * 最后登录时间
+     */
+    private LocalDateTime loginDate;
+
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createTime;
+
+    /**
+     * 备注
+     */
+    private String remark;
+
+    /**
+     * 角色ID列表
+     */
+    private List<Long> roleIds;
+
+    /**
+     * 角色名称列表
+     */
+    private List<String> roleNames;
+
+    /**
+     * 岗位ID列表
+     */
+    private List<Long> postIds;
+
+    /**
+     * 岗位名称列表
+     */
+    private List<String> postNames;
+}
+

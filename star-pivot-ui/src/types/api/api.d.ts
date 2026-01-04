@@ -122,6 +122,21 @@ declare namespace Api {
       delFlag?: number
       remark?: string
     }
+    interface UserBo{
+      userId: number,
+      deptId: number,
+      userName: string,
+      nickName: string,
+      email: string,
+      avatar: string,
+      password: string,
+      phonenumber: string,
+      status: string,
+      sex: string,
+      remark: string,
+      roleIds: string[],
+      postIds: string[]
+    }
 
     /** 用户搜索参数 */
     type UserSearchParams = Partial<

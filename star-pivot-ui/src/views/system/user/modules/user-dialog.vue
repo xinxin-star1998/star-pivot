@@ -9,7 +9,7 @@
       <ElFormItem label="用户名" prop="username">
         <ElInput v-model="formData.userName" placeholder="请输入用户名" />
       </ElFormItem>
-      <ElFormItem label="用户密码" prop="username">
+      <ElFormItem label="用户密码" prop="username" v-if="dialogType === 'add'">
         <ElInput v-model="formData.password" placeholder="请输入用户名" />
       </ElFormItem>
       <ElFormItem label="用户昵称" prop="nickName">
@@ -50,7 +50,7 @@
           <ElOption
             v-for="post in postList"
             :key="post.postId"
-            :value="post.postId"
+            :value="post.postId?.toString()"
             :label="post.postName"
           />
         </ElSelect>
@@ -65,6 +65,9 @@
           check-strictly
           :render-after-expand="false"
         />
+      </ElFormItem>
+      <ElFormItem label="备注" prop="remark">
+        <ElInput type="textarea" v-model="formData.remark" placeholder="请输入备注" />
       </ElFormItem>
     </ElForm>
     <template #footer>
@@ -83,6 +86,7 @@
   import { fetchGetRoleSelect } from '@/api/role/role'
   import { fetchGetPostSelect } from '@/api/post/post'
   import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
+  import { fetchAddUser, fetchUpdateUser, fetchGetUserById } from '@/api/user/user'
 
   // 角色列表项类型（扩展 RoleListItem，添加 roleCode 字段）
   type RoleOption = Api.SystemManage.RoleListItem & { roleCode: string }
@@ -90,7 +94,7 @@
   interface Props {
     visible: boolean
     type: string
-    userData?: Partial<Api.SystemManage.UserListItem>
+    userData?: Partial<Api.SystemManage.UserBo>
   }
 
   interface Emits {
@@ -126,7 +130,8 @@
 
   // 表单数据
   const formData = reactive({
-    deptId: null,
+    userId: 0,
+    deptId: 0,
     userName: '',
     nickName: '',
     email: '',
@@ -158,28 +163,88 @@
    * 初始化表单数据
    * 根据对话框类型（新增/编辑）填充表单
    */
-  const initFormData = () => {
+  const initFormData = async () => {
     const isEdit = props.type === 'edit' && props.userData
     const row = props.userData
 
-    Object.assign(formData, {
-      deptId: isEdit && row ? row.deptId || null : null,
-      userName: isEdit && row ? row.userName || '' : '',
-      nickName: isEdit && row ? row.nickName || '' : '',
-      email: isEdit && row ? row.email || '' : '',
-      phonenumber: isEdit && row ? row.phonenumber || '' : '',
-      sex: isEdit && row ? row.sex || '0' : '0',
-      status: isEdit && row ? row.status || '0' : '0',
-      password: '',
-      roleIds:
-        isEdit && row && Array.isArray(row.userRoles)
-          ? row.userRoles.map((role: any) => role.roleId?.toString() || '')
-          : [],
-      postIds:
-        isEdit && row && (row as any).postIds && Array.isArray((row as any).postIds)
-          ? (row as any).postIds
-          : []
-    })
+    if (isEdit && row?.userId) {
+      // 编辑模式：获取完整的用户详情（包含 roleIds 和 postIds）
+      try {
+        const userDetail = await fetchGetUserById(row.userId)
+        console.log('用户详情数据:', userDetail)
+        if (userDetail) {
+          // 处理角色ID：可能是 roleIds 数组，也可能是 userRoles 数组
+          let roleIdsArray: any[] = []
+          if (Array.isArray((userDetail as any).roleIds)) {
+            roleIdsArray = (userDetail as any).roleIds
+          } else if (Array.isArray((userDetail as any).userRoles)) {
+            // 如果后端返回的是 userRoles，提取角色ID
+            roleIdsArray = (userDetail as any).userRoles.map((role: any) =>
+              typeof role === 'object' ? role.roleId : role
+            )
+          }
+
+          // 转换为字符串数组，与 roleCode 格式一致
+          const roleIds = roleIdsArray.map((id: any) => id?.toString() || '').filter(Boolean)
+          console.log('处理后的角色ID:', roleIds)
+
+          // 处理岗位ID
+          const postIds = Array.isArray((userDetail as any).postIds)
+            ? (userDetail as any).postIds.map((id: any) => id?.toString() || '').filter(Boolean)
+            : []
+
+          Object.assign(formData, {
+            userId: userDetail.userId || 0,
+            deptId: userDetail.deptId || 0,
+            userName: userDetail.userName || '',
+            nickName: userDetail.nickName || '',
+            email: userDetail.email || '',
+            phonenumber: userDetail.phonenumber || '',
+            sex: userDetail.sex || '0',
+            status: userDetail.status || '0',
+            password: userDetail.password || '',
+            roleIds,
+            postIds,
+            remark: userDetail.remark || ''
+          })
+
+          console.log('表单数据已设置，roleIds:', formData.roleIds)
+        }
+      } catch (error) {
+        console.error('获取用户详情失败:', error)
+        ElMessage.error('获取用户详情失败')
+        // 如果获取详情失败，使用列表数据作为回退
+        Object.assign(formData, {
+          userId: row.userId || 0,
+          deptId: row.deptId || 0,
+          userName: row.userName || '',
+          nickName: row.nickName || '',
+          email: row.email || '',
+          phonenumber: row.phonenumber || '',
+          sex: row.sex || '0',
+          status: row.status || '0',
+          password: '',
+          remark: row.remark || '',
+          roleIds: [],
+          postIds: []
+        })
+      }
+    } else {
+      // 新增模式：重置表单
+      Object.assign(formData, {
+        userId: 0,
+        deptId: 0,
+        userName: '',
+        nickName: '',
+        email: '',
+        phonenumber: '',
+        sex: '0',
+        status: '0',
+        password: '',
+        roleIds: [],
+        postIds: []
+      })
+    }
   }
 
   /**
@@ -188,12 +253,16 @@
    */
   watch(
     () => [props.visible, props.type, props.userData],
-    ([visible]) => {
+    async ([visible]) => {
       if (visible) {
-        initFormData()
-        getRoleList() // 获取角色列表
-        getPostList() // 获取岗位列表
-        getDeptTree() // 获取部门树
+        // 先获取下拉数据
+        await Promise.all([
+          getRoleList(), // 获取角色列表
+          getPostList(), // 获取岗位列表
+          getDeptTree() // 获取部门树
+        ])
+        // 再初始化表单数据（编辑模式会获取用户详情）
+        await initFormData()
         nextTick(() => {
           formRef.value?.clearValidate()
         })
@@ -209,11 +278,21 @@
   const handleSubmit = async () => {
     if (!formRef.value) return
 
-    await formRef.value.validate((valid) => {
+    await formRef.value.validate(async (valid) => {
       if (valid) {
-        ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
-        dialogVisible.value = false
-        emit('submit')
+        try {
+          if (dialogType.value === 'add') {
+            await fetchAddUser(formData)
+          } else {
+            await fetchUpdateUser(formData)
+          }
+          ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
+          dialogVisible.value = false
+          emit('submit')
+        } catch (error) {
+          console.error('提交失败:', error)
+          ElMessage.error(dialogType.value === 'add' ? '添加失败' : '更新失败')
+        }
       }
     })
   }

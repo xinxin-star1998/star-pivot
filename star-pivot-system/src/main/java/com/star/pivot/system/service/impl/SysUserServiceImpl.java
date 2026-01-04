@@ -9,11 +9,10 @@ import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.exception.BusinessException;
 import com.star.pivot.common.utils.SecurityUtils;
 import com.star.pivot.system.domain.bo.UserReqBo;
+import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.*;
-import com.star.pivot.system.mapper.SysUserMapper;
-import com.star.pivot.system.mapper.UserPostMapper;
-import com.star.pivot.system.mapper.UserRoleMapper;
+import com.star.pivot.system.mapper.*;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import org.springframework.beans.BeanUtils;
@@ -23,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户信息表(SysUser)表服务实现类
@@ -39,6 +40,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private UserRoleMapper userRoleMapper;
     @Autowired
     private UserPostMapper userPostMapper;
+    @Autowired
+    private SysDeptMapper deptMapper;
+    @Autowired
+    private PostMapper postMapper;
+    @Autowired
+    private SysRoleMapper sysRoleMapper;
     /**
      * 用户分页查询
      *
@@ -46,14 +53,19 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      * @return 分页结果
      */
     @Override
-    public PageResponse<SysUser> pageList(UserReqBo userReqBo) {
-        PageResponse<SysUser> pageResponse = new PageResponse<>();
+    public PageResponse<UserVO> pageList(UserReqBo userReqBo) {
+        PageResponse<UserVO> pageResponse = new PageResponse<>();
         // 分页查询
         Page<SysUser> page = new Page<>(userReqBo.getPageNum(), userReqBo.getPageSize());
         IPage<SysUser> pageList = sysUserMapper.selectPageList(page,userReqBo);
+        // 转换为VO
+//        IPage<UserVO> voPage = new Page<>(pageList.getCurrent(), pageList.getSize(), pageList.getTotal());
+        List<UserVO> voList = pageList.getRecords().stream()
+                .map(this::convertToVO)
+                .toList();
         // 转换为分页结果
         pageResponse.setTotal(pageList.getTotal());
-        pageResponse.setRows(pageList.getRecords());
+        pageResponse.setRows(voList);
         pageResponse.setPageNum(pageList.getCurrent());
         pageResponse.setPageSize(pageList.getSize());
         pageResponse.setPageCount(pageList.getPages());
@@ -113,6 +125,117 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
         return success;
     }
+
+    @Override
+    public UserVO selectByUserId(Long userId) {
+        UserVO vo = new UserVO();
+        //查询用户信息
+        SysUser user = this.getById(userId);
+        vo = convertToVO(user);
+        return vo;
+    }
+    /*
+    * 修改用户信息
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateUser(UserDTO userDTO) {
+        SysUser user = this.getById(userDTO.getUserId());
+        if (user == null || "2".equals(user.getDelFlag())) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 检查用户名是否已被其他用户使用
+        SysUser existUser = getUserByUsername(userDTO.getUserName());
+        if (existUser != null && !existUser.getUserId().equals(userDTO.getUserId())) {
+            throw new BusinessException("用户名已被使用");
+        }
+
+        // 更新用户信息
+        BeanUtils.copyProperties(userDTO, user, "password", "userId");
+        String currentUser = SecurityContextUtils.getUsername();
+        user.setUpdateBy(currentUser);
+        user.setUpdateTime(LocalDateTime.now());
+
+        boolean success = this.updateById(user);
+
+        if (success) {
+            // 更新角色关联
+            if (userDTO.getRoleIds() != null) {
+                // 删除旧的角色关联
+                LambdaQueryWrapper<UserRole> roleWrapper = new LambdaQueryWrapper<>();
+                roleWrapper.eq(UserRole::getUserId, userDTO.getUserId());
+                userRoleMapper.delete(roleWrapper);
+
+                // 添加新的角色关联
+                if (!userDTO.getRoleIds().isEmpty()) {
+                    insertUserRoles(userDTO.getUserId(), userDTO.getRoleIds());
+                }
+            }
+
+            // 更新岗位关联
+            if (userDTO.getPostIds() != null) {
+                // 删除旧的岗位关联
+                LambdaQueryWrapper<UserPost> postWrapper = new LambdaQueryWrapper<>();
+                postWrapper.eq(UserPost::getUserId, userDTO.getUserId());
+                userPostMapper.delete(postWrapper);
+
+                // 添加新的岗位关联
+                if (!userDTO.getPostIds().isEmpty()) {
+                    insertUserPosts(userDTO.getUserId(), userDTO.getPostIds());
+                }
+            }
+        }
+
+        return success;
+    }
+
+    @Override
+    public boolean changeUserStatus(Long userId, String status) {
+        SysUser user = this.getById(userId);
+        if (user == null || "2".equals(user.getDelFlag())) {
+            throw new BusinessException("用户不存在");
+        }
+
+        user.setStatus(status);
+        String currentUser = SecurityContextUtils.getUsername();
+        user.setUpdateBy(currentUser);
+        user.setUpdateTime(LocalDateTime.now());
+
+        return this.updateById(user);
+    }
+
+    @Override
+    public boolean resetUserPassword(Long userId, String password) {
+        SysUser user = this.getById(userId);
+        if (user == null || "2".equals(user.getDelFlag())) {
+            throw new BusinessException("用户不存在");
+        }
+
+        user.setPassword(SecurityUtils.encryptPassword(password));
+        user.setPwdUpdateDate(LocalDateTime.now());
+        String currentUser = SecurityContextUtils.getUsername();
+        user.setUpdateBy(currentUser);
+        user.setUpdateTime(LocalDateTime.now());
+
+        return this.updateById(user);
+    }
+
+    @Override
+    public boolean deleteUserByIds(Long[] userIds) {
+        for (Long userId : userIds) {
+            SysUser user = this.getById(userId);
+            if (user != null && !"2".equals(user.getDelFlag())) {
+                user.setDelFlag("2");
+                String currentUser = SecurityContextUtils.getUsername();
+                user.setUpdateBy(currentUser);
+                user.setUpdateTime(LocalDateTime.now());
+                this.updateById(user);
+            }
+        }
+        return true;
+    }
+
     /**
      * 插入用户角色关联
      */
@@ -135,6 +258,48 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             userPost.setPostId(postId);
             userPostMapper.insert(userPost);
         }
+    }
+    /**
+     * 转换为VO
+     */
+    private UserVO convertToVO(SysUser user) {
+        UserVO vo = new UserVO();
+        BeanUtils.copyProperties(user, vo);
+
+        // 查询部门名称
+        if (user.getDeptId() != null) {
+            SysDept dept = deptMapper.selectById(user.getDeptId());
+            if (dept != null) {
+                vo.setDeptName(dept.getDeptName());
+            }
+        }
+
+        // 查询角色信息
+        List<SysRole> roles = sysRoleMapper.selectRoleListByUserId(user.getUserId());
+        if (roles != null && !roles.isEmpty()) {
+            vo.setRoleIds(roles.stream().map(SysRole::getRoleId).collect(Collectors.toList()));
+            vo.setRoleNames(roles.stream().map(SysRole::getRoleName).collect(Collectors.toList()));
+        }
+
+        // 查询岗位信息
+        LambdaQueryWrapper<UserPost> postWrapper = new LambdaQueryWrapper<>();
+        postWrapper.eq(UserPost::getUserId, user.getUserId());
+        List<UserPost> userPosts = userPostMapper.selectList(postWrapper);
+        if (userPosts != null && !userPosts.isEmpty()) {
+            List<Long> postIds = userPosts.stream().map(UserPost::getPostId).collect(Collectors.toList());
+            vo.setPostIds(postIds);
+
+            List<String> postNames = new ArrayList<>();
+            for (Long postId : postIds) {
+                SysPost post = postMapper.selectById(postId);
+                if (post != null) {
+                    postNames.add(post.getPostName());
+                }
+            }
+            vo.setPostNames(postNames);
+        }
+
+        return vo;
     }
 }
 
