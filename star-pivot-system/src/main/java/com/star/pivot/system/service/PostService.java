@@ -2,6 +2,7 @@ package com.star.pivot.system.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.system.domain.bo.PostBo;
 import com.star.pivot.system.domain.bo.PostVO;
 import com.star.pivot.system.domain.dto.PostDTO;
@@ -24,7 +25,7 @@ public interface PostService extends IService<SysPost> {
      * @param queryDTO 查询条件
      * @return 岗位分页列表
      */
-    IPage<PostVO> selectPostPage(PostQueryDTO queryDTO);
+    PageResponse<PostVO> selectPostPage(PostQueryDTO queryDTO);
 
     /**
      * 根据岗位ID查询岗位详情
@@ -68,5 +69,7 @@ public interface PostService extends IService<SysPost> {
     boolean checkPostCodeUnique(String postCode, Long postId);
 
     List<PostBo> selectPost();
+
+    List<PostVO> all();
 }
 

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.exception.BusinessException;
 import com.star.pivot.system.domain.bo.PostBo;
 import com.star.pivot.system.domain.bo.PostVO;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,7 +42,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     private final UserPostMapper userPostMapper;
 
     @Override
-    public IPage<PostVO> selectPostPage(PostQueryDTO queryDTO) {
+    public PageResponse<PostVO> selectPostPage(PostQueryDTO queryDTO) {
         Page<SysPost> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         LambdaQueryWrapper<SysPost> wrapper = new LambdaQueryWrapper<>();
         // 构建查询条件
@@ -55,7 +57,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
         voPage.setRecords(voList);
-        return voPage;
+        PageResponse<PostVO> pageResponse = new PageResponse<>();
+        pageResponse.setTotal(voPage.getTotal());
+        pageResponse.setRows(voPage.getRecords());
+        pageResponse.setPageNum(Long.valueOf(queryDTO.getPageNum()));
+        pageResponse.setPageSize(Long.valueOf(queryDTO.getPageSize()));
+        return pageResponse;
     }
 
     @Override
@@ -154,6 +161,14 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
                     return postVO;
                 })
                 .toList();
+        return postVOList;
+    }
+
+    @Override
+    public List<PostVO> all() {
+        List<PostVO> postVOList = new ArrayList<>();
+        List<SysPost> list= postMapper.selectList(null);
+        BeanUtils.copyProperties(list,postVOList);
         return postVOList;
     }
 

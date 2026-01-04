@@ -38,7 +38,11 @@
             </ElCheckbox>
           </div>
           <!-- 树结构容器 -->
-          <div class="permission-tree-container" ref="menuTreeContainerRef">
+          <div 
+            class="permission-tree-container" 
+            :class="isDark ? 'dark-bg' : 'light-bg'"
+            ref="menuTreeContainerRef"
+          >
             <ElTree
               ref="menuTreeRef"
               :data="menuTreeData"
@@ -74,7 +78,11 @@
             </ElCheckbox>
           </div>
           <!-- 树结构容器 -->
-          <div class="permission-tree-container" ref="deptTreeContainerRef">
+          <div 
+            class="permission-tree-container" 
+            :class="isDark ? 'dark-bg' : 'light-bg'"
+            ref="deptTreeContainerRef"
+          >
             <ElTree
               ref="deptTreeRef"
               :data="deptTreeData"
@@ -107,6 +115,7 @@
   import { fetchAddRole, fetchUpdateRole } from '@/api/role/role'
   import { fetchGetMenuTree, fetchGetRoleMenus, type SysMenu } from '@/api/menu/menu'
   import { fetchGetDeptTree, fetchGetRoleDeptIds, type SysDept } from '@/api/dept/dept'
+  import { useSettingStore } from '@/store/modules/setting'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -134,6 +143,10 @@
   const deptTreeRef = ref()
   const menuTreeContainerRef = ref<HTMLElement>()
   const deptTreeContainerRef = ref<HTMLElement>()
+
+  // 主题状态
+  const settingStore = useSettingStore()
+  const { isDark } = storeToRefs(settingStore)
 
   // 菜单树数据
   const menuTreeData = ref<SysMenu[]>([])
@@ -746,18 +759,27 @@
       margin-bottom: 12px;
       padding-bottom: 12px;
       border-bottom: 1px solid var(--el-border-color-lighter);
+      color: var(--el-text-color-primary);
+      transition: color 0.3s ease;
     }
 
     .permission-tree-container {
-      background: #fff;
       border: 1px solid var(--el-border-color-lighter);
       border-radius: 4px;
       padding: 12px;
       min-height: 100px;
       max-height: 600px;
       overflow: auto;
-      transition: height 0.3s ease;
+      transition: height 0.3s ease, background-color 0.3s ease;
       height: auto;
+
+      &.light-bg {
+        background: #fff;
+      }
+
+      &.dark-bg {
+        background: var(--el-bg-color-page);
+      }
     }
   }
 </style>

@@ -21,7 +21,11 @@
             </ElCheckbox>
           </div>
           <!-- 树结构容器 -->
-          <div class="permission-tree-container" ref="treeContainerRef">
+          <div 
+            class="permission-tree-container" 
+            :class="isDark ? 'dark-bg' : 'light-bg'"
+            ref="treeContainerRef"
+          >
             <div v-loading="loading" class="tree-wrapper">
               <ElTree
                 ref="treeRef"
@@ -56,7 +60,11 @@
             </ElCheckbox>
           </div>
           <!-- 树结构容器 -->
-          <div class="permission-tree-container" ref="deptTreeContainerRef">
+          <div 
+            class="permission-tree-container" 
+            :class="isDark ? 'dark-bg' : 'light-bg'"
+            ref="deptTreeContainerRef"
+          >
             <div v-loading="deptLoading" class="tree-wrapper">
               <ElTree
                 ref="deptTreeRef"
@@ -91,6 +99,7 @@
   import { fetchGetMenuTree, fetchGetRoleMenus, type SysMenu } from '@/api/menu/menu'
   import { fetchGetDeptTree, fetchGetRoleDeptIds, type SysDept } from '@/api/dept/dept'
   import { fetchUpdateRole } from '@/api/role/role'
+  import { useSettingStore } from '@/store/modules/setting'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -110,6 +119,10 @@
   })
 
   const emit = defineEmits<Emits>()
+
+  // 主题状态
+  const settingStore = useSettingStore()
+  const { isDark } = storeToRefs(settingStore)
 
   // 标签页
   const activeTab = ref('menu')
@@ -654,18 +667,27 @@
       margin-bottom: 16px;
       padding-bottom: 12px;
       border-bottom: 1px solid var(--el-border-color-lighter);
+      color: var(--el-text-color-primary);
+      transition: color 0.3s ease;
     }
 
     .permission-tree-container {
-      background: #fff;
       border: 1px solid var(--el-border-color-lighter);
       border-radius: 4px;
       padding: 12px;
       min-height: 100px;
       max-height: 600px;
       overflow: auto;
-      transition: height 0.3s ease;
+      transition: height 0.3s ease, background-color 0.3s ease;
       height: auto;
+
+      &.light-bg {
+        background: #fff;
+      }
+
+      &.dark-bg {
+        background: var(--el-bg-color-page);
+      }
 
       .tree-wrapper {
         min-height: 100px;

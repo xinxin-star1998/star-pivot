@@ -1,6 +1,7 @@
 package com.star.pivot.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.PostBo;
 import com.star.pivot.system.domain.bo.PostVO;
@@ -36,8 +37,8 @@ public class PostController {
      * @return 分页的岗位列表结果
      */
     @PostMapping("/list")
-    public Result<IPage<PostVO>> list(@RequestBody PostQueryDTO queryDTO) {
-        IPage<PostVO> page = postService.selectPostPage(queryDTO);
+    public Result<PageResponse<PostVO>> list(@RequestBody PostQueryDTO queryDTO) {
+        PageResponse<PostVO> page = postService.selectPostPage(queryDTO);
         return Result.success(page);
     }
     /**
@@ -54,12 +55,9 @@ public class PostController {
      * @return 所有岗位列表
      */
     @GetMapping("/all")
-    public Result<java.util.List<PostVO>> all() {
-        PostQueryDTO queryDTO = new PostQueryDTO();
-        queryDTO.setPageNum(1);
-        queryDTO.setPageSize(1000); // 设置一个较大的值
-        IPage<PostVO> page = postService.selectPostPage(queryDTO);
-        return Result.success(page.getRecords());
+    public Result<List<PostVO>> all() {
+        List<PostVO> page = postService.all();
+        return Result.success(page);
     }
 
     /**

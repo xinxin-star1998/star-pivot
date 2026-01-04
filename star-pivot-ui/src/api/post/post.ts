@@ -20,9 +20,9 @@ export interface SysPost {
  * 获取岗位列表（分页）
  */
 export function fetchGetPostList(params: Api.post.PostSearchParams) {
-  return request.get<Api.post.PostList>({
+  return request.post<Api.post.PostList>({
     url: '/api/sys/post/list',
-    params
+    data: params
   })
 }
 

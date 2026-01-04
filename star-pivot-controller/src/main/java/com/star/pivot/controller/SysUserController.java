@@ -100,7 +100,7 @@ public class SysUserController {
     /**
      * 重置密码
      */
-    @PutMapping("/resetPwd")
+    @PostMapping("/resetPwd")
     public Result<?> resetPwd(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
         boolean success = sysUserService.resetUserPassword(
                 resetPasswordDTO.getUserId(),

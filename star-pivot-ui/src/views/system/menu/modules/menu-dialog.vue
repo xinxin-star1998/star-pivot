@@ -27,60 +27,19 @@
         </ElRadioGroup>
       </template>
       <template #icon>
-        <div class="icon-selector">
+        <ArtIconPicker ref="iconPickerRef" v-model="form.icon">
           <ElInput
             v-model="form.icon"
             placeholder="如：ri:user-line"
             clearable
-            style="flex: 1"
+            style="width: 100%"
+            @focus="handleIconInputFocus"
           >
             <template #prefix>
               <Icon v-if="form.icon" :icon="form.icon" style="font-size: 18px" />
             </template>
           </ElInput>
-          <ElPopover
-            placement="bottom-start"
-            :width="400"
-            trigger="click"
-            popper-class="icon-picker-popover"
-          >
-            <template #reference>
-              <ElButton type="primary" :icon="Search">选择图标</ElButton>
-            </template>
-            <div class="icon-picker">
-              <ElInput
-                v-model="iconSearchText"
-                placeholder="搜索图标（支持在线搜索，如：user、home、settings）..."
-                clearable
-                style="margin-bottom: 12px"
-                @input="handleIconSearch"
-              >
-                <template #prefix>
-                  <ElIcon><Search /></ElIcon>
-                </template>
-              </ElInput>
-              <div v-if="isSearchingIcons" class="icon-loading">
-                <ElIcon class="is-loading"><Loading /></ElIcon>
-                <span style="margin-left: 8px">搜索中...</span>
-              </div>
-              <div v-if="!isSearchingIcons && filteredIcons.length === 0 && iconSearchText" class="icon-empty">
-                未找到相关图标
-              </div>
-              <div class="icon-list">
-                <div
-                  v-for="iconItem in filteredIcons"
-                  :key="iconItem"
-                  class="icon-item"
-                  :class="{ active: form.icon === iconItem }"
-                  @click="selectIcon(iconItem)"
-                >
-                  <Icon :icon="iconItem" style="font-size: 20px" />
-                  <span class="icon-name">{{ iconItem }}</span>
-                </div>
-              </div>
-            </div>
-          </ElPopover>
-        </div>
+        </ArtIconPicker>
       </template>
     </ArtForm>
 
@@ -95,13 +54,14 @@
 
 <script setup lang="ts">
   import type { FormRules } from 'element-plus'
-  import { ElIcon, ElTooltip, ElMessage, ElPopover, ElInput, ElButton } from 'element-plus'
-  import { QuestionFilled, Search, Loading } from '@element-plus/icons-vue'
+  import { ElIcon, ElTooltip, ElMessage, ElInput } from 'element-plus'
+  import { QuestionFilled } from '@element-plus/icons-vue'
   import { Icon } from '@iconify/vue'
   import { formatMenuTitle } from '@/utils/router'
   import type { AppRouteRecord } from '@/types/router'
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
+  import ArtIconPicker from '@/components/core/base/art-icon-picker/index.vue'
   import { useWindowSize } from '@vueuse/core'
   import type { MenuFormData } from '../types'
   import { fetchGetParentMenu, type SysMenu } from '@/api/menu/menu'
@@ -152,6 +112,12 @@
 
   const formRef = ref()
   const isEdit = ref(false)
+  const iconPickerRef = ref()
+
+  // 处理图标输入框聚焦
+  const handleIconInputFocus = () => {
+    iconPickerRef.value?.open()
+  }
   // 树形选择器的数据结构
   interface TreeNode {
     label: string
@@ -159,147 +125,6 @@
     children?: TreeNode[]
   }
   const parentMenuOptions = ref<TreeNode[]>([])
-  const iconSearchText = ref('')
-  const isSearchingIcons = ref(false)
-  const onlineSearchResults = ref<string[]>([])
-
-  // 常用图标列表（精简版）
-  const commonIcons = [
-    'ri:home-line',
-    'ri:user-line',
-    'ri:user-3-line',
-    'ri:settings-line',
-    'ri:menu-line',
-    'ri:file-list-line',
-    'ri:folder-line',
-    'ri:folder-open-line',
-    'ri:search-line',
-    'ri:add-line',
-    'ri:edit-line',
-    'ri:delete-line',
-    'ri:save-line',
-    'ri:close-line',
-    'ri:check-line',
-    'ri:arrow-right-line',
-    'ri:arrow-left-line',
-    'ri:arrow-up-line',
-    'ri:arrow-down-line',
-    'ri:refresh-line',
-    'ri:download-line',
-    'ri:upload-line',
-    'ri:eye-line',
-    'ri:eye-off-line',
-    'ri:lock-line',
-    'ri:unlock-line',
-    'ri:key-line',
-    'ri:shield-line',
-    'ri:shield-check-line',
-    'ri:notification-line',
-    'ri:bell-line',
-    'ri:mail-line',
-    'ri:message-line',
-    'ri:chat-line',
-    'ri:calendar-line',
-    'ri:time-line',
-    'ri:chart-line',
-    'ri:bar-chart-line',
-    'ri:pie-chart-line',
-    'ri:database-line',
-    'ri:server-line',
-    'ri:computer-line',
-    'ri:phone-line',
-    'ri:global-line',
-    'ri:link-line',
-    'ri:image-line',
-    'ri:file-line',
-    'ri:file-text-line',
-    'ri:file-edit-line',
-    'ri:folder-add-line',
-    'ri:star-line',
-    'ri:heart-line',
-    'ri:share-line',
-    'ri:grid-line',
-    'ri:table-line',
-    'ri:layout-line',
-    'ri:apps-line',
-    'ri:filter-line',
-    'ri:question-line',
-    'ri:information-line',
-    'ri:error-warning-line',
-    'ri:check-circle-line',
-    'ri:close-circle-line',
-    'ri:forbid-line'
-  ]
-
-  // 从 Iconify 在线搜索图标
-  const searchIconsOnline = async (keyword: string): Promise<void> => {
-    if (!keyword || keyword.trim().length < 2) {
-      onlineSearchResults.value = []
-      return
-    }
-
-    isSearchingIcons.value = true
-    try {
-      // 使用 Iconify 的搜索 API
-      const response = await fetch(
-        `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=50`
-      )
-      const data = await response.json()
-      
-      if (data.icons && Array.isArray(data.icons)) {
-        onlineSearchResults.value = data.icons
-      } else {
-        onlineSearchResults.value = []
-      }
-    } catch (error) {
-      console.error('搜索图标失败:', error)
-      onlineSearchResults.value = []
-    } finally {
-      isSearchingIcons.value = false
-    }
-  }
-
-  // 防抖搜索
-  let searchTimer: ReturnType<typeof setTimeout> | null = null
-  const handleIconSearch = (): void => {
-    if (searchTimer) {
-      clearTimeout(searchTimer)
-    }
-    
-    searchTimer = setTimeout(() => {
-      const keyword = iconSearchText.value.trim()
-      if (keyword.length >= 2) {
-        searchIconsOnline(keyword)
-      } else {
-        onlineSearchResults.value = []
-      }
-    }, 500) // 500ms 防抖
-  }
-
-  // 过滤图标列表
-  const filteredIcons = computed(() => {
-    const keyword = iconSearchText.value.trim().toLowerCase()
-    
-    // 如果有搜索关键词且长度>=2，使用在线搜索结果
-    if (keyword.length >= 2 && onlineSearchResults.value.length > 0) {
-      return onlineSearchResults.value
-    }
-    
-    // 如果有搜索关键词但长度<2，搜索本地常用图标
-    if (keyword.length > 0) {
-      return commonIcons.filter(icon => icon.toLowerCase().includes(keyword))
-    }
-    
-    // 默认显示前50个常用图标
-    return commonIcons.slice(0, 50)
-  })
-
-  // 选择图标
-  const selectIcon = (icon: string) => {
-    form.icon = icon
-    iconSearchText.value = ''
-    onlineSearchResults.value = []
-  }
 
   const form = reactive<MenuFormData>({
     menuType: 'M',
@@ -399,7 +224,7 @@
   const formItems = computed<FormItem[]>(() => {
     // 确保选项数据存在
     const menuOptions = parentMenuOptions.value || []
-    
+
     // 菜单类型和上级菜单放在同一行
     const baseItems: FormItem[] = [
       { label: '菜单类型', key: 'menuType', span: 12 },
@@ -408,7 +233,7 @@
         key: 'parentId',
         type: 'treeselect',
         span: 12,
-        props: { 
+        props: {
           placeholder: '请选择上级菜单，不选则为顶级菜单',
           clearable: true,
           data: menuOptions,
@@ -423,15 +248,31 @@
     if (form.menuType === 'F') {
       return [
         ...baseItems,
-        { label: '按钮名称', key: 'menuName', type: 'input', props: { placeholder: '请输入按钮名称' } },
-        { label: '权限标识', key: 'perms', type: 'input', props: { placeholder: '如：system:user:add' } },
+        {
+          label: '按钮名称',
+          key: 'menuName',
+          type: 'input',
+          props: { placeholder: '请输入按钮名称' }
+        },
+        {
+          label: '权限标识',
+          key: 'perms',
+          type: 'input',
+          props: { placeholder: '如：system:user:add' }
+        },
         {
           label: '显示顺序',
           key: 'orderNum',
           type: 'number',
           props: { min: 1, controlsPosition: 'right', style: { width: '100%' } }
         },
-        { label: '备注', key: 'remark', type: 'input', span: 24, props: { type: 'textarea', rows: 3, placeholder: '请输入备注' } }
+        {
+          label: '备注',
+          key: 'remark',
+          type: 'input',
+          span: 24,
+          props: { type: 'textarea', rows: 3, placeholder: '请输入备注' }
+        }
       ]
     }
 
@@ -440,7 +281,12 @@
 
     return [
       ...baseItems,
-      { label: '菜单名称', key: 'menuName', type: 'input', props: { placeholder: '请输入菜单名称' } },
+      {
+        label: '菜单名称',
+        key: 'menuName',
+        type: 'input',
+        props: { placeholder: '请输入菜单名称' }
+      },
       {
         label: createLabelTooltip(
           '路由地址',
@@ -466,7 +312,10 @@
         ),
         key: 'component',
         type: 'input',
-        props: { placeholder: '如：一级父级菜单：填写 /index/index\n具体页面：填写组件路径（如 /system/user）\n目录菜单：留空' }
+        props: {
+          placeholder:
+            '如：一级父级菜单：填写 /index/index\n具体页面：填写组件路径（如 /system/user）\n目录菜单：留空'
+        }
       },
       {
         label: '路由参数',
@@ -527,7 +376,13 @@
           inactiveValue: '1'
         }
       },
-      { label: '备注', key: 'remark', type: 'input', span: 24, props: { type: 'textarea', rows: 3, placeholder: '请输入备注0/500' } }
+      {
+        label: '备注',
+        key: 'remark',
+        type: 'input',
+        span: 24,
+        props: { type: 'textarea', rows: 3, placeholder: '请输入备注0/500' }
+      }
     ]
   })
 
@@ -551,22 +406,19 @@
   })
 
   /**
-   * 加载上级菜单选项
-   */
-  /**
    * 加载上级菜单选项（树形结构）
    * 接口已返回 label 和 value 字段，转换为树形结构
    */
   const loadParentMenuOptions = async (): Promise<void> => {
     try {
       const menus = await fetchGetParentMenu()
-      
+
       // 将菜单数据转换为树形结构（跳过 menuId 为 0 的顶级虚拟节点）
       const convertToTree = (menuList: SysMenu[]): TreeNode[] => {
         const treeNodes: TreeNode[] = []
-        
+
         if (!Array.isArray(menuList)) return treeNodes
-        
+
         menuList.forEach((menu) => {
           // 直接使用接口返回的 label 和 value
           if ((menu as any).label && (menu as any).value !== undefined) {
@@ -581,21 +433,21 @@
                 node.children = children
               }
             }
-            
+
             treeNodes.push(node)
           }
         })
-        
+
         return treeNodes
       }
-      
+
       const treeData = convertToTree(menus)
-      
+
       // 确保至少有一个选项
       if (treeData.length === 0) {
         treeData.push({ label: '无上级菜单', value: 0 })
       }
-      
+
       parentMenuOptions.value = treeData
     } catch (error) {
       console.error('加载上级菜单失败:', error)
@@ -642,7 +494,7 @@
    */
   const findRawMenu = (menuId: number | undefined, menuList: SysMenu[]): SysMenu | undefined => {
     if (!menuId || !menuList) return undefined
-    
+
     for (const menu of menuList) {
       if (menu.menuId === menuId) {
         return menu
@@ -664,11 +516,9 @@
 
     isEdit.value = true
     const row = props.editData
-    
+
     // 从原始数据中查找菜单项
-    const rawMenu = row.id && props.rawMenuData 
-      ? findRawMenu(row.id, props.rawMenuData) 
-      : null
+    const rawMenu = row.id && props.rawMenuData ? findRawMenu(row.id, props.rawMenuData) : null
 
     // 如果是按钮类型
     if (props.type === 'button' || row.meta?.isAuthButton) {
@@ -692,8 +542,18 @@
     form.component = rawMenu?.component || row.component || ''
     form.query = rawMenu?.query || row.query || ''
     form.routeName = rawMenu?.routeName || row.name || row.routeName || ''
-    form.isFrame = rawMenu?.isFrame !== undefined ? rawMenu.isFrame : (row.meta?.isIframe === true ? 0 : (row.isFrame ?? 1))
-    form.isCache = rawMenu?.isCache !== undefined ? rawMenu.isCache : (row.meta?.keepAlive === true ? 0 : (row.isCache ?? 1))
+    form.isFrame =
+      rawMenu?.isFrame !== undefined
+        ? rawMenu.isFrame
+        : row.meta?.isIframe === true
+          ? 0
+          : (row.isFrame ?? 1)
+    form.isCache =
+      rawMenu?.isCache !== undefined
+        ? rawMenu.isCache
+        : row.meta?.keepAlive === true
+          ? 0
+          : (row.isCache ?? 1)
     form.visible = rawMenu?.visible || (row.meta?.isHide === true ? '1' : (row.visible ?? '0'))
     form.status = rawMenu?.status || row.status || '0'
     form.perms = rawMenu?.perms || row.meta?.authList?.[0]?.authMark || row.perms || ''
@@ -718,7 +578,7 @@
 
     try {
       await formRef.value.validate()
-      
+
       // 构建提交数据
       const submitData: MenuFormData = {
         menuType: form.menuType,
@@ -773,7 +633,7 @@
       if (newVal) {
         // 先加载上级菜单选项
         await loadParentMenuOptions()
-        
+
         // 设置菜单类型
         if (props.type === 'button') {
           form.menuType = 'F'
@@ -798,7 +658,7 @@
    */
   watch(
     () => form.menuType,
-    (newType) => {
+    () => {
       // 验证规则已经在 rules 中定义，这里只需要确保触发验证
       nextTick(() => {
         if (formRef.value) {
@@ -813,70 +673,4 @@
   })
 </script>
 
-<style scoped lang="scss">
-.icon-selector {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.icon-picker {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.icon-loading,
-.icon-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  color: #909399;
-  font-size: 14px;
-}
-
-.icon-list {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.icon-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 8px;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: #fff;
-
-  &:hover {
-    border-color: #409eff;
-    background: #ecf5ff;
-  }
-
-  &.active {
-    border-color: #409eff;
-    background: #ecf5ff;
-    color: #409eff;
-  }
-
-  .icon-name {
-    margin-top: 4px;
-    font-size: 12px;
-    color: #606266;
-    text-align: center;
-    word-break: break-all;
-    line-height: 1.2;
-  }
-
-  &.active .icon-name {
-    color: #409eff;
-  }
-}
-</style>
+<style scoped lang="scss"></style>

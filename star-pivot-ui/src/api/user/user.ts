@@ -60,3 +60,15 @@ export function fetchUpdateUserStatus(userId: number, status: number) {
     }
   })
 }
+/**
+ * 重置用户密码
+ */
+export function fetchResetUserPassword(userId: number, password: string) {
+  return request.post({
+    url: '/api/sys/user/resetPwd',
+    data: {
+      userId,
+      password
+    }
+  })
+}
