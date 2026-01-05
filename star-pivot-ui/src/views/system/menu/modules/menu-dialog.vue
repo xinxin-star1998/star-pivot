@@ -586,14 +586,21 @@
         parentId: form.parentId === 0 ? undefined : form.parentId,
         orderNum: form.orderNum,
         path: form.path || undefined,
-        component: form.component || undefined,
+        // 目录类型或组件路径为空时，明确传递空字符串以清空后端数据
+        // 如果传递 undefined，后端可能不会更新该字段，导致原来的值保留
+        component:
+          form.menuType === 'M' || !form.component || form.component.trim() === ''
+            ? ''
+            : form.component,
         query: form.query || undefined,
         routeName: form.routeName || undefined,
         isFrame: form.isFrame,
         isCache: form.isCache,
         visible: form.visible,
         status: form.status,
-        perms: form.perms || undefined,
+        // 如果 perms 为空，明确传递空字符串以清空后端数据
+        // 如果传递 undefined，后端可能不会更新该字段，导致原来的值保留
+        perms: form.perms && form.perms.trim() !== '' ? form.perms : '',
         icon: form.icon || undefined,
         remark: form.remark || undefined
       }

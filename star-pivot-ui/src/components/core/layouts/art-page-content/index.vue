@@ -14,15 +14,19 @@
       </div>
     </div>
 
-    <RouterView v-if="isRefresh" v-slot="{ Component, route }" :style="contentStyle">
+    <RouterView v-if="isRefresh" v-slot="{ Component, route: routeSlot }">
+      <!-- 检查是否是 Layout 组件（嵌套路由） -->
+      <!-- Layout 组件不应该接收 art-page-view class 和 contentStyle -->
+      <!-- 通过检查路由的 meta.isLayout 或组件名称来判断 -->
       <!-- 缓存路由动画 -->
       <Transition :name="showTransitionMask ? '' : actualTransition" mode="out-in" appear>
         <KeepAlive :max="10" :exclude="keepAliveExclude">
           <component
-            class="art-page-view"
+            v-if="routeSlot.meta.keepAlive"
+            :class="isLayoutComponent(Component, routeSlot) ? '' : 'art-page-view'"
             :is="Component"
-            :key="route.path"
-            v-if="route.meta.keepAlive"
+            :key="routeSlot.path"
+            :style="isLayoutComponent(Component, routeSlot) ? undefined : contentStyle"
           />
         </KeepAlive>
       </Transition>
@@ -30,10 +34,11 @@
       <!-- 非缓存路由动画 -->
       <Transition :name="showTransitionMask ? '' : actualTransition" mode="out-in" appear>
         <component
-          class="art-page-view"
+          v-if="!routeSlot.meta.keepAlive"
+          :class="isLayoutComponent(Component, routeSlot) ? '' : 'art-page-view'"
           :is="Component"
-          :key="route.path"
-          v-if="!route.meta.keepAlive"
+          :key="routeSlot.path"
+          :style="isLayoutComponent(Component, routeSlot) ? undefined : contentStyle"
         />
       </Transition>
     </RouterView>
@@ -116,6 +121,28 @@
       minHeight: containerMinHeight.value
     })
   )
+
+  /**
+   * 检查组件是否是 Layout 组件（嵌套路由）
+   * Layout 组件不应该接收 art-page-view class 和 contentStyle
+   */
+  const isLayoutComponent = (component: any, routeSlot: any): boolean => {
+    // 方法1: 检查路由的 meta.isLayout 标记
+    if (routeSlot?.meta?.isLayout) return true
+    
+    // 方法2: 检查组件名称
+    if (component) {
+      const componentName =
+        component?.name || component?.__name || component?.type?.name || component?.type?.__name
+      if (componentName === 'AppLayout' || componentName === 'Index' || componentName === 'NestedLayout') return true
+    }
+    
+    // 方法3: 检查路由名称
+    const routeName = routeSlot?.name?.toString() || ''
+    if (routeName === 'AppLayout' || routeName === 'Index' || routeName === 'NestedLayout') return true
+    
+    return false
+  }
 
   const reload = () => {
     isRefresh.value = false
