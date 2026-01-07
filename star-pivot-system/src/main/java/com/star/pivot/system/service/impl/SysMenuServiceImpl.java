@@ -21,9 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,9 +35,13 @@ import java.util.Optional;
  * @author makejava
  * @since 2025-12-28 21:57:29
  */
+@Slf4j
 @Service("sysMenuService")
 @RequiredArgsConstructor
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
+
+    private static final Long ROOT_PARENT_ID = 0L;
+    private static final Long TOP_MENU_PARENT_ID = -1L;
 
     private final SysUserService sysUserService;
     private final RoleMenuMapper roleMenuMapper;
@@ -49,36 +55,45 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         List<SysMenu> allMenu = this.list(queryWrapper);
 
         // 构建权限树
-        return buildMenuTree(allMenu, 0L);
+        return buildMenuTree(allMenu, ROOT_PARENT_ID);
     }
 
     @Override
     public List<SysMenu> getUserMenuTree(Long userId) {
-        //查询用户角色
+        log.debug("获取用户菜单树，userId: {}", userId);
+        // 查询用户角色
         List<SysRole> roles = sysUserService.getRolesByUserId(userId);
-        // 查询用户有权限的菜单（平铺列表）
-//        List<SysMenu> userMenus = sysUserService.getMenuByUserId(userId);
-//
-//        if (userMenus == null || userMenus.isEmpty()) {
-//            return new ArrayList<>();
-//        }
-        List<SysMenu> allMenu = null;
-        //获取用户角色对应的菜单 roleKey == admin 时，查询全部菜单
-        if (roles.stream().anyMatch(role -> "admin".equals(role.getRoleKey()))) {
-            // 查询所有菜单（用于构建树结构）
+        log.debug("用户角色列表，userId: {}, roles: {}", userId, roles);
+        
+        List<SysMenu> allMenu;
+        // 获取用户角色对应的菜单，roleKey == admin 时，查询全部菜单
+        boolean isAdmin = roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
+        log.debug("是否为admin用户，userId: {}, isAdmin: {}", userId, isAdmin);
+        
+        if (isAdmin) {
+            // admin用户查询所有菜单（用于构建树结构）
             LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.orderByAsc(SysMenu::getOrderNum);
             allMenu = this.list(queryWrapper);
-        }else{
+            log.debug("admin用户查询到所有菜单，userId: {}, menuCount: {}", userId, allMenu != null ? allMenu.size() : 0);
+        } else {
             // 获取用户角色对应的菜单
             allMenu = sysUserService.getMenuByUserId(userId);
+            if (allMenu == null) {
+                allMenu = Collections.emptyList();
+            }
+            log.debug("普通用户查询到菜单，userId: {}, menuCount: {}", userId, allMenu != null ? allMenu.size() : 0);
         }
-        return buildMenuTree(allMenu, 0L);
+        // 构建菜单树，并过滤掉有按钮子节点的菜单
+        return buildUserMenuTree(allMenu, ROOT_PARENT_ID);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean insertMenu(MenuDTO menuDTO) {
+        log.info("新增菜单: menuName={}, parentId={}, menuType={}", 
+                menuDTO.getMenuName(), menuDTO.getParentId(), menuDTO.getMenuType());
+        
         // 检查菜单名称是否唯一
         if (!checkMenuNameUnique(menuDTO.getMenuName(), menuDTO.getParentId(), null)) {
             throw new BusinessException("菜单名称已存在");
@@ -87,35 +102,46 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         // 创建菜单
         SysMenu menu = new SysMenu();
         BeanUtils.copyProperties(menuDTO, menu);
-        menu.setParentId(menuDTO.getParentId() != null ? menuDTO.getParentId() : 0L);
+        menu.setParentId(menuDTO.getParentId() != null ? menuDTO.getParentId() : ROOT_PARENT_ID);
         menu.setOrderNum(menuDTO.getOrderNum() != null ? menuDTO.getOrderNum() : 0);
         menu.setIsFrame(menuDTO.getIsFrame() != null ? menuDTO.getIsFrame() : 1);
         menu.setIsCache(menuDTO.getIsCache() != null ? menuDTO.getIsCache() : 0);
-        menu.setVisible(StringUtils.hasText(menuDTO.getVisible()) ? menuDTO.getVisible() : "0");
-        menu.setStatus(StringUtils.hasText(menuDTO.getStatus()) ? menuDTO.getStatus() : "0");
+        menu.setVisible(StringUtils.hasText(menuDTO.getVisible()) ? menuDTO.getVisible() : Constants.Visible.SHOW);
+        menu.setStatus(StringUtils.hasText(menuDTO.getStatus()) ? menuDTO.getStatus() : Constants.Status.NORMAL);
 
         String currentUser = SecurityContextUtils.getUsername();
         menu.setCreateBy(currentUser);
         menu.setCreateTime(LocalDateTime.now());
 
-        return this.save(menu);
+        boolean result = this.save(menu);
+        if (result) {
+            log.info("新增菜单成功: menuId={}, menuName={}", menu.getMenuId(), menu.getMenuName());
+        } else {
+            log.error("新增菜单失败: menuName={}", menuDTO.getMenuName());
+        }
+        return result;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateMenu(MenuDTO menuDTO) {
+        log.info("修改菜单: menuId={}, menuName={}", menuDTO.getMenuId(), menuDTO.getMenuName());
+        
         SysMenu menu = this.getById(menuDTO.getMenuId());
         if (menu == null) {
+            log.warn("菜单不存在: menuId={}", menuDTO.getMenuId());
             throw new BusinessException("菜单不存在");
         }
 
         // 不能将父菜单设置为自己的子菜单
         if (menuDTO.getParentId() != null && menuDTO.getParentId().equals(menuDTO.getMenuId())) {
+            log.warn("不能将父菜单设置为自己的子菜单: menuId={}", menuDTO.getMenuId());
             throw new BusinessException("不能将父菜单设置为自己的子菜单");
         }
 
         // 检查菜单名称是否唯一
         if (!checkMenuNameUnique(menuDTO.getMenuName(), menuDTO.getParentId(), menuDTO.getMenuId())) {
+            log.warn("菜单名称已存在: menuName={}, parentId={}", menuDTO.getMenuName(), menuDTO.getParentId());
             throw new BusinessException("菜单名称已存在");
         }
 
@@ -125,17 +151,26 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         menu.setUpdateBy(currentUser);
         menu.setUpdateTime(LocalDateTime.now());
 
-        return this.updateById(menu);
+        boolean result = this.updateById(menu);
+        if (result) {
+            log.info("修改菜单成功: menuId={}, menuName={}", menu.getMenuId(), menu.getMenuName());
+        } else {
+            log.error("修改菜单失败: menuId={}", menuDTO.getMenuId());
+        }
+        return result;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteMenu(Long menuId) {
+        log.info("删除菜单: menuId={}", menuId);
+        
         // 检查是否有子菜单
         LambdaQueryWrapper<SysMenu> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysMenu::getParentId, menuId);
         long count = this.count(wrapper);
         if (count > 0) {
+            log.warn("存在子菜单，不允许删除: menuId={}, 子菜单数量={}", menuId, count);
             throw new BusinessException("存在子菜单，不允许删除");
         }
 
@@ -144,90 +179,170 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         roleMenuWrapper.eq(RoleMenu::getMenuId, menuId);
         long roleMenuCount = roleMenuMapper.selectCount(roleMenuWrapper);
         if (roleMenuCount > 0) {
+            log.warn("菜单已被角色使用，不允许删除: menuId={}, 使用角色数量={}", menuId, roleMenuCount);
             throw new BusinessException("菜单已被角色使用，不允许删除");
         }
 
-        return this.removeById(menuId);
+        boolean result = this.removeById(menuId);
+        if (result) {
+            log.info("删除菜单成功: menuId={}", menuId);
+        } else {
+            log.error("删除菜单失败: menuId={}", menuId);
+        }
+        return result;
     }
 
     @Override
     public List<SysMenu> getParent() {
-        String[] type = {"M","C"};
-        List<String> strings = Arrays.asList(type);
+        // 查询目录和菜单类型（排除按钮类型）
+        List<String> menuTypes = Arrays.asList(
+                Constants.MenuType.CATALOG,
+                Constants.MenuType.MENU
+        );
         QueryWrapper<SysMenu> query = new QueryWrapper<>();
-        query.lambda().in(SysMenu::getMenuType,strings).orderByAsc(SysMenu::getOrderNum);
+        query.lambda().in(SysMenu::getMenuType, menuTypes).orderByAsc(SysMenu::getOrderNum);
         List<SysMenu> menuList = this.baseMapper.selectList(query);
-        //组装顶级树
-        SysMenu menu = new SysMenu();
-        menu.setMenuName("顶级菜单");
-        menu.setLabel("顶级菜单");
-        menu.setParentId(-1L);
-        menu.setMenuId(0L);
-        menu.setValue(0L);
-        menuList.add(menu);
-        //组装菜单树
-        return makeMenuTree(menuList, -1L);
+        
+        // 组装顶级菜单
+        SysMenu topMenu = new SysMenu();
+        topMenu.setMenuName("顶级菜单");
+        topMenu.setLabel("顶级菜单");
+        topMenu.setParentId(TOP_MENU_PARENT_ID);
+        topMenu.setMenuId(ROOT_PARENT_ID);
+        topMenu.setValue(ROOT_PARENT_ID);
+        menuList.add(topMenu);
+        
+        // 组装菜单树（使用统一的树构建方法，并设置label和value）
+        return buildMenuTreeWithLabelValue(menuList, TOP_MENU_PARENT_ID);
     }
 
     @Override
     public List<SysMenu> getMenuByRoleId(Long roleId) {
+        log.debug("根据角色ID获取菜单: roleId={}", roleId);
         SysRole sysRole = sysRoleMapper.selectById(roleId);
-        List<SysMenu> menuList = null;
-        if(sysRole.getRoleKey().equals(Constants.ADMIN_ROLE_KEY)){
+        if (sysRole == null) {
+            log.warn("角色不存在: roleId={}", roleId);
+            return Collections.emptyList();
+        }
+        
+        List<SysMenu> menuList;
+        if (Constants.ADMIN_ROLE_KEY.equals(sysRole.getRoleKey())) {
             menuList = sysMenuMapper.selectList(null);
-        }else{
-            menuList =  sysMenuMapper.getMenuByRoleId(roleId);
+        } else {
+            menuList = sysMenuMapper.getMenuByRoleId(roleId);
+            if (menuList == null) {
+                menuList = Collections.emptyList();
+            }
         }
         return menuList;
     }
 
-    private List<SysMenu> makeMenuTree(List<SysMenu> menuList, long pid) {
-        //存放组装的树数据
-        List<SysMenu> list = new ArrayList<>();
-        //组装树
-        Optional.ofNullable(menuList).orElse(new ArrayList<>())
+    /**
+     * 构建菜单树（带label和value字段，用于下拉选择等场景）
+     * @param menuList 菜单列表
+     * @param parentId 父菜单ID
+     * @return 菜单树
+     */
+    private List<SysMenu> buildMenuTreeWithLabelValue(List<SysMenu> menuList, long parentId) {
+        List<SysMenu> tree = new ArrayList<>();
+        
+        // 筛选出指定父级ID的菜单
+        Optional.ofNullable(menuList).orElse(Collections.emptyList())
                 .stream()
-                .filter(item -> item != null && item.getParentId().equals(pid))
+                .filter(item -> item != null && item.getParentId() != null && item.getParentId().equals(parentId))
                 .forEach(item -> {
                     SysMenu menu = new SysMenu();
                     BeanUtils.copyProperties(item, menu);
                     menu.setLabel(item.getMenuName());
                     menu.setValue(item.getMenuId());
-                    //查找下级：递归调用；自己调用自己
-                    List<SysMenu> children = makeMenuTree(menuList, item.getMenuId());
+                    // 递归构建子树
+                    List<SysMenu> children = buildMenuTreeWithLabelValue(menuList, item.getMenuId());
                     menu.setChildren(children);
-                    list.add(menu);
+                    tree.add(menu);
                 });
-        return list;
+        
+        return tree;
     }
 
     public boolean checkMenuNameUnique(String menuName, Long parentId, Long menuId) {
         LambdaQueryWrapper<SysMenu> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysMenu::getMenuName, menuName)
-                .eq(SysMenu::getParentId, parentId != null ? parentId : 0L);
+                .eq(SysMenu::getParentId, parentId != null ? parentId : ROOT_PARENT_ID);
         if (menuId != null) {
             wrapper.ne(SysMenu::getMenuId, menuId);
         }
         return this.count(wrapper) == 0;
     }
     /**
-     * 构建菜单树
+     * 构建菜单树（通用方法）
      * @param allMenu 所有菜单列表
      * @param parentId 父菜单ID
      * @return 菜单树
      */
     private List<SysMenu> buildMenuTree(List<SysMenu> allMenu, long parentId) {
+        if (allMenu == null || allMenu.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
         List<SysMenu> tree = new ArrayList<>();
 
         // 筛选出指定父级ID的菜单
         List<SysMenu> children = allMenu.stream()
-                .filter(menu -> menu.getParentId() != null && menu.getParentId().equals(parentId))
+                .filter(menu -> menu != null && menu.getParentId() != null && menu.getParentId().equals(parentId))
                 .toList();
 
         // 递归构建子树
         for (SysMenu menu : children) {
             List<SysMenu> childTree = buildMenuTree(allMenu, menu.getMenuId());
             menu.setChildren(childTree);
+            tree.add(menu);
+        }
+
+        return tree;
+    }
+
+    /**
+     * 构建用户菜单树（过滤掉按钮类型和有按钮子节点的菜单）
+     * @param allMenu 所有菜单列表
+     * @param parentId 父菜单ID
+     * @return 菜单树
+     */
+    private List<SysMenu> buildUserMenuTree(List<SysMenu> allMenu, long parentId) {
+        if (allMenu == null || allMenu.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        List<SysMenu> tree = new ArrayList<>();
+
+        // 筛选出指定父级ID的菜单，排除按钮类型
+        List<SysMenu> children = allMenu.stream()
+                .filter(menu -> menu != null 
+                        && menu.getParentId() != null 
+                        && menu.getParentId().equals(parentId)
+                        && !Constants.MenuType.BUTTON.equals(menu.getMenuType())) // 过滤掉按钮类型
+                .toList();
+
+        // 递归构建子树
+        for (SysMenu menu : children) {
+            List<SysMenu> childTree = buildUserMenuTree(allMenu, menu.getMenuId());
+            
+            // 检查是否有按钮子节点
+            boolean hasButtonChildren = allMenu.stream()
+                    .anyMatch(child -> child != null 
+                            && child.getParentId() != null 
+                            && child.getParentId().equals(menu.getMenuId())
+                            && Constants.MenuType.BUTTON.equals(child.getMenuType()));
+            
+            // 如果有按钮子节点，则不显示该菜单
+            if (hasButtonChildren) {
+                log.debug("菜单 {} 有按钮子节点，不显示在菜单树中", menu.getMenuName());
+                continue;
+            }
+            
+            // 如果子菜单树为空，则不设置children
+            if (!childTree.isEmpty()) {
+                menu.setChildren(childTree);
+            }
             tree.add(menu);
         }
 

@@ -47,6 +47,19 @@ export class MenuProcessor {
   }
 
   /**
+   * 将 SysMenu 数组转换为 AppRouteRecord 数组（公共方法）
+   * 用于菜单管理页面等需要处理所有菜单的场景
+   * @param sysMenus 后端菜单列表
+   * @returns 转换后的路由记录数组
+   */
+  convertSysMenuToRouteRecordPublic(sysMenus: SysMenu[]): AppRouteRecord[] {
+    const convertedList = this.convertSysMenuToRouteRecord(sysMenus)
+    const filteredList = this.filterEmptyMenus(convertedList)
+    this.validateMenuPaths(filteredList)
+    return this.normalizeMenuPaths(filteredList)
+  }
+
+  /**
    * 将后端 SysMenu 转换为前端 AppRouteRecord
    * @param sysMenus 后端菜单列表
    * @param level 当前层级（从0开始，0表示一级菜单）

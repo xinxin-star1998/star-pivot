@@ -22,6 +22,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final JwtBlackListManager jwtBlackListManager;
     
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -38,6 +39,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         if (token != null) {
             log.debug("成功提取Token: {}...", token.substring(0, Math.min(20, token.length())));
+            
+            // 检查令牌是否在黑名单中
+            if (jwtBlackListManager.isBlackListed(token)) {
+                log.info("Token在黑名单中，拒绝访问: {}", token.substring(0, Math.min(20, token.length())));
+                // 继续执行请求，但不设置认证信息
+                filterChain.doFilter(request, response);
+                return;
+            }
             
             if (jwtUtil.validateToken(token)) {
                 String username = jwtUtil.getUsernameFromToken(token);

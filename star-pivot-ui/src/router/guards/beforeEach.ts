@@ -169,7 +169,23 @@ async function handleRouteGuard(
   }
 
   // 3. 处理动态路由注册
-  if (!routeRegistry?.isRegistered() && userStore.isLogin) {
+  // 如果用户已登录，但菜单列表为空或路由未注册，需要重新加载菜单
+  // 这种情况可能发生在：页面回退、刷新、或菜单数据被意外清空时
+  const menuStore = useMenuStore()
+  const needReloadMenu = userStore.isLogin && (
+    !routeRegistry?.isRegistered() || 
+    menuStore.menuList.length === 0
+  )
+
+  if (needReloadMenu) {
+    // 如果路由已注册但菜单列表为空，说明菜单数据被清空但路由状态还在
+    // 需要先重置路由注册状态，然后重新加载菜单数据
+    if (routeRegistry?.isRegistered() && menuStore.menuList.length === 0) {
+      console.warn('[RouteGuard] 检测到菜单列表为空，重置路由注册状态')
+      routeRegistry?.unregister()
+      menuStore.removeAllDynamicRoutes()
+    }
+
     // 防止并发请求（快速连续导航场景）
     if (routeInitInProgress) {
       // 正在初始化中，等待完成后重新导航

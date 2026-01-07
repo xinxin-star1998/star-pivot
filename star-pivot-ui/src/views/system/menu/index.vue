@@ -3,7 +3,7 @@
   <div class="menu-page art-full-height">
     <!-- 搜索栏 -->
     <ArtSearchBar
-      v-model="formFilters"
+      v-model="searchFilters"
       :items="formItems"
       :showExpand="false"
       @reset="handleReset"
@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
   import { formatMenuTitle } from '@/utils/router'
+  import { deepClone, findInTree, safeError } from '@/utils'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import type { AppRouteRecord } from '@/types/router'
@@ -69,6 +70,7 @@
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import { MENU_TYPE_CONFIG, STATUS_CONFIG, INITIAL_SEARCH_STATE } from './constants'
 
   defineOptions({ name: 'Menus' })
 
@@ -83,16 +85,8 @@
   const editData = ref<Partial<MenuFormData & AppRouteRecord> | null>(null)
   const lockMenuType = ref(false)
 
-  // 搜索相关
-  const initialSearchState = {
-    menuName: '',
-    route: '',
-    perms: '',
-    status: ''
-  }
-
-  const formFilters = reactive({ ...initialSearchState })
-  const appliedFilters = reactive({ ...initialSearchState })
+  // 搜索相关 - 简化状态管理，只使用一个状态
+  const searchFilters = reactive({ ...INITIAL_SEARCH_STATE })
 
   const formItems = computed(() => [
     {
@@ -132,18 +126,6 @@
     getMenuList()
   })
 
-  // 常量配置
-  const MENU_TYPE_CONFIG = {
-    M: { text: '目录', color: 'info' as const },
-    C: { text: '菜单', color: 'primary' as const },
-    F: { text: '按钮', color: 'danger' as const }
-  } as const
-
-  const STATUS_CONFIG = {
-    '0': { text: '正常', type: 'success' as const },
-    '1': { text: '停用', type: 'danger' as const }
-  } as const
-
   // 存储原始菜单数据（用于查找parentId和原始path）
   const rawMenuData = ref<SysMenu[]>([])
   // 存储菜单ID到原始path的映射
@@ -169,6 +151,29 @@
   }
 
   /**
+   * 将 SysMenu 转换为 AppRouteRecord（使用 MenuProcessor）
+   */
+  const convertMenuToRouteRecord = (sysMenuList: SysMenu[]): AppRouteRecord[] => {
+    const menuProcessor = new MenuProcessor()
+    return menuProcessor.convertSysMenuToRouteRecordPublic(sysMenuList)
+  }
+
+  /**
+   * 为路由记录添加权限标识
+   */
+  const addPermsToMenu = (menus: AppRouteRecord[], rawMenus: SysMenu[]): void => {
+    menus.forEach((menu) => {
+      const rawMenu = findMenuAndParentFromRawData(menu.id, rawMenus).menu
+      if (rawMenu?.perms) {
+        menu.perms = rawMenu.perms
+      }
+      if (menu.children?.length && rawMenu?.children) {
+        addPermsToMenu(menu.children, rawMenu.children)
+      }
+    })
+  }
+
+  /**
    * 获取菜单列表数据
    */
   const getMenuList = async (): Promise<void> => {
@@ -182,34 +187,14 @@
       // 构建菜单路径映射
       buildMenuPathMap(sysMenuList)
 
-      // 使用 MenuProcessor 将 SysMenu[] 转换为 AppRouteRecord[]
-      // 由于MenuProcessor的getMenuList使用的是userMenuTree接口，我们需要手动转换
-      const menuProcessor = new MenuProcessor()
+      // 转换为路由记录格式
+      const normalizedList = convertMenuToRouteRecord(sysMenuList)
 
-      // 创建一个临时的MenuProcessor实例来使用其私有方法
-      // 由于TypeScript的限制，我们使用类型断言来访问私有方法
-      const processor = menuProcessor as any
-      const convertedList = processor.convertSysMenuToRouteRecord(sysMenuList, 0)
-      const filteredList = processor.filterEmptyMenus(convertedList)
-      processor.validateMenuPaths(filteredList)
-      const normalizedList = processor.normalizeMenuPaths(filteredList)
-
-      // 手动添加 perms 字段（从原始数据中获取）
-      const addPermsToMenu = (menus: AppRouteRecord[], rawMenus: SysMenu[]): void => {
-        menus.forEach((menu) => {
-          const rawMenu = findMenuAndParentFromRawData(menu.id, rawMenus).menu
-          if (rawMenu?.perms) {
-            menu.perms = rawMenu.perms
-          }
-          if (menu.children?.length && rawMenu?.children) {
-            addPermsToMenu(menu.children, rawMenu.children)
-          }
-        })
-      }
+      // 添加权限标识
       addPermsToMenu(normalizedList, sysMenuList)
       tableData.value = normalizedList
     } catch (error) {
-      console.error('获取菜单列表失败:', error)
+      safeError('获取菜单列表失败:', error)
       ElMessage.error('获取菜单列表失败')
     } finally {
       loading.value = false
@@ -220,26 +205,40 @@
    * 从原始菜单数据中查找菜单项及其父ID
    * @param menuId 菜单ID
    * @param menuList 菜单列表
-   * @param parentId 父菜单ID（递归使用）
    * @returns 菜单项和父ID的对象
    */
   const findMenuAndParentFromRawData = (
     menuId: number | undefined,
-    menuList: SysMenu[],
-    parentId?: number
+    menuList: SysMenu[]
   ): { menu: SysMenu | undefined; parentId: number | undefined } => {
     if (!menuId) return { menu: undefined, parentId: undefined }
 
-    for (const menu of menuList) {
-      if (menu.menuId === menuId) {
-        return { menu, parentId }
-      }
-      if (menu.children?.length) {
-        const found = findMenuAndParentFromRawData(menuId, menu.children, menu.menuId)
-        if (found.menu) return found
-      }
+    const result = findInTree(
+      menuList,
+      (menu) => menu.menuId === menuId,
+      (menu) => menu.children,
+      undefined
+    )
+    return { menu: result.node, parentId: result.parentId }
+  }
+
+  /**
+   * 检查菜单行是否有权限按钮子节点
+   * @param row 菜单行数据
+   * @returns 是否有权限按钮子节点
+   */
+  const hasAuthButtonChildren = (row: AppRouteRecord): boolean => {
+    // 检查子节点中是否有权限按钮
+    if (row.children && row.children.length > 0) {
+      return row.children.some(
+        (child) =>
+          // 通过 authList 转换的权限按钮
+          child.meta?.isAuthButton === true ||
+          // 直接从数据库返回的按钮类型（menuType='F'）
+          child.menuType === 'F'
+      )
     }
-    return { menu: undefined, parentId: undefined }
+    return false
   }
 
   /**
@@ -350,6 +349,7 @@
       formatter: (row: AppRouteRecord) => {
         const buttonStyle = { style: 'text-align: right' }
 
+        // 如果是权限按钮，显示编辑和删除按钮
         if (row.meta?.isAuthButton) {
           return h('div', buttonStyle, [
             h(ArtButtonTable, {
@@ -363,21 +363,42 @@
           ])
         }
 
-        return h('div', buttonStyle, [
-          h(ArtButtonTable, {
-            type: 'add',
-            onClick: () => handleAddAuth(row),
-            title: '新增权限'
-          }),
-          h(ArtButtonTable, {
-            type: 'edit',
-            onClick: () => handleEditMenu(row)
-          }),
+        // 检查菜单是否有权限按钮子节点
+        const hasAuthButtons = hasAuthButtonChildren(row)
+
+        const buttons = []
+
+        // 第一个按钮：如果没有权限按钮子节点，显示"新增权限"按钮；如果有，显示"编辑"按钮
+        if (hasAuthButtons) {
+          buttons.push(
+            h(ArtButtonTable, {
+              type: 'edit',
+              onClick: () => handleEditMenu(row)
+            })
+          )
+        } else {
+          buttons.push(
+            h(ArtButtonTable, {
+              type: 'add',
+              onClick: () => handleAddAuth(row),
+              title: '新增权限'
+            }),
+            h(ArtButtonTable, {
+              type: 'edit',
+              onClick: () => handleEditMenu(row)
+            })
+          )
+        }
+
+        // 删除按钮
+        buttons.push(
           h(ArtButtonTable, {
             type: 'delete',
             onClick: () => handleDeleteMenu(row)
           })
-        ])
+        )
+
+        return h('div', buttonStyle, buttons)
       }
     }
   ])
@@ -389,17 +410,16 @@
    * 重置搜索条件
    */
   const handleReset = (): void => {
-    Object.assign(formFilters, { ...initialSearchState })
-    Object.assign(appliedFilters, { ...initialSearchState })
-    getMenuList()
+    Object.assign(searchFilters, { ...INITIAL_SEARCH_STATE })
+    // 重置后不需要重新获取数据，computed会自动更新
   }
 
   /**
    * 执行搜索
    */
   const handleSearch = (): void => {
-    Object.assign(appliedFilters, { ...formFilters })
-    getMenuList()
+    // 搜索条件已通过v-model绑定到searchFilters，computed会自动更新
+    // 这里可以添加其他搜索相关的逻辑，如记录搜索历史等
   }
 
   /**
@@ -407,25 +427,6 @@
    */
   const handleRefresh = (): void => {
     getMenuList()
-  }
-
-  /**
-   * 深度克隆对象
-   * @param obj 要克隆的对象
-   * @returns 克隆后的对象
-   */
-  const deepClone = <T,>(obj: T): T => {
-    if (obj === null || typeof obj !== 'object') return obj
-    if (obj instanceof Date) return new Date(obj) as T
-    if (Array.isArray(obj)) return obj.map((item) => deepClone(item)) as T
-
-    const cloned = {} as T
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        cloned[key] = deepClone(obj[key])
-      }
-    }
-    return cloned
   }
 
   /**
@@ -467,7 +468,56 @@
   }
 
   /**
-   * 搜索菜单
+   * 检查菜单项是否匹配搜索条件
+   */
+  const matchesSearchFilters = (
+    item: AppRouteRecord,
+    searchName: string,
+    searchRoute: string,
+    searchPerms: string,
+    searchStatus: string
+  ): boolean => {
+    // 名称匹配
+    if (searchName) {
+      const menuTitle = formatMenuTitle(item.meta?.title || '').toLowerCase()
+      if (!menuTitle.includes(searchName)) return false
+    }
+
+    // 路由匹配
+    if (searchRoute) {
+      const menuPath = (item.path || '').toLowerCase()
+      if (!menuPath.includes(searchRoute)) return false
+    }
+
+    // 权限标识匹配
+    if (searchPerms) {
+      const itemPerms = (item.perms || '').toLowerCase()
+      const authMarks = item.meta?.authList?.map((auth) => auth.authMark.toLowerCase()) || []
+      const authMark = item.meta?.authMark?.toLowerCase() || ''
+      const permsMatch =
+        itemPerms.includes(searchPerms) ||
+        authMarks.some((mark) => mark.includes(searchPerms)) ||
+        authMark.includes(searchPerms) ||
+        (item.meta?.authList?.some((auth) => auth.title.toLowerCase().includes(searchPerms)) ??
+          false)
+      if (!permsMatch) return false
+    }
+
+    // 状态匹配
+    if (searchStatus && item.status !== searchStatus) return false
+
+    return true
+  }
+
+  /**
+   * 检查是否有搜索条件
+   */
+  const hasSearchFilters = computed(() => {
+    return Object.values(searchFilters).some((v) => v?.trim())
+  })
+
+  /**
+   * 搜索菜单（优化版本：减少不必要的克隆）
    * @param items 菜单项数组
    * @returns 搜索结果数组
    */
@@ -475,57 +525,31 @@
     const results: AppRouteRecord[] = []
 
     // 提前计算搜索条件，避免在循环中重复计算
-    const searchName = appliedFilters.menuName?.toLowerCase().trim() || ''
-    const searchRoute = appliedFilters.route?.toLowerCase().trim() || ''
-    const searchPerms = appliedFilters.perms?.toLowerCase().trim() || ''
-    const searchStatus = appliedFilters.status?.trim() || ''
+    const searchName = searchFilters.menuName?.toLowerCase().trim() || ''
+    const searchRoute = searchFilters.route?.toLowerCase().trim() || ''
+    const searchPerms = searchFilters.perms?.toLowerCase().trim() || ''
+    const searchStatus = searchFilters.status?.trim() || ''
 
     for (const item of items) {
-      const menuTitle = formatMenuTitle(item.meta?.title || '').toLowerCase()
-      const menuPath = (item.path || '').toLowerCase()
-
-      // 权限标识匹配：优先检查 perms 字段，然后检查权限列表或权限标识
-      let permsMatch = true
-      if (searchPerms) {
-        const itemPerms = (item.perms || '').toLowerCase()
-        const authMarks = item.meta?.authList?.map((auth) => auth.authMark.toLowerCase()) || []
-        const authMark = item.meta?.authMark?.toLowerCase() || ''
-        permsMatch =
-          itemPerms.includes(searchPerms) ||
-          authMarks.some((mark) => mark.includes(searchPerms)) ||
-          authMark.includes(searchPerms) ||
-          (item.meta?.authList?.some((auth) => auth.title.toLowerCase().includes(searchPerms)) ??
-            false)
-      }
-
-      // 状态匹配
-      const statusMatch = !searchStatus || item.status === searchStatus
-
-      // 名称和路由匹配
-      const nameMatch = !searchName || menuTitle.includes(searchName)
-      const routeMatch = !searchRoute || menuPath.includes(searchRoute)
-
-      // 如果所有搜索条件都匹配
-      const allMatch = nameMatch && routeMatch && permsMatch && statusMatch
+      const itemMatches = matchesSearchFilters(
+        item,
+        searchName,
+        searchRoute,
+        searchPerms,
+        searchStatus
+      )
 
       if (item.children?.length) {
         const matchedChildren = searchMenu(item.children)
-        if (matchedChildren.length > 0) {
+        // 如果子节点有匹配的，或者当前节点匹配，则保留
+        if (matchedChildren.length > 0 || itemMatches) {
           const clonedItem = deepClone(item)
-          clonedItem.children = matchedChildren
+          clonedItem.children =
+            matchedChildren.length > 0 ? matchedChildren : searchMenu(item.children)
           results.push(clonedItem)
-          continue
         }
-        // 如果父节点本身匹配，即使子节点不匹配也要显示
-        if (allMatch) {
-          const clonedItem = deepClone(item)
-          clonedItem.children = searchMenu(item.children)
-          results.push(clonedItem)
-          continue
-        }
-      }
-
-      if (allMatch) {
+      } else if (itemMatches) {
+        // 叶子节点且匹配，才需要克隆
         results.push(deepClone(item))
       }
     }
@@ -533,8 +557,14 @@
     return results
   }
 
-  // 过滤后的表格数据
+  // 过滤后的表格数据 - 优化：无搜索条件时直接返回原始数据
   const filteredTableData = computed(() => {
+    // 如果没有搜索条件，直接返回原始数据（避免不必要的搜索和克隆）
+    if (!hasSearchFilters.value) {
+      return convertAuthListToChildren(tableData.value)
+    }
+
+    // 有搜索条件时才执行搜索
     const searchedData = searchMenu(tableData.value)
     return convertAuthListToChildren(searchedData)
   })
@@ -555,7 +585,10 @@
    */
   const handleAddAuth = (parentRow?: AppRouteRecord): void => {
     dialogType.value = 'button'
-    editData.value = parentRow ? ({ ...parentRow, parentId: parentRow.id } as any) : null
+    // 新增权限时，只传递 parentId，不传递完整的父菜单对象，避免被误判为编辑模式
+    editData.value = parentRow
+      ? ({ parentId: parentRow.id } as Partial<MenuFormData & AppRouteRecord>)
+      : null
     lockMenuType.value = false
     dialogVisible.value = true
   }
@@ -575,8 +608,8 @@
       parentId,
       path: rawMenu?.path || row.path || '',
       component: rawMenu?.component || row.component || ''
-    } as any
-    lockMenuType.value = true
+    } as Partial<MenuFormData & AppRouteRecord>
+    lockMenuType.value = false
     dialogVisible.value = true
   }
 
@@ -592,7 +625,7 @@
       authMark: row.meta?.authMark,
       perms: row.meta?.authMark,
       parentPath: row.meta?.parentPath
-    } as any
+    } as Partial<MenuFormData & AppRouteRecord>
     lockMenuType.value = false
     dialogVisible.value = true
   }
@@ -614,7 +647,7 @@
       dialogVisible.value = false
       await getMenuList()
     } catch (error) {
-      console.error('保存菜单失败:', error)
+      safeError('保存菜单失败:', error)
       ElMessage.error(formData.menuId ? '修改菜单失败' : '新增菜单失败')
     }
   }
@@ -646,7 +679,7 @@
       await getMenuList()
     } catch (error) {
       if (error !== 'cancel') {
-        console.error(`删除${isAuthButton ? '权限' : '菜单'}失败:`, error)
+        safeError(`删除${isAuthButton ? '权限' : '菜单'}失败:`, error)
         ElMessage.error('删除失败')
       }
     }

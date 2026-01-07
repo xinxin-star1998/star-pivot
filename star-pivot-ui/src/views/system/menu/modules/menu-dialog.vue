@@ -58,6 +58,7 @@
   import { QuestionFilled } from '@element-plus/icons-vue'
   import { Icon } from '@iconify/vue'
   import { formatMenuTitle } from '@/utils/router'
+  import { safeError } from '@/utils'
   import type { AppRouteRecord } from '@/types/router'
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
@@ -450,7 +451,7 @@
 
       parentMenuOptions.value = treeData
     } catch (error) {
-      console.error('加载上级菜单失败:', error)
+      safeError('加载上级菜单失败:', error)
       parentMenuOptions.value = [{ label: '无上级菜单', value: 0 }]
     }
   }
@@ -514,8 +515,15 @@
   const loadFormData = (): void => {
     if (!props.editData) return
 
-    isEdit.value = true
     const row = props.editData
+    
+    // 只有当 row.id 存在时，才认为是编辑模式
+    // 如果只有 parentId 而没有 id，说明是新增模式
+    if (row.id) {
+      isEdit.value = true
+    } else {
+      isEdit.value = false
+    }
 
     // 从原始数据中查找菜单项
     const rawMenu = row.id && props.rawMenuData ? findRawMenu(row.id, props.rawMenuData) : null
