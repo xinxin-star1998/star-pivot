@@ -26,10 +26,20 @@ spring:
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root}
   
+
+  
   # Jackson 配置
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
+    # Redis配置
+  data:
+    redis:
+      host: ${REDIS_HOST:192.168.56.12}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: ${REDIS_TIMEOUT:2000ms}
 
 # MyBatis-Plus 配置
 mybatis-plus:
@@ -49,7 +59,7 @@ mybatis-plus:
 # JWT 配置
 jwt:
   # 生产环境请通过环境变量 JWT_SECRET 配置，不要直接写在配置文件中
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:Dj4G8272xJONkOqkn1pM8q1n+U5MPLrRUCjXun3/Yeo=}
   expiration: ${JWT_EXPIRATION:86400000} # 24小时，单位：毫秒
 
 # CORS 配置
@@ -64,19 +74,6 @@ logging:
     com.star.pivot: ${LOG_LEVEL:info}
     org.springframework.security: ${SECURITY_LOG_LEVEL:warn}
     org.apache.ibatis: ${SQL_LOG_LEVEL:OFF}
-
-# Redis配置
-redis:
-  host: ${REDIS_HOST:localhost}
-  port: ${REDIS_PORT:6379}
-  password: ${REDIS_PASSWORD:}
-  database: ${REDIS_DATABASE:0}
-  timeout: ${REDIS_TIMEOUT:2000ms}
-  lettuce:
-    pool:
-      max-active: ${REDIS_POOL_MAX_ACTIVE:8}
-      max-idle: ${REDIS_POOL_MAX_IDLE:8}
-      min-idle: ${REDIS_POOL_MIN_IDLE:0}
 
 # 代码生成配置
 gen:
