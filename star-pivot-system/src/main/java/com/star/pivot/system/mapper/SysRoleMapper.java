@@ -17,8 +17,10 @@ import java.util.List;
  */
 public interface SysRoleMapper extends BaseMapper<SysRole> {
 
-    List<SysRole> selectRolesByUserId(Long userId);
+    List<SysRole> selectRolesByUserId(@Param("userId") Long userId);
 
     IPage<SysRole> selectPageList(Page<SysRole> page, @Param("param") RoleQueryDTO roleQueryDTO);
+
+    List<SysRole> selectRoleListByUserId(Long userId);
 }
 

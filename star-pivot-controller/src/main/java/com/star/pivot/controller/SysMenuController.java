@@ -8,8 +8,6 @@ import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +25,9 @@ public class SysMenuController {
     private final SysUserService sysUserService;
 
     /**
-     * 查询所有菜单树（管理员使用）
+     * 查询所有菜单树接口（管理员使用）
+     * 
+     * @return 菜单树列表，包含所有菜单项及其层级关系
      */
     @GetMapping("/menuTree")
     public Result<List<SysMenu>> menuTree() {
@@ -37,8 +37,10 @@ public class SysMenuController {
     }
 
     /**
-     * 获取当前用户的菜单树（根据用户权限）
-     * 后端为主：根据用户权限返回菜单数据
+     * 获取当前用户的菜单树接口（根据用户权限）
+     * 
+     * @param authentication Spring Security认证对象
+     * @return 当前用户有权限的菜单树列表
      */
     @GetMapping("/userMenuTree")
     public Result<List<SysMenu>> getUserMenuTree(Authentication authentication) {
@@ -61,15 +63,21 @@ public class SysMenuController {
     }
 
     /**
-     * 新增菜单
+     * 新增菜单接口
+     * 
+     * @param menuDTO 菜单数据传输对象，包含菜单的详细信息
+     * @return 操作结果，成功或失败的响应
      */
-    @PostMapping
+    @PostMapping("/add")
     public Result<?> add(@Valid @RequestBody MenuDTO menuDTO) {
         boolean success = sysMenuService.insertMenu(menuDTO);
         return success ? Result.success("新增菜单成功") : Result.error("新增菜单失败");
     }
     /**
-     * 修改菜单
+     * 修改菜单接口
+     * 
+     * @param menuDTO 菜单数据传输对象，包含要更新的菜单信息
+     * @return 操作结果，成功或失败的响应
      */
     @PutMapping
     public Result<?> edit(@Valid @RequestBody MenuDTO menuDTO) {
@@ -78,11 +86,46 @@ public class SysMenuController {
     }
 
     /**
-     * 删除菜单
+     * 删除菜单接口
+     * 
+     * @param menuId 菜单ID
+     * @return 操作结果，成功或失败的响应
      */
     @DeleteMapping("/{menuId}")
-    public Result<?> remove(@PathVariable Long menuId) {
+    public Result<?> remove(@PathVariable("menuId") Long menuId) {
         boolean success = sysMenuService.deleteMenu(menuId);
         return success ? Result.success("删除菜单成功") : Result.error("删除菜单失败");
+    }
+    /**
+     * 获取上级菜单树接口
+     * 
+     * @return 上级菜单列表，用于菜单选择或层级展示
+     */
+    @GetMapping("/getParent")
+    public Result<List<SysMenu>> getParent(){
+        List<SysMenu> list = sysMenuService.getParent();
+        return Result.success("查询成功",list);
+    }
+    /**
+     * 根据ID获取菜单接口
+     * 
+     * @param menuId 菜单ID
+     * @return 指定ID的菜单信息
+     */
+    @GetMapping("/getById/{menuId}")
+    public Result<SysMenu> getById(@PathVariable("menuId") Long menuId){
+        SysMenu menu = sysMenuService.getById(menuId);
+        return Result.success("查询成功",menu);
+    }
+    /**
+     * 根据角色ID获取菜单接口
+     * 
+     * @param roleId 角色ID
+     * @return 指定角色拥有的菜单列表
+     */
+    @GetMapping("/getMenuByRoleId/{roleId}")
+    public Result<List<SysMenu>> getMenuByRoleId(@PathVariable("roleId") Long roleId){
+        List<SysMenu> list = sysMenuService.getMenuByRoleId(roleId);
+        return Result.success("查询成功",list);
     }
 }

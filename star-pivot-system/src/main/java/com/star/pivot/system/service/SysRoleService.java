@@ -6,6 +6,8 @@ import com.star.pivot.system.domain.dto.RoleDTO;
 import com.star.pivot.system.domain.dto.RoleQueryDTO;
 import com.star.pivot.system.domain.entity.SysRole;
 
+import java.util.List;
+
 /**
  * 角色信息表(SysRole)表服务接口
  *
@@ -25,5 +27,7 @@ public interface SysRoleService extends IService<SysRole> {
     boolean deleteRoleByIds(Long[] roleIds);
 
     boolean changeRoleStatus(Long roleId, String status);
+
+    List<Long> selectDeptIdsByRoleId(Long roleId);
 }
 

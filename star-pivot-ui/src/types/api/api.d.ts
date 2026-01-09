@@ -122,6 +122,21 @@ declare namespace Api {
       delFlag?: number
       remark?: string
     }
+    interface UserBo{
+      userId: number,
+      deptId: number,
+      userName: string,
+      nickName: string,
+      email: string,
+      avatar: string,
+      password: string,
+      phonenumber: string,
+      status: string,
+      sex: string,
+      remark: string,
+      roleIds: string[],
+      postIds: string[]
+    }
 
     /** 用户搜索参数 */
     type UserSearchParams = Partial<
@@ -140,9 +155,17 @@ declare namespace Api {
       roleId: number
       roleName: string
       roleKey: string
+      roleSort: number;
+      dataScope: string;
+      menuCheckStrictly: number;
+      deptCheckStrictly: number;
       remark: string
       status: number
       createTime: string
+      delFlag: number
+      createBy: string
+      updateTime: string
+      updateBy: string
     }
 
     /** 角色搜索参数 */
@@ -151,4 +174,31 @@ declare namespace Api {
     > &
       Api.Common.CommonSearchParams
   }
+
+  namespace post{
+    type PostList = Api.Common.PaginatedResponse<PostListItem>
+    interface PostListItem {
+      postId: number
+      postName: string
+      postCode: string
+      postSort: number
+      status: number
+      remark: string
+      createTime: string
+      updateTime: string
+      createBy: string
+      updateBy: string
+    }
+    type PostSearchParams = Partial<
+      Pick<PostListItem, 'postId' | 'postName' | 'postCode' | 'status'>
+    > &
+      Api.Common.CommonSearchParams
+
+    interface PostBo {
+      postId : number
+      postCode: string
+      postName: string
+    }
+  }
+
 }

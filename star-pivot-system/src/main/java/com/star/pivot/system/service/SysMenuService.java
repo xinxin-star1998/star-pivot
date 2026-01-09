@@ -32,5 +32,9 @@ public interface SysMenuService extends IService<SysMenu> {
     boolean updateMenu(MenuDTO menuDTO);
 
     boolean deleteMenu(Long menuId);
+
+    List<SysMenu> getParent();
+
+    List<SysMenu> getMenuByRoleId(Long roleId);
 }
 

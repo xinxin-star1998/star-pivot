@@ -7,10 +7,10 @@
  */
 export const WEB_LINKS = {
   // Github 主页
-  GITHUB_HOME: 'https://github.com/Daymychen/star-pivot-ui',
+  GITHUB_HOME: 'https://gitee.com/xin1998/StarPivot',
 
   // 项目 Github 主页
-  GITHUB: 'https://github.com/Daymychen/star-pivot-ui',
+  GITHUB: 'https://gitee.com/xin1998/StarPivot',
 
   // 个人博客
   BLOG: 'https://www.artd.pro',

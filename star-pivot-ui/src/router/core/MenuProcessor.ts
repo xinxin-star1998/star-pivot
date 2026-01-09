@@ -47,6 +47,19 @@ export class MenuProcessor {
   }
 
   /**
+   * 将 SysMenu 数组转换为 AppRouteRecord 数组（公共方法）
+   * 用于菜单管理页面等需要处理所有菜单的场景
+   * @param sysMenus 后端菜单列表
+   * @returns 转换后的路由记录数组
+   */
+  convertSysMenuToRouteRecordPublic(sysMenus: SysMenu[]): AppRouteRecord[] {
+    const convertedList = this.convertSysMenuToRouteRecord(sysMenus)
+    const filteredList = this.filterEmptyMenus(convertedList)
+    this.validateMenuPaths(filteredList)
+    return this.normalizeMenuPaths(filteredList)
+  }
+
+  /**
    * 将后端 SysMenu 转换为前端 AppRouteRecord
    * @param sysMenus 后端菜单列表
    * @param level 当前层级（从0开始，0表示一级菜单）
@@ -78,16 +91,39 @@ export class MenuProcessor {
           component = component.replace(/#/g, '').trim()
         }
 
-        // 只有一级菜单（level === 0）且是目录类型时，如果没有 component，才使用 Layout
-        // 二级及以下菜单如果是目录类型，不设置 component（留空）
+        // 检查是否有子菜单
+        // 注意：后端返回的应该是树形结构，menu.children 应该已经包含子菜单
+        const hasChildren = menu.children && menu.children.length > 0
+
+        // 只有目录类型（M）才能使用 Layout
+        // 菜单类型（C）必须有自己的 component，不能使用 Layout
+        // 支持多级路由：任何目录类型如果有子菜单，都应该使用 Layout 来承载子路由
         if (isDirectory && (!component || component === '')) {
-          if (level === 0) {
-            // 一级菜单使用 Layout
+          if (hasChildren) {
+            // 任何层级的目录，只要有子菜单，都使用 Layout 来承载子路由
             component = RoutesAlias.Layout
+            console.log(
+              `[MenuProcessor] 目录 "${menu.menuName}" (level: ${level}) 有子菜单，设置为 Layout`
+            )
           } else {
-            // 二级及以下菜单不设置 component
+            // 目录类型但没有子菜单，不设置 component
             component = undefined
+            console.log(
+              `[MenuProcessor] 目录 "${menu.menuName}" (level: ${level}) 没有子菜单，不设置 component`
+            )
           }
+        }
+
+        // 将 perms 字符串转换为 authList 数组格式
+        // perms 可能是单个权限标识，也可能是逗号分隔的多个权限标识
+        let authList: Array<{ title: string; authMark: string }> | undefined
+        if (menu.perms) {
+          // 如果 perms 是逗号分隔的字符串，拆分成数组
+          const permsArray = menu.perms.split(',').map((p) => p.trim()).filter(Boolean)
+          authList = permsArray.map((perm) => ({
+            title: perm, // 使用权限标识作为标题
+            authMark: perm // 权限标识
+          }))
         }
 
         const routeRecord: AppRouteRecord = {
@@ -105,8 +141,19 @@ export class MenuProcessor {
             // visible: 0显示, 1隐藏 -> isHide: true隐藏, false显示
             isHide: menu.visible === '1',
             // 如果是外链，设置 link
-            link: isExternalLink ? path : undefined
+            link: isExternalLink ? path : undefined,
+            // 将 perms 转换为 authList 格式
+            authList: authList,
+            // 标记是否是 Layout 组件（用于多级路由判断）
+            isLayout: component === RoutesAlias.Layout
           },
+          // 保留菜单的额外信息
+          createTime: menu.createTime,
+          updateTime: menu.updateTime,
+          status: menu.status,
+          orderNum: menu.orderNum,
+          remark: menu.remark,
+          menuType: menu.menuType as 'M' | 'C' | 'F' | undefined,
           children: menu.children && menu.children.length > 0
             ? this.convertSysMenuToRouteRecord(menu.children, level + 1)
             : undefined
