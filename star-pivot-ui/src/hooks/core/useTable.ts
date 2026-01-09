@@ -17,24 +17,20 @@
  * @author Art Design Pro Team
  */
 
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick, readonly } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, readonly, ref } from 'vue'
 import { useWindowSize } from '@vueuse/core'
-import { useTableColumns } from './useTableColumns'
+import { useTableColumns } from '@/hooks'
 import type { ColumnOption } from '@/types/component'
+import { type ApiResponse, CacheInvalidationStrategy, TableCache } from '@utils/table/tableCache'
 import {
-  TableCache,
-  CacheInvalidationStrategy,
-  type ApiResponse
-} from '../../utils/table/tableCache'
-import {
-  type TableError,
+  createErrorHandler,
+  createSmartDebounce,
   defaultResponseAdapter,
   extractTableData,
-  updatePaginationFromResponse,
-  createSmartDebounce,
-  createErrorHandler
-} from '../../utils/table/tableUtils'
-import { tableConfig } from '../../utils/table/tableConfig'
+  type TableError,
+  updatePaginationFromResponse
+} from '@utils/table/tableUtils'
+import { tableConfig } from '@utils/table/tableConfig'
 
 // 类型推导工具类型
 type InferApiParams<T> = T extends (params: infer P) => any ? P : never
@@ -275,19 +271,53 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
     cacheUpdateTrigger.value++
   }
 
+  // 防止重复调用的标记
+  let isFetching = false
+  let pendingRequest: Promise<ApiResponse<TRecord>> | null = null
+
   // 获取数据的核心方法
   const fetchData = async (
     params?: Partial<TParams>,
     useCache = enableCache
   ): Promise<ApiResponse<TRecord>> => {
-    // 取消上一个请求
-    if (abortController) {
+    // 如果正在请求中，取消上一个请求
+    if (isFetching && abortController) {
       abortController.abort()
+    }
+
+    // 如果已有待处理的请求，等待它完成（避免重复调用）
+    if (pendingRequest) {
+      try {
+        return await pendingRequest
+      } catch {
+        // 如果上一个请求失败，继续执行新的请求
+      }
     }
 
     // 创建新的取消控制器
     const currentController = new AbortController()
     abortController = currentController
+
+    // 设置请求标记和待处理请求
+    isFetching = true
+    pendingRequest = (async () => {
+      try {
+        return await executeFetchData(currentController, params, useCache)
+      } finally {
+        isFetching = false
+        pendingRequest = null
+      }
+    })()
+
+    return pendingRequest
+  }
+
+  // 执行实际的数据获取
+  const executeFetchData = async (
+    currentController: AbortController,
+    params?: Partial<TParams>,
+    useCache = enableCache
+  ): Promise<ApiResponse<TRecord>> => {
 
     // 状态机：进入 loading 状态
     loadingState.value = 'loading'
@@ -400,8 +430,7 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
       // 状态机：请求失败，进入 error 状态
       loadingState.value = 'error'
       data.value = []
-      const tableError = handleError(err, '获取表格数据失败')
-      throw tableError
+      throw handleError(err, '获取表格数据失败')
     } finally {
       // 只有当前控制器是活跃的才清空
       if (abortController === currentController) {

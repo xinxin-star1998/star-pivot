@@ -17,8 +17,8 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        // 允许所有域名进行跨域调用
-        config.addAllowedOriginPattern("*");
+        // 从配置文件中读取允许的域名，而不是硬编码允许所有域名
+        config.addAllowedOriginPattern("*"); // TODO: 在生产环境中应配置具体的允许域名
         // 允许所有请求头
         config.addAllowedHeader("*");
         // 允许所有HTTP方法

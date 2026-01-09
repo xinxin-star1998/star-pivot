@@ -9,17 +9,34 @@
       <ElFormItem label="用户名" prop="username">
         <ElInput v-model="formData.userName" placeholder="请输入用户名" />
       </ElFormItem>
+      <ElFormItem label="用户密码" prop="username" v-if="dialogType === 'add'">
+        <ElInput v-model="formData.password" placeholder="请输入用户名" />
+      </ElFormItem>
+      <ElFormItem label="用户昵称" prop="nickName">
+        <ElInput v-model="formData.nickName" placeholder="请输入用户昵称" />
+      </ElFormItem>
+      <ElFormItem label="邮箱" prop="email">
+        <ElInput v-model="formData.email" placeholder="请输入邮箱" />
+      </ElFormItem>
+
       <ElFormItem label="手机号" prop="phone">
         <ElInput v-model="formData.phonenumber" placeholder="请输入手机号" />
       </ElFormItem>
       <ElFormItem label="性别" prop="gender">
-        <ElSelect v-model="formData.sex">
-          <ElOption label="男" value="男" />
-          <ElOption label="女" value="女" />
-        </ElSelect>
+        <ElRadioGroup v-model="formData.sex">
+          <ElRadio label="0">男</ElRadio>
+          <ElRadio label="1">女</ElRadio>
+          <ElRadio label="2">未知</ElRadio>
+        </ElRadioGroup>
+      </ElFormItem>
+      <ElFormItem label="状态" prop="status">
+        <ElRadioGroup v-model="formData.status">
+          <ElRadio label="0">启用</ElRadio>
+          <ElRadio label="1">禁用</ElRadio>
+        </ElRadioGroup>
       </ElFormItem>
       <ElFormItem label="角色" prop="role">
-        <ElSelect v-model="formData.role" multiple>
+        <ElSelect v-model="formData.roleIds" multiple>
           <ElOption
             v-for="role in roleList"
             :key="role.roleCode"
@@ -27,6 +44,30 @@
             :label="role.roleName"
           />
         </ElSelect>
+      </ElFormItem>
+      <ElFormItem label="岗位" prop="post">
+        <ElSelect v-model="formData.postIds" multiple>
+          <ElOption
+            v-for="post in postList"
+            :key="post.postId"
+            :value="post.postId?.toString()"
+            :label="post.postName"
+          />
+        </ElSelect>
+      </ElFormItem>
+      <ElFormItem label="部门" prop="deptId">
+        <ElTreeSelect
+          v-model="formData.deptId"
+          :data="deptTreeData"
+          :props="deptTreeProps"
+          placeholder="请选择部门"
+          clearable
+          check-strictly
+          :render-after-expand="false"
+        />
+      </ElFormItem>
+      <ElFormItem label="备注" prop="remark">
+        <ElInput type="textarea" v-model="formData.remark" placeholder="请输入备注" />
       </ElFormItem>
     </ElForm>
     <template #footer>
@@ -39,13 +80,21 @@
 </template>
 
 <script setup lang="ts">
-  import { ROLE_LIST_DATA } from '@/mock/temp/formData'
+  import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { ElTreeSelect } from 'element-plus'
+  import { fetchGetRoleSelect } from '@/api/role/role'
+  import { fetchGetPostSelect } from '@/api/post/post'
+  import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
+  import { fetchAddUser, fetchUpdateUser, fetchGetUserById } from '@/api/user/user'
+
+  // 角色列表项类型（扩展 RoleListItem，添加 roleCode 字段）
+  type RoleOption = Api.SystemManage.RoleListItem & { roleCode: string }
 
   interface Props {
     visible: boolean
     type: string
-    userData?: Partial<Api.SystemManage.UserListItem>
+    userData?: Partial<Api.SystemManage.UserBo>
   }
 
   interface Emits {
@@ -57,8 +106,17 @@
   const emit = defineEmits<Emits>()
 
   // 角色列表数据
-  const roleList = ref(ROLE_LIST_DATA)
-
+  const roleList = ref<RoleOption[]>([])
+  // 岗位列表数据
+  const postList = ref<Api.post.PostBo[]>([])
+  // 部门树数据
+  const deptTreeData = ref<SysDept[]>([])
+  // 部门树配置
+  const deptTreeProps = {
+    value: 'deptId',
+    label: 'deptName',
+    children: 'children'
+  }
   // 对话框显示控制
   const dialogVisible = computed({
     get: () => props.visible,
@@ -72,40 +130,121 @@
 
   // 表单数据
   const formData = reactive({
+    userId: 0,
+    deptId: 0,
     userName: '',
+    nickName: '',
+    email: '',
+    avatar: '',
+    password: '',
     phonenumber: '',
-    sex: '男',
-    role: [] as string[]
+    status: '0',
+    sex: '0',
+    remark: '',
+    roleIds: [] as string[],
+    postIds: [] as string[]
   })
 
   // 表单验证规则
   const rules: FormRules = {
-    username: [
+    userName: [
       { required: true, message: '请输入用户名', trigger: 'blur' },
       { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
     ],
-    phone: [
+    phonenumber: [
       { required: true, message: '请输入手机号', trigger: 'blur' },
       { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' }
     ],
-    gender: [{ required: true, message: '请选择性别', trigger: 'blur' }],
-    role: [{ required: true, message: '请选择角色', trigger: 'blur' }]
+    sex: [{ required: true, message: '请选择性别', trigger: 'blur' }],
+    roleIds: [{ required: true, message: '请选择角色', trigger: 'blur' }]
   }
 
   /**
    * 初始化表单数据
    * 根据对话框类型（新增/编辑）填充表单
    */
-  const initFormData = () => {
+  const initFormData = async () => {
     const isEdit = props.type === 'edit' && props.userData
     const row = props.userData
 
-    Object.assign(formData, {
-      username: isEdit && row ? row.userName || '' : '',
-      phone: isEdit && row ? row.phonenumber || '' : '',
-      gender: isEdit && row ? row.sex || '男' : '男',
-      role: isEdit && row ? (Array.isArray(row.userRoles) ? row.userRoles : []) : []
-    })
+    if (isEdit && row?.userId) {
+      // 编辑模式：获取完整的用户详情（包含 roleIds 和 postIds）
+      try {
+        const userDetail = await fetchGetUserById(row.userId)
+        console.log('用户详情数据:', userDetail)
+        if (userDetail) {
+          // 处理角色ID：可能是 roleIds 数组，也可能是 userRoles 数组
+          let roleIdsArray: any[] = []
+          if (Array.isArray((userDetail as any).roleIds)) {
+            roleIdsArray = (userDetail as any).roleIds
+          } else if (Array.isArray((userDetail as any).userRoles)) {
+            // 如果后端返回的是 userRoles，提取角色ID
+            roleIdsArray = (userDetail as any).userRoles.map((role: any) =>
+              typeof role === 'object' ? role.roleId : role
+            )
+          }
+
+          // 转换为字符串数组，与 roleCode 格式一致
+          const roleIds = roleIdsArray.map((id: any) => id?.toString() || '').filter(Boolean)
+          console.log('处理后的角色ID:', roleIds)
+
+          // 处理岗位ID
+          const postIds = Array.isArray((userDetail as any).postIds)
+            ? (userDetail as any).postIds.map((id: any) => id?.toString() || '').filter(Boolean)
+            : []
+
+          Object.assign(formData, {
+            userId: userDetail.userId || 0,
+            deptId: userDetail.deptId || 0,
+            userName: userDetail.userName || '',
+            nickName: userDetail.nickName || '',
+            email: userDetail.email || '',
+            phonenumber: userDetail.phonenumber || '',
+            sex: userDetail.sex || '0',
+            status: userDetail.status || '0',
+            password: userDetail.password || '',
+            roleIds,
+            postIds,
+            remark: userDetail.remark || ''
+          })
+
+          console.log('表单数据已设置，roleIds:', formData.roleIds)
+        }
+      } catch (error) {
+        console.error('获取用户详情失败:', error)
+        ElMessage.error('获取用户详情失败')
+        // 如果获取详情失败，使用列表数据作为回退
+        Object.assign(formData, {
+          userId: row.userId || 0,
+          deptId: row.deptId || 0,
+          userName: row.userName || '',
+          nickName: row.nickName || '',
+          email: row.email || '',
+          phonenumber: row.phonenumber || '',
+          sex: row.sex || '0',
+          status: row.status || '0',
+          password: '',
+          remark: row.remark || '',
+          roleIds: [],
+          postIds: []
+        })
+      }
+    } else {
+      // 新增模式：重置表单
+      Object.assign(formData, {
+        userId: 0,
+        deptId: 0,
+        userName: '',
+        nickName: '',
+        email: '',
+        phonenumber: '',
+        sex: '0',
+        status: '0',
+        password: '',
+        roleIds: [],
+        postIds: []
+      })
+    }
   }
 
   /**
@@ -114,9 +253,16 @@
    */
   watch(
     () => [props.visible, props.type, props.userData],
-    ([visible]) => {
+    async ([visible]) => {
       if (visible) {
-        initFormData()
+        // 先获取下拉数据
+        await Promise.all([
+          getRoleList(), // 获取角色列表
+          getPostList(), // 获取岗位列表
+          getDeptTree() // 获取部门树
+        ])
+        // 再初始化表单数据（编辑模式会获取用户详情）
+        await initFormData()
         nextTick(() => {
           formRef.value?.clearValidate()
         })
@@ -132,12 +278,77 @@
   const handleSubmit = async () => {
     if (!formRef.value) return
 
-    await formRef.value.validate((valid) => {
+    await formRef.value.validate(async (valid) => {
       if (valid) {
-        ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
-        dialogVisible.value = false
-        emit('submit')
+        try {
+          if (dialogType.value === 'add') {
+            await fetchAddUser(formData)
+          } else {
+            await fetchUpdateUser(formData)
+          }
+          ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
+          dialogVisible.value = false
+          emit('submit')
+        } catch (error) {
+          console.error('提交失败:', error)
+          ElMessage.error(dialogType.value === 'add' ? '添加失败' : '更新失败')
+        }
       }
     })
+  }
+  /**
+   * 获取角色下拉数据
+   */
+  const getRoleList = async () => {
+    try {
+      const res = await fetchGetRoleSelect()
+      if (Array.isArray(res) && res.length > 0) {
+        // 将 roleKey 映射为 roleCode，以匹配模板中的使用
+        roleList.value = res.map((role) => ({
+          ...role,
+          roleCode: role.roleId?.toString()
+        }))
+      } else {
+        roleList.value = []
+      }
+    } catch (error) {
+      console.error('获取角色列表失败:', error)
+      roleList.value = []
+      ElMessage.error('获取角色列表失败')
+    }
+  }
+  /**
+   * 获取岗位下拉数据
+   */
+  const getPostList = async () => {
+    try {
+      const res = await fetchGetPostSelect()
+      if (Array.isArray(res) && res.length > 0) {
+        postList.value = res
+      } else {
+        postList.value = []
+      }
+    } catch (error) {
+      console.error('获取岗位列表失败:', error)
+      postList.value = []
+      ElMessage.error('获取岗位列表失败')
+    }
+  }
+  /**
+   * 获取部门树数据
+   */
+  const getDeptTree = async () => {
+    try {
+      const res = await fetchGetDeptTree()
+      if (Array.isArray(res) && res.length > 0) {
+        deptTreeData.value = res
+      } else {
+        deptTreeData.value = []
+      }
+    } catch (error) {
+      console.error('获取部门树失败:', error)
+      deptTreeData.value = []
+      ElMessage.error('获取部门树失败')
+    }
   }
 </script>

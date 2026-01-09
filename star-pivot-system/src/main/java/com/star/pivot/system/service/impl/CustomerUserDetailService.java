@@ -6,6 +6,7 @@ import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.mapper.SysMenuMapper;
 import com.star.pivot.system.mapper.SysRoleMapper;
 import com.star.pivot.system.service.SysUserService;
+import com.star.pivot.system.utils.LoginUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
@@ -54,17 +55,8 @@ public class CustomerUserDetailService implements UserDetailsService {
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
-        // 判断账号是否启用（status为"0"表示正常，"1"表示停用）
-        boolean enabled = user.getStatus() != null && "0".equals(user.getStatus());
-
-        return new org.springframework.security.core.userdetails.User(
-                user.getUserName(),
-                user.getPassword(),
-                enabled,  // 账号是否启用
-                true,     // 账号是否未过期
-                true,     // 凭证是否未过期
-                true,     // 账号是否未锁定
-                authorities
-        );
+        // 返回LoginUser对象，而不是Spring Security标准的User对象
+        // 这样SecurityContextUtils才能正确获取到用户信息
+        return new LoginUser(user, authorities);
     }
 }

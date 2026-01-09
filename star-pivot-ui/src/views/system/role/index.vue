@@ -58,7 +58,7 @@
 <script setup lang="ts">
   import { ButtonMoreItem } from '@/components/core/forms/art-button-more/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetRoleList } from '@/api/role/role'
+  import { fetchDeleteRole, fetchGetRoleList } from '@/api/role/role'
   import ArtButtonMore from '@/components/core/forms/art-button-more/index.vue'
   import RoleSearch from './modules/role-search.vue'
   import RoleEditDialog from './modules/role-edit-dialog.vue'
@@ -135,8 +135,8 @@
           label: '角色状态',
           width: 100,
           formatter: (row) => {
-            const status = row.status
-            const isEnabled = status === 0 || status === '0'
+            const status = Number(row.status)
+            const isEnabled = status === 0
             const tagType = isEnabled ? 'success' : 'danger'
             const text = isEnabled ? '启用' : '禁用'
             return h(ElTag, { type: tagType }, () => text)
@@ -159,7 +159,7 @@
                 list: [
                   {
                     key: 'permission',
-                    label: '菜单权限',
+                    label: '分配菜单',
                     icon: 'ri:user-3-line'
                   },
                   {
@@ -229,13 +229,16 @@
       cancelButtonText: '取消',
       type: 'warning'
     })
-      .then(() => {
-        // TODO: 调用删除接口
-        ElMessage.success('删除成功')
+      .then(async () => {
+        await fetchDeleteRole([row.roleId])
         refreshData()
       })
-      .catch(() => {
-        ElMessage.info('已取消删除')
+      .catch((error) => {
+        // 用户取消操作时不显示错误（Element Plus 会 reject，但这是正常的用户行为）
+        // API 调用失败的错误已在 HTTP 拦截器中统一处理并显示错误消息
+        if (import.meta.env.DEV && error !== 'cancel') {
+          console.error('删除角色失败:', error)
+        }
       })
   }
 </script>

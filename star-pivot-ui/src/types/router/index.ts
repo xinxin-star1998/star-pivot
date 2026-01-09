@@ -66,6 +66,8 @@ export interface RouteMeta extends Record<string | number | symbol, unknown> {
   authMark?: string
   /** 父级路径 */
   parentPath?: string
+  /** 是否是 Layout 组件（用于多级路由判断） */
+  isLayout?: boolean
 }
 
 /**
@@ -77,4 +79,18 @@ export interface AppRouteRecord extends Omit<RouteRecordRaw, 'meta' | 'children'
   meta: RouteMeta
   children?: AppRouteRecord[]
   component?: string | (() => Promise<any>)
+  /** 创建时间 */
+  createTime?: string
+  /** 更新时间 */
+  updateTime?: string
+  /** 菜单状态（0正常 1停用） */
+  status?: string
+  /** 显示顺序 */
+  orderNum?: number
+  /** 备注 */
+  remark?: string
+  /** 菜单类型（M目录 C菜单 F按钮） */
+  menuType?: 'M' | 'C' | 'F'
+  /** 权限标识 */
+  perms?: string
 }

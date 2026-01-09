@@ -15,7 +15,7 @@ export const staticRoutes: AppRouteRecordRaw[] = [
   // {
   //   path: '/welcome',
   //   name: 'WelcomeStatic',
-  //   component: () => import('@views/dashboard/console/index.vue'),
+  //   component: () => import('@views/dashboard/console/dict-data.vue'),
   //   meta: { title: 'menus.dashboard.title' }
   // },
   {
@@ -66,6 +66,21 @@ export const staticRoutes: AppRouteRecordRaw[] = [
         name: 'Iframe',
         component: () => import('@/views/outside/Iframe.vue'),
         meta: { title: 'iframe' }
+      }
+    ]
+  },
+  // 字典数据页面路由
+  {
+    path: '/data',
+    name: 'Layout',
+    component: () => import('@views/index/index.vue'),
+    meta: { title: '字典数据管理' },
+    children:[
+      {
+        path: '/system/dict/dict-data',
+        name: 'DictData',
+        component: () => import('@views/system/dict/dict-data.vue'),
+        meta: { title: '字典数据详情' }
       }
     ]
   }

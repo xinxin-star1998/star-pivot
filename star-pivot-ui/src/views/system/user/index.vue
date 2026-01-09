@@ -45,11 +45,13 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { ACCOUNT_TABLE_DATA } from '@/mock/temp/formData'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetUserList } from '@/api/user/user'
+  import { fetchDeleteUser, fetchGetUserList, fetchUpdateUserStatus } from '@/api/user/user'
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
-  import { ElTag, ElMessageBox, ElImage } from 'element-plus'
+  import { ElMessageBox, ElImage, ElSwitch, ElMessage } from 'element-plus'
   import { DialogType } from '@/types'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
 
   defineOptions({ name: 'User' })
 
@@ -72,24 +74,6 @@
     status: '0'
   })
 
-  // 用户状态配置
-  const USER_STATUS_CONFIG = {
-    '0': { type: 'success' as const, text: '正常' },
-    '1': { type: 'info' as const, text: '停用' }
-  } as const
-
-  /**
-   * 获取用户状态配置
-   */
-  const getUserStatusConfig = (status: string) => {
-    return (
-      USER_STATUS_CONFIG[status as keyof typeof USER_STATUS_CONFIG] || {
-        type: 'info' as const,
-        text: '未知'
-      }
-    )
-  }
-
   const {
     columns,
     columnChecks,
@@ -110,11 +94,6 @@
         pageNum: 1,
         pageSize: 20,
         ...searchForm.value
-      },
-      // 自定义分页字段映射，后端使用 pageNum 和 pageSize
-      paginationKey: {
-        current: 'pageNum',
-        size: 'pageSize'
       },
       columnsFactory: () => [
         { type: 'selection' }, // 勾选列
@@ -166,8 +145,14 @@
           prop: 'status',
           label: '状态',
           formatter: (row) => {
-            const statusConfig = getUserStatusConfig(row.status)
-            return h(ElTag, { type: statusConfig.type }, () => statusConfig.text)
+            return h(ElSwitch, {
+              modelValue: row.status === '0',
+              activeValue: true,
+              inactiveValue: false,
+              onChange: (value: string | number | boolean) => {
+                handleStatusChange(row, value === true)
+              }
+            })
           }
         },
         {
@@ -263,6 +248,8 @@
       cancelButtonText: '取消',
       type: 'error'
     }).then(() => {
+      fetchDeleteUser([row.userId])
+      refreshData()
       ElMessage.success('注销成功')
     })
   }
@@ -274,6 +261,8 @@
     try {
       dialogVisible.value = false
       currentUserData.value = {}
+      // 刷新列表数据
+      refreshData()
     } catch (error) {
       console.error('提交失败:', error)
     }
@@ -285,5 +274,25 @@
   const handleSelectionChange = (selection: UserListItem[]): void => {
     selectedRows.value = selection
     console.log('选中行数据:', selectedRows.value)
+  }
+
+  /**
+   * 处理用户状态切换
+   */
+  const handleStatusChange = async (row: UserListItem, value: boolean) => {
+    try {
+      const newStatus = value ? '0' : '1'
+      await fetchUpdateUserStatus(row.userId, Number(newStatus))
+      ElMessage.success(value ? '启用成功' : '禁用成功')
+      // 更新本地数据
+      row.status = newStatus
+      // 刷新列表
+      refreshData()
+    } catch (error) {
+      console.error('更新状态失败:', error)
+      ElMessage.error('更新状态失败')
+      // 刷新列表以恢复原状态
+      refreshData()
+    }
   }
 </script>

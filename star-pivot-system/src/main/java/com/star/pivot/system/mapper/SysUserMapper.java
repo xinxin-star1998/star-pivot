@@ -23,8 +23,8 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 
     IPage<SysUser> selectPageList(Page<SysUser> page, @Param("userReqBo") UserReqBo userReqBo);
 
-    List<SysRole> getRolesByUserId(Long userId);
+    List<SysRole> getRolesByUserId(@Param("userId") Long userId);
 
-    List<SysMenu> getMenuByUserId(Long userId);
+    List<SysMenu> getMenuByUserId(@Param("userId") Long userId);
 }
 

@@ -9,6 +9,8 @@ import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.AuthService;
 import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
+import com.star.pivot.system.utils.JwtBlackListManager;
+import com.star.pivot.system.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -19,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 认证控制器
@@ -33,9 +34,14 @@ public class AuthController {
     private final AuthService authService;
     private final SysUserService sysUserService;
     private final SysMenuService sysMenuService;
+    private final JwtBlackListManager jwtBlackListManager;
+    private final JwtUtil jwtUtil;
 
     /**
-     * 用户登录
+     * 用户登录接口
+     * 
+     * @param request 登录请求参数，包含用户名和密码
+     * @return 登录响应结果，包含用户信息和认证令牌
      */
     @PostMapping("/login")
     public Result<LoginResponse> login(@RequestBody LoginRequest request) {
@@ -44,30 +50,49 @@ public class AuthController {
     }
 
     /**
-     * 用户登出
+     * 用户登出接口
+     * 
+     * @return 登出结果响应
      */
     @PostMapping("/logout")
-    public Result<Void> logout() {
+    public Result<Void> logout(@RequestHeader("Authorization") String authHeader) {
         // 从SecurityContext中获取当前用户信息
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = null;
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String username = userDetails.getUsername();
-            log.info("用户 {} 退出登录", username);
+            username = userDetails.getUsername();
+        }
+
+        // 从请求头中提取JWT令牌
+        String token = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+
+        // 如果提取到令牌，则将其加入黑名单
+        if (token != null && jwtUtil.validateToken(token)) {
+            // 获取令牌的剩余过期时间
+            long expirationTime = jwtUtil.getClaimsFromToken(token).getExpiration().getTime() - System.currentTimeMillis();
+            if (expirationTime > 0) {
+                jwtBlackListManager.addToBlackList(token, expirationTime);
+                log.info("用户 {} 的令牌已加入黑名单", username);
+            }
+        } else {
+            log.warn("无法从请求头中提取有效的JWT令牌");
         }
 
         // 清除SecurityContext
         SecurityContextHolder.clearContext();
 
-        // TODO: 如果使用Redis，可以将Token加入黑名单
-        // redisTemplate.opsForValue().set("blacklist:" + token, "1", tokenExpiration, TimeUnit.MILLISECONDS);
-
         return Result.success("登出成功");
     }
 
     /**
-     * 获取当前用户信息
-     * 从Spring Security的Authentication中获取用户名，而不是通过请求参数传递
+     * 获取当前用户信息接口
+     * 
+     * @param authentication Spring Security认证对象
+     * @return 当前用户信息，包含用户基本信息、角色列表和权限菜单
      */
     @GetMapping("/userinfo")
     public Result<Map<String, Object>> getCurrentUser(Authentication authentication) {

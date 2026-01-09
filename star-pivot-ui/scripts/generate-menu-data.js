@@ -106,14 +106,14 @@ function scanViewsDir(dirPath, basePath = '') {
     const fullPath = path.join(dirPath, dir.name)
     const relativePath = basePath ? `${basePath}/${dir.name}` : dir.name
     
-    // 检查目录下是否有 index.vue 文件
-    const indexPath = path.join(fullPath, 'index.vue')
+    // 检查目录下是否有 dict-data.vue 文件
+    const indexPath = path.join(fullPath, 'dict-data.vue')
     const hasIndex = fs.existsSync(indexPath)
     
     // 递归扫描子目录
     const children = scanViewsDir(fullPath, relativePath)
     
-    // 如果有子目录或 index.vue，添加到菜单
+    // 如果有子目录或 dict-data.vue，添加到菜单
     if (children.length > 0 || hasIndex) {
       items.push({
         type: 'directory',
@@ -175,7 +175,7 @@ function generateMenuData(items, parentId = 0, orderNum = 1) {
         }
         resultMenus.push(menu)
 
-        // 如果有 index.vue，作为第一个子菜单添加
+        // 如果有 dict-data.vue，作为第一个子菜单添加
         let childOrderNum = 1
         if (hasIndex) {
           const pageMenuId = menuIdCounter++
@@ -204,7 +204,7 @@ function generateMenuData(items, parentId = 0, orderNum = 1) {
         const childMenus = processItems(item.children, menuId, childOrderNum)
         resultMenus.push(...childMenus)
       } 
-      // 如果是只有 index.vue 的目录（没有子目录），生成页面菜单（C类型）
+      // 如果是只有 dict-data.vue 的目录（没有子目录），生成页面菜单（C类型）
       else if (isDirectory && hasIndex && !hasChildren) {
         const menuName = getPageName(item.path)
         const menu = {

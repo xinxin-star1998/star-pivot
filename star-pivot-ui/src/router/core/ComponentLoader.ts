@@ -43,10 +43,19 @@ export class ComponentLoader {
   }
 
   /**
-   * 加载布局组件
+   * 加载布局组件（完整布局，包含侧边栏、头部等）
+   * 用于一级路由
    */
   loadLayout(): () => Promise<any> {
     return () => import('@/views/index/index.vue')
+  }
+
+  /**
+   * 加载嵌套布局组件（简单布局，只包含 RouterView）
+   * 用于嵌套路由（二级及以下）
+   */
+  loadNestedLayout(): () => Promise<any> {
+    return () => import('@/views/layouts/NestedLayout.vue')
   }
 
   /**

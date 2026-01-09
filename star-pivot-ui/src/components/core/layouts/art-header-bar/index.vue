@@ -183,6 +183,15 @@
   import { useCommon } from '@/hooks/core/useCommon'
   import { useHeaderBar } from '@/hooks/core/useHeaderBar'
   import ArtUserMenu from './widget/ArtUserMenu.vue'
+  import ArtLogo from '@/components/core/base/art-logo/index.vue'
+  import ArtIconButton from '@/components/core/widget/art-icon-button/index.vue'
+  import ArtFastEnter from '@/components/core/layouts/art-fast-enter/index.vue'
+  import ArtBreadcrumb from '@/components/core/layouts/art-breadcrumb/index.vue'
+  import ArtHorizontalMenu from '@/components/core/layouts/art-menus/art-horizontal-menu/index.vue'
+  import ArtMixedMenu from '@/components/core/layouts/art-menus/art-mixed-menu/index.vue'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtWorkTab from '@/components/core/layouts/art-work-tab/index.vue'
+  import ArtNotification from '@/components/core/layouts/art-notification/index.vue'
 
   defineOptions({ name: 'ArtHeaderBar' })
 

@@ -139,16 +139,47 @@ export class RouteValidator {
 
   /**
    * 检测嵌套菜单的 Layout 组件配置
-   * 只有一级菜单才能使用 Layout，二级及以下菜单不能使用
+   * 支持多级路由：目录类型（M）如果有子菜单，可以使用 Layout
+   * 菜单类型（C）不应该使用 Layout
    */
   private checkNestedIndexComponent(routes: AppRouteRecord[], level = 1): void {
     routes.forEach((route) => {
-      // 检查二级及以下菜单是否错误使用了 Layout
-      if (level > 1 && route.component === RoutesAlias.Layout) {
-        this.logLayoutError(route, level)
+      // 菜单类型（C）不应该使用 Layout，只有目录类型（M）才能使用
+      if (route.menuType === 'C' && route.component === RoutesAlias.Layout) {
+        const routeName = String(route.name || route.path || '未知路由')
+        const routeKey = `${routeName}_${route.path}`
+        if (!this.warnedRoutes.has(routeKey)) {
+          this.warnedRoutes.add(routeKey)
+          console.error(
+            `[路由配置错误] 菜单 "${route.meta?.title || routeName}" (name: ${routeName}, path: ${route.path || '/'}) 配置错误\n` +
+            `  问题: 菜单类型（C）不能使用 ${RoutesAlias.Layout} 作为 component\n` +
+            `  说明: 只有目录类型（M）才能使用 ${RoutesAlias.Layout}，菜单类型（C）必须指向具体的组件路径\n` +
+            `  当前配置: component: '${RoutesAlias.Layout}'\n` +
+            `  应该改为: component: '/your/component/path'`
+          )
+        }
+      }
+      
+      // 目录类型如果没有子菜单，不应该使用 Layout
+      if (
+        route.menuType === 'M' &&
+        route.component === RoutesAlias.Layout &&
+        (!route.children || route.children.length === 0)
+      ) {
+        const routeName = String(route.name || route.path || '未知路由')
+        const routeKey = `${routeName}_${route.path}`
+        if (!this.warnedRoutes.has(routeKey)) {
+          this.warnedRoutes.add(routeKey)
+          console.warn(
+            `[路由配置警告] 目录 "${route.meta?.title || routeName}" (name: ${routeName}, path: ${route.path || '/'}) 配置可能有问题\n` +
+            `  问题: 目录类型（M）没有子菜单，但使用了 ${RoutesAlias.Layout}\n` +
+            `  说明: 目录类型只有在有子菜单时才应该使用 ${RoutesAlias.Layout} 来承载子路由\n` +
+            `  当前配置: component: '${RoutesAlias.Layout}'`
+          )
+        }
       }
 
-      // 递归检查子路由
+      // 递归检查子路由（支持多级路由）
       if (route.children?.length) {
         this.checkNestedIndexComponent(route.children, level + 1)
       }

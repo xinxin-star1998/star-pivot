@@ -7,8 +7,10 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -105,5 +107,13 @@ public class SysMenu implements Serializable {
      */
     private String remark;
     @TableField(exist = false)
-    private List<SysMenu> children;
+    private Long value;
+    @TableField(exist = false)
+    private String label;
+    //子菜单
+    @TableField(exist = false)
+    private List<SysMenu> children = new ArrayList<>();
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 }
