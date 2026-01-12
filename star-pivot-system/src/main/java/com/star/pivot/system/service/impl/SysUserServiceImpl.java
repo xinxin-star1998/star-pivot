@@ -24,6 +24,9 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -57,12 +60,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         PageResponse<UserVO> pageResponse = new PageResponse<>();
         // 分页查询
         Page<SysUser> page = new Page<>(userReqBo.getPageNum(), userReqBo.getPageSize());
-        IPage<SysUser> pageList = sysUserMapper.selectPageList(page,userReqBo);
-        // 转换为VO
-//        IPage<UserVO> voPage = new Page<>(pageList.getCurrent(), pageList.getSize(), pageList.getTotal());
-        List<UserVO> voList = pageList.getRecords().stream()
-                .map(this::convertToVO)
-                .toList();
+        IPage<SysUser> pageList = sysUserMapper.selectPageList(page, userReqBo);
+        
+        List<SysUser> userList = pageList.getRecords();
+        List<UserVO> voList = convertToVOList(userList);
+        
         // 转换为分页结果
         pageResponse.setTotal(pageList.getTotal());
         pageResponse.setRows(voList);
@@ -222,24 +224,44 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean deleteUserByIds(Long[] userIds) {
-        for (Long userId : userIds) {
-            SysUser user = this.getById(userId);
-            if (user != null && !"2".equals(user.getDelFlag())) {
-                user.setDelFlag("2");
-                String currentUser = SecurityContextUtils.getUsername();
-                user.setUpdateBy(currentUser);
-                user.setUpdateTime(LocalDateTime.now());
-                this.updateById(user);
-            }
+        if (userIds == null || userIds.length == 0) {
+            return false;
         }
+        
+        // 批量查询用户信息
+        List<SysUser> userList = this.listByIds(List.of(userIds));
+        if (userList.isEmpty()) {
+            return false;
+        }
+        
+        String currentUser = SecurityContextUtils.getUsername();
+        LocalDateTime now = LocalDateTime.now();
+        
+        // 更新用户状态
+        userList.forEach(user -> {
+            if (!"2".equals(user.getDelFlag())) {
+                user.setDelFlag("2");
+                user.setUpdateBy(currentUser);
+                user.setUpdateTime(now);
+            }
+        });
+        
+        // 批量更新
+        this.updateBatchById(userList);
         return true;
     }
 
     /**
-     * 插入用户角色关联
+     * 插入用户角色关联（批量）
      */
     private void insertUserRoles(Long userId, List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return;
+        }
+        
+        // 循环插入（已在事务中，保证数据一致性）
         for (Long roleId : roleIds) {
             UserRole userRole = new UserRole();
             userRole.setUserId(userId);
@@ -249,9 +271,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     /**
-     * 插入用户岗位关联
+     * 插入用户岗位关联（批量）
      */
     private void insertUserPosts(Long userId, List<Long> postIds) {
+        if (postIds == null || postIds.isEmpty()) {
+            return;
+        }
+        
+        // 循环插入（已在事务中，保证数据一致性）
         for (Long postId : postIds) {
             UserPost userPost = new UserPost();
             userPost.setUserId(userId);
@@ -260,7 +287,135 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
     }
     /**
-     * 转换为VO
+     * 批量转换为VO，解决N+1查询问题
+     */
+    private List<UserVO> convertToVOList(List<SysUser> userList) {
+        if (userList == null || userList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 1. 收集所有用户ID
+        List<Long> userIds = userList.stream()
+                .map(SysUser::getUserId)
+                .collect(Collectors.toList());
+        
+        // 2. 收集所有部门ID
+        List<Long> deptIds = userList.stream()
+                .map(SysUser::getDeptId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        // 3. 批量查询部门信息
+        Map<Long, String> deptNameMap = new HashMap<>();
+        if (!deptIds.isEmpty()) {
+            List<SysDept> deptList = deptMapper.selectBatchIds(deptIds);
+            for (SysDept dept : deptList) {
+                deptNameMap.put(dept.getDeptId(), dept.getDeptName());
+            }
+        }
+        
+        // 4. 批量查询角色信息
+        Map<Long, List<SysRole>> userRolesMap = new HashMap<>();
+        LambdaQueryWrapper<UserRole> roleWrapper = new LambdaQueryWrapper<>();
+        roleWrapper.in(UserRole::getUserId, userIds);
+        List<UserRole> userRoles = userRoleMapper.selectList(roleWrapper);
+        
+        // 收集角色ID
+        List<Long> roleIds = userRoles.stream()
+                .map(UserRole::getRoleId)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        // 批量查询角色详情
+        Map<Long, SysRole> roleMap = new HashMap<>();
+        if (!roleIds.isEmpty()) {
+            List<SysRole> roleList = sysRoleMapper.selectBatchIds(roleIds);
+            for (SysRole role : roleList) {
+                roleMap.put(role.getRoleId(), role);
+            }
+        }
+        
+        // 构建用户角色映射
+        for (UserRole userRole : userRoles) {
+            userRolesMap.computeIfAbsent(userRole.getUserId(), k -> new ArrayList<>())
+                    .add(roleMap.get(userRole.getRoleId()));
+        }
+        
+        // 5. 批量查询岗位信息
+        Map<Long, List<Long>> userPostIdsMap = new HashMap<>();
+        LambdaQueryWrapper<UserPost> postWrapper = new LambdaQueryWrapper<>();
+        postWrapper.in(UserPost::getUserId, userIds);
+        List<UserPost> userPosts = userPostMapper.selectList(postWrapper);
+        
+        // 收集岗位ID
+        List<Long> postIds = userPosts.stream()
+                .map(UserPost::getPostId)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        // 批量查询岗位详情
+        Map<Long, String> postNameMap = new HashMap<>();
+        if (!postIds.isEmpty()) {
+            List<SysPost> postList = postMapper.selectBatchIds(postIds);
+            for (SysPost post : postList) {
+                postNameMap.put(post.getPostId(), post.getPostName());
+            }
+        }
+        
+        // 构建用户岗位映射
+        for (UserPost userPost : userPosts) {
+            userPostIdsMap.computeIfAbsent(userPost.getUserId(), k -> new ArrayList<>())
+                    .add(userPost.getPostId());
+        }
+        
+        // 6. 转换为VO列表
+        List<UserVO> voList = new ArrayList<>();
+        for (SysUser user : userList) {
+            UserVO vo = convertToVO(user, deptNameMap, userRolesMap, userPostIdsMap, postNameMap);
+            voList.add(vo);
+        }
+        
+        return voList;
+    }
+    
+    /**
+     * 转换为VO（使用预加载的Map信息，避免N+1查询）
+     */
+    private UserVO convertToVO(SysUser user, Map<Long, String> deptNameMap, Map<Long, List<SysRole>> userRolesMap, 
+                            Map<Long, List<Long>> userPostIdsMap, Map<Long, String> postNameMap) {
+        UserVO vo = new UserVO();
+        BeanUtils.copyProperties(user, vo);
+
+        // 设置部门名称
+        if (user.getDeptId() != null) {
+            vo.setDeptName(deptNameMap.get(user.getDeptId()));
+        }
+
+        // 设置角色信息
+        List<SysRole> roles = userRolesMap.getOrDefault(user.getUserId(), new ArrayList<>());
+        if (!roles.isEmpty()) {
+            vo.setRoleIds(roles.stream().map(SysRole::getRoleId).collect(Collectors.toList()));
+            vo.setRoleNames(roles.stream().map(SysRole::getRoleName).collect(Collectors.toList()));
+        }
+
+        // 设置岗位信息
+        List<Long> postIds = userPostIdsMap.getOrDefault(user.getUserId(), new ArrayList<>());
+        if (!postIds.isEmpty()) {
+            vo.setPostIds(postIds);
+            
+            List<String> postNames = postIds.stream()
+                    .map(postNameMap::get)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            vo.setPostNames(postNames);
+        }
+
+        return vo;
+    }
+    
+    /**
+     * 转换为VO（单用户查询使用）
      */
     private UserVO convertToVO(SysUser user) {
         UserVO vo = new UserVO();

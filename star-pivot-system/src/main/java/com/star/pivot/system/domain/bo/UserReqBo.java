@@ -22,4 +22,12 @@ public class UserReqBo extends PageReqBo {
      * 用户昵称
      */
     private String nickName;
+    private String sex;
+    private String status;
+    private String phonenumber;
+    private String email;
+    /**
+     * 部门ID
+     */
+    private Long deptId;
 }

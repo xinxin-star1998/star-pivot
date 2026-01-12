@@ -28,12 +28,7 @@
         </ElRadioGroup>
       </ElFormItem>
       <ElFormItem label="备注" prop="remark">
-        <ElInput
-          type="textarea"
-          v-model="formData.remark"
-          :rows="4"
-          placeholder="请输入备注"
-        />
+        <ElInput type="textarea" v-model="formData.remark" :rows="4" placeholder="请输入备注" />
       </ElFormItem>
     </ElForm>
     <template #footer>
@@ -48,12 +43,7 @@
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
-  import {
-    fetchAddPost,
-    fetchUpdatePost,
-    fetchGetPostById,
-    type SysPost
-  } from '@/api/post/post'
+  import { fetchAddPost, fetchUpdatePost, fetchGetPostById, type SysPost } from '@/api/post/post'
 
   interface Props {
     visible: boolean
@@ -122,10 +112,7 @@
             postCode: postDetail.postCode || '',
             postName: postDetail.postName || '',
             postSort: postDetail.postSort || 0,
-            status:
-              postDetail.status !== undefined
-                ? postDetail.status.toString()
-                : '0',
+            status: postDetail.status !== undefined ? postDetail.status.toString() : '0',
             remark: postDetail.remark || ''
           })
         }
@@ -139,8 +126,7 @@
           postCode: row.postCode || '',
           postName: row.postName || '',
           postSort: row.postSort || 0,
-          status:
-            row.status !== undefined ? row.status.toString() : '0',
+          status: row.status !== undefined ? row.status.toString() : '0',
           remark: row.remark || ''
         })
       }
@@ -217,4 +203,3 @@
     gap: 10px;
   }
 </style>
-

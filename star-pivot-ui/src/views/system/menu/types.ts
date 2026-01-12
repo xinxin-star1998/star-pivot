@@ -23,4 +23,3 @@ export interface MenuFormData {
   icon?: string
   remark?: string
 }
-

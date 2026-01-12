@@ -56,7 +56,13 @@
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElTreeSelect } from 'element-plus'
-  import { fetchGetDeptTree, fetchAddDept, fetchUpdateDept, fetchGetDeptById, type SysDept } from '@/api/dept/dept'
+  import {
+    fetchGetDeptTree,
+    fetchAddDept,
+    fetchUpdateDept,
+    fetchGetDeptById,
+    type SysDept
+  } from '@/api/dept/dept'
   import { DialogType } from '@/types'
 
   interface Props {
@@ -111,12 +117,8 @@
       { required: true, message: '请输入部门名称', trigger: 'blur' },
       { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
     ],
-    phone: [
-      { pattern: /^1[3-9]\d{9}$|^$/, message: '请输入正确的手机号格式', trigger: 'blur' }
-    ],
-    email: [
-      { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
-    ]
+    phone: [{ pattern: /^1[3-9]\d{9}$|^$/, message: '请输入正确的手机号格式', trigger: 'blur' }],
+    email: [{ type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }]
   }
 
   /**
@@ -129,7 +131,7 @@
   const isChildOf = (dept: SysDept, excludeId: number, allDepts: SysDept[]): boolean => {
     if (dept.deptId === excludeId) return true
     if (dept.parentId === excludeId) return true
-    
+
     // 递归检查父部门
     if (dept.parentId) {
       const parent = findDeptById(dept.parentId, allDepts)
@@ -166,17 +168,17 @@
    */
   const filterDeptTree = (tree: SysDept[], excludeId?: number, allDepts?: SysDept[]): SysDept[] => {
     if (!excludeId) return tree
-    
+
     const allDeptsList = allDepts || tree
-    
+
     return tree
-      .filter(dept => {
+      .filter((dept) => {
         // 排除自己
         if (dept.deptId === excludeId) return false
         // 排除所有子部门
         return !isChildOf(dept, excludeId, allDeptsList)
       })
-      .map(dept => {
+      .map((dept) => {
         const cloned = { ...dept }
         if (dept.children && dept.children.length > 0) {
           cloned.children = filterDeptTree(dept.children, excludeId, allDeptsList)
@@ -299,7 +301,7 @@
             ...formData,
             parentId: formData.parentId || 0
           }
-          
+
           if (dialogType.value === 'add') {
             await fetchAddDept(submitData)
             ElMessage.success('添加成功')
@@ -317,4 +319,3 @@
     })
   }
 </script>
-

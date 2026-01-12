@@ -108,4 +108,3 @@ export function fetchDeleteDictData(dictCodes: number[]) {
     url: `/api/sys/dict/data/${dictCodes.join(',')}`
   })
 }
-

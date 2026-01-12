@@ -28,4 +28,3 @@ export const INITIAL_SEARCH_STATE = {
   perms: '',
   status: ''
 } as const
-

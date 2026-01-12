@@ -11,6 +11,9 @@
 </template>
 
 <script setup lang="ts">
+  import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
+  import { ref, computed, onMounted } from 'vue'
+
   interface Props {
     modelValue: Record<string, any>
   }
@@ -43,7 +46,7 @@
       setTimeout(() => {
         resolve([
           { label: '在线', value: '0' },
-          { label: '离线', value: '1' },
+          { label: '离线', value: '1' }
         ])
       }, 1000)
     })
@@ -86,11 +89,12 @@
     {
       label: '性别',
       key: 'sex',
-      type: 'radiogroup',
+      type: 'select',
       props: {
         options: [
-          { label: '男', value: '1' },
-          { label: '女', value: '2' }
+          { label: '男', value: '0' },
+          { label: '女', value: '1' },
+          { label: '未知', value: '2' }
         ]
       }
     }

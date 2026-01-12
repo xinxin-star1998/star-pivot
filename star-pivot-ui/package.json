@@ -16,8 +16,6 @@
     "lint:stylelint": "stylelint  \"**/*.{css,scss,vue}\" --fix",
     "generate:menu": "node scripts/generate-menu-data.js"
   },
-
-
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
     "@iconify/vue": "^5.0.0",

@@ -110,9 +110,12 @@
       excludeParams: ['date range'],
       columnsFactory: () => [
         {
-          prop: 'roleId',
-          label: '角色ID',
-          width: 100
+          type: 'index',
+          label: '序号',
+          width: 100,
+          index: (index: number) => {
+            return (pagination.current - 1) * pagination.size + index + 1
+          }
         },
         {
           prop: 'roleName',

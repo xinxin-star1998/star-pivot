@@ -122,19 +122,19 @@ declare namespace Api {
       delFlag?: number
       remark?: string
     }
-    interface UserBo{
-      userId: number,
-      deptId: number,
-      userName: string,
-      nickName: string,
-      email: string,
-      avatar: string,
-      password: string,
-      phonenumber: string,
-      status: string,
-      sex: string,
-      remark: string,
-      roleIds: string[],
+    interface UserBo {
+      userId: number
+      deptId: number
+      userName: string
+      nickName: string
+      email: string
+      avatar: string
+      password: string
+      phonenumber: string
+      status: string
+      sex: string
+      remark: string
+      roleIds: string[]
       postIds: string[]
     }
 
@@ -142,7 +142,7 @@ declare namespace Api {
     type UserSearchParams = Partial<
       Pick<
         UserListItem,
-        'userId' | 'userName' | 'nickName' | 'sex' | 'phonenumber' | 'email' | 'status'
+        'userId' | 'userName' | 'nickName' | 'sex' | 'phonenumber' | 'email' | 'status' | 'deptId'
       >
     > &
       Api.Common.CommonSearchParams
@@ -155,10 +155,10 @@ declare namespace Api {
       roleId: number
       roleName: string
       roleKey: string
-      roleSort: number;
-      dataScope: string;
-      menuCheckStrictly: number;
-      deptCheckStrictly: number;
+      roleSort: number
+      dataScope: string
+      menuCheckStrictly: number
+      deptCheckStrictly: number
       remark: string
       status: number
       createTime: string
@@ -175,7 +175,7 @@ declare namespace Api {
       Api.Common.CommonSearchParams
   }
 
-  namespace post{
+  namespace post {
     type PostList = Api.Common.PaginatedResponse<PostListItem>
     interface PostListItem {
       postId: number
@@ -195,10 +195,9 @@ declare namespace Api {
       Api.Common.CommonSearchParams
 
     interface PostBo {
-      postId : number
+      postId: number
       postCode: string
       postName: string
     }
   }
-
 }

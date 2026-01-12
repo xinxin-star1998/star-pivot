@@ -21,9 +21,9 @@
     >
       <template #menuType>
         <ElRadioGroup v-model="form.menuType" :disabled="disableMenuType">
-          <ElRadioButton value="M">目录</ElRadioButton>
-          <ElRadioButton value="C">菜单</ElRadioButton>
-          <ElRadioButton value="F">按钮</ElRadioButton>
+          <ElRadioButton value="M" :disabled="menuTypeDisabled.M">目录</ElRadioButton>
+          <ElRadioButton value="C" :disabled="menuTypeDisabled.C">菜单</ElRadioButton>
+          <ElRadioButton value="F" :disabled="menuTypeDisabled.F">按钮</ElRadioButton>
         </ElRadioGroup>
       </template>
       <template #icon>
@@ -123,9 +123,11 @@
   interface TreeNode {
     label: string
     value: number
+    menuType?: string // 新增menuType字段，用于判断上级菜单类型
     children?: TreeNode[]
   }
   const parentMenuOptions = ref<TreeNode[]>([])
+  const originalMenus = ref<SysMenu[]>([])
 
   const form = reactive<MenuFormData>({
     menuType: 'M',
@@ -144,6 +146,22 @@
     icon: '',
     remark: ''
   })
+
+  /**
+   * 根据menuId查找菜单类型
+   */
+  const findMenuTypeById = (menuId: number, menuList: SysMenu[]): string | undefined => {
+    for (const menu of menuList) {
+      if (menu.menuId === menuId) {
+        return menu.menuType
+      }
+      if (menu.children && menu.children.length > 0) {
+        const found = findMenuTypeById(menuId, menu.children)
+        if (found) return found
+      }
+    }
+    return undefined
+  }
 
   // 路径验证函数
   const validatePath = (rule: any, value: string, callback: any) => {
@@ -398,6 +416,16 @@
   })
 
   /**
+   * 获取当前选择的上级菜单类型
+   */
+  const getParentMenuType = computed(() => {
+    if (form.parentId === 0 || form.parentId === undefined) {
+      return undefined // 顶级菜单，无上级
+    }
+    return findMenuTypeById(form.parentId, originalMenus.value)
+  })
+
+  /**
    * 是否禁用菜单类型切换
    */
   const disableMenuType = computed(() => {
@@ -407,12 +435,34 @@
   })
 
   /**
+   * 菜单类型选项的禁用状态
+   */
+  const menuTypeDisabled = computed(() => {
+    const parentType = getParentMenuType.value
+    if (parentType === 'C') {
+      // 如果上级菜单是'C'（菜单），则禁用'M'（目录）选项
+      return {
+        M: true, // 禁用目录
+        C: false, // 允许菜单
+        F: false // 允许按钮
+      }
+    }
+    return {
+      M: false,
+      C: false,
+      F: false
+    }
+  })
+
+  /**
    * 加载上级菜单选项（树形结构）
    * 接口已返回 label 和 value 字段，转换为树形结构
    */
   const loadParentMenuOptions = async (): Promise<void> => {
     try {
       const menus = await fetchGetParentMenu()
+      // 保存原始菜单数据，用于后续查找菜单类型
+      originalMenus.value = menus
 
       // 将菜单数据转换为树形结构（跳过 menuId 为 0 的顶级虚拟节点）
       const convertToTree = (menuList: SysMenu[]): TreeNode[] => {
@@ -425,7 +475,8 @@
           if ((menu as any).label && (menu as any).value !== undefined) {
             const node: TreeNode = {
               label: (menu as any).label,
-              value: (menu as any).value
+              value: (menu as any).value,
+              menuType: menu.menuType // 保存菜单类型
             }
             // 递归处理子菜单
             if (menu.children && Array.isArray(menu.children) && menu.children.length > 0) {
@@ -516,7 +567,7 @@
     if (!props.editData) return
 
     const row = props.editData
-    
+
     // 只有当 row.id 存在时，才认为是编辑模式
     // 如果只有 parentId 而没有 id，说明是新增模式
     if (row.id) {
@@ -667,6 +718,16 @@
       }
     }
   )
+
+  /**
+   * 监听上级菜单变化，自动调整菜单类型
+   */
+  watch([() => form.parentId, () => getParentMenuType.value], ([newParentId, newParentType]) => {
+    if (newParentType === 'C' && form.menuType === 'M') {
+      // 如果上级菜单是'C'（菜单），且当前选择的是'M'（目录），则自动切换到'C'（菜单）
+      form.menuType = 'C'
+    }
+  })
 
   /**
    * 监听菜单类型变化，更新验证规则

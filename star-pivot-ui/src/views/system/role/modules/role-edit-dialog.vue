@@ -38,8 +38,8 @@
             </ElCheckbox>
           </div>
           <!-- 树结构容器 -->
-          <div 
-            class="permission-tree-container" 
+          <div
+            class="permission-tree-container"
             :class="isDark ? 'dark-bg' : 'light-bg'"
             ref="menuTreeContainerRef"
           >
@@ -78,8 +78,8 @@
             </ElCheckbox>
           </div>
           <!-- 树结构容器 -->
-          <div 
-            class="permission-tree-container" 
+          <div
+            class="permission-tree-container"
             :class="isDark ? 'dark-bg' : 'light-bg'"
             ref="deptTreeContainerRef"
           >
@@ -770,7 +770,9 @@
       min-height: 100px;
       max-height: 600px;
       overflow: auto;
-      transition: height 0.3s ease, background-color 0.3s ease;
+      transition:
+        height 0.3s ease,
+        background-color 0.3s ease;
       height: auto;
 
       &.light-bg {

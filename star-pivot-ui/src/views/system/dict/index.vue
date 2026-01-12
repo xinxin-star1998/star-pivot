@@ -104,12 +104,12 @@
       type: 'select',
       props: {
         clearable: true,
-        placeholder: '请选择状态'
-      },
-      options: [
-        { label: '正常', value: '0' },
-        { label: '停用', value: '1' }
-      ]
+        placeholder: '请选择状态',
+        options: [
+          { label: '正常', value: '0' },
+          { label: '停用', value: '1' }
+        ]
+      }
     }
   ])
 
@@ -126,9 +126,12 @@
   // 表格列配置
   const { columnChecks, columns } = useTableColumns(() => [
     {
-      prop: 'dictId',
-      label: '字典ID',
-      width: 100
+      type: 'index',
+      label: '序号',
+      width: 100,
+      index: (index: number) => {
+        return (pagination.current - 1) * pagination.size + index + 1
+      }
     },
     {
       prop: 'dictName',
@@ -146,7 +149,7 @@
           {
             style: {
               color: '#409eff', // 蓝色文字，提示可点击
-              cursor: 'pointer', // 鼠标手型
+              cursor: 'pointer' // 鼠标手型
               // textDecoration: 'underline' // 下划线（可选）
             },
             onClick: () => handleDictTypeClick(row) // 绑定点击事件

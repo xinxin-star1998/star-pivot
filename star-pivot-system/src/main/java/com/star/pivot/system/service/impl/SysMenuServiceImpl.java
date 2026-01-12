@@ -82,7 +82,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             if (allMenu == null) {
                 allMenu = Collections.emptyList();
             }
-            log.debug("普通用户查询到菜单，userId: {}, menuCount: {}", userId, allMenu != null ? allMenu.size() : 0);
+            log.debug("普通用户查询到菜单，userId: {}, menuCount: {}", userId, allMenu.size());
         }
         // 构建菜单树，并过滤掉有按钮子节点的菜单
         return buildUserMenuTree(allMenu, ROOT_PARENT_ID);
@@ -293,6 +293,10 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
         // 递归构建子树
         for (SysMenu menu : children) {
+            // 设置label和value字段，用于前端显示
+            menu.setLabel(menu.getMenuName());
+            menu.setValue(menu.getMenuId());
+            
             List<SysMenu> childTree = buildMenuTree(allMenu, menu.getMenuId());
             menu.setChildren(childTree);
             tree.add(menu);
@@ -311,9 +315,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         if (allMenu == null || allMenu.isEmpty()) {
             return Collections.emptyList();
         }
-        
         List<SysMenu> tree = new ArrayList<>();
-
         // 筛选出指定父级ID的菜单，排除按钮类型
         List<SysMenu> children = allMenu.stream()
                 .filter(menu -> menu != null 
@@ -324,20 +326,11 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
         // 递归构建子树
         for (SysMenu menu : children) {
+            // 设置label和value字段，用于前端显示
+            menu.setLabel(menu.getMenuName());
+            menu.setValue(menu.getMenuId());
+            
             List<SysMenu> childTree = buildUserMenuTree(allMenu, menu.getMenuId());
-            
-            // 检查是否有按钮子节点
-            boolean hasButtonChildren = allMenu.stream()
-                    .anyMatch(child -> child != null 
-                            && child.getParentId() != null 
-                            && child.getParentId().equals(menu.getMenuId())
-                            && Constants.MenuType.BUTTON.equals(child.getMenuType()));
-            
-            // 如果有按钮子节点，则不显示该菜单
-            if (hasButtonChildren) {
-                log.debug("菜单 {} 有按钮子节点，不显示在菜单树中", menu.getMenuName());
-                continue;
-            }
             
             // 如果子菜单树为空，则不设置children
             if (!childTree.isEmpty()) {

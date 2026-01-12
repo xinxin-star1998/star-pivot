@@ -109,7 +109,7 @@
     {
       label: '状态',
       key: 'status',
-      type: 'radio',
+      type: 'radiogroup',
       props: {
         options: [
           { label: '正常', value: '0' },
@@ -222,4 +222,3 @@
 </script>
 
 <style scoped lang="scss"></style>
-

@@ -7,7 +7,16 @@
     <ElTable
       ref="elTableRef"
       v-loading="!!loading"
-      v-bind="{ ...$attrs, ...props, height, stripe, border, size, tableLayout: props.tableLayout, headerCellStyle }"
+      v-bind="{
+        ...$attrs,
+        ...props,
+        height,
+        stripe,
+        border,
+        size,
+        tableLayout: props.tableLayout,
+        headerCellStyle
+      }"
     >
       <template v-for="col in columns" :key="col.prop || col.type">
         <!-- 渲染全局序号列 -->
@@ -36,7 +45,12 @@
           </template>
           <!-- 如果有formatter，使用formatter渲染 -->
           <template v-if="col.formatter && !col.useSlot" #default="slotScope">
-            <template v-if="typeof col.formatter(slotScope.row) === 'string' || typeof col.formatter(slotScope.row) === 'number'">
+            <template
+              v-if="
+                typeof col.formatter(slotScope.row) === 'string' ||
+                typeof col.formatter(slotScope.row) === 'number'
+              "
+            >
               {{ col.formatter(slotScope.row) }}
             </template>
             <component v-else :is="col.formatter(slotScope.row)" />

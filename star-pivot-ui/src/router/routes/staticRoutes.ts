@@ -75,7 +75,7 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     name: 'Layout',
     component: () => import('@views/index/index.vue'),
     meta: { title: '字典数据管理' },
-    children:[
+    children: [
       {
         path: '/system/dict/dict-data',
         name: 'DictData',
