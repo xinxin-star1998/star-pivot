@@ -152,14 +152,14 @@ export class RouteValidator {
           this.warnedRoutes.add(routeKey)
           console.error(
             `[路由配置错误] 菜单 "${route.meta?.title || routeName}" (name: ${routeName}, path: ${route.path || '/'}) 配置错误\n` +
-            `  问题: 菜单类型（C）不能使用 ${RoutesAlias.Layout} 作为 component\n` +
-            `  说明: 只有目录类型（M）才能使用 ${RoutesAlias.Layout}，菜单类型（C）必须指向具体的组件路径\n` +
-            `  当前配置: component: '${RoutesAlias.Layout}'\n` +
-            `  应该改为: component: '/your/component/path'`
+              `  问题: 菜单类型（C）不能使用 ${RoutesAlias.Layout} 作为 component\n` +
+              `  说明: 只有目录类型（M）才能使用 ${RoutesAlias.Layout}，菜单类型（C）必须指向具体的组件路径\n` +
+              `  当前配置: component: '${RoutesAlias.Layout}'\n` +
+              `  应该改为: component: '/your/component/path'`
           )
         }
       }
-      
+
       // 目录类型如果没有子菜单，不应该使用 Layout
       if (
         route.menuType === 'M' &&
@@ -172,9 +172,9 @@ export class RouteValidator {
           this.warnedRoutes.add(routeKey)
           console.warn(
             `[路由配置警告] 目录 "${route.meta?.title || routeName}" (name: ${routeName}, path: ${route.path || '/'}) 配置可能有问题\n` +
-            `  问题: 目录类型（M）没有子菜单，但使用了 ${RoutesAlias.Layout}\n` +
-            `  说明: 目录类型只有在有子菜单时才应该使用 ${RoutesAlias.Layout} 来承载子路由\n` +
-            `  当前配置: component: '${RoutesAlias.Layout}'`
+              `  问题: 目录类型（M）没有子菜单，但使用了 ${RoutesAlias.Layout}\n` +
+              `  说明: 目录类型只有在有子菜单时才应该使用 ${RoutesAlias.Layout} 来承载子路由\n` +
+              `  当前配置: component: '${RoutesAlias.Layout}'`
           )
         }
       }

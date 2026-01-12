@@ -21,8 +21,8 @@
             </ElCheckbox>
           </div>
           <!-- 树结构容器 -->
-          <div 
-            class="permission-tree-container" 
+          <div
+            class="permission-tree-container"
             :class="isDark ? 'dark-bg' : 'light-bg'"
             ref="treeContainerRef"
           >
@@ -60,8 +60,8 @@
             </ElCheckbox>
           </div>
           <!-- 树结构容器 -->
-          <div 
-            class="permission-tree-container" 
+          <div
+            class="permission-tree-container"
             :class="isDark ? 'dark-bg' : 'light-bg'"
             ref="deptTreeContainerRef"
           >
@@ -404,9 +404,19 @@
     try {
       // 获取选中的菜单ID和部门ID
       const menuCheckedKeys = treeRef.value?.getCheckedKeys() || []
+      const menuHalfCheckedKeys = treeRef.value?.getHalfCheckedKeys() || []
       const deptCheckedKeys = deptTreeRef.value?.getCheckedKeys() || []
-      const menuIds = menuCheckedKeys.filter((key: any) => typeof key === 'number') as number[]
-      const deptIds = deptCheckedKeys.filter((key: any) => typeof key === 'number') as number[]
+      const deptHalfCheckedKeys = deptTreeRef.value?.getHalfCheckedKeys() || []
+      // 合并完全选中和半选中的节点ID，确保父级菜单ID被传递
+      const allMenuKeys = [...menuCheckedKeys, ...menuHalfCheckedKeys]
+      const allDeptKeys = [...deptCheckedKeys, ...deptHalfCheckedKeys]
+      // 去重并过滤出数字类型的ID
+      const menuIds = Array.from(new Set(allMenuKeys)).filter(
+        (key: any) => typeof key === 'number'
+      ) as number[]
+      const deptIds = Array.from(new Set(allDeptKeys)).filter(
+        (key: any) => typeof key === 'number'
+      ) as number[]
 
       // 调用更新角色接口，同时保存菜单和部门权限
       const updateData = {
@@ -678,7 +688,9 @@
       min-height: 100px;
       max-height: 600px;
       overflow: auto;
-      transition: height 0.3s ease, background-color 0.3s ease;
+      transition:
+        height 0.3s ease,
+        background-color 0.3s ease;
       height: auto;
 
       &.light-bg {

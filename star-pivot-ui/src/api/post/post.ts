@@ -1,6 +1,6 @@
 import request from '@/utils/http'
 
-/** 
+/**
  * 岗位实体类型
  */
 export interface SysPost {

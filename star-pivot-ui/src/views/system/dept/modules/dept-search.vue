@@ -53,12 +53,12 @@
       type: 'select',
       props: {
         placeholder: '请选择状态',
-        clearable: true
-      },
-      options: [
-        { label: '正常', value: '0' },
-        { label: '停用', value: '1' }
-      ]
+        clearable: true,
+        options: [
+          { label: '正常', value: '0' },
+          { label: '停用', value: '1' }
+        ]
+      }
     }
   ])
 
@@ -74,4 +74,3 @@
     console.log('表单数据', formData.value)
   }
 </script>
-

@@ -70,101 +70,107 @@ export class MenuProcessor {
       return []
     }
 
-    return sysMenus.map((menu, index) => {
-      try {
-        if (!menu) {
-          console.warn(`[MenuProcessor] 菜单项 ${index} 为空，跳过`)
+    return sysMenus
+      .map((menu, index) => {
+        try {
+          if (!menu) {
+            console.warn(`[MenuProcessor] 菜单项 ${index} 为空，跳过`)
+            return null
+          }
+
+          // 清理路径中的 # 符号
+          const path = (menu.path || '').replace(/#/g, '').trim()
+          const isExternalLink = path.startsWith('http://') || path.startsWith('https://')
+          // isFrame: 0是外链/iframe, 1否
+          const isIframe = menu.isFrame === 0 && !isExternalLink
+          const isDirectory = menu.menuType === 'M' // M目录 C菜单 F按钮
+
+          // 处理 component
+          let component = menu.component
+          if (component) {
+            // 清理 component 中的 # 符号
+            component = component.replace(/#/g, '').trim()
+          }
+
+          // 检查是否有子菜单
+          // 注意：后端返回的应该是树形结构，menu.children 应该已经包含子菜单
+          const hasChildren = menu.children && menu.children.length > 0
+
+          // 只有目录类型（M）才能使用 Layout
+          // 菜单类型（C）必须有自己的 component，不能使用 Layout
+          // 支持多级路由：任何目录类型如果有子菜单，都应该使用 Layout 来承载子路由
+          if (isDirectory && (!component || component === '')) {
+            if (hasChildren) {
+              // 任何层级的目录，只要有子菜单，都使用 Layout 来承载子路由
+              component = RoutesAlias.Layout
+              console.log(
+                `[MenuProcessor] 目录 "${menu.menuName}" (level: ${level}) 有子菜单，设置为 Layout`
+              )
+            } else {
+              // 目录类型但没有子菜单，不设置 component
+              component = undefined
+              console.log(
+                `[MenuProcessor] 目录 "${menu.menuName}" (level: ${level}) 没有子菜单，不设置 component`
+              )
+            }
+          }
+
+          // 将 perms 字符串转换为 authList 数组格式
+          // perms 可能是单个权限标识，也可能是逗号分隔的多个权限标识
+          let authList: Array<{ title: string; authMark: string }> | undefined
+          if (menu.perms) {
+            // 如果 perms 是逗号分隔的字符串，拆分成数组
+            const permsArray = menu.perms
+              .split(',')
+              .map((p) => p.trim())
+              .filter(Boolean)
+            authList = permsArray.map((perm) => ({
+              title: perm, // 使用权限标识作为标题
+              authMark: perm // 权限标识
+            }))
+          }
+
+          const routeRecord: AppRouteRecord = {
+            id: menu.menuId,
+            name: menu.routeName || undefined,
+            path: path,
+            component: component || undefined,
+            meta: {
+              title: menu.menuName || '',
+              icon: menu.icon,
+              // isFrame: 0是外链/iframe, 1否
+              isIframe: isIframe,
+              // isCache: 0缓存, 1不缓存 -> keepAlive: true缓存, false不缓存
+              keepAlive: menu.isCache === 0,
+              // visible: 0显示, 1隐藏 -> isHide: true隐藏, false显示
+              isHide: menu.visible === '1',
+              // 如果是外链，设置 link
+              link: isExternalLink ? path : undefined,
+              // 将 perms 转换为 authList 格式
+              authList: authList,
+              // 标记是否是 Layout 组件（用于多级路由判断）
+              isLayout: component === RoutesAlias.Layout
+            },
+            // 保留菜单的额外信息
+            createTime: menu.createTime,
+            updateTime: menu.updateTime,
+            status: menu.status,
+            orderNum: menu.orderNum,
+            remark: menu.remark,
+            menuType: menu.menuType as 'M' | 'C' | 'F' | undefined,
+            children:
+              menu.children && menu.children.length > 0
+                ? this.convertSysMenuToRouteRecord(menu.children, level + 1)
+                : undefined
+          }
+
+          return routeRecord
+        } catch (error) {
+          console.error(`[MenuProcessor] 转换菜单项 ${index} 失败:`, menu, error)
           return null
         }
-
-        // 清理路径中的 # 符号
-        let path = (menu.path || '').replace(/#/g, '').trim()
-        const isExternalLink = path.startsWith('http://') || path.startsWith('https://')
-        // isFrame: 0是外链/iframe, 1否
-        const isIframe = menu.isFrame === 0 && !isExternalLink
-        const isDirectory = menu.menuType === 'M' // M目录 C菜单 F按钮
-
-        // 处理 component
-        let component = menu.component
-        if (component) {
-          // 清理 component 中的 # 符号
-          component = component.replace(/#/g, '').trim()
-        }
-
-        // 检查是否有子菜单
-        // 注意：后端返回的应该是树形结构，menu.children 应该已经包含子菜单
-        const hasChildren = menu.children && menu.children.length > 0
-
-        // 只有目录类型（M）才能使用 Layout
-        // 菜单类型（C）必须有自己的 component，不能使用 Layout
-        // 支持多级路由：任何目录类型如果有子菜单，都应该使用 Layout 来承载子路由
-        if (isDirectory && (!component || component === '')) {
-          if (hasChildren) {
-            // 任何层级的目录，只要有子菜单，都使用 Layout 来承载子路由
-            component = RoutesAlias.Layout
-            console.log(
-              `[MenuProcessor] 目录 "${menu.menuName}" (level: ${level}) 有子菜单，设置为 Layout`
-            )
-          } else {
-            // 目录类型但没有子菜单，不设置 component
-            component = undefined
-            console.log(
-              `[MenuProcessor] 目录 "${menu.menuName}" (level: ${level}) 没有子菜单，不设置 component`
-            )
-          }
-        }
-
-        // 将 perms 字符串转换为 authList 数组格式
-        // perms 可能是单个权限标识，也可能是逗号分隔的多个权限标识
-        let authList: Array<{ title: string; authMark: string }> | undefined
-        if (menu.perms) {
-          // 如果 perms 是逗号分隔的字符串，拆分成数组
-          const permsArray = menu.perms.split(',').map((p) => p.trim()).filter(Boolean)
-          authList = permsArray.map((perm) => ({
-            title: perm, // 使用权限标识作为标题
-            authMark: perm // 权限标识
-          }))
-        }
-
-        const routeRecord: AppRouteRecord = {
-          id: menu.menuId,
-          name: menu.routeName || undefined,
-          path: path,
-          component: component || undefined,
-          meta: {
-            title: menu.menuName || '',
-            icon: menu.icon,
-            // isFrame: 0是外链/iframe, 1否
-            isIframe: isIframe,
-            // isCache: 0缓存, 1不缓存 -> keepAlive: true缓存, false不缓存
-            keepAlive: menu.isCache === 0,
-            // visible: 0显示, 1隐藏 -> isHide: true隐藏, false显示
-            isHide: menu.visible === '1',
-            // 如果是外链，设置 link
-            link: isExternalLink ? path : undefined,
-            // 将 perms 转换为 authList 格式
-            authList: authList,
-            // 标记是否是 Layout 组件（用于多级路由判断）
-            isLayout: component === RoutesAlias.Layout
-          },
-          // 保留菜单的额外信息
-          createTime: menu.createTime,
-          updateTime: menu.updateTime,
-          status: menu.status,
-          orderNum: menu.orderNum,
-          remark: menu.remark,
-          menuType: menu.menuType as 'M' | 'C' | 'F' | undefined,
-          children: menu.children && menu.children.length > 0
-            ? this.convertSysMenuToRouteRecord(menu.children, level + 1)
-            : undefined
-        }
-
-        return routeRecord
-      } catch (error) {
-        console.error(`[MenuProcessor] 转换菜单项 ${index} 失败:`, menu, error)
-        return null
-      }
-    }).filter((item): item is AppRouteRecord => item !== null)
+      })
+      .filter((item): item is AppRouteRecord => item !== null)
   }
 
   /**
@@ -176,24 +182,25 @@ export class MenuProcessor {
         // 如果有子菜单，先递归过滤子菜单
         if (item.children && item.children.length > 0) {
           const filteredChildren = this.filterEmptyMenus(item.children)
-          // 如果过滤后还有子菜单，保留该菜单项
-          if (filteredChildren.length > 0) {
-            return {
-              ...item,
-              children: filteredChildren
-            }
+          // 保留菜单项，即使过滤后的子菜单为空数组
+          // 因为目录菜单本身应该被保留，不管是否有子菜单
+          return {
+            ...item,
+            children: filteredChildren
           }
-          // 如果过滤后没有子菜单了，返回 null 标记为删除
-          return null
         }
         return item
       })
       .filter((item): item is AppRouteRecord => {
         if (!item) return false
 
-        // 如果有子菜单（即使过滤后为空数组），说明这是一个目录菜单，应该保留
+        // 如果有子菜单数组（即使为空），说明这是一个目录菜单，应该保留
         if ('children' in item && Array.isArray(item.children)) {
-          // 如果有子菜单数组，保留（即使为空数组，因为可能是目录菜单）
+          return true
+        }
+
+        // 如果是按钮类型，保留
+        if (item.menuType === 'F') {
           return true
         }
 
@@ -346,18 +353,18 @@ export class MenuProcessor {
       // 清理父路径中的 # 符号和重复斜杠
       const cleanParent = parentPath.replace(/#/g, '').replace(/\/+/g, '/').replace(/\/$/, '')
       const cleanChild = path.replace(/^\//, '')
-      
+
       // 检查子路径是否已经包含父路径的一部分，避免重复拼接
       // 例如：父路径是 /monitor，子路径是 monitor/druid，应该拼接成 /monitor/druid
       // 但如果子路径已经包含完整的父路径，则直接使用子路径
       const parentSegments = cleanParent.split('/').filter(Boolean)
       const childSegments = cleanChild.split('/').filter(Boolean)
-      
+
       // 如果子路径的第一个段与父路径的最后一个段相同，跳过第一个段
       if (parentSegments.length > 0 && childSegments.length > 0) {
         const parentLastSegment = parentSegments[parentSegments.length - 1]
         const childFirstSegment = childSegments[0]
-        
+
         if (parentLastSegment === childFirstSegment) {
           // 跳过重复的段
           childSegments.shift()
@@ -366,7 +373,7 @@ export class MenuProcessor {
           return fullPath.replace(/\/+/g, '/')
         }
       }
-      
+
       const fullPath = `${cleanParent}/${cleanChild}`
       // 清理最终路径中的重复斜杠
       return fullPath.replace(/\/+/g, '/')

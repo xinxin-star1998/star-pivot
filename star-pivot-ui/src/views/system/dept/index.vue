@@ -46,16 +46,11 @@
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import DeptSearch from './modules/dept-search.vue'
   import DeptDialog from './modules/dept-dialog.vue'
-  import { ElMessageBox, ElMessage, ElTag, ElSwitch } from 'element-plus'
+  import { ElMessageBox, ElMessage, ElTag } from 'element-plus'
   import { DialogType } from '@/types'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import {
-    fetchGetDeptTree,
-    fetchDeleteDept,
-    fetchGetDeptById,
-    type SysDept
-  } from '@/api/dept/dept'
+  import { fetchGetDeptTree, fetchDeleteDept, type SysDept } from '@/api/dept/dept'
 
   defineOptions({ name: 'Dept' })
 
@@ -71,9 +66,9 @@
 
   // 搜索表单
   const searchForm = ref({
-    deptName: undefined,
-    leader: undefined,
-    status: undefined
+    deptName: '',
+    leader: '',
+    status: ''
   })
 
   // 表格数据
@@ -122,9 +117,9 @@
     const results: SysDept[] = []
 
     for (const item of items) {
-      const searchName = searchForm.value.deptName?.toLowerCase().trim() || ''
-      const searchLeader = searchForm.value.leader?.toLowerCase().trim() || ''
-      const searchStatus = searchForm.value.status?.trim() || ''
+      const searchName = searchForm.value.deptName.toLowerCase().trim()
+      const searchLeader = searchForm.value.leader.toLowerCase().trim()
+      const searchStatus = searchForm.value.status.trim()
 
       const deptName = (item.deptName || '').toLowerCase()
       const leader = (item.leader || '').toLowerCase()
@@ -273,9 +268,9 @@
    */
   const resetSearchParams = () => {
     searchForm.value = {
-      deptName: undefined,
-      leader: undefined,
-      status: undefined
+      deptName: '',
+      leader: '',
+      status: ''
     }
   }
 

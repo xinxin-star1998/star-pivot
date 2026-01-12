@@ -19,9 +19,7 @@
         @refresh="handleRefresh"
       >
         <template #left>
-          <ElButton @click="goBack" v-ripple plain>
-            返回
-          </ElButton>
+          <ElButton @click="goBack" v-ripple plain> 返回 </ElButton>
           <ElButton @click="handleAdd" v-ripple :disabled="!selectedDictType">
             新增字典数据
           </ElButton>
@@ -64,10 +62,7 @@
     type SysDictData,
     type DictDataFormData
   } from '@/api/dict/data'
-  import {
-    fetchGetDictTypeList,
-    type SysDictType
-  } from '@/api/dict/type'
+  import { fetchGetDictTypeList, type SysDictType } from '@/api/dict/type'
   import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
@@ -145,24 +140,18 @@
     '1': { text: '停用', type: 'danger' as const }
   }
 
-  // 是否默认配置
-  const IS_DEFAULT_CONFIG = {
-    Y: { text: '是', type: 'success' as const },
-    N: { text: '否', type: 'info' as const }
-  }
-
   // 表格列配置
   const { columnChecks, columns } = useTableColumns(() => [
     {
       prop: 'dictLabel',
       label: '序号',
       width: 80,
-      formatter: ( index: number) => {
-        return dict + 1
+      formatter: (_, __, index: number) => {
+        return index + 1
       }
     },
     {
-      prop:'dictCode',
+      prop: 'dictCode',
       label: '字典编码',
       width: 80
     },
@@ -246,7 +235,7 @@
       searchFilters.dictType = routeDictType
       selectedDictType.value = routeDictType
     }
-    
+
     loadDictTypes()
     getDictDataList()
   })
@@ -396,15 +385,11 @@
     }
 
     try {
-      await ElMessageBox.confirm(
-        `确定要删除字典数据"${row.dictLabel}"吗？删除后无法恢复`,
-        '提示',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      )
+      await ElMessageBox.confirm(`确定要删除字典数据"${row.dictLabel}"吗？删除后无法恢复`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
 
       await fetchDeleteDictData([row.dictCode])
       ElMessage.success('删除成功')

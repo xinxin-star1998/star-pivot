@@ -1,6 +1,6 @@
 /**
  * 根据 views 目录下的文件自动生成菜单表数据
- * 
+ *
  * 使用方法：
  * node scripts/generate-menu-data.js
  * 或
@@ -58,12 +58,15 @@ const PAGE_NAMES = {
  */
 function pathToRouteName(filePath) {
   const parts = filePath.split('/').filter(Boolean)
-  return parts.map(part => {
-    // 将 kebab-case 转换为 PascalCase
-    return part.split('-').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join('')
-  }).join('')
+  return parts
+    .map((part) => {
+      // 将 kebab-case 转换为 PascalCase
+      return part
+        .split('-')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join('')
+    })
+    .join('')
 }
 
 /**
@@ -101,18 +104,18 @@ function scanViewsDir(dirPath, basePath = '') {
   const entries = fs.readdirSync(dirPath, { withFileTypes: true })
 
   // 处理目录
-  const dirs = entries.filter(e => e.isDirectory() && !EXCLUDE_DIRS.includes(e.name))
-  dirs.forEach(dir => {
+  const dirs = entries.filter((e) => e.isDirectory() && !EXCLUDE_DIRS.includes(e.name))
+  dirs.forEach((dir) => {
     const fullPath = path.join(dirPath, dir.name)
     const relativePath = basePath ? `${basePath}/${dir.name}` : dir.name
-    
+
     // 检查目录下是否有 dict-data.vue 文件
     const indexPath = path.join(fullPath, 'dict-data.vue')
     const hasIndex = fs.existsSync(indexPath)
-    
+
     // 递归扫描子目录
     const children = scanViewsDir(fullPath, relativePath)
-    
+
     // 如果有子目录或 dict-data.vue，添加到菜单
     if (children.length > 0 || hasIndex) {
       items.push({
@@ -141,15 +144,15 @@ function generateMenuData(items, parentId = 0, orderNum = 1) {
     let currentOrderNum = orderNum
     const resultMenus = []
 
-    items.forEach(item => {
+    items.forEach((item) => {
       const menuId = menuIdCounter++
       const isDirectory = item.type === 'directory'
       const hasChildren = item.children && item.children.length > 0
       const hasIndex = item.hasIndex
-      
+
       // 生成路径
       const routePath = `/${item.path}`
-      
+
       // 生成路由名称
       const routeName = pathToRouteName(item.path)
 
@@ -199,11 +202,11 @@ function generateMenuData(items, parentId = 0, orderNum = 1) {
           }
           resultMenus.push(pageMenu)
         }
-        
+
         // 递归处理子目录
         const childMenus = processItems(item.children, menuId, childOrderNum)
         resultMenus.push(...childMenus)
-      } 
+      }
       // 如果是只有 dict-data.vue 的目录（没有子目录），生成页面菜单（C类型）
       else if (isDirectory && hasIndex && !hasChildren) {
         const menuName = getPageName(item.path)
@@ -247,7 +250,7 @@ function generateSQL(menus) {
   sql.push('')
   sql.push('DELETE FROM sys_menu;')
   sql.push('')
-  
+
   // 按层级排序：先插入父菜单，再插入子菜单
   const sortedMenus = [...menus].sort((a, b) => {
     // 先按 parentId 排序（父菜单在前）
@@ -257,10 +260,12 @@ function generateSQL(menus) {
     // 同层级按 orderNum 排序
     return a.orderNum - b.orderNum
   })
-  
-  sql.push('INSERT INTO sys_menu (menu_name, parent_id, order_num, path, component, route_name, is_frame, is_cache, menu_type, visible, status, icon, perms, create_by, create_time, remark) VALUES')
-  
-  const values = sortedMenus.map((menu, index) => {
+
+  sql.push(
+    'INSERT INTO sys_menu (menu_name, parent_id, order_num, path, component, route_name, is_frame, is_cache, menu_type, visible, status, icon, perms, create_by, create_time, remark) VALUES'
+  )
+
+  const values = sortedMenus.map((menu) => {
     const icon = menu.icon ? `'${menu.icon.replace(/'/g, "''")}'` : 'NULL'
     const component = menu.component ? `'${menu.component.replace(/'/g, "''")}'` : 'NULL'
     const perms = menu.perms ? `'${menu.perms.replace(/'/g, "''")}'` : 'NULL'
@@ -268,20 +273,20 @@ function generateSQL(menus) {
     const menuName = menu.menuName.replace(/'/g, "''")
     const remark = menu.remark.replace(/'/g, "''")
     const path = menu.path.replace(/'/g, "''")
-    
+
     // 注意: parent_id 需要根据实际插入后的 menu_id 调整
     // 如果 parent_id 不为 0，需要查询对应的父菜单的实际 menu_id
     // 这里先使用相对位置（假设 parent_id=0 的菜单从 menu_id=1 开始）
     let parentId = menu.parentId
     if (parentId !== 0) {
       // 查找父菜单在排序后的位置
-      const parentIndex = sortedMenus.findIndex(m => m.menuId === parentId)
+      const parentIndex = sortedMenus.findIndex((m) => m.menuId === parentId)
       if (parentIndex !== -1) {
         // 计算父菜单的实际 menu_id（假设从 1 开始自增）
         parentId = parentIndex + 1
       }
     }
-    
+
     return `('${menuName}', ${parentId}, ${menu.orderNum}, '${path}', ${component}, ${routeName}, ${menu.isFrame}, ${menu.isCache}, '${menu.menuType}', '${menu.visible}', '${menu.status}', ${icon}, ${perms}, 'system', NOW(), '${remark}')`
   })
 
@@ -289,7 +294,7 @@ function generateSQL(menus) {
   sql.push('')
   sql.push('-- 注意: 如果 parent_id 引用不正确，请手动调整')
   sql.push('-- 建议: 先执行上面的 INSERT，然后根据实际的 menu_id 更新 parent_id')
-  
+
   return sql.join('\n')
 }
 
@@ -305,7 +310,7 @@ function generateJSON(menus) {
  */
 function main() {
   const viewsDir = path.join(__dirname, '../src/views')
-  
+
   if (!fs.existsSync(viewsDir)) {
     console.error('错误: views 目录不存在:', viewsDir)
     process.exit(1)
@@ -313,27 +318,27 @@ function main() {
 
   console.log('开始扫描 views 目录...')
   const items = scanViewsDir(viewsDir)
-  
+
   console.log('生成菜单数据...')
   const menus = generateMenuData(items)
-  
+
   console.log(`共生成 ${menus.length} 条菜单数据`)
-  
+
   // 生成 SQL 文件
   const sqlContent = generateSQL(menus)
   const sqlPath = path.join(__dirname, '../menu-data.sql')
   fs.writeFileSync(sqlPath, sqlContent, 'utf-8')
   console.log(`SQL 文件已生成: ${sqlPath}`)
-  
+
   // 生成 JSON 文件
   const jsonContent = generateJSON(menus)
   const jsonPath = path.join(__dirname, '../menu-data.json')
   fs.writeFileSync(jsonPath, jsonContent, 'utf-8')
   console.log(`JSON 文件已生成: ${jsonPath}`)
-  
+
   // 输出预览
   console.log('\n菜单数据预览:')
-  menus.forEach(menu => {
+  menus.forEach((menu) => {
     const indent = '  '.repeat(menu.parentId > 0 ? 1 : 0)
     console.log(`${indent}- [${menu.menuType}] ${menu.menuName} (${menu.path})`)
   })
@@ -341,4 +346,3 @@ function main() {
 
 // 运行
 main()
-

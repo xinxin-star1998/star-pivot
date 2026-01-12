@@ -204,7 +204,9 @@ class VersionManager {
         this.setStoredVersion(StorageConfig.CURRENT_VERSION)
         // 清理旧数据
         this.cleanupLegacyData(legacyStorage.oldSysKey, legacyStorage.oldVersionKeys)
-        console.info(`[Upgrade] 升级完成（无升级日志）: ${storedVersion} → ${StorageConfig.CURRENT_VERSION}`)
+        console.info(
+          `[Upgrade] 升级完成（无升级日志）: ${storedVersion} → ${StorageConfig.CURRENT_VERSION}`
+        )
         return
       }
 

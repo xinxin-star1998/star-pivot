@@ -46,6 +46,7 @@ views/
 ### 排除的目录
 
 以下目录不会生成菜单：
+
 - `auth` - 认证相关页面
 - `exception` - 异常页面
 - `result` - 结果页面
@@ -72,21 +73,21 @@ views/
 // 目录对应的图标
 const DIR_ICONS = {
   dashboard: 'ri:pie-chart-line',
-  system: 'ri:user-3-line',
+  system: 'ri:user-3-line'
   // 添加更多...
 }
 
 // 目录对应的中文名称
 const DIR_NAMES = {
   dashboard: '仪表盘',
-  system: '系统管理',
+  system: '系统管理'
   // 添加更多...
 }
 
 // 页面对应的中文名称
 const PAGE_NAMES = {
   console: '控制台',
-  user: '用户管理',
+  user: '用户管理'
   // 添加更多...
 }
 ```
@@ -133,4 +134,3 @@ source menu-data.sql;
   - [C] 用户管理 (/system/user)
   - [C] 个人中心 (/system/user-center)
 ```
-

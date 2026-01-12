@@ -44,10 +44,14 @@ export function findInTree<T>(
     }
     const children = getChildren(node)
     if (children?.length) {
-      const found = findInTree(children, predicate, getChildren, (node as any).id || (node as any).menuId)
+      const found = findInTree(
+        children,
+        predicate,
+        getChildren,
+        (node as any).id || (node as any).menuId
+      )
       if (found.node) return found
     }
   }
   return { node: undefined, parentId: undefined }
 }
-
