@@ -142,7 +142,10 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
   }
 
   // 优先使用后端返回的消息，如果没有则使用 HTTP 状态码对应的国际化消息
-  const message = backendMessage || (statusCode ? getErrorMessage(statusCode) : error.message) || $t('httpMsg.requestFailed')
+  const message =
+    backendMessage ||
+    (statusCode ? getErrorMessage(statusCode) : error.message) ||
+    $t('httpMsg.requestFailed')
   throw new HttpError(message, statusCode || ApiStatus.error, {
     data: responseData,
     url: requestConfig?.url,

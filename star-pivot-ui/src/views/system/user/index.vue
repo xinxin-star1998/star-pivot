@@ -5,39 +5,95 @@
 <!-- useTable 文档：https://www.artd.pro/docs/zh/guide/hooks/use-table.html -->
 <template>
   <div class="user-page art-full-height">
-    <!-- 搜索栏 -->
-    <UserSearch v-model="searchForm" @search="handleSearch" @reset="resetSearchParams"></UserSearch>
+    <div class="user-layout">
+      <!-- 左侧部门树 -->
+      <div class="left-panel">
+        <ElCard shadow="never" class="department-tree-card">
+          <div class="department-tree-header">
+            <div class="dept-search-box">
+              <ElInput
+                v-model="deptSearchText"
+                placeholder="搜索部门名称"
+                size="small"
+                clearable
+                @input="handleDeptSearch"
+              >
+                <template #prefix>
+                  <el-icon class="el-input__icon"><Search /></el-icon>
+                </template>
+              </ElInput>
+            </div>
+            <ElButton
+              type="primary"
+              size="small"
+              :plain="selectedDeptId !== undefined"
+              @click="showAllUsers"
+              v-ripple
+            >
+              显示全部
+            </ElButton>
+          </div>
+          <div class="department-tree-wrapper">
+            <ElTree
+              :data="deptTree"
+              :props="deptTreeProps"
+              :default-expand-all="false"
+              :default-checked-keys="selectedDeptId ? [selectedDeptId] : []"
+              :filter-node-method="filterDeptNode"
+              ref="deptTreeRef"
+              @node-click="(data) => handleDeptSelect(data.deptId)"
+            >
+              <template #default="{ node, data }">
+                <span class="custom-tree-node">
+                  <span>{{ node.label }}</span>
+                </span>
+              </template>
+            </ElTree>
+          </div>
+        </ElCard>
+      </div>
 
-    <ElCard class="art-table-card" shadow="never">
-      <!-- 表格头部 -->
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
-        <template #left>
-          <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增用户</ElButton>
-          </ElSpace>
-        </template>
-      </ArtTableHeader>
+      <!-- 右侧用户列表 -->
+      <div class="right-panel">
+        <!-- 搜索栏 -->
+        <UserSearch
+          v-model="searchForm"
+          @search="handleSearch"
+          @reset="resetSearchParams"
+        ></UserSearch>
 
-      <!-- 表格 -->
-      <ArtTable
-        :loading="loading"
-        :data="data"
-        :columns="columns"
-        :pagination="pagination"
-        @selection-change="handleSelectionChange"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      >
-      </ArtTable>
+        <ElCard class="art-table-card" shadow="never">
+          <!-- 表格头部 -->
+          <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
+            <template #left>
+              <ElSpace wrap>
+                <ElButton @click="showDialog('add')" v-ripple>新增用户</ElButton>
+              </ElSpace>
+            </template>
+          </ArtTableHeader>
 
-      <!-- 用户弹窗 -->
-      <UserDialog
-        v-model:visible="dialogVisible"
-        :type="dialogType"
-        :user-data="currentUserData"
-        @submit="handleDialogSubmit"
-      />
-    </ElCard>
+          <!-- 表格 -->
+          <ArtTable
+            :loading="loading"
+            :data="data"
+            :columns="columns"
+            :pagination="pagination"
+            @selection-change="handleSelectionChange"
+            @pagination:size-change="handleSizeChange"
+            @pagination:current-change="handleCurrentChange"
+          >
+          </ArtTable>
+
+          <!-- 用户弹窗 -->
+          <UserDialog
+            v-model:visible="dialogVisible"
+            :type="dialogType"
+            :user-data="currentUserData"
+            @submit="handleDialogSubmit"
+          />
+        </ElCard>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -46,9 +102,11 @@
   import { ACCOUNT_TABLE_DATA } from '@/mock/temp/formData'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchDeleteUser, fetchGetUserList, fetchUpdateUserStatus } from '@/api/user/user'
+  import { fetchGetDeptTree, SysDept } from '@/api/dept/dept'
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
-  import { ElMessageBox, ElImage, ElSwitch, ElMessage } from 'element-plus'
+  import { ElMessageBox, ElImage, ElSwitch, ElMessage, ElTree, ElInput } from 'element-plus'
+  import { Search } from '@element-plus/icons-vue'
   import { DialogType } from '@/types'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
@@ -66,12 +124,81 @@
   const selectedRows = ref<UserListItem[]>([])
 
   // 搜索表单
-  const searchForm = ref({
+  const searchForm = ref<{
+    userName: string | undefined
+    sex: string | undefined
+    phonenumber: string | undefined
+    email: string | undefined
+    status: string
+    deptId: number | undefined
+  }>({
     userName: undefined,
     sex: undefined,
     phonenumber: undefined,
     email: undefined,
-    status: '0'
+    status: '0',
+    deptId: undefined
+  })
+
+  // 部门树相关
+  const deptTree = ref<SysDept[]>([])
+  const deptLoading = ref(false)
+  const selectedDeptId = ref<number | undefined>(undefined)
+  const deptTreeRef = ref()
+
+  // 部门树配置
+  const deptTreeProps = {
+    label: 'deptName',
+    children: 'children',
+    value: 'deptId'
+  }
+
+  // 部门搜索文本
+  const deptSearchText = ref('')
+
+  // 部门树节点过滤方法
+  const filterDeptNode = (value: string, data: any) => {
+    if (!value) return true
+    return data.deptName?.includes(value)
+  }
+
+  // 处理部门搜索
+  const handleDeptSearch = () => {
+    if (deptTreeRef.value) {
+      deptTreeRef.value.filter(deptSearchText.value)
+    }
+  }
+
+  // 获取部门树数据
+  const getDeptTree = async () => {
+    try {
+      deptLoading.value = true
+      const data = await fetchGetDeptTree()
+      deptTree.value = data
+    } catch (error) {
+      console.error('获取部门树失败:', error)
+    } finally {
+      deptLoading.value = false
+    }
+  }
+
+  // 处理部门选择
+  const handleDeptSelect = (deptId: number | undefined) => {
+    selectedDeptId.value = deptId
+    searchForm.value.deptId = deptId
+    handleSearch(searchForm.value)
+  }
+
+  // 显示全部用户
+  const showAllUsers = () => {
+    selectedDeptId.value = undefined
+    searchForm.value.deptId = undefined
+    handleSearch(searchForm.value)
+  }
+
+  // 组件初始化
+  onMounted(() => {
+    getDeptTree()
   })
 
   const {
@@ -296,3 +423,106 @@
     }
   }
 </script>
+
+<style lang="scss" scoped>
+  .user-page {
+    padding: 16px;
+    background-color: #f5f7fa;
+  }
+
+  .user-layout {
+    display: flex;
+    gap: 16px;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .left-panel {
+    width: 280px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .right-panel {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .department-tree-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border: none;
+    box-shadow: none;
+  }
+
+  .card-header {
+    font-size: 16px;
+    font-weight: 600;
+    color: #303133;
+    padding: 12px 16px;
+    border-bottom: 1px solid #ebeef5;
+  }
+
+  .department-tree-header {
+    padding: 0 16px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dept-search-box {
+    width: 100%;
+  }
+
+  :deep(.el-input) {
+    width: 100%;
+  }
+
+  .department-tree-wrapper {
+    flex: 1;
+    padding: 0 16px 16px;
+    overflow-y: auto;
+    background-color: #fff;
+  }
+
+  :deep(.el-tree) {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+  }
+
+  :deep(.el-tree-node__content) {
+    height: 36px;
+    line-height: 36px;
+  }
+
+  :deep(.el-tree-node__expand-icon) {
+    font-size: 14px;
+  }
+
+  .custom-tree-node {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  .art-table-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: none;
+    box-shadow: none;
+  }
+</style>

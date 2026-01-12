@@ -168,7 +168,11 @@ export class RouteTransformer {
    * @param component 组件路径
    * @param depth 路由深度（0 表示一级路由）
    */
-  private handleNormalRoute(converted: ConvertedRoute, component: string | undefined, depth: number): void {
+  private handleNormalRoute(
+    converted: ConvertedRoute,
+    component: string | undefined,
+    depth: number
+  ): void {
     if (component) {
       // 如果 component 是 Layout，根据深度选择不同的 Layout
       if (component === RoutesAlias.Layout) {

@@ -78,8 +78,8 @@ export default ({ mode }: { mode: string }) => {
           manualChunks: {
             'vue-vendor': ['vue', 'vue-router', 'pinia'],
             'element-plus': ['element-plus'],
-            'echarts': ['echarts'],
-            'utils': ['axios', '@vueuse/core']
+            echarts: ['echarts'],
+            utils: ['axios', '@vueuse/core']
           }
         }
       }
@@ -116,8 +116,8 @@ export default ({ mode }: { mode: string }) => {
         ext: '.gz', // 压缩后的文件名后缀
         threshold: 10240, // 只有大小大于该值的资源会被处理 10240B = 10KB
         deleteOriginFile: false // 压缩后是否删除原文件
-      }),
-      vueDevTools()
+      })
+      // vueDevTools()
       // 打包分析
       // visualizer({
       //   open: true,
@@ -172,5 +172,5 @@ export default ({ mode }: { mode: string }) => {
 }
 
 function resolvePath(paths: string) {
-  return path.resolve(__dirname, paths)
+  return path.resolve(process.cwd(), paths)
 }

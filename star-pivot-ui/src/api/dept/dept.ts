@@ -75,4 +75,3 @@ export function fetchDeleteDept(deptId: number) {
     url: `/api/sys/dept/${deptId}`
   })
 }
-

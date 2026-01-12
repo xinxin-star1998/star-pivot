@@ -95,7 +95,7 @@
   })
 
   const formItems = computed<FormItem[]>(() => {
-    const switchSpan = width.value < 640 ? 12 : 6
+    const switchSpan = width.value < 768 ? 24 : 12
     return [
       {
         label: '字典类型',
@@ -131,37 +131,59 @@
       {
         label: '样式属性',
         key: 'cssClass',
-        type: 'input',
-        props: { placeholder: '如：primary、success、warning、danger' }
+        type: 'select',
+        props: {
+          placeholder: '请选择样式属性',
+          options: [
+            { label: '主要', value: 'primary' },
+            { label: '成功', value: 'success' },
+            { label: '警告', value: 'warning' },
+            { label: '危险', value: 'danger' }
+          ]
+        }
       },
       {
         label: '回显样式',
         key: 'listClass',
-        type: 'input',
-        props: { placeholder: '如：default、primary、success、info、warning、danger' }
+        type: 'select',
+        props: {
+          placeholder: '请选择回显样式',
+          options: [
+            { label: '默认', value: 'default' },
+            { label: '主要', value: 'primary' },
+            { label: '成功', value: 'success' },
+            { label: '信息', value: 'info' },
+            { label: '警告', value: 'warning' },
+            { label: '危险', value: 'danger' }
+          ]
+        }
       },
       {
         label: '是否默认',
         key: 'isDefault',
-        type: 'radio',
+        type: 'radiogroup',
         span: switchSpan,
         props: {
           options: [
             { label: '是', value: 'Y' },
             { label: '否', value: 'N' }
-          ]
+          ],
+          size: 'default',
+          direction: 'horizontal'
         }
       },
       {
         label: '状态',
         key: 'status',
-        type: 'radio',
+        type: 'radiogroup',
         span: switchSpan,
         props: {
           options: [
             { label: '正常', value: '0' },
             { label: '停用', value: '1' }
-          ]
+          ],
+          size: 'default',
+          direction: 'horizontal'
         }
       },
       {
@@ -297,4 +319,3 @@
 </script>
 
 <style scoped lang="scss"></style>
-

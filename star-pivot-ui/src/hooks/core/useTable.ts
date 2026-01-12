@@ -318,7 +318,6 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
     params?: Partial<TParams>,
     useCache = enableCache
   ): Promise<ApiResponse<TRecord>> => {
-
     // 状态机：进入 loading 状态
     loadingState.value = 'loading'
     error.value = null

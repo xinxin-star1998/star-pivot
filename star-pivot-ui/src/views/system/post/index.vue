@@ -48,12 +48,7 @@
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import {
-    fetchGetPostList,
-    fetchDeletePost,
-    fetchUpdatePost,
-    type SysPost
-  } from '@/api/post/post'
+  import { fetchGetPostList, fetchDeletePost, fetchUpdatePost } from '@/api/post/post'
   import PostSearch from './modules/post-search.vue'
   import PostDialog from './modules/post-dialog.vue'
   import { ElMessageBox, ElSwitch, ElMessage } from 'element-plus'

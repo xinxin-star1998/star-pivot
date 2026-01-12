@@ -349,8 +349,8 @@
       formatter: (row: AppRouteRecord) => {
         const buttonStyle = { style: 'text-align: right' }
 
-        // 如果是权限按钮，显示编辑和删除按钮
-        if (row.meta?.isAuthButton) {
+        // 如果是权限按钮（包括isAuthButton和menuType='F'），显示编辑和删除按钮
+        if (row.meta?.isAuthButton || row.menuType === 'F') {
           return h('div', buttonStyle, [
             h(ArtButtonTable, {
               type: 'edit',
@@ -363,20 +363,11 @@
           ])
         }
 
-        // 检查菜单是否有权限按钮子节点
-        const hasAuthButtons = hasAuthButtonChildren(row)
-
         const buttons = []
 
-        // 第一个按钮：如果没有权限按钮子节点，显示"新增权限"按钮；如果有，显示"编辑"按钮
-        if (hasAuthButtons) {
-          buttons.push(
-            h(ArtButtonTable, {
-              type: 'edit',
-              onClick: () => handleEditMenu(row)
-            })
-          )
-        } else {
+        // 非权限按钮菜单：显示"新增权限"和"编辑"按钮
+        // 无论是否已有权限按钮子节点，都允许添加更多
+        if (!row.meta?.isAuthButton && row.menuType !== 'F') {
           buttons.push(
             h(ArtButtonTable, {
               type: 'add',

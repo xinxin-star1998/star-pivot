@@ -23,8 +23,8 @@ export interface SysMenu {
   updateBy?: string
   updateTime?: string // 更新时间
   remark?: string
-  label:string
-  value:number
+  label: string
+  value: number
   children?: SysMenu[]
 }
 

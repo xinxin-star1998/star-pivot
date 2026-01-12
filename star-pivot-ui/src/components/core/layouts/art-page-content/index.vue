@@ -129,18 +129,24 @@
   const isLayoutComponent = (component: any, routeSlot: any): boolean => {
     // 方法1: 检查路由的 meta.isLayout 标记
     if (routeSlot?.meta?.isLayout) return true
-    
+
     // 方法2: 检查组件名称
     if (component) {
       const componentName =
         component?.name || component?.__name || component?.type?.name || component?.type?.__name
-      if (componentName === 'AppLayout' || componentName === 'Index' || componentName === 'NestedLayout') return true
+      if (
+        componentName === 'AppLayout' ||
+        componentName === 'Index' ||
+        componentName === 'NestedLayout'
+      )
+        return true
     }
-    
+
     // 方法3: 检查路由名称
     const routeName = routeSlot?.name?.toString() || ''
-    if (routeName === 'AppLayout' || routeName === 'Index' || routeName === 'NestedLayout') return true
-    
+    if (routeName === 'AppLayout' || routeName === 'Index' || routeName === 'NestedLayout')
+      return true
+
     return false
   }
 
