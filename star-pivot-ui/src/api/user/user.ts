@@ -72,3 +72,40 @@ export function fetchResetUserPassword(userId: number, password: string) {
     }
   })
 }
+
+/**
+ * 上传头像
+ */
+export function fetchUploadAvatar(data: FormData) {
+  return request.post({
+    url: '/api/avatar/upload',
+    data,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
+/**
+ * 删除头像
+ */
+export function fetchDeleteAvatar(userId: string) {
+  return request.del({
+    url: '/api/avatar/delete',
+    params: {
+      userId
+    }
+  })
+}
+
+/**
+ * 获取头像临时访问链接
+ */
+export function fetchGetAvatarPresignedUrl(filePath: string) {
+  return request.get({
+    url: '/api/avatar/presigned-url',
+    params: {
+      filePath
+    }
+  })
+}

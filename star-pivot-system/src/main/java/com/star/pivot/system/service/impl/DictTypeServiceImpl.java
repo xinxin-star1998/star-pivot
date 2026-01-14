@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> implements DictTypeService {
 
-    private final DictTypeMapper dictTypeMapper;
     private final DictDataMapper dictDataMapper;
 
     @Override

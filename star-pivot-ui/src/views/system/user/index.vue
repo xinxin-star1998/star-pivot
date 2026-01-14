@@ -98,8 +98,8 @@
 </template>
 
 <script setup lang="ts">
+  import { h, ref, onMounted, nextTick } from 'vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import { ACCOUNT_TABLE_DATA } from '@/mock/temp/formData'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchDeleteUser, fetchGetUserList, fetchUpdateUserStatus } from '@/api/user/user'
   import { fetchGetDeptTree, SysDept } from '@/api/dept/dept'
@@ -227,22 +227,52 @@
         { type: 'index', width: 60, label: '序号' }, // 序号
         {
           prop: 'userInfo',
-          label: '用户名',
-          width: 280,
-          // visible: false, // 默认是否显示列
+          label: '用户信息',
+          width: 300,
           formatter: (row) => {
             const avatarUrl = row.avatar || ''
-            return h('div', { class: 'user flex-c' }, [
-              h(ElImage, {
-                class: 'size-9.5 rounded-md',
-                src: avatarUrl,
-                previewSrcList: avatarUrl ? [avatarUrl] : [],
-                // 图片预览是否插入至 body 元素上，用于解决表格内部图片预览样式异常
-                previewTeleported: true
-              }),
-              h('div', { class: 'ml-2' }, [
-                h('p', { class: 'user-name' }, row.userName || ''),
-                h('p', { class: 'email' }, row.email || '')
+            const hasAvatar = !!avatarUrl && avatarUrl !== ''
+            
+            return h('div', { class: 'user-info flex-c items-center' }, [
+              // 只有当有头像时才显示头像容器
+              hasAvatar && h('div', { class: 'avatar-wrapper' }, [
+                h(ElImage, {
+                  class: 'size-10 rounded-full object-cover',
+                  src: avatarUrl,
+                  previewSrcList: [avatarUrl],
+                  previewTeleported: true,
+                  fallback: '加载失败',
+                  fit: 'cover'
+                })
+              ]),
+              
+              // 用户信息容器，根据是否有头像调整间距
+              h('div', { 
+                class: `flex-1 min-w-0 ${hasAvatar ? 'ml-3' : ''}`
+              }, [
+                h('div', { 
+                  class: 'flex items-center gap-2',
+                  style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+                }, [
+                  h('span', { 
+                    class: 'user-name font-medium text-gray-900',
+                    style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+                  }, row.userName || '未知用户'),
+                  h('span', { 
+                    class: 'status-indicator',
+                    style: {
+                      display: 'inline-block',
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: row.status === '0' ? '#67C23A' : '#909399'
+                    }
+                  })
+                ]),
+                h('p', { 
+                  class: 'email text-sm text-gray-500',
+                  style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+                }, row.email || '无邮箱')
               ])
             ])
           }
@@ -308,36 +338,14 @@
     },
     // 数据处理
     transform: {
-      // 数据转换器 - 替换头像
+      // 数据转换器
       dataTransformer: (records) => {
         // 类型守卫检查
         if (!Array.isArray(records)) {
-          console.warn('数据转换器: 期望数组类型，实际收到:', typeof records)
           return []
         }
 
-        // 调试：打印第一条数据查看字段结构
-        if (records.length > 0) {
-          console.log('用户列表原始数据示例:', records[0])
-          console.log('用户列表所有字段:', Object.keys(records[0]))
-        }
-
-        // 使用本地头像替换接口返回的头像
-        return records.map((item, index: number) => {
-          return {
-            ...item,
-            avatar: ACCOUNT_TABLE_DATA[index % ACCOUNT_TABLE_DATA.length].avatar
-          }
-        })
-      }
-    },
-    // 生命周期钩子
-    hooks: {
-      onSuccess: (data) => {
-        console.log('用户列表加载成功，数据:', data)
-        if (data.length > 0) {
-          console.log('第一条用户数据:', data[0])
-        }
+        return records
       }
     }
   })
@@ -347,7 +355,6 @@
    * @param params 参数
    */
   const handleSearch = (params: Record<string, any>) => {
-    console.log(params)
     // 搜索参数赋值
     Object.assign(searchParams, params)
     getData()
@@ -357,7 +364,6 @@
    * 显示用户弹窗
    */
   const showDialog = (type: DialogType, row?: UserListItem): void => {
-    console.log('打开弹窗:', { type, row })
     dialogType.value = type
     currentUserData.value = row || {}
     nextTick(() => {
@@ -368,17 +374,22 @@
   /**
    * 删除用户
    */
-  const deleteUser = (row: UserListItem): void => {
-    console.log('删除用户:', row)
-    ElMessageBox.confirm(`确定要注销该用户吗？`, '注销用户', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'error'
-    }).then(() => {
-      fetchDeleteUser([row.userId])
+  const deleteUser = async (row: UserListItem): Promise<void> => {
+    try {
+      await ElMessageBox.confirm(`确定要注销该用户吗？`, '注销用户', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'error'
+      })
+      await fetchDeleteUser([row.userId])
       refreshData()
       ElMessage.success('注销成功')
-    })
+    } catch (error) {
+      if (error !== 'cancel') {
+        console.error('删除用户失败:', error)
+        ElMessage.error('注销失败')
+      }
+    }
   }
 
   /**
@@ -400,7 +411,6 @@
    */
   const handleSelectionChange = (selection: UserListItem[]): void => {
     selectedRows.value = selection
-    console.log('选中行数据:', selectedRows.value)
   }
 
   /**

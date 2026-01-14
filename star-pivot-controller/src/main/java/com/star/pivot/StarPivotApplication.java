@@ -20,6 +20,7 @@ public class StarPivotApplication {
                 StarPivot权限管理系统启动成功！
                 访问地址: http://localhost:8080
                 API文档: http://localhost:8080/doc.html
+                MinIO地址: http://localhost:9000
                 ========================================
                 """);
     }

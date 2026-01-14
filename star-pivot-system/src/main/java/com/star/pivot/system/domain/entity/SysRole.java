@@ -7,8 +7,6 @@ import com.star.pivot.common.domain.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
-
 /**
  * 角色信息表(SysRole)表实体类
  *
@@ -18,7 +16,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @TableName("sys_role")
-public class SysRole extends BaseEntity implements Serializable {
+public class SysRole extends BaseEntity {
     /**
      * 角色ID
      */

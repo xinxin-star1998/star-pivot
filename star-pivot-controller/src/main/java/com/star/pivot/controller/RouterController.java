@@ -72,10 +72,10 @@ public class RouterController {
         MetaVo meta = new MetaVo();
         meta.setTitle(menu.getMenuName());
         meta.setIcon(menu.getIcon());
-        meta.setNoCache("1".equals(menu.getIsCache()));
+        meta.setNoCache(menu.getIsCache() != null && menu.getIsCache() == 1);
         
         // 设置link（如果是外链）
-        if ("0".equals(menu.getIsFrame()) && menu.getPath() != null && (menu.getPath().startsWith("http://") || menu.getPath().startsWith("https://"))) {
+        if (menu.getIsFrame() != null && menu.getIsFrame() == 0 && menu.getPath() != null && (menu.getPath().startsWith("http://") || menu.getPath().startsWith("https://"))) {
             meta.setLink(menu.getPath());
         }
         
