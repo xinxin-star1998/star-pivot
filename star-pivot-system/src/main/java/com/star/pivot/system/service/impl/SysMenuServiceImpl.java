@@ -11,7 +11,6 @@ import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.mapper.RoleMenuMapper;
 import com.star.pivot.system.mapper.SysMenuMapper;
-import com.star.pivot.system.mapper.SysRoleMapper;
 import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.utils.SecurityContextUtils;

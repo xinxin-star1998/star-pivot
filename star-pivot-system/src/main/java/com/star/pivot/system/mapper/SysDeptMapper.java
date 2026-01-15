@@ -3,7 +3,6 @@ package com.star.pivot.system.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.star.pivot.system.domain.entity.SysDept;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
