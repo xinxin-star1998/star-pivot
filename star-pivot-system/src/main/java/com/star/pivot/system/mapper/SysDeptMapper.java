@@ -14,8 +14,6 @@ import java.util.List;
  */
 @Mapper
 public interface SysDeptMapper extends BaseMapper<SysDept> {
-    List<Long> selectDeptIdsByRoleId(@Param("roleId") Long roleId);
-
     List<Long> selectAllDeptIds();
 }
 

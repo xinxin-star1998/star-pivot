@@ -299,10 +299,10 @@
         try {
           if (dialogType.value === 'add') {
             // 新增用户
-            const addResult = await fetchAddUser(formData) as any
+            const addResult = (await fetchAddUser(formData)) as any
             // 假设后端返回的结果包含userId
             const newUserId = addResult?.userId || addResult?.id
-            
+
             // 设置新的userId到formData，以便上传头像时使用
             if (newUserId) {
               formData.userId = newUserId

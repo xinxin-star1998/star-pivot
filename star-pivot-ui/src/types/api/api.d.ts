@@ -167,6 +167,11 @@ declare namespace Api {
       updateTime: string
       updateBy: string
     }
+    interface RolePermissionAssignDTO {
+      roleId: number
+      menuIds: number[]
+      deptIds: number[]
+    }
 
     /** 角色搜索参数 */
     type RoleSearchParams = Partial<

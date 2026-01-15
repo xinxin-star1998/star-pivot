@@ -15,8 +15,13 @@
           <div class="permission-controls">
             <span>分配菜单</span>
             <ElCheckbox v-model="isExpandAll" @change="toggleExpandAll">展开/折叠</ElCheckbox>
-            <ElCheckbox v-model="isSelectAll" @change="toggleSelectAll">全选/全不选</ElCheckbox>
-            <ElCheckbox v-model="checkStrictly" @change="handleCheckStrictlyChange">
+            <ElCheckbox
+              v-model="isSelectAll"
+              :indeterminate="isSelectAllIndeterminate"
+              @change="toggleSelectAll"
+              >全选/全不选</ElCheckbox
+            >
+            <ElCheckbox v-model="isParentChildLinked" @change="handleCheckStrictlyChange">
               父子联动
             </ElCheckbox>
           </div>
@@ -33,7 +38,7 @@
                 show-checkbox
                 node-key="menuId"
                 :default-expand-all="isExpandAll"
-                :check-strictly="!checkStrictly"
+                :check-strictly="checkStrictly"
                 :props="treeProps"
                 @check="handleTreeCheck"
                 @node-expand="handleNodeExpand"
@@ -52,10 +57,14 @@
           <div class="permission-controls">
             <span>分配部门</span>
             <ElCheckbox v-model="deptExpandAll" @change="toggleDeptExpandAll">展开/折叠</ElCheckbox>
-            <ElCheckbox v-model="deptSelectAll" @change="toggleDeptSelectAll">
+            <ElCheckbox
+              v-model="deptSelectAll"
+              :indeterminate="deptSelectAllIndeterminate"
+              @change="toggleDeptSelectAll"
+            >
               全选/全不选
             </ElCheckbox>
-            <ElCheckbox v-model="deptCheckStrictly" @change="handleDeptCheckStrictlyChange">
+            <ElCheckbox v-model="isDeptParentChildLinked" @change="handleDeptCheckStrictlyChange">
               父子联动
             </ElCheckbox>
           </div>
@@ -72,7 +81,7 @@
                 show-checkbox
                 node-key="deptId"
                 :default-expand-all="deptExpandAll"
-                :check-strictly="!deptCheckStrictly"
+                :check-strictly="deptCheckStrictly"
                 :props="deptTreeProps"
                 @check="handleDeptTreeCheck"
                 @node-expand="handleDeptNodeExpand"
@@ -96,9 +105,9 @@
 
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
-  import { fetchGetMenuTree, fetchGetRoleMenus, type SysMenu } from '@/api/menu/menu'
-  import { fetchGetDeptTree, fetchGetRoleDeptIds, type SysDept } from '@/api/dept/dept'
-  import { fetchUpdateRole } from '@/api/role/role'
+  import { fetchGetMenuTree, type SysMenu } from '@/api/menu/menu'
+  import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
+  import { fetchAssignPermission, fetchGetRoleMenus, fetchGetRoleDeptIds } from '@/api/role/role'
   import { useSettingStore } from '@/store/modules/setting'
 
   type RoleListItem = Api.SystemManage.RoleListItem
@@ -132,7 +141,9 @@
   const treeContainerRef = ref<HTMLElement>()
   const isExpandAll = ref(false)
   const isSelectAll = ref(false)
-  const checkStrictly = ref(true) // 父子联动，true表示联动，false表示不联动
+  const isSelectAllIndeterminate = ref(false) // 全选按钮半选状态
+  const isParentChildLinked = ref(true) // 父子联动，true表示启用联动，false表示禁用联动
+  const checkStrictly = computed(() => !isParentChildLinked.value) // Element Plus的check-strictly为false时表示联动，为true时表示不联动
   const menuTreeData = ref<SysMenu[]>([])
   const loading = ref(false)
 
@@ -141,7 +152,9 @@
   const deptTreeContainerRef = ref<HTMLElement>()
   const deptExpandAll = ref(false)
   const deptSelectAll = ref(false)
-  const deptCheckStrictly = ref(true) // 父子联动，true表示联动，false表示不联动
+  const deptSelectAllIndeterminate = ref(false) // 部门全选按钮半选状态
+  const isDeptParentChildLinked = ref(true) // 部门树父子联动，true表示启用联动，false表示禁用联动
+  const deptCheckStrictly = computed(() => !isDeptParentChildLinked.value) // Element Plus的check-strictly为false时表示联动，为true时表示不联动
   const deptTreeData = ref<SysDept[]>([])
   const deptLoading = ref(false)
 
@@ -224,24 +237,29 @@
   const loadRoleMenuIds = async () => {
     if (!props.roleData?.roleId) return
     try {
-      const menus = await fetchGetRoleMenus(props.roleData.roleId)
-      if (Array.isArray(menus) && menus.length > 0) {
-        // 从菜单对象列表中提取菜单ID
-        const menuIds = extractMenuIds(menus)
-        if (menuIds.length > 0) {
-          // 等待树组件完全渲染后再设置选中状态
-          await nextTick()
-          // 再次等待，确保树节点已完全初始化
-          setTimeout(() => {
-            if (treeRef.value) {
-              treeRef.value.setCheckedKeys(menuIds)
-              // 设置选中状态后，更新全选按钮状态
-              handleTreeCheck()
-              // 调整容器高度
-              adjustTreeContainerHeight()
-            }
-          }, 100)
-        }
+      const menuIds = await fetchGetRoleMenus(props.roleData.roleId)
+      console.log('加载角色菜单ID:', menuIds)
+      // 确保menuIds是数组类型，处理null或undefined情况
+      const safeMenuIds = Array.isArray(menuIds) ? menuIds : []
+      console.log('菜单ID列表:', safeMenuIds)
+      // 等待树组件完全渲染后再设置选中状态
+      await nextTick()
+      // 先关闭父子联动，确保只选中指定的ID
+      const originalLink = isParentChildLinked.value
+      isParentChildLinked.value = false
+      // 等待checkStrictly计算属性更新
+      await nextTick()
+      // 设置选中状态
+      if (treeRef.value) {
+        treeRef.value.setCheckedKeys(safeMenuIds)
+        // 恢复父子联动
+        isParentChildLinked.value = originalLink
+        // 等待checkStrictly计算属性更新和Tree组件自动更新父子节点状态
+        await nextTick()
+        // 设置选中状态后，更新全选按钮状态
+        handleTreeCheck()
+        // 调整容器高度
+        adjustTreeContainerHeight()
       }
     } catch (error) {
       // API 调用失败的错误已在 HTTP 拦截器中统一处理并显示错误消息
@@ -249,27 +267,6 @@
         console.error('加载角色菜单ID失败:', error)
       }
     }
-  }
-
-  /**
-   * 递归提取菜单ID列表
-   * @param menus 菜单列表
-   * @returns 菜单ID数组
-   */
-  const extractMenuIds = (menus: SysMenu[]): number[] => {
-    const ids: number[] = []
-    const traverse = (menuList: SysMenu[]) => {
-      menuList.forEach((menu) => {
-        if (menu.menuId) {
-          ids.push(menu.menuId)
-        }
-        if (menu.children && menu.children.length > 0) {
-          traverse(menu.children)
-        }
-      })
-    }
-    traverse(menus)
-    return ids
   }
 
   /**
@@ -324,19 +321,28 @@
     if (!props.roleData?.roleId) return
     try {
       const deptIds = await fetchGetRoleDeptIds(props.roleData.roleId)
-      if (Array.isArray(deptIds) && deptIds.length > 0) {
-        // 等待树组件完全渲染后再设置选中状态
+      console.log('加载角色部门ID:', deptIds)
+      // 确保deptIds是数组类型，处理null或undefined情况
+      const safeDeptIds = Array.isArray(deptIds) ? deptIds : []
+      console.log('部门ID列表:', safeDeptIds)
+      // 等待树组件完全渲染后再设置选中状态
+      await nextTick()
+      // 先关闭父子联动，确保只选中指定的ID
+      const originalLink = isDeptParentChildLinked.value
+      isDeptParentChildLinked.value = false
+      // 等待checkStrictly计算属性更新
+      await nextTick()
+      // 设置选中状态
+      if (deptTreeRef.value) {
+        deptTreeRef.value.setCheckedKeys(safeDeptIds)
+        // 恢复父子联动
+        isDeptParentChildLinked.value = originalLink
+        // 等待checkStrictly计算属性更新和Tree组件自动更新父子节点状态
         await nextTick()
-        // 再次等待，确保树节点已完全初始化
-        setTimeout(() => {
-          if (deptTreeRef.value) {
-            deptTreeRef.value.setCheckedKeys(deptIds)
-            // 设置选中状态后，更新全选按钮状态
-            handleDeptTreeCheck()
-            // 调整容器高度
-            adjustDeptTreeContainerHeight()
-          }
-        }, 100)
+        // 设置选中状态后，更新全选按钮状态
+        handleDeptTreeCheck()
+        // 调整容器高度
+        adjustDeptTreeContainerHeight()
       }
     } catch (error) {
       // API 调用失败的错误已在 HTTP 拦截器中统一处理并显示错误消息
@@ -363,6 +369,9 @@
         isLoadingMenuTree.value = false
         isLoadingDeptTree.value = false
         activeTab.value = 'menu'
+        // 重置树组件选中状态
+        treeRef.value?.setCheckedKeys([])
+        deptTreeRef.value?.setCheckedKeys([])
         // 等待弹窗完全打开后再加载数据
         await nextTick()
         loadMenuTree()
@@ -424,7 +433,7 @@
         menuIds,
         deptIds
       }
-      await fetchUpdateRole(updateData)
+      await fetchAssignPermission(updateData)
 
       ElMessage.success('权限保存成功')
       emit('success')
@@ -501,8 +510,10 @@
     if (isSelectAll.value) {
       const allKeys = getAllNodeKeys(menuTreeData.value)
       tree.setCheckedKeys(allKeys)
+      isSelectAllIndeterminate.value = false
     } else {
       tree.setCheckedKeys([])
+      isSelectAllIndeterminate.value = false
     }
   }
 
@@ -510,15 +521,16 @@
    * 处理父子联动变化
    */
   const handleCheckStrictlyChange = () => {
-    // check-strictly 为 false 时表示父子联动，为 true 时表示不联动
-    // checkStrictly 为 true 时表示联动，所以需要取反
     const tree = treeRef.value
     if (tree) {
       // 重新设置选中状态以应用新的联动模式
       const checkedKeys = tree.getCheckedKeys()
+      const halfCheckedKeys = tree.getHalfCheckedKeys()
       tree.setCheckedKeys([])
       nextTick(() => {
-        tree.setCheckedKeys(checkedKeys)
+        // 合并完全选中和半选中的节点ID，确保父级菜单ID被传递
+        const allKeys = [...checkedKeys, ...halfCheckedKeys]
+        tree.setCheckedKeys(allKeys)
       })
     }
   }
@@ -549,9 +561,14 @@
     if (!tree) return
 
     const checkedKeys = tree.getCheckedKeys()
+    const halfCheckedKeys = tree.getHalfCheckedKeys()
     const allKeys = getAllNodeKeys(menuTreeData.value)
 
+    // 计算全选状态：所有节点都被完全选中
     isSelectAll.value = checkedKeys.length === allKeys.length && allKeys.length > 0
+    // 计算半选状态：部分节点被选中或半选中，且不是全选状态
+    isSelectAllIndeterminate.value =
+      (checkedKeys.length > 0 || halfCheckedKeys.length > 0) && !isSelectAll.value
   }
 
   /**
@@ -617,8 +634,10 @@
     if (deptSelectAll.value) {
       const allKeys = getAllDeptNodeKeys(deptTreeData.value)
       tree.setCheckedKeys(allKeys)
+      deptSelectAllIndeterminate.value = false
     } else {
       tree.setCheckedKeys([])
+      deptSelectAllIndeterminate.value = false
     }
   }
 
@@ -630,9 +649,12 @@
     if (tree) {
       // 重新设置选中状态以应用新的联动模式
       const checkedKeys = tree.getCheckedKeys()
+      const halfCheckedKeys = tree.getHalfCheckedKeys()
       tree.setCheckedKeys([])
       nextTick(() => {
-        tree.setCheckedKeys(checkedKeys)
+        // 合并完全选中和半选中的节点ID，确保父级菜单ID被传递
+        const allKeys = [...checkedKeys, ...halfCheckedKeys]
+        tree.setCheckedKeys(allKeys)
       })
     }
   }
@@ -663,9 +685,14 @@
     if (!tree) return
 
     const checkedKeys = tree.getCheckedKeys()
+    const halfCheckedKeys = tree.getHalfCheckedKeys()
     const allKeys = getAllDeptNodeKeys(deptTreeData.value)
 
+    // 计算全选状态：所有节点都被完全选中
     deptSelectAll.value = checkedKeys.length === allKeys.length && allKeys.length > 0
+    // 计算半选状态：部分节点被选中或半选中，且不是全选状态
+    deptSelectAllIndeterminate.value =
+      (checkedKeys.length > 0 || halfCheckedKeys.length > 0) && !deptSelectAll.value
   }
 </script>
 

@@ -232,48 +232,69 @@
           formatter: (row) => {
             const avatarUrl = row.avatar || ''
             const hasAvatar = !!avatarUrl && avatarUrl !== ''
-            
+
             return h('div', { class: 'user-info flex-c items-center' }, [
               // 只有当有头像时才显示头像容器
-              hasAvatar && h('div', { class: 'avatar-wrapper' }, [
-                h(ElImage, {
-                  class: 'size-10 rounded-full object-cover',
-                  src: avatarUrl,
-                  previewSrcList: [avatarUrl],
-                  previewTeleported: true,
-                  fallback: '加载失败',
-                  fit: 'cover'
-                })
-              ]),
-              
-              // 用户信息容器，根据是否有头像调整间距
-              h('div', { 
-                class: `flex-1 min-w-0 ${hasAvatar ? 'ml-3' : ''}`
-              }, [
-                h('div', { 
-                  class: 'flex items-center gap-2',
-                  style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
-                }, [
-                  h('span', { 
-                    class: 'user-name font-medium text-gray-900',
-                    style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
-                  }, row.userName || '未知用户'),
-                  h('span', { 
-                    class: 'status-indicator',
-                    style: {
-                      display: 'inline-block',
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      backgroundColor: row.status === '0' ? '#67C23A' : '#909399'
-                    }
+              hasAvatar &&
+                h('div', { class: 'avatar-wrapper' }, [
+                  h(ElImage, {
+                    class: 'size-10 rounded-full object-cover',
+                    src: avatarUrl,
+                    previewSrcList: [avatarUrl],
+                    previewTeleported: true,
+                    fallback: '加载失败',
+                    fit: 'cover'
                   })
                 ]),
-                h('p', { 
-                  class: 'email text-sm text-gray-500',
-                  style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
-                }, row.email || '无邮箱')
-              ])
+
+              // 用户信息容器，根据是否有头像调整间距
+              h(
+                'div',
+                {
+                  class: `flex-1 min-w-0 ${hasAvatar ? 'ml-3' : ''}`
+                },
+                [
+                  h(
+                    'div',
+                    {
+                      class: 'flex items-center gap-2',
+                      style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+                    },
+                    [
+                      h(
+                        'span',
+                        {
+                          class: 'user-name font-medium text-gray-900',
+                          style: {
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }
+                        },
+                        row.userName || '未知用户'
+                      ),
+                      h('span', {
+                        class: 'status-indicator',
+                        style: {
+                          display: 'inline-block',
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          backgroundColor: row.status === '0' ? '#67C23A' : '#909399'
+                        }
+                      })
+                    ]
+                  ),
+                  h(
+                    'p',
+                    {
+                      class: 'email text-sm text-gray-500',
+                      style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+                    },
+                    row.email || '无邮箱'
+                  )
+                ]
+              )
             ])
           }
         },
