@@ -2,13 +2,13 @@ import request from '@/utils/http'
 
 /**
  * 登录
- * @param params 登录参数
+ * @param data 登录参数
  * @returns 登录响应
  */
-export function fetchLogin(params: Api.Auth.LoginParams) {
+export function fetchLogin(data: Api.Auth.LoginParams) {
   return request.post<Api.Auth.LoginResponse>({
     url: '/api/auth/login',
-    params
+    data
     // showSuccessMessage: true // 显示成功消息
     // showErrorMessage: false // 不显示错误消息
   })
@@ -35,5 +35,17 @@ export function fetchGetUserInfo() {
 export function fetchLogout() {
   return request.post({
     url: '/api/auth/logout'
+  })
+}
+
+/**
+ * 获取验证码
+ * @param captchaId 验证码ID
+ * @returns 验证码响应
+ */
+export function fetchCaptcha(captchaId: string) {
+  return request.get<Api.Auth.CaptchaResponse>({
+    url: '/api/auth/captcha',
+    params: { captchaId }
   })
 }

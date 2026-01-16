@@ -38,7 +38,7 @@ import { headerBarConfig } from './modules/headerBar'
 const appConfig: SystemConfig = {
   // 系统信息
   systemInfo: {
-    name: 'Star Pivot UI' // 系统名称
+    name: '星枢后台管理系统' // 系统名称
   },
   // 系统主题
   systemThemeStyles: {

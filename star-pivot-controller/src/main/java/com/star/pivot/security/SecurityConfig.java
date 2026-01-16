@@ -92,7 +92,7 @@ public class SecurityConfig {
                 // 配置请求授权
                 .authorizeHttpRequests(auth -> auth
                         // 允许登录接口匿名访问（注意：如果配置了context-path，Spring Security会自动处理）
-                        .requestMatchers("/auth/login", "/api/auth/login").permitAll()
+                        .requestMatchers("/auth/login", "/api/auth/login", "/auth/captcha", "/api/auth/captcha").permitAll()
                         // 允许 Swagger 相关路径匿名访问
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         // 其他请求需要认证（包括菜单接口，根据用户权限返回菜单）
