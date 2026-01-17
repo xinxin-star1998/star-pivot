@@ -121,7 +121,8 @@
   // 新增：字典类型点击事件处理函数
   const handleDictTypeClick = (row: SysDictType) => {
     // 跳转到字典数据列表页，并传递字典类型参数
-    router.push({ path: '/system/dict/dict-data', query: { dictType: row.dictType } })
+    // router.push({ path: '/system/dict/dict-data', query: { dictType: row.dictType } })
+    router.push({ path: '/system/data', query: { dictType: row.dictType } })
   }
   // 表格列配置
   const { columnChecks, columns } = useTableColumns(() => [

@@ -70,18 +70,18 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     ]
   },
   // 字典数据页面路由
-  {
-    path: '/data',
-    name: 'Layout',
-    component: () => import('@views/index/index.vue'),
-    meta: { title: '字典数据管理' },
-    children: [
-      {
-        path: '/system/dict/dict-data',
-        name: 'DictData',
-        component: () => import('@views/system/dict/dict-data.vue'),
-        meta: { title: '字典数据详情' }
-      }
-    ]
-  }
+  // {
+  //   path: '/data',
+  //   name: 'Layout',
+  //   component: () => import('@views/index/index.vue'),
+  //   meta: { title: '字典数据管理' },
+  //   children: [
+  //     {
+  //       path: '/system/dict/dict-data',
+  //       name: 'DictData',
+  //       component: () => import('@views/system/dict/dict-data.vue'),
+  //       meta: { title: '字典数据详情' }
+  //     }
+  //   ]
+  // }
 ]
