@@ -1,6 +1,8 @@
 package com.star.pivot.system.service;
 
-import java.awt.image.BufferedImage;
+import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
+import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
+import com.star.pivot.system.domain.bo.CaptchaVerifyResponse;
 
 /**
  * 验证码服务接口
@@ -8,17 +10,27 @@ import java.awt.image.BufferedImage;
 public interface CaptchaService {
 
     /**
-     * 生成验证码图片
-     * @param captchaId 验证码ID
-     * @return 验证码图片
+     * 申请验证码
+     *
+     * @param scene 业务场景（如 login/register/reset），可选
+     * @return 包含 captchaToken 和 base64 图片
      */
-    BufferedImage generateCaptcha(String captchaId);
+    CaptchaIssueResponse generateCaptcha(String scene);
 
     /**
-     * 验证验证码
-     * @param captchaId 验证码ID
-     * @param code 用户输入的验证码
-     * @return 是否验证通过
+     * 校验验证码，一次性
+     *
+     * @param request 校验请求
+     * @return 校验通过后返回短期 proof
      */
-    boolean validateCaptcha(String captchaId, String code);
+    CaptchaVerifyResponse verifyCaptcha(CaptchaVerifyRequest request);
+
+    /**
+     * 业务接口消费验证码 proof，一次性
+     *
+     * @param captchaProof 验证码通过凭证
+     * @param scene        业务场景，防止跨场景复用
+     * @return 是否校验通过（成功会销毁 proof）
+     */
+    boolean validateAndConsumeCaptchaProof(String captchaProof, String scene);
 }

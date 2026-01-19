@@ -9,6 +9,7 @@ import com.star.pivot.system.service.DictDataService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class DictDataController {
     /**
      * 分页查询字典数据列表
      */
+    @PreAuthorize("hasAuthority('system:data:query')")
     @PostMapping("/list")
     public Result<PageResponse<DictDataVO>> list(@RequestBody DictDataQueryDTO queryDTO) {
         PageResponse<DictDataVO> page = dictDataService.selectDictDataPage(queryDTO);
@@ -38,6 +40,7 @@ public class DictDataController {
     /**
      * 根据字典类型查询字典数据
      */
+    @PreAuthorize("hasAuthority('system:data:query')")
     @GetMapping("/type/{dictType}")
     public Result<List<DictDataVO>> getDataByType(@PathVariable String dictType) {
         List<DictDataVO> list = dictDataService.selectDictDataByType(dictType);
@@ -47,6 +50,7 @@ public class DictDataController {
     /**
      * 根据字典编码查询字典数据详情
      */
+    @PreAuthorize("hasAuthority('system:data:query')")
     @GetMapping("/{dictCode}")
     public Result<DictDataVO> getInfo(@PathVariable Long dictCode) {
         DictDataVO dictDataVO = dictDataService.selectDictDataById(dictCode);
@@ -56,6 +60,7 @@ public class DictDataController {
     /**
      * 新增字典数据
      */
+    @PreAuthorize("hasAuthority('system:data:add')")
     @PostMapping
     public Result<?> add(@Valid @RequestBody DictDataDTO dictDataDTO) {
         boolean success = dictDataService.insertDictData(dictDataDTO);
@@ -65,6 +70,7 @@ public class DictDataController {
     /**
      * 修改字典数据
      */
+    @PreAuthorize("hasAuthority('system:data:edit')")
     @PutMapping
     public Result<?> edit(@Valid @RequestBody DictDataDTO dictDataDTO) {
         boolean success = dictDataService.updateDictData(dictDataDTO);
@@ -74,6 +80,7 @@ public class DictDataController {
     /**
      * 删除字典数据
      */
+    @PreAuthorize("hasAuthority('system:data:delete')")
     @DeleteMapping("/{dictCodes}")
     public Result<?> remove(@PathVariable Long[] dictCodes) {
         boolean success = dictDataService.deleteDictDataByIds(dictCodes);

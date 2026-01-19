@@ -8,7 +8,8 @@ public class LoginRequest {
     
     private String password;
     
-    private String captchaId;
-    
-    private String captcha;
+    /**
+     * 验证码通过凭证（一次性 proof）
+     */
+    private String captchaProof;
 }

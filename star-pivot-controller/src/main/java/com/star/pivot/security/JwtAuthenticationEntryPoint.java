@@ -1,6 +1,7 @@
 package com.star.pivot.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.star.pivot.common.domain.Result;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,8 +11,6 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 认证入口点 - 处理未认证访问
@@ -28,12 +27,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 401);
-        result.put("message", "未认证，请先登录");
-        result.put("data", null);
-        
+
+        Result<Void> result = Result.error(401, "未认证，请先登录");
         ObjectMapper objectMapper = new ObjectMapper();
         response.getWriter().write(objectMapper.writeValueAsString(result));
     }

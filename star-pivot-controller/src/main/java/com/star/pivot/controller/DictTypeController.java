@@ -9,6 +9,7 @@ import com.star.pivot.system.service.DictTypeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -28,6 +29,7 @@ public class DictTypeController {
     /**
      * 分页查询字典类型列表
      */
+    @PreAuthorize("hasAuthority('system:type:query')")
     @PostMapping("/list")
     public Result<PageResponse<DictTypeVO>> list(@RequestBody DictTypeQueryDTO queryDTO) {
         PageResponse<DictTypeVO> page = dictTypeService.selectDictTypePage(queryDTO);
@@ -37,6 +39,7 @@ public class DictTypeController {
     /**
      * 根据字典类型ID查询详情
      */
+    @PreAuthorize("hasAuthority('system:type:query')")
     @GetMapping("/{dictId}")
     public Result<DictTypeVO> getInfo(@PathVariable Long dictId) {
         DictTypeVO dictTypeVO = dictTypeService.selectDictTypeById(dictId);
@@ -46,6 +49,7 @@ public class DictTypeController {
     /**
      * 新增字典类型
      */
+    @PreAuthorize("hasAuthority('system:type:add')")
     @PostMapping
     public Result<?> add(@Valid @RequestBody DictTypeDTO dictTypeDTO) {
         boolean success = dictTypeService.insertDictType(dictTypeDTO);
@@ -55,6 +59,7 @@ public class DictTypeController {
     /**
      * 修改字典类型
      */
+    @PreAuthorize("hasAuthority('system:type:edit')")
     @PutMapping
     public Result<?> edit(@Valid @RequestBody DictTypeDTO dictTypeDTO) {
         boolean success = dictTypeService.updateDictType(dictTypeDTO);
@@ -64,6 +69,7 @@ public class DictTypeController {
     /**
      * 删除字典类型
      */
+    @PreAuthorize("hasAuthority('system:type:delete')")
     @DeleteMapping("/{dictIds}")
     public Result<?> remove(@PathVariable Long[] dictIds) {
         boolean success = dictTypeService.deleteDictTypeByIds(dictIds);

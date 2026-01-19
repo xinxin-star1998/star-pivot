@@ -125,6 +125,7 @@
   import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
   import { fetchGetRoleMenus, fetchGetRoleDeptIds } from '@/api/role/role'
   import { useSettingStore } from '@/store/modules/setting'
+  import { useCheckableTree } from '@/composables/useCheckableTree'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -148,42 +149,46 @@
   const emit = defineEmits<Emits>()
 
   const roleForm = ref<FormInstance>()
-  const menuTreeRef = ref()
-  const deptTreeRef = ref()
-  const menuTreeContainerRef = ref<HTMLElement>()
-  const deptTreeContainerRef = ref<HTMLElement>()
+  const menuTree = useCheckableTree<SysMenu>({ keyField: 'menuId', childrenField: 'children' })
+  const deptTree = useCheckableTree<SysDept>({ keyField: 'deptId', childrenField: 'children' })
+
+  // 兼容原模板变量命名（保持模板不动）
+  const menuTreeRef = menuTree.treeRef
+  const deptTreeRef = deptTree.treeRef
+  const menuTreeContainerRef = menuTree.containerRef
+  const deptTreeContainerRef = deptTree.containerRef
 
   // 主题状态
   const settingStore = useSettingStore()
   const { isDark } = storeToRefs(settingStore)
 
   // 菜单树数据
-  const menuTreeData = ref<SysMenu[]>([])
+  const menuTreeData = menuTree.data
   const menuTreeProps = {
     children: 'children',
     label: 'menuName'
   }
 
   // 部门树数据
-  const deptTreeData = ref<SysDept[]>([])
+  const deptTreeData = deptTree.data
   const deptTreeProps = {
     children: 'children',
     label: 'deptName'
   }
 
   // 菜单树控制状态
-  const menuExpandAll = ref(false)
-  const menuSelectAll = ref(false)
-  const menuSelectAllIndeterminate = ref(false) // 菜单全选按钮半选状态
-  const isMenuParentChildLinked = ref(true) // 菜单树父子联动，true表示启用联动，false表示禁用联动
-  const menuCheckStrictly = computed(() => !isMenuParentChildLinked.value) // Element Plus的check-strictly为false时表示联动，为true时表示不联动
+  const menuExpandAll = menuTree.expandAll
+  const menuSelectAll = menuTree.selectAll
+  const menuSelectAllIndeterminate = menuTree.indeterminate
+  const isMenuParentChildLinked = menuTree.parentChildLinked
+  const menuCheckStrictly = menuTree.checkStrictly
 
   // 部门树控制状态
-  const deptExpandAll = ref(false)
-  const deptSelectAll = ref(false)
-  const deptSelectAllIndeterminate = ref(false) // 部门全选按钮半选状态
-  const isDeptParentChildLinked = ref(true) // 部门树父子联动，true表示启用联动，false表示禁用联动
-  const deptCheckStrictly = computed(() => !isDeptParentChildLinked.value) // Element Plus的check-strictly为false时表示联动，为true时表示不联动
+  const deptExpandAll = deptTree.expandAll
+  const deptSelectAll = deptTree.selectAll
+  const deptSelectAllIndeterminate = deptTree.indeterminate
+  const isDeptParentChildLinked = deptTree.parentChildLinked
+  const deptCheckStrictly = deptTree.checkStrictly
   /**
    * 弹窗显示状态双向绑定
    */
@@ -358,7 +363,7 @@
         }
         // 延迟调整容器高度，确保 DOM 完全渲染
         setTimeout(() => {
-          adjustMenuTreeContainerHeight()
+          menuTree.adjustContainerHeight()
         }, 100)
       }
     } catch (error) {
@@ -387,7 +392,7 @@
         }
         // 延迟调整容器高度，确保 DOM 完全渲染
         setTimeout(() => {
-          adjustDeptTreeContainerHeight()
+          deptTree.adjustContainerHeight()
         }, 100)
       }
     } catch (error) {
@@ -407,30 +412,10 @@
       // 确保menuIds是数组类型，处理null或undefined情况
       const safeMenuIds = Array.isArray(menuIds) ? menuIds : []
       console.log('加载角色菜单ID:', safeMenuIds)
-      
-      // 设置树节点选中状态
-      // 先关闭父子联动，确保只选中指定的ID
-      const originalLink = isMenuParentChildLinked.value
-      isMenuParentChildLinked.value = false
-      // 等待menuCheckStrictly计算属性更新
-      await nextTick()
-      // 设置选中状态
-      if (menuTreeRef.value) {
-        menuTreeRef.value.setCheckedKeys(safeMenuIds)
-        // 恢复父子联动
-        isMenuParentChildLinked.value = originalLink
-        // 等待menuCheckStrictly计算属性更新和Tree组件自动更新父子节点状态
-        await nextTick()
-        
-        // 获取包含半选状态的所有节点ID
-        const checkedKeys = menuTreeRef.value.getCheckedKeys() || []
-        const halfCheckedKeys = menuTreeRef.value.getHalfCheckedKeys() || []
-        // 将半选状态的节点ID也添加到表单数据中
-        form.menuIds = [...checkedKeys, ...halfCheckedKeys].filter((key: any) => typeof key === 'number') as number[]
-        
-        // 更新全选按钮状态
-        handleMenuTreeCheck()
-      }
+
+      await menuTree.applyCheckedKeys(safeMenuIds)
+      // 同步表单 + 全选/半选
+      handleMenuTreeCheck()
     } catch (error) {
       // API 调用失败的错误已在 HTTP 拦截器中统一处理并显示错误消息
       if (import.meta.env.DEV) {
@@ -448,30 +433,10 @@
       // 确保deptIds是数组类型，处理null或undefined情况
       const safeDeptIds = Array.isArray(deptIds) ? deptIds : []
       console.log('加载角色部门ID:', safeDeptIds)
-      
-      // 设置树节点选中状态
-      // 先关闭父子联动，确保只选中指定的ID
-      const originalLink = isDeptParentChildLinked.value
-      isDeptParentChildLinked.value = false
-      // 等待deptCheckStrictly计算属性更新
-      await nextTick()
-      // 设置选中状态
-      if (deptTreeRef.value) {
-        deptTreeRef.value.setCheckedKeys(safeDeptIds)
-        // 恢复父子联动
-        isDeptParentChildLinked.value = originalLink
-        // 等待deptCheckStrictly计算属性更新和Tree组件自动更新父子节点状态
-        await nextTick()
-        
-        // 获取包含半选状态的所有节点ID
-        const checkedKeys = deptTreeRef.value.getCheckedKeys() || []
-        const halfCheckedKeys = deptTreeRef.value.getHalfCheckedKeys() || []
-        // 将半选状态的节点ID也添加到表单数据中
-        form.deptIds = [...checkedKeys, ...halfCheckedKeys].filter((key: any) => typeof key === 'number') as number[]
-        
-        // 更新全选按钮状态
-        handleDeptTreeCheck()
-      }
+
+      await deptTree.applyCheckedKeys(safeDeptIds)
+      // 同步表单 + 全选/半选
+      handleDeptTreeCheck()
     } catch (error) {
       // API 调用失败的错误已在 HTTP 拦截器中统一处理并显示错误消息
       if (import.meta.env.DEV) {
@@ -490,14 +455,7 @@
     form.menuIds = [...checkedKeys, ...halfCheckedKeys].filter(
       (key: any) => typeof key === 'number'
     ) as number[]
-
-    // 更新全选状态
-    const allKeys = getAllMenuNodeKeys(menuTreeData.value)
-    // 全选状态：所有节点都被完全选中
-    menuSelectAll.value = checkedKeys.length === allKeys.length && allKeys.length > 0
-    // 半选状态：部分节点被选中或半选中，且不是全选状态
-    menuSelectAllIndeterminate.value =
-      (checkedKeys.length > 0 || halfCheckedKeys.length > 0) && !menuSelectAll.value
+    menuTree.syncSelectState()
   }
 
   /**
@@ -510,218 +468,81 @@
     form.deptIds = [...checkedKeys, ...halfCheckedKeys].filter(
       (key: any) => typeof key === 'number'
     ) as number[]
-
-    // 更新全选状态
-    const allKeys = getAllDeptNodeKeys(deptTreeData.value)
-    // 全选状态：所有节点都被完全选中
-    deptSelectAll.value = checkedKeys.length === allKeys.length && allKeys.length > 0
-    // 半选状态：部分节点被选中或半选中，且不是全选状态
-    deptSelectAllIndeterminate.value =
-      (checkedKeys.length > 0 || halfCheckedKeys.length > 0) && !deptSelectAll.value
+    deptTree.syncSelectState()
   }
 
   /**
    * 切换菜单树展开/收起
    */
   const toggleMenuExpandAll = () => {
-    const tree = menuTreeRef.value
-    if (!tree) return
-    const nodes = tree.store.nodesMap
-    Object.values(nodes).forEach((node: any) => {
-      node.expanded = menuExpandAll.value
-    })
-    // 延迟调整容器高度，等待树节点展开/收起动画完成（Element Plus 动画约 300ms）
-    setTimeout(() => {
-      adjustMenuTreeContainerHeight()
-    }, 350)
+    menuTree.toggleExpandAll()
   }
 
   /**
    * 处理菜单树节点展开
    */
   const handleMenuNodeExpand = () => {
-    // 延迟调整容器高度，等待动画完成
-    setTimeout(() => {
-      adjustMenuTreeContainerHeight()
-    }, 350)
+    menuTree.handleNodeExpand()
   }
 
   /**
    * 处理菜单树节点收起
    */
   const handleMenuNodeCollapse = () => {
-    // 延迟调整容器高度，等待动画完成
-    setTimeout(() => {
-      adjustMenuTreeContainerHeight()
-    }, 350)
-  }
-
-  /**
-   * 调整菜单树容器高度
-   */
-  const adjustMenuTreeContainerHeight = () => {
-    if (!menuTreeContainerRef.value) return
-    const treeEl = menuTreeContainerRef.value.querySelector('.el-tree')
-    if (treeEl) {
-      // 先移除固定高度，让容器自适应
-      menuTreeContainerRef.value.style.height = 'auto'
-      // 获取实际内容高度
-      const height = treeEl.scrollHeight
-      // 设置新的高度，但不超过最大值
-      menuTreeContainerRef.value.style.height = `${Math.min(height + 24, 600)}px`
-    }
+    menuTree.handleNodeCollapse()
   }
 
   /**
    * 切换菜单树全选/全不选
    */
   const toggleMenuSelectAll = () => {
-    const tree = menuTreeRef.value
-    if (!tree) return
-
-    if (menuSelectAll.value) {
-      const allKeys = getAllMenuNodeKeys(menuTreeData.value)
-      tree.setCheckedKeys(allKeys)
-      menuSelectAllIndeterminate.value = false
-    } else {
-      tree.setCheckedKeys([])
-      menuSelectAllIndeterminate.value = false
-    }
+    menuTree.toggleSelectAll()
+    handleMenuTreeCheck()
   }
 
   /**
    * 处理菜单树父子联动变化
    */
   const handleMenuCheckStrictlyChange = () => {
-    const tree = menuTreeRef.value
-    if (tree) {
-      // 重新设置选中状态以应用新的联动模式
-      const checkedKeys = tree.getCheckedKeys()
-      const halfCheckedKeys = tree.getHalfCheckedKeys()
-      tree.setCheckedKeys([])
-      nextTick(() => {
-        // 合并完全选中和半选中的节点ID，确保父级菜单ID被传递
-        const allKeys = [...checkedKeys, ...halfCheckedKeys]
-        tree.setCheckedKeys(allKeys)
-      })
-    }
+    menuTree.handleCheckStrictlyChange()
+    handleMenuTreeCheck()
   }
 
   /**
    * 切换部门树展开/收起
    */
   const toggleDeptExpandAll = () => {
-    const tree = deptTreeRef.value
-    if (!tree) return
-    const nodes = tree.store.nodesMap
-    Object.values(nodes).forEach((node: any) => {
-      node.expanded = deptExpandAll.value
-    })
-    // 延迟调整容器高度，等待树节点展开/收起动画完成（Element Plus 动画约 300ms）
-    setTimeout(() => {
-      adjustDeptTreeContainerHeight()
-    }, 350)
+    deptTree.toggleExpandAll()
   }
 
   /**
    * 处理部门树节点展开
    */
   const handleDeptNodeExpand = () => {
-    // 延迟调整容器高度，等待动画完成
-    setTimeout(() => {
-      adjustDeptTreeContainerHeight()
-    }, 350)
+    deptTree.handleNodeExpand()
   }
 
   /**
    * 处理部门树节点收起
    */
   const handleDeptNodeCollapse = () => {
-    // 延迟调整容器高度，等待动画完成
-    setTimeout(() => {
-      adjustDeptTreeContainerHeight()
-    }, 350)
-  }
-
-  /**
-   * 调整部门树容器高度
-   */
-  const adjustDeptTreeContainerHeight = () => {
-    if (!deptTreeContainerRef.value) return
-    const treeEl = deptTreeContainerRef.value.querySelector('.el-tree')
-    if (treeEl) {
-      // 先移除固定高度，让容器自适应
-      deptTreeContainerRef.value.style.height = 'auto'
-      // 获取实际内容高度
-      const height = treeEl.scrollHeight
-      // 设置新的高度，但不超过最大值
-      deptTreeContainerRef.value.style.height = `${Math.min(height + 24, 600)}px`
-    }
+    deptTree.handleNodeCollapse()
   }
 
   /**
    * 切换部门树全选/全不选
    */
   const toggleDeptSelectAll = () => {
-    const tree = deptTreeRef.value
-    if (!tree) return
-
-    if (deptSelectAll.value) {
-      const allKeys = getAllDeptNodeKeys(deptTreeData.value)
-      tree.setCheckedKeys(allKeys)
-      deptSelectAllIndeterminate.value = false
-    } else {
-      tree.setCheckedKeys([])
-      deptSelectAllIndeterminate.value = false
-    }
+    deptTree.toggleSelectAll()
+    handleDeptTreeCheck()
   }
 
   /**
    * 处理部门树父子联动变化
    */
   const handleDeptCheckStrictlyChange = () => {
-    const tree = deptTreeRef.value
-    if (tree) {
-      // 重新设置选中状态以应用新的联动模式
-      const checkedKeys = tree.getCheckedKeys()
-      const halfCheckedKeys = tree.getHalfCheckedKeys()
-      tree.setCheckedKeys([])
-      nextTick(() => {
-        // 合并完全选中和半选中的节点ID，确保父级菜单ID被传递
-        const allKeys = [...checkedKeys, ...halfCheckedKeys]
-        tree.setCheckedKeys(allKeys)
-      })
-    }
-  }
-
-  /**
-   * 递归获取所有菜单节点的 key
-   */
-  const getAllMenuNodeKeys = (nodes: SysMenu[]): number[] => {
-    const keys: number[] = []
-    const traverse = (nodeList: SysMenu[]): void => {
-      nodeList.forEach((node) => {
-        if (node.menuId) keys.push(node.menuId)
-        if (node.children?.length) traverse(node.children)
-      })
-    }
-    traverse(nodes)
-    return keys
-  }
-
-  /**
-   * 递归获取所有部门节点的 key
-   */
-  const getAllDeptNodeKeys = (nodes: SysDept[]): number[] => {
-    const keys: number[] = []
-    const traverse = (nodeList: SysDept[]): void => {
-      nodeList.forEach((node) => {
-        if (node.deptId) keys.push(node.deptId)
-        if (node.children?.length) traverse(node.children)
-      })
-    }
-    traverse(nodes)
-    return keys
+    deptTree.handleCheckStrictlyChange()
+    handleDeptTreeCheck()
   }
 
   /**
