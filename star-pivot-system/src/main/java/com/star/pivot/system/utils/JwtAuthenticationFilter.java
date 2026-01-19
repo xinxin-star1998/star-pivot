@@ -31,18 +31,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         log.debug("处理请求: {} {}", request.getMethod(), requestURI);
         
-        // 获取Authorization请求头
-        String authHeader = request.getHeader("Authorization");
-        log.debug("Authorization Header: {}", authHeader != null ? "Bearer ***" : "未提供");
-        
         String token = getTokenFromRequest(request);
         
         if (token != null) {
-            log.debug("成功提取Token: {}...", token.substring(0, Math.min(20, token.length())));
-            
             // 检查令牌是否在黑名单中
             if (jwtBlackListManager.isBlackListed(token)) {
-                log.info("Token在黑名单中，拒绝访问: {}", token.substring(0, Math.min(20, token.length())));
                 // 继续执行请求，但不设置认证信息
                 filterChain.doFilter(request, response);
                 return;
@@ -50,7 +43,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             
             if (jwtUtil.validateToken(token)) {
                 String username = jwtUtil.getUsernameFromToken(token);
-                log.info("Token验证成功，用户: {}", username);
                 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 

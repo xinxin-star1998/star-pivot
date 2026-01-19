@@ -39,7 +39,8 @@ spring:
     # Redis配置
   data:
     redis:
-      host: ${REDIS_HOST:101.201.181.191}
+      # 默认使用本地 Redis，避免误连外网或生产环境
+      host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       database: ${REDIS_DATABASE:0}

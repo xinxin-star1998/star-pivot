@@ -64,9 +64,28 @@ const axiosInstance = axios.create({
   ]
 })
 
+/**
+ * 规范化请求 URL，避免出现 /api/api 重复前缀
+ * - 当 baseURL 已包含 /api（或使用 Vite 代理 /api）时，业务层仍然写 /api/xxx 会导致重复
+ */
+function normalizeRequestUrl(url: string): string {
+  if (!url) return url
+  // 只处理以 /api/ 开头的相对路径
+  if (!url.startsWith('/api/')) return url
+
+  const base = (VITE_API_URL || '').trim()
+  const baseHasApi =
+    base === '/api' || base.endsWith('/api') || base.includes('/api/')
+
+  return baseHasApi ? url.replace(/^\/api/, '') : url
+}
+
 /** 请求拦截器 */
 axiosInstance.interceptors.request.use(
   (request: InternalAxiosRequestConfig) => {
+    if (typeof request.url === 'string') {
+      request.url = normalizeRequestUrl(request.url)
+    }
     const { accessToken } = useUserStore()
     if (accessToken)
       request.headers.set(
