@@ -1,6 +1,5 @@
 package com.star.pivot.system.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.system.domain.bo.DictTypeVO;

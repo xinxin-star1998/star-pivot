@@ -3,6 +3,7 @@ package com.star.pivot.controller;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.dto.RoleDTO;
+import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
 import com.star.pivot.system.domain.dto.RoleQueryDTO;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.service.SysRoleService;
@@ -98,8 +99,16 @@ public class SysRoleController {
         return success ? Result.success("修改状态成功") : Result.error("修改状态失败");
     }
     /**
+     * 分配角色权限接口（菜单权限和部门权限）
+     */
+    @PostMapping("/assignPermission")
+    public Result<?> assignPermission(@RequestBody RolePermissionAssignDTO rolePermissionAssignDTO) {
+        boolean success = sysRoleService.assignPermission(rolePermissionAssignDTO);
+        return success ? Result.success("分配权限成功") : Result.error("分配权限失败");
+    }
+    /**
      * 根据角色ID查询部门ID列表接口
-     * 
+     *
      * @param roleId 角色ID
      * @return 该角色关联的部门ID列表
      */
@@ -107,5 +116,16 @@ public class SysRoleController {
     public Result<List<Long>> getDeptIds(@PathVariable("roleId") Long roleId) {
         List<Long> deptIds = sysRoleService.selectDeptIdsByRoleId(roleId);
         return Result.success(deptIds);
+    }
+    /**
+     * 根据角色ID获取菜单接口
+     *
+     * @param roleId 角色ID
+     * @return 指定角色拥有的菜单列表
+     */
+    @GetMapping("/getMenuIdsByRoleId/{roleId}")
+    public Result<List<Long>> getMenuIdsByRoleId(@PathVariable("roleId") Long roleId){
+        List<Long> menuIds = sysRoleService.getMenuIdsByRoleId(roleId);
+        return Result.success("查询成功", menuIds);
     }
 }

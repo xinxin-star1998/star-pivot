@@ -23,8 +23,8 @@
       </ElFormItem>
       <ElFormItem label="状态" prop="status">
         <ElRadioGroup v-model="formData.status">
-          <ElRadio label="0">正常</ElRadio>
-          <ElRadio label="1">停用</ElRadio>
+          <ElRadio :value="'0'">正常</ElRadio>
+          <ElRadio :value="'1'">停用</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
       <ElFormItem label="备注" prop="remark">

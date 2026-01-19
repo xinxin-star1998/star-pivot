@@ -8,6 +8,10 @@ spring:
     name: permission-system
   profiles:
     active: dev
+  servlet:
+    multipart:
+      max-file-size: 10MB # 限制上传文件大小
+      max-request-size: 10MB
   
   # 禁用数据库初始化依赖检测（修复MyBatis-Plus与Spring Boot 3.x兼容性问题）
   sql:
@@ -35,7 +39,7 @@ spring:
     # Redis配置
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: ${REDIS_HOST:101.201.181.191}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       database: ${REDIS_DATABASE:0}
@@ -75,6 +79,13 @@ logging:
     org.springframework.security: ${SECURITY_LOG_LEVEL:warn}
     org.apache.ibatis: ${SQL_LOG_LEVEL:OFF}
 
+
+minio:
+  endpoint: http://localhost:9000 # API 地址
+  access-key: admin # 账号
+  secret-key: admin123456 # 密码
+  bucket-name: star-pivot-avatar # 存储桶名称（需提前创建）
+  url-prefix: http://localhost:9000 # 访问文件的前缀（前端展示用）
 # 代码生成配置
 gen:
   # 作者

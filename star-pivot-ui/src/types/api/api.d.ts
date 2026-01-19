@@ -44,7 +44,6 @@ declare namespace Api {
       /** 总条数 */
       total: number
     }
-
     /** 通用搜索参数（发送给后端的参数，使用 pageNum 和 pageSize） */
     interface CommonSearchParams {
       /** 当前页码，默认值为 1 */
@@ -52,7 +51,6 @@ declare namespace Api {
       /** 每页条数，默认值为 10 */
       pageSize?: number
     }
-
     /** 分页响应基础结构（后端返回的数据结构） */
     interface PaginatedResponse<T = any> {
       records: T[]
@@ -60,19 +58,20 @@ declare namespace Api {
       pageSize?: number
       total: number
     }
-
     /** 启用状态 */
     type EnableStatus = '1' | '2'
   }
 
   /** 认证类型 */
   namespace Auth {
-    /** 登录参数 */
+    /** 登录请求参数 */
     interface LoginParams {
       username: string
       password: string
+      rememberPassword: boolean
+      captchaId: string
+      captcha: string
     }
-
     /** 登录响应 */
     interface LoginResponse {
       token: string
@@ -82,13 +81,48 @@ declare namespace Api {
 
     /** 用户信息 */
     interface UserInfo {
-      buttons: string[]
-      roles: string[]
-      userId: number
-      userName: string
-      nickName?: string
-      email: string
-      avatar?: string
+      user: {
+        userId: number
+        username: string
+        nickName: string
+        avatar: string
+        email: string
+        phoneNumber: string
+        sex: number
+        status: string
+        createTime: string
+      }
+      roles: Array<{
+        roleId: number
+        roleName: string
+        roleKey: string
+        roleSort: number
+        status: string
+        createTime: string
+      }>
+      permissions: Array<{
+        menuId: number
+        menuName: string
+        parentId: number
+        orderNum: number
+        path: string
+        component: string
+        query: string
+        isFrame: number
+        isCache: number
+        menuType: string
+        visible: string
+        status: string
+        perms: string
+        icon: string
+        createTime: string
+        children?: Array<any>
+      }>
+    }
+    /** 验证码响应 */
+    interface CaptchaResponse {
+      captchaId: string
+      captchaImage: string
     }
   }
 
@@ -167,6 +201,11 @@ declare namespace Api {
       updateTime: string
       updateBy: string
     }
+    interface RolePermissionAssignDTO {
+      roleId: number
+      menuIds: number[]
+      deptIds: number[]
+    }
 
     /** 角色搜索参数 */
     type RoleSearchParams = Partial<
@@ -175,8 +214,10 @@ declare namespace Api {
       Api.Common.CommonSearchParams
   }
 
-  namespace post {
+  namespace Post {
+    /** 岗位列表 */
     type PostList = Api.Common.PaginatedResponse<PostListItem>
+
     interface PostListItem {
       postId: number
       postName: string

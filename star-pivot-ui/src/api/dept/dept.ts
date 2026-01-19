@@ -30,15 +30,6 @@ export function fetchGetDeptTree() {
 }
 
 /**
- * 根据角色ID获取已分配的部门ID列表
- */
-export function fetchGetRoleDeptIds(roleId: number) {
-  return request.get<number[]>({
-    url: `/api/sys/role/${roleId}/deptIds`
-  })
-}
-
-/**
  * 根据ID获取部门详情
  */
 export function fetchGetDeptById(deptId: number) {

@@ -3,6 +3,9 @@ package com.star.pivot.system.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.star.pivot.system.domain.entity.RoleDept;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * 角色部门关联Mapper接口
@@ -12,5 +15,10 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface RoleDeptMapper extends BaseMapper<RoleDept> {
+    void batchSave(Long roleId, List<Long> deptIds);
+
+    void deleteByRoleId(@Param("roleId") Long roleId);
+
+    List<Long> selectDeptIdsByRoleId(Long roleId);
 }
 

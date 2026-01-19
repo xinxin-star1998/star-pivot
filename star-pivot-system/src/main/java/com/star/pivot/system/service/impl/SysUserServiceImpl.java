@@ -309,7 +309,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 3. 批量查询部门信息
         Map<Long, String> deptNameMap = new HashMap<>();
         if (!deptIds.isEmpty()) {
-            List<SysDept> deptList = deptMapper.selectBatchIds(deptIds);
+            List<SysDept> deptList = deptMapper.selectList(new LambdaQueryWrapper<SysDept>().in(SysDept::getDeptId, deptIds));
             for (SysDept dept : deptList) {
                 deptNameMap.put(dept.getDeptId(), dept.getDeptName());
             }
@@ -330,7 +330,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 批量查询角色详情
         Map<Long, SysRole> roleMap = new HashMap<>();
         if (!roleIds.isEmpty()) {
-            List<SysRole> roleList = sysRoleMapper.selectBatchIds(roleIds);
+            List<SysRole> roleList = sysRoleMapper.selectList(new LambdaQueryWrapper<SysRole>().in(SysRole::getRoleId, roleIds));
             for (SysRole role : roleList) {
                 roleMap.put(role.getRoleId(), role);
             }
@@ -357,7 +357,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 批量查询岗位详情
         Map<Long, String> postNameMap = new HashMap<>();
         if (!postIds.isEmpty()) {
-            List<SysPost> postList = postMapper.selectBatchIds(postIds);
+            List<SysPost> postList = postMapper.selectList(new LambdaQueryWrapper<SysPost>().in(SysPost::getPostId, postIds));
             for (SysPost post : postList) {
                 postNameMap.put(post.getPostId(), post.getPostName());
             }

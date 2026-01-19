@@ -38,7 +38,7 @@ public class BaseEntity implements Serializable {
     private String updateBy;
 
     /**
-     * 逻辑删除（0-未删除，1-已删除）
+     * 逻辑删除（0-未删除，2-已删除）
      */
     private String delFlag;
     

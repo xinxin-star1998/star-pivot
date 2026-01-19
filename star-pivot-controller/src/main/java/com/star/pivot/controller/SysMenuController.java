@@ -117,15 +117,4 @@ public class SysMenuController {
         SysMenu menu = sysMenuService.getById(menuId);
         return Result.success("查询成功",menu);
     }
-    /**
-     * 根据角色ID获取菜单接口
-     * 
-     * @param roleId 角色ID
-     * @return 指定角色拥有的菜单列表
-     */
-    @GetMapping("/getMenuByRoleId/{roleId}")
-    public Result<List<SysMenu>> getMenuByRoleId(@PathVariable("roleId") Long roleId){
-        List<SysMenu> list = sysMenuService.getMenuByRoleId(roleId);
-        return Result.success("查询成功",list);
-    }
 }

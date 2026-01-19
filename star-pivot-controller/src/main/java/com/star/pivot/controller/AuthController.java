@@ -7,8 +7,9 @@ import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.AuthService;
-import com.star.pivot.system.service.SysMenuService;
+import com.star.pivot.system.service.CaptchaService;
 import com.star.pivot.system.service.SysUserService;
+import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.utils.JwtBlackListManager;
 import com.star.pivot.system.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import javax.imageio.ImageIO;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +43,7 @@ public class AuthController {
     private final SysMenuService sysMenuService;
     private final JwtBlackListManager jwtBlackListManager;
     private final JwtUtil jwtUtil;
+    private final CaptchaService captchaService;
 
     /**
      * 用户登录接口
@@ -86,6 +94,36 @@ public class AuthController {
         SecurityContextHolder.clearContext();
 
         return Result.success("登出成功");
+    }
+
+    /**
+     * 获取验证码接口
+     * 
+     * @param captchaId 验证码ID
+     * @return 验证码图片（Base64格式）
+     */
+    @GetMapping("/captcha")
+    public Result<Map<String, Object>> getCaptcha(@RequestParam String captchaId) {
+        try {
+            // 生成验证码图片
+            BufferedImage image = captchaService.generateCaptcha(captchaId);
+            
+            // 将图片转换为Base64
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", outputStream);
+            byte[] imageBytes = outputStream.toByteArray();
+            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+            outputStream.close();
+            
+            // 返回验证码图片
+            Map<String, Object> result = new HashMap<>();
+            result.put("captchaId", captchaId);
+            result.put("captchaImage", "data:image/png;base64," + base64Image);
+            return Result.success(result);
+        } catch (Exception e) {
+            log.error("生成验证码失败", e);
+            return Result.error(500, "生成验证码失败");
+        }
     }
 
     /**

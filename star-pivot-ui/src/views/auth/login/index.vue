@@ -36,29 +36,34 @@
               />
             </ElFormItem>
 
-            <!-- 推拽验证 -->
+            <!-- 验证码 -->
             <div class="relative pb-5 mt-6">
-              <div
-                class="relative z-[2] overflow-hidden select-none rounded-lg border border-transparent tad-300"
-                :class="{ '!border-[#FF4E4F]': !isPassing && isClickPass }"
-              >
-                <ArtDragVerify
-                  ref="dragVerify"
-                  v-model:value="isPassing"
-                  :text="$t('login.sliderText')"
-                  textColor="var(--art-gray-700)"
-                  :successText="$t('login.sliderSuccessText')"
-                  progressBarBg="var(--main-color)"
-                  :background="isDark ? '#26272F' : '#F1F1F4'"
-                  handlerBg="var(--default-box-color)"
-                />
-              </div>
-              <p
-                class="absolute top-0 z-[1] px-px mt-2 text-xs text-[#f56c6c] tad-300"
-                :class="{ 'translate-y-10': !isPassing && isClickPass }"
-              >
-                {{ $t('login.placeholder.slider') }}
-              </p>
+              <ElFormItem prop="captcha" :error="captchaError">
+                <div class="flex items-center">
+                  <ElInput
+                    v-model="formData.captcha"
+                    :placeholder="$t('login.placeholder.captcha')"
+                    class="mr-2 custom-height"
+                    @keyup.enter="handleSubmit"
+                  />
+                  <div class="relative">
+                    <img
+                      v-if="captchaImage"
+                      :src="captchaImage"
+                      alt="验证码"
+                      class="h-10 w-32 cursor-pointer rounded border border-gray-300"
+                      @click="refreshCaptcha"
+                      :class="{ 'opacity-50': loadingCaptcha }"
+                    />
+                    <div v-else class="h-10 w-32 cursor-pointer rounded border border-gray-300 flex items-center justify-center bg-gray-50" @click="refreshCaptcha">
+                      <span class="text-gray-400 text-sm">点击获取验证码</span>
+                    </div>
+                    <div v-if="loadingCaptcha" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70">
+                      <div class="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                    </div>
+                  </div>
+                </div>
+              </ElFormItem>
             </div>
 
             <div class="flex-cb mt-2 text-sm">
@@ -100,15 +105,16 @@
   import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
-  import { fetchLogin } from '@/api/auth'
+  import { fetchLogin, fetchCaptcha } from '@/api/auth'
   import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
   import { useSettingStore } from '@/store/modules/setting'
   import { useCommon } from '@/hooks'
+  import { onMounted, computed, ref, reactive, watch } from 'vue'
 
   defineOptions({ name: 'Login' })
 
   const settingStore = useSettingStore()
-  const { isDark } = storeToRefs(settingStore)
+  const { isDark } = settingStore
   const { t, locale } = useI18n()
   const formKey = ref(0)
 
@@ -117,26 +123,38 @@
     formKey.value++
   })
 
-  const dragVerify = ref()
-
   const userStore = useUserStore()
   const router = useRouter()
   const route = useRoute()
-  const isPassing = ref(false)
-  const isClickPass = ref(false)
 
   const systemName = AppConfig.systemInfo.name
   const formRef = ref<FormInstance>()
 
+  // 生成UUID
+  const generateUUID = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0
+      const v = c === 'x' ? r : (r & 0x3 | 0x8)
+      return v.toString(16)
+    })
+  }
+
   const formData = reactive({
     username: '',
     password: '',
-    rememberPassword: true
+    rememberPassword: true,
+    captchaId: generateUUID(),
+    captcha: ''
   })
+
+  const captchaImage = ref('')
+  const loadingCaptcha = ref(false)
+  const captchaError = ref('')
 
   const rules = computed<FormRules>(() => ({
     username: [{ required: true, message: t('login.placeholder.username'), trigger: 'blur' }],
-    password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }]
+    password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }],
+    captcha: [{ required: true, message: t('login.placeholder.captcha'), trigger: 'blur' }]
   }))
 
   const loading = ref(false)
@@ -150,25 +168,25 @@
       const valid = await formRef.value.validate()
       if (!valid) return
 
-      // 拖拽验证
-      if (!isPassing.value) {
-        isClickPass.value = true
-        return
-      }
-
       loading.value = true
+      captchaError.value = ''
 
       // 登录请求
-      const { username, password } = formData
+      const { username, password, captchaId, captcha } = formData
+
+      const response = await fetchLogin({
+        username: username,
+        password,
+        captchaId,
+        captcha,
+        rememberPassword: formData.rememberPassword
+      })
 
       const {
         token,
         username: returnedUsername,
         nickname
-      } = await fetchLogin({
-        username: username,
-        password
-      })
+      } = response
 
       // 验证token
       if (!token) {
@@ -181,12 +199,24 @@
 
       // 设置用户信息
       userStore.setUserInfo({
-        userName: returnedUsername,
-        nickName: nickname
+        user: {
+          userId: 0,
+          username: returnedUsername,
+          nickName: nickname,
+          avatar: '',
+          email: '',
+          phoneNumber: '',
+          sex: 0,
+          status: '',
+          createTime: ''
+        }
       })
 
       // 登录成功处理
       showLoginSuccessNotice()
+
+      // 保存登录信息到本地存储
+      saveLoginInfo()
 
       // 获取 redirect 参数，如果存在且不是登录页或根路径则跳转到指定页面，否则跳转到首页
       const redirect = route.query.redirect as string
@@ -200,22 +230,80 @@
     } catch (error) {
       // 处理 HttpError
       if (error instanceof HttpError) {
-        // console.log(error.code)
+        if (error.code === 401 && error.message.includes('验证码')) {
+          captchaError.value = error.message
+          refreshCaptcha()
+        }
       } else {
         // 处理非 HttpError
-        // ElMessage.error('登录失败，请稍后重试')
         console.error('[Login] Unexpected error:', error)
       }
     } finally {
       loading.value = false
-      resetDragVerify()
     }
   }
 
-  // 重置拖拽验证
-  const resetDragVerify = () => {
-    dragVerify.value.reset()
+  // 获取验证码
+  const refreshCaptcha = async () => {
+    loadingCaptcha.value = true
+    captchaError.value = ''
+    
+    try {
+      formData.captchaId = generateUUID()
+      const response = await fetchCaptcha(formData.captchaId)
+      captchaImage.value = response.captchaImage
+    } catch (error) {
+      console.error('获取验证码失败:', error)
+    } finally {
+      loadingCaptcha.value = false
+    }
   }
+
+  // 从本地存储读取保存的登录信息
+  const loadSavedLoginInfo = () => {
+    try {
+      const savedInfo = localStorage.getItem('login-info')
+      if (savedInfo) {
+        const parsedInfo = JSON.parse(savedInfo)
+        if (parsedInfo.username) {
+          formData.username = parsedInfo.username
+        }
+        if (parsedInfo.password) {
+          formData.password = parsedInfo.password
+        }
+        if (parsedInfo.rememberPassword !== undefined) {
+          formData.rememberPassword = parsedInfo.rememberPassword
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load saved login info:', error)
+    }
+  }
+
+  // 保存登录信息到本地存储
+  const saveLoginInfo = () => {
+    try {
+      if (formData.rememberPassword) {
+        const loginInfo = {
+          username: formData.username,
+          password: formData.password,
+          rememberPassword: formData.rememberPassword
+        }
+        localStorage.setItem('login-info', JSON.stringify(loginInfo))
+      } else {
+        // 如果用户取消记住密码，清除本地存储中的登录信息
+        localStorage.removeItem('login-info')
+      }
+    } catch (error) {
+      console.error('Failed to save login info:', error)
+    }
+  }
+
+  // 组件挂载时获取验证码并加载保存的登录信息
+  onMounted(() => {
+    refreshCaptcha()
+    loadSavedLoginInfo()
+  })
 
   // 登录成功提示
   const showLoginSuccessNotice = () => {

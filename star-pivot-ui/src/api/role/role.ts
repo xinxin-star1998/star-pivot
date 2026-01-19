@@ -72,3 +72,30 @@ export function fetchGetRoleSelect() {
     url: '/api/sys/role/select'
   })
 }
+
+/**
+ * 分配菜单权限 和 部门权限
+ */
+export function fetchAssignPermission(data: Api.SystemManage.RolePermissionAssignDTO) {
+  return request.post({
+    url: '/api/sys/role/assignPermission',
+    data,
+    showSuccessMessage: true
+  })
+}
+/**
+ * 根据角色ID获取已分配的菜单列表
+ */
+export function fetchGetRoleMenus(roleId: number) {
+  return request.get<number[]>({
+    url: `/api/sys/role/getMenuIdsByRoleId/${roleId}`
+  })
+}
+/**
+ * 根据角色ID获取已分配的部门ID列表
+ */
+export function fetchGetRoleDeptIds(roleId: number) {
+  return request.get<number[]>({
+    url: `/api/sys/role/${roleId}/deptIds`
+  })
+}
