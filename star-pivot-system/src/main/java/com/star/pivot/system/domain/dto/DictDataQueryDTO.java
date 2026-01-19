@@ -6,7 +6,7 @@ import lombok.Data;
  * 字典数据查询DTO
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Data
 public class DictDataQueryDTO {

@@ -194,7 +194,8 @@ export const useUserStore = defineStore(
       accessToken.value = ''
       // 清空刷新令牌
       refreshToken.value = ''
-      // 清除本地存储中的登录信息
+      // 清除会话存储中的登录信息（兼容清除旧版 localStorage）
+      sessionStorage.removeItem('login-info')
       localStorage.removeItem('login-info')
       // 清理登录态相关的 Pinia 持久化缓存（避免刷新后回显旧状态）
       clearAuthRelatedPersistedStorage()

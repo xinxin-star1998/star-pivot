@@ -8,8 +8,8 @@
 
       <div class="auth-right-wrap">
         <div class="form">
-          <h3 class="title">{{ $t('register.title') }}</h3>
-          <p class="sub-title">{{ $t('register.subTitle') }}</p>
+          <h3 class="title">{{ t('register.title') }}</h3>
+          <p class="sub-title">{{ t('register.subTitle') }}</p>
           <ElForm
             class="mt-7.5"
             ref="formRef"
@@ -22,7 +22,7 @@
               <ElInput
                 class="custom-height"
                 v-model.trim="formData.username"
-                :placeholder="$t('register.placeholder.username')"
+                :placeholder="t('register.placeholder.username')"
               />
             </ElFormItem>
 
@@ -30,7 +30,7 @@
               <ElInput
                 class="custom-height"
                 v-model.trim="formData.password"
-                :placeholder="$t('register.placeholder.password')"
+                :placeholder="t('register.placeholder.password')"
                 type="password"
                 autocomplete="off"
                 show-password
@@ -41,7 +41,7 @@
               <ElInput
                 class="custom-height"
                 v-model.trim="formData.confirmPassword"
-                :placeholder="$t('register.placeholder.confirmPassword')"
+                :placeholder="t('register.placeholder.confirmPassword')"
                 type="password"
                 autocomplete="off"
                 @keyup.enter="register"
@@ -51,11 +51,11 @@
 
             <ElFormItem prop="agreement">
               <ElCheckbox v-model="formData.agreement">
-                {{ $t('register.agreeText') }}
+                {{ t('register.agreeText') }}
                 <RouterLink
                   style="color: var(--theme-color); text-decoration: none"
                   to="/privacy-policy"
-                  >{{ $t('register.privacyPolicy') }}</RouterLink
+                  >{{ t('register.privacyPolicy') }}</RouterLink
                 >
               </ElCheckbox>
             </ElFormItem>
@@ -68,14 +68,14 @@
                 :loading="loading"
                 v-ripple
               >
-                {{ $t('register.submitBtnText') }}
+                {{ t('register.submitBtnText') }}
               </ElButton>
             </div>
 
             <div class="mt-5 text-sm text-g-600">
-              <span>{{ $t('register.hasAccount') }}</span>
+              <span>{{ t('register.hasAccount') }}</span>
               <RouterLink class="text-theme" :to="{ name: 'Login' }">{{
-                $t('register.toLogin')
+                t('register.toLogin')
               }}</RouterLink>
             </div>
           </ElForm>

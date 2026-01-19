@@ -14,7 +14,7 @@ import java.util.List;
  * 岗位服务接口
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 public interface PostService extends IService<SysPost> {
 

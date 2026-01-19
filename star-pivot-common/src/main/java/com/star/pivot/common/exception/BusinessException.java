@@ -2,15 +2,18 @@ package com.star.pivot.common.exception;
 
 import lombok.Getter;
 
+import java.io.Serial;
+
 /**
  * 业务异常类
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Getter
 public class BusinessException extends RuntimeException {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

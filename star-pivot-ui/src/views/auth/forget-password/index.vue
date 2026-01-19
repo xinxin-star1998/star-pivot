@@ -7,13 +7,13 @@
 
       <div class="auth-right-wrap">
         <div class="form">
-          <h3 class="title">{{ $t('forgetPassword.title') }}</h3>
-          <p class="sub-title">{{ $t('forgetPassword.subTitle') }}</p>
+          <h3 class="title">{{ t('forgetPassword.title') }}</h3>
+          <p class="sub-title">{{ t('forgetPassword.subTitle') }}</p>
           <div class="mt-5">
             <span class="input-label" v-if="showInputLabel">账号</span>
             <ElInput
               class="custom-height"
-              :placeholder="$t('forgetPassword.placeholder')"
+              :placeholder="t('forgetPassword.placeholder')"
               v-model.trim="username"
             />
           </div>
@@ -26,13 +26,13 @@
               :loading="loading"
               v-ripple
             >
-              {{ $t('forgetPassword.submitBtnText') }}
+              {{ t('forgetPassword.submitBtnText') }}
             </ElButton>
           </div>
 
           <div style="margin-top: 15px">
             <ElButton class="w-full custom-height" plain @click="toLogin">
-              {{ $t('forgetPassword.backBtnText') }}
+              {{ t('forgetPassword.backBtnText') }}
             </ElButton>
           </div>
         </div>
@@ -42,8 +42,11 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
   defineOptions({ name: 'ForgetPassword' })
 
+  const { t } = useI18n()
   const router = useRouter()
   const showInputLabel = ref(false)
 

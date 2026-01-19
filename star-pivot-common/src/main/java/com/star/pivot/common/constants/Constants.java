@@ -4,7 +4,7 @@ package com.star.pivot.common.constants;
  * 通用常量
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 public class Constants {
 

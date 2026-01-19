@@ -8,8 +8,8 @@
 
       <div class="auth-right-wrap">
         <div class="form">
-          <h3 class="title">{{ $t('login.title') }}</h3>
-          <p class="sub-title">{{ $t('login.subTitle') }}</p>
+          <h3 class="title">{{ t('login.title') }}</h3>
+          <p class="sub-title">{{ t('login.subTitle') }}</p>
           <ElForm
             ref="formRef"
             :model="formData"
@@ -21,14 +21,14 @@
             <ElFormItem prop="username">
               <ElInput
                 class="custom-height"
-                :placeholder="$t('login.placeholder.username')"
+                :placeholder="t('login.placeholder.username')"
                 v-model.trim="formData.username"
               />
             </ElFormItem>
             <ElFormItem prop="password">
               <ElInput
                 class="custom-height"
-                :placeholder="$t('login.placeholder.password')"
+                :placeholder="t('login.placeholder.password')"
                 v-model.trim="formData.password"
                 type="password"
                 autocomplete="off"
@@ -42,7 +42,7 @@
                 <div class="flex items-center">
                   <ElInput
                     v-model="formData.captcha"
-                    :placeholder="$t('login.placeholder.captcha')"
+                    :placeholder="t('login.placeholder.captcha')"
                     class="mr-2 custom-height"
                     @keyup.enter="handleSubmit"
                   />
@@ -55,11 +55,20 @@
                       @click="refreshCaptcha"
                       :class="{ 'opacity-50': loadingCaptcha }"
                     />
-                    <div v-else class="h-10 w-32 cursor-pointer rounded border border-gray-300 flex items-center justify-center bg-gray-50" @click="refreshCaptcha">
+                    <div
+                      v-else
+                      class="h-10 w-32 cursor-pointer rounded border border-gray-300 flex items-center justify-center bg-gray-50"
+                      @click="refreshCaptcha"
+                    >
                       <span class="text-gray-400 text-sm">点击获取验证码</span>
                     </div>
-                    <div v-if="loadingCaptcha" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70">
-                      <div class="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                    <div
+                      v-if="loadingCaptcha"
+                      class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70"
+                    >
+                      <div
+                        class="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -68,10 +77,10 @@
 
             <div class="flex-cb mt-2 text-sm">
               <ElCheckbox v-model="formData.rememberPassword">{{
-                $t('login.rememberPwd')
+                t('login.rememberPwd')
               }}</ElCheckbox>
               <RouterLink class="text-theme" :to="{ name: 'ForgetPassword' }">{{
-                $t('login.forgetPwd')
+                t('login.forgetPwd')
               }}</RouterLink>
             </div>
 
@@ -83,14 +92,14 @@
                 :loading="loading"
                 v-ripple
               >
-                {{ $t('login.btnText') }}
+                {{ t('login.btnText') }}
               </ElButton>
             </div>
 
             <div class="mt-5 text-sm text-gray-600">
-              <span>{{ $t('login.noAccount') }}</span>
+              <span>{{ t('login.noAccount') }}</span>
               <RouterLink class="text-theme" :to="{ name: 'Register' }">{{
-                $t('login.register')
+                t('login.register')
               }}</RouterLink>
             </div>
           </ElForm>
@@ -107,14 +116,12 @@
   import { HttpError } from '@/utils/http/error'
   import { fetchLogin, fetchCaptcha, fetchVerifyCaptcha } from '@/api/auth'
   import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
-  import { useSettingStore } from '@/store/modules/setting'
   import { useCommon } from '@/hooks'
   import { onMounted, computed, ref, reactive, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
 
   defineOptions({ name: 'Login' })
 
-  const settingStore = useSettingStore()
-  const { isDark } = settingStore
   const { t, locale } = useI18n()
   const formKey = ref(0)
 
@@ -133,7 +140,8 @@
   const formData = reactive({
     username: '',
     password: '',
-    rememberPassword: true,
+    // 默认不勾选记住密码，由用户主动选择
+    rememberPassword: false,
     /** 当前验证码 token，由服务端生成 */
     captchaToken: '',
     captcha: ''
@@ -188,15 +196,19 @@
         rememberPassword: formData.rememberPassword
       })
 
-      const {
-        token,
-        username: returnedUsername,
-        nickname
-      } = response
+      const { token, username: returnedUsername, nickname } = response
 
       // 验证token
       if (!token) {
-        throw new Error('Login failed - no token received')
+        console.error('[Login] Login failed - no token received')
+        ElNotification({
+          title: t('common.error') || '错误',
+          type: 'error',
+          duration: 2500,
+          zIndex: 10000,
+          message: '登录失败：未获取到 token'
+        })
+        return
       }
 
       // 存储 token 和登录状态
@@ -253,7 +265,7 @@
   const refreshCaptcha = async () => {
     loadingCaptcha.value = true
     captchaError.value = ''
-    
+
     try {
       const response = await fetchCaptcha()
       formData.captchaToken = response.captchaToken
@@ -265,40 +277,36 @@
     }
   }
 
-  // 从本地存储读取保存的登录信息
+  // 从会话存储读取保存的登录信息（仅账号信息，不再保存密码）
   const loadSavedLoginInfo = () => {
     try {
-      const savedInfo = localStorage.getItem('login-info')
+      const savedInfo = sessionStorage.getItem('login-info')
       if (savedInfo) {
         const parsedInfo = JSON.parse(savedInfo)
         if (parsedInfo.username) {
           formData.username = parsedInfo.username
         }
-        if (parsedInfo.password) {
-          formData.password = parsedInfo.password
-        }
-        if (parsedInfo.rememberPassword !== undefined) {
-          formData.rememberPassword = parsedInfo.rememberPassword
-        }
+        // 兼容老数据：如果曾经存过密码，这里直接忽略密码字段
+        formData.rememberPassword =
+          parsedInfo.rememberPassword !== undefined ? parsedInfo.rememberPassword : true
       }
     } catch (error) {
       console.error('Failed to load saved login info:', error)
     }
   }
 
-  // 保存登录信息到本地存储
+  // 保存登录信息到会话存储（仅账号和勾选状态，不保存密码）
   const saveLoginInfo = () => {
     try {
       if (formData.rememberPassword) {
         const loginInfo = {
           username: formData.username,
-          password: formData.password,
           rememberPassword: formData.rememberPassword
         }
-        localStorage.setItem('login-info', JSON.stringify(loginInfo))
+        sessionStorage.setItem('login-info', JSON.stringify(loginInfo))
       } else {
-        // 如果用户取消记住密码，清除本地存储中的登录信息
-        localStorage.removeItem('login-info')
+        // 如果用户取消记住密码，清除会话存储中的登录信息
+        sessionStorage.removeItem('login-info')
       }
     } catch (error) {
       console.error('Failed to save login info:', error)

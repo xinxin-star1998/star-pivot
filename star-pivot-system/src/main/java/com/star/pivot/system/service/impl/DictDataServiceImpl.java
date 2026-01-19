@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * 字典数据服务实现类
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Service
 @RequiredArgsConstructor

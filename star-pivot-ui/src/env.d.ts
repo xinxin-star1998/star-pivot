@@ -32,3 +32,10 @@ declare module 'qrcode.vue' {
 
 // 全局变量声明
 declare const __APP_VERSION__: string // 版本号
+
+// Vue i18n 全局类型声明
+declare module '@vue/runtime-core' {
+  interface ComponentCustomProperties {
+    $t: (key: string) => string
+  }
+}
