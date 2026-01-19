@@ -2,17 +2,19 @@ package com.star.pivot.common.domain;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
  * 统一响应结果类
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Data
 public class Result<T> implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

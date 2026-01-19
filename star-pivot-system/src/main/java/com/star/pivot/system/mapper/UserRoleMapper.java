@@ -10,7 +10,7 @@ import java.util.List;
  * 用户角色关联Mapper接口
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Mapper
 public interface UserRoleMapper extends BaseMapper<UserRole> {

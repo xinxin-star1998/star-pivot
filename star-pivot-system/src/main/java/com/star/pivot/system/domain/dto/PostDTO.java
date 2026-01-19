@@ -8,7 +8,7 @@ import lombok.Data;
  * 岗位DTO
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Data
 public class PostDTO {

@@ -11,7 +11,7 @@ import java.util.List;
  * 部门服务接口
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 public interface SysDeptService extends IService<SysDept> {
 

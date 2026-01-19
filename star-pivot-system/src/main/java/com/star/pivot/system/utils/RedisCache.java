@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  * 支持基础对象、Hash、List、Set操作 + 批量操作 + 简单分布式锁
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Slf4j
 @Component
@@ -146,7 +146,10 @@ public class RedisCache {
         if (key == null) {
             throw new IllegalArgumentException("缓存key不能为空");
         }
-        return redisTemplate.getExpire(key, TimeUnit.SECONDS);
+        // RedisTemplate#getExpire 返回的是 Long 可能为 null，这里做安全转换
+        Long expire = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+        // 按方法注释约定：null 视为 key 不存在，返回 -2
+        return expire != null ? expire : -2L;
     }
 
     // ======================== 批量操作 ========================

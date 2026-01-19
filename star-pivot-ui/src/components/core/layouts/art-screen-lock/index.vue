@@ -22,7 +22,7 @@
       <ElDialog v-model="visible" :width="370" :show-close="false" @open="handleDialogOpen">
         <div class="flex-c flex-col">
           <img class="w-16 h-16 rounded-full" src="@imgs/user/avatar.webp" alt="用户头像" />
-          <div class="mt-7.5 mb-3.5 text-base font-medium">{{ userInfo.userName }}</div>
+          <div class="mt-7.5 mb-3.5 text-base font-medium">{{ userInfo.user?.username }}</div>
           <ElForm
             ref="formRef"
             :model="formData"
@@ -34,7 +34,7 @@
               <ElInput
                 v-model="formData.password"
                 type="password"
-                :placeholder="$t('lockScreen.lock.inputPlaceholder')"
+                :placeholder="t('lockScreen.lock.inputPlaceholder')"
                 :show-password="true"
                 autocomplete="new-password"
                 ref="lockInputRef"
@@ -49,7 +49,7 @@
               </ElInput>
             </ElFormItem>
             <ElButton type="primary" class="w-full mt-0.5" @click="handleLock" v-ripple>
-              {{ $t('lockScreen.lock.btnText') }}
+              {{ t('lockScreen.lock.btnText') }}
             </ElButton>
           </ElForm>
         </div>
@@ -61,7 +61,7 @@
       <div class="flex-c flex-col w-80">
         <img class="w-16 h-16 mt-5 rounded-full" src="@imgs/user/avatar.webp" alt="用户头像" />
         <div class="mt-3 mb-3.5 text-base font-medium">
-          {{ userInfo.userName }}
+          {{ userInfo.user?.username }}
         </div>
         <ElForm
           ref="unlockFormRef"
@@ -74,7 +74,7 @@
             <ElInput
               v-model="unlockForm.password"
               type="password"
-              :placeholder="$t('lockScreen.unlock.inputPlaceholder')"
+              :placeholder="t('lockScreen.unlock.inputPlaceholder')"
               :show-password="true"
               autocomplete="new-password"
               ref="unlockInputRef"
@@ -89,7 +89,7 @@
           </ElFormItem>
 
           <ElButton type="primary" class="w-full mt-2" @click="handleUnlock" v-ripple>
-            {{ $t('lockScreen.unlock.btnText') }}
+            {{ t('lockScreen.unlock.btnText') }}
           </ElButton>
           <div class="w-full text-center">
             <ElButton
@@ -97,7 +97,7 @@
               class="mt-2.5 !text-g-600 hover:!text-theme hover:!bg-transparent"
               @click="toLogin"
             >
-              {{ $t('lockScreen.unlock.backBtnText') }}
+              {{ t('lockScreen.unlock.backBtnText') }}
             </ElButton>
           </div>
         </ElForm>

@@ -9,7 +9,7 @@ import lombok.Data;
  * 角色菜单关联实体类
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Data
 @TableName("sys_role_menu")

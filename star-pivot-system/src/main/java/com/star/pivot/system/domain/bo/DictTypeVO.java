@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * 字典类型VO
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Data
 public class DictTypeVO {

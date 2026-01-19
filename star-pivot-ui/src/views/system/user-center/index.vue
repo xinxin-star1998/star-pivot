@@ -15,7 +15,7 @@
             class="mt-5 text-xl font-normal transition-colors"
             :class="isDark ? 'text-g-100' : 'text-g-900'"
           >
-            {{ userDetail.userName || userInfo.userName }}
+            {{ userDetail.userName || userInfo.user?.username }}
           </h2>
           <p class="mt-5 text-sm transition-colors" :class="isDark ? 'text-g-400' : 'text-g-600'">
             {{ userDetail.remark || '专注于用户体验跟视觉设计' }}

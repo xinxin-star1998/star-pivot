@@ -13,7 +13,7 @@ import java.util.List;
  * 字典数据服务接口
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 public interface DictDataService extends IService<DictData> {
 

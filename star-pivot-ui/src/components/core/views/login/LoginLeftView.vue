@@ -11,8 +11,8 @@
     </div>
 
     <div class="text-wrap">
-      <h1> {{ $t('login.leftView.title') }} </h1>
-      <p> {{ $t('login.leftView.subTitle') }} </p>
+      <h1> {{ t('login.leftView.title') }} </h1>
+      <p> {{ t('login.leftView.subTitle') }} </p>
     </div>
 
     <!-- 几何装饰元素 -->
@@ -71,9 +71,12 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import AppConfig from '@/config'
   import loginIcon from '@imgs/svg/login_icon.svg'
   import { themeAnimation } from '@/utils/ui/animation'
+
+  const { t } = useI18n()
 
   // 定义 props
   defineProps<{

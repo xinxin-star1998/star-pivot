@@ -9,7 +9,7 @@ import java.util.List;
  * 部门VO
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Data
 public class DeptVO {
