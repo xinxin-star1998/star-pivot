@@ -11,7 +11,7 @@ import com.star.pivot.system.domain.entity.DictType;
  * 字典类型服务接口
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 public interface DictTypeService extends IService<DictType> {
 

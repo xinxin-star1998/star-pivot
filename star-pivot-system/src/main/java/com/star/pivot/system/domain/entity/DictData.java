@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
  * 字典数据实体类
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Data
 @TableName("sys_dict_data")

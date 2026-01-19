@@ -16,7 +16,7 @@ import java.util.Map;
  * JWT工具类
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Component
 public class JwtTokenUtil {

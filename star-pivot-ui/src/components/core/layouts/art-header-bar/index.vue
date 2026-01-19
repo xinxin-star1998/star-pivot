@@ -69,7 +69,7 @@
         >
           <div class="flex-c">
             <ArtSvgIcon icon="ri:search-line" class="text-sm text-g-500" />
-            <span class="ml-1 text-xs font-normal text-g-500">{{ $t('topBar.search.title') }}</span>
+            <span class="ml-1 text-xs font-normal text-g-500">{{ t('topBar.search.title') }}</span>
           </div>
           <div class="flex-c h-5 px-1.5 text-g-500/80 border border-g-400 rounded">
             <ArtSvgIcon v-if="isWindows" icon="vaadin:ctrl-a" class="text-sm" />
@@ -139,10 +139,10 @@
             </template>
             <template #default>
               <p
-                >{{ $t('topBar.guide.title')
-                }}<span :style="{ color: systemThemeColor }"> {{ $t('topBar.guide.theme') }} </span
-                >、 <span :style="{ color: systemThemeColor }"> {{ $t('topBar.guide.menu') }} </span
-                >{{ $t('topBar.guide.description') }}
+                >{{ t('topBar.guide.title')
+                }}<span :style="{ color: systemThemeColor }"> {{ t('topBar.guide.theme') }} </span
+                >、 <span :style="{ color: systemThemeColor }"> {{ t('topBar.guide.menu') }} </span
+                >{{ t('topBar.guide.description') }}
               </p>
             </template>
           </ElPopover>
@@ -199,7 +199,7 @@
   const isWindows = navigator.userAgent.includes('Windows')
 
   const router = useRouter()
-  const { locale } = useI18n()
+  const { locale, t } = useI18n()
   const { width } = useWindowSize()
 
   const settingStore = useSettingStore()

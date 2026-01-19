@@ -16,6 +16,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -67,6 +68,7 @@ public class CaptchaServiceImpl implements CaptchaService {
 
     @Data
     private static class CaptchaState implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
 
         /**

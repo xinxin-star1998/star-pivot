@@ -11,7 +11,7 @@ import java.util.List;
  * 字典数据Mapper接口
  *
  * @author stardust
- * @date 2024-01-01
+ * @since 2024-01-01
  */
 @Mapper
 public interface DictDataMapper extends BaseMapper<DictData> {
