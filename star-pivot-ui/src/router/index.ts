@@ -1,5 +1,5 @@
 import type { App } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import { staticRoutes } from './routes/staticRoutes'
 import { configureNProgress } from '@/utils/router'
 import { setupBeforeEachGuard } from './guards/beforeEach'
@@ -7,7 +7,8 @@ import { setupAfterEachGuard } from './guards/afterEach'
 
 // 创建路由实例
 export const router = createRouter({
-  history: createWebHashHistory(),
+  // 生产环境推荐使用 history 模式，需配合 Nginx 等服务端进行路由兜底配置
+  history: createWebHistory(),
   routes: staticRoutes // 静态路由
 })
 
@@ -20,4 +21,5 @@ export function initRouter(app: App<Element>): void {
 }
 
 // 主页路径，默认使用菜单第一个有效路径，配置后使用此路径
-export const HOME_PAGE_PATH = ''
+// 建议显式指定主工作台路由，避免因菜单排序变化导致首页不稳定
+export const HOME_PAGE_PATH = '/dashboard/console'

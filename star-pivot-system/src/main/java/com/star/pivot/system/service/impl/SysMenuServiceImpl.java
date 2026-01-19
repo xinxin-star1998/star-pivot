@@ -11,10 +11,13 @@ import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.mapper.RoleMenuMapper;
 import com.star.pivot.system.mapper.SysMenuMapper;
+import com.star.pivot.system.mapper.SysRoleMapper;
 import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +47,11 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     private final SysUserService sysUserService;
     private final RoleMenuMapper roleMenuMapper;
+    private final SysMenuMapper sysMenuMapper;
+    private final SysRoleMapper sysRoleMapper;
+
     @Override
+    @Cacheable(cacheNames = "menuTree", key = "'all'")
     public List<SysMenu> menuTree() {
         // 查询所有权限
         LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
@@ -87,6 +94,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "menuTree", allEntries = true)
     public boolean insertMenu(MenuDTO menuDTO) {
         log.info("新增菜单: menuName={}, parentId={}, menuType={}", 
                 menuDTO.getMenuName(), menuDTO.getParentId(), menuDTO.getMenuType());
@@ -121,6 +129,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "menuTree", allEntries = true)
     public boolean updateMenu(MenuDTO menuDTO) {
         log.info("修改菜单: menuId={}, menuName={}", menuDTO.getMenuId(), menuDTO.getMenuName());
         
@@ -159,6 +168,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "menuTree", allEntries = true)
     public boolean deleteMenu(Long menuId) {
         log.info("删除菜单: menuId={}", menuId);
         
@@ -211,6 +221,27 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         
         // 组装菜单树（使用统一的树构建方法，并设置label和value）
         return buildMenuTreeWithLabelValue(menuList, TOP_MENU_PARENT_ID);
+    }
+
+    @Override
+    public List<SysMenu> getMenuByRoleId(Long roleId) {
+        log.debug("根据角色ID获取菜单: roleId={}", roleId);
+        SysRole sysRole = sysRoleMapper.selectById(roleId);
+        if (sysRole == null) {
+            log.warn("角色不存在: roleId={}", roleId);
+            return Collections.emptyList();
+        }
+        
+        List<SysMenu> menuList;
+        if (Constants.ADMIN_ROLE_KEY.equals(sysRole.getRoleKey())) {
+            menuList = sysMenuMapper.selectList(null);
+        } else {
+            menuList = sysMenuMapper.getMenuByRoleId(roleId);
+            if (menuList == null) {
+                menuList = Collections.emptyList();
+            }
+        }
+        return menuList;
     }
 
     /**

@@ -15,6 +15,8 @@ import com.star.pivot.system.service.DictDataService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -61,6 +63,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
     }
 
     @Override
+    @Cacheable(cacheNames = "dictData", key = "#dictType")
     public List<DictDataVO> selectDictDataByType(String dictType) {
         List<DictData> dictDataList = dictDataMapper.selectDictDataByType(dictType);
         return dictDataList.stream()
@@ -79,6 +82,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "dictData", allEntries = true)
     public boolean insertDictData(DictDataDTO dictDataDTO) {
         // 创建字典数据
         DictData dictData = new DictData();
@@ -96,6 +100,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "dictData", allEntries = true)
     public boolean updateDictData(DictDataDTO dictDataDTO) {
         DictData dictData = this.getById(dictDataDTO.getDictCode());
         if (dictData == null) {
@@ -113,6 +118,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "dictData", allEntries = true)
     public boolean deleteDictDataByIds(Long[] dictCodes) {
         for (Long dictCode : dictCodes) {
             this.removeById(dictCode);
