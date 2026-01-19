@@ -223,27 +223,6 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         return buildMenuTreeWithLabelValue(menuList, TOP_MENU_PARENT_ID);
     }
 
-    @Override
-    public List<SysMenu> getMenuByRoleId(Long roleId) {
-        log.debug("根据角色ID获取菜单: roleId={}", roleId);
-        SysRole sysRole = sysRoleMapper.selectById(roleId);
-        if (sysRole == null) {
-            log.warn("角色不存在: roleId={}", roleId);
-            return Collections.emptyList();
-        }
-        
-        List<SysMenu> menuList;
-        if (Constants.ADMIN_ROLE_KEY.equals(sysRole.getRoleKey())) {
-            menuList = sysMenuMapper.selectList(null);
-        } else {
-            menuList = sysMenuMapper.getMenuByRoleId(roleId);
-            if (menuList == null) {
-                menuList = Collections.emptyList();
-            }
-        }
-        return menuList;
-    }
-
     /**
      * 构建菜单树（带label和value字段，用于下拉选择等场景）
      * @param menuList 菜单列表
