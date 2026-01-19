@@ -3,6 +3,7 @@ package com.star.pivot;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 
 /**
  * 启动类
@@ -11,6 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication(scanBasePackages = "com.star.pivot")
 @MapperScan("com.star.pivot.*.mapper")
+@EnableCaching
 public class StarPivotApplication {
     public static void main(String[] args) {
         SpringApplication.run(StarPivotApplication.class, args);

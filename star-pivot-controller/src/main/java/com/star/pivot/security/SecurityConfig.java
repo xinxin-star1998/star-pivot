@@ -1,6 +1,5 @@
 package com.star.pivot.security;
 
-import com.star.pivot.system.utils.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -46,6 +45,13 @@ public class SecurityConfig {
     private String allowedOrigins;
 
     /**
+     * 是否允许直接访问 Swagger/Knife4j 文档
+     * 非生产环境默认开启，生产环境建议通过配置关闭：security.swagger-permit-all=false
+     */
+    @Value("${security.swagger-permit-all:true}")
+    private boolean swaggerPermitAll;
+
+    /**
      * 密码编码器
      */
     @Bean
@@ -73,6 +79,9 @@ public class SecurityConfig {
 
     /**
      * Security 过滤器链配置
+     *
+     * <p>外部调用统一以 {@code /api} 为前缀（由 {@code server.servlet.context-path=/api} 决定），
+     * 这里的 {@code /auth/login} 等路径都是去掉 context-path 之后的应用内路径。
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
