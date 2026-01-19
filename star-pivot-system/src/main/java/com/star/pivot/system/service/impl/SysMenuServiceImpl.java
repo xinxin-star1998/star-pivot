@@ -16,6 +16,8 @@ import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +49,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     private final RoleMenuMapper roleMenuMapper;
     private final SysMenuMapper sysMenuMapper;
     private final SysRoleMapper sysRoleMapper;
+
     @Override
+    @Cacheable(cacheNames = "menuTree", key = "'all'")
     public List<SysMenu> menuTree() {
         // 查询所有权限
         LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
@@ -90,6 +94,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "menuTree", allEntries = true)
     public boolean insertMenu(MenuDTO menuDTO) {
         log.info("新增菜单: menuName={}, parentId={}, menuType={}", 
                 menuDTO.getMenuName(), menuDTO.getParentId(), menuDTO.getMenuType());
@@ -124,6 +129,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "menuTree", allEntries = true)
     public boolean updateMenu(MenuDTO menuDTO) {
         log.info("修改菜单: menuId={}, menuName={}", menuDTO.getMenuId(), menuDTO.getMenuName());
         
@@ -162,6 +168,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "menuTree", allEntries = true)
     public boolean deleteMenu(Long menuId) {
         log.info("删除菜单: menuId={}", menuId);
         

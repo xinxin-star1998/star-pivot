@@ -1,6 +1,5 @@
 package com.star.pivot.security;
 
-import com.star.pivot.system.utils.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -46,6 +45,13 @@ public class SecurityConfig {
     private String allowedOrigins;
 
     /**
+     * 是否允许直接访问 Swagger/Knife4j 文档
+     * 非生产环境默认开启，生产环境建议通过配置关闭：security.swagger-permit-all=false
+     */
+    @Value("${security.swagger-permit-all:true}")
+    private boolean swaggerPermitAll;
+
+    /**
      * 密码编码器
      */
     @Bean
@@ -73,6 +79,9 @@ public class SecurityConfig {
 
     /**
      * Security 过滤器链配置
+     *
+     * <p>外部调用统一以 {@code /api} 为前缀（由 {@code server.servlet.context-path=/api} 决定），
+     * 这里的 {@code /auth/login} 等路径都是去掉 context-path 之后的应用内路径。
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -90,14 +99,19 @@ public class SecurityConfig {
                         .accessDeniedHandler(jwtAccessDeniedHandler)
                 )
                 // 配置请求授权
-                .authorizeHttpRequests(auth -> auth
-                        // 允许登录接口匿名访问（注意：如果配置了context-path，Spring Security会自动处理）
-                        .requestMatchers("/auth/login", "/api/auth/login").permitAll()
-                        // 允许 Swagger 相关路径匿名访问
-                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
-                        // 其他请求需要认证（包括菜单接口，根据用户权限返回菜单）
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(auth -> {
+                    // 允许登录接口匿名访问（注意：外部访问为 /api/auth/login，这里不需要带 context-path）
+                    auth.requestMatchers("/auth/login").permitAll();
+
+                    // Swagger/Knife4j 文档在非生产环境默认放开，生产环境可通过配置关闭
+                    if (swaggerPermitAll) {
+                        auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
+                                "/swagger-resources/**", "/webjars/**", "/doc.html").permitAll();
+                    }
+
+                    // 其他请求需要认证（包括菜单接口，根据用户权限返回菜单）
+                    auth.anyRequest().authenticated();
+                })
                 // 添加 JWT 过滤器
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
