@@ -1,6 +1,5 @@
 package com.star.pivot.system.domain.bo;
 
-import com.star.pivot.common.utils.StringUtils;
 import lombok.Data;
 
 /**

@@ -91,12 +91,3 @@ export function fetchGetMenuById(menuId: number) {
     url: `/api/sys/menu/getById/${menuId}`
   })
 }
-
-/**
- * 根据角色ID获取已分配的菜单列表
- */
-export function fetchGetRoleMenus(roleId: number) {
-  return request.get<SysMenu[]>({
-    url: `/api/sys/menu/getMenuByRoleId/${roleId}`
-  })
-}

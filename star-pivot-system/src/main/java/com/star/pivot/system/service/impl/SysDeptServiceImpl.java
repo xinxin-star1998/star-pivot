@@ -31,7 +31,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> implements SysDeptService {
 
-    private final SysDeptMapper deptMapper;
     private final SysUserMapper userMapper;
 
     @Override

@@ -221,9 +221,9 @@
     }
   }
 
-  const showPermissionDialog = (row?: RoleListItem) => {
+  const showPermissionDialog = (roleId: RoleListItem) => {
     permissionDialog.value = true
-    currentRoleData.value = row
+    currentRoleData.value = roleId
   }
 
   const deleteRole = (row: RoleListItem) => {

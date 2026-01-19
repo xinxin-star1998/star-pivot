@@ -1,6 +1,5 @@
 package com.star.pivot.system.domain.bo;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.util.List;

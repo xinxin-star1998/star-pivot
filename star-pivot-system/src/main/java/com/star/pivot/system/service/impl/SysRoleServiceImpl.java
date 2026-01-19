@@ -8,6 +8,7 @@ import com.star.pivot.common.constants.Constants;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.exception.BusinessException;
 import com.star.pivot.system.domain.dto.RoleDTO;
+import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
 import com.star.pivot.system.domain.dto.RoleQueryDTO;
 import com.star.pivot.system.domain.entity.RoleDept;
 import com.star.pivot.system.domain.entity.RoleMenu;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -43,6 +45,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     private UserRoleMapper userRoleMapper;
     @Autowired
     private SysDeptMapper sysDeptMapper;
+    @Autowired
+    private SysMenuMapper sysMenuMapper;
     @Override
     public PageResponse<SysRole> selectRoleList(RoleQueryDTO roleQueryDTO) {
         PageResponse<SysRole> pageResponse = new PageResponse<>();
@@ -209,20 +213,85 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     /**
-     * 查询角色部门权限  deptIds
-     * @param roleId 角色ID
-     * @return 部门ID列表
+     * 根据角色id获取部门id列表
+     * @param roleId 角色id
+     * @return deptIds 部门id列表
      */
     @Override
     public List<Long> selectDeptIdsByRoleId(Long roleId) {
-        SysRole sysRole = this.sysRoleMapper.selectById(roleId);
+        SysRole sysRole = sysRoleMapper.selectById(roleId);
+        if(sysRole == null){
+            throw new BusinessException("角色不存在");
+        }
+        if ("2".equals(sysRole.getDelFlag())){
+            throw new BusinessException("角色已删除");
+        }
+        if("1".equals(sysRole.getStatus())){
+            throw new BusinessException("角色已禁用，请联系管理员");
+        }
         List<Long> deptIds;
         if(sysRole.getRoleKey().equals(Constants.ADMIN_ROLE_KEY)){
             deptIds = sysDeptMapper.selectAllDeptIds();
         }else{
-            deptIds = sysDeptMapper.selectDeptIdsByRoleId(roleId);
+            deptIds = roleDeptMapper.selectDeptIdsByRoleId(roleId);
         }
         return deptIds;
+    }
+
+    /**
+     * 根据角色id获取菜单id列表
+     * @param roleId 角色id
+     * @return menuIds 菜单id列表
+     */
+    @Override
+    public List<Long> getMenuIdsByRoleId(Long roleId) {
+        SysRole sysRole = sysRoleMapper.selectById(roleId);
+        if(sysRole == null){
+            throw new BusinessException("角色不存在");
+        }
+        if ("2".equals(sysRole.getDelFlag())){
+            throw new BusinessException("角色已删除");
+        }
+        if("1".equals(sysRole.getStatus())){
+            throw new BusinessException("角色已禁用，请联系管理员");
+        }
+        List<Long> menuIds;
+        if (Constants.ADMIN_ROLE_KEY.equals(sysRole.getRoleKey())) {
+            menuIds = sysMenuMapper.selectMenuIds(null);
+        } else {
+            menuIds = roleMenuMapper.selectMenuIdsByRoleId(roleId);
+            if (menuIds == null) {
+                menuIds = Collections.emptyList();
+            }
+        }
+        return menuIds;
+    }
+    /**
+     * 执行角色权限分配（菜单+部门）
+     * &#064;Transactional：事务控制，保证操作原子性
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean assignPermission(RolePermissionAssignDTO rolePermissionAssignDTO) {
+        // 1. 基础参数校验
+        Long roleId = rolePermissionAssignDTO.getRoleId();
+        List<Long> menuIds = rolePermissionAssignDTO.getMenuIds() == null ? Collections.emptyList() : rolePermissionAssignDTO.getMenuIds();
+        List<Long> deptIds = rolePermissionAssignDTO.getDeptIds() == null ? Collections.emptyList() : rolePermissionAssignDTO.getDeptIds();
+        //2.查询角色是否存在
+        SysRole role = sysRoleMapper.selectById(roleId);
+        if (role == null || "2".equals(role.getDelFlag())) {
+            throw new BusinessException("角色不存在");
+        }
+        // 3.处理旧菜蛋权限，添加新菜单权限
+        roleMenuMapper.deleteByRoleId(roleId);
+        if(!menuIds.isEmpty()){
+            roleMenuMapper.batchSave(roleId, menuIds);
+        }
+        // 4.处理旧部门权限，添加新部门权限
+        roleDeptMapper.deleteByRoleId(roleId);
+        if(!deptIds.isEmpty()){
+            roleDeptMapper.batchSave(roleId, deptIds);
+        }
+        return true;
     }
 
     /**

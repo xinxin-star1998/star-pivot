@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 
 import lombok.Data;
-import lombok.Setter;
 
 /**
  * 路由配置信息

@@ -1,6 +1,5 @@
 package com.star.pivot.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.PostBo;

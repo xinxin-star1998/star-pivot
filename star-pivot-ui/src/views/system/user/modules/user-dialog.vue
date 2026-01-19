@@ -2,7 +2,7 @@
   <ElDialog
     v-model="dialogVisible"
     :title="dialogType === 'add' ? '添加用户' : '编辑用户'"
-    width="30%"
+    width="40%"
     align-center
   >
     <ElForm ref="formRef" :model="formData" :rules="rules" label-width="80px">
@@ -19,20 +19,31 @@
         <ElInput v-model="formData.email" placeholder="请输入邮箱" />
       </ElFormItem>
 
+      <ElFormItem label="头像">
+        <art-avatar-upload
+          ref="avatarUploadRef"
+          v-model="formData.avatar"
+          :user-id="formData.userId"
+          :size="100"
+          :auto-upload="dialogType === 'edit'"
+          use-presigned-url
+        />
+      </ElFormItem>
+
       <ElFormItem label="手机号" prop="phone">
         <ElInput v-model="formData.phonenumber" placeholder="请输入手机号" />
       </ElFormItem>
       <ElFormItem label="性别" prop="gender">
         <ElRadioGroup v-model="formData.sex">
-          <ElRadio label="0">男</ElRadio>
-          <ElRadio label="1">女</ElRadio>
-          <ElRadio label="2">未知</ElRadio>
+          <ElRadio :value="'0'">男</ElRadio>
+          <ElRadio :value="'1'">女</ElRadio>
+          <ElRadio :value="'2'">未知</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
       <ElFormItem label="状态" prop="status">
         <ElRadioGroup v-model="formData.status">
-          <ElRadio label="0">启用</ElRadio>
-          <ElRadio label="1">禁用</ElRadio>
+          <ElRadio :value="'0'">启用</ElRadio>
+          <ElRadio :value="'1'">禁用</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
       <ElFormItem label="角色" prop="role">
@@ -87,6 +98,7 @@
   import { fetchGetPostSelect } from '@/api/post/post'
   import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
   import { fetchAddUser, fetchUpdateUser, fetchGetUserById } from '@/api/user/user'
+  import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
 
   // 角色列表项类型（扩展 RoleListItem，添加 roleCode 字段）
   type RoleOption = Api.SystemManage.RoleListItem & { roleCode: string }
@@ -127,6 +139,8 @@
 
   // 表单实例
   const formRef = ref<FormInstance>()
+  // 头像上传组件实例
+  const avatarUploadRef = ref<any>()
 
   // 表单数据
   const formData = reactive({
@@ -199,6 +213,7 @@
             userName: userDetail.userName || '',
             nickName: userDetail.nickName || '',
             email: userDetail.email || '',
+            avatar: userDetail.avatar || '',
             phonenumber: userDetail.phonenumber || '',
             sex: userDetail.sex || '0',
             status: userDetail.status || '0',
@@ -220,6 +235,7 @@
           userName: row.userName || '',
           nickName: row.nickName || '',
           email: row.email || '',
+          avatar: row.avatar || '',
           phonenumber: row.phonenumber || '',
           sex: row.sex || '0',
           status: row.status || '0',
@@ -282,10 +298,25 @@
       if (valid) {
         try {
           if (dialogType.value === 'add') {
-            await fetchAddUser(formData)
+            // 新增用户
+            const addResult = (await fetchAddUser(formData)) as any
+            // 假设后端返回的结果包含userId
+            const newUserId = addResult?.userId || addResult?.id
+
+            // 设置新的userId到formData，以便上传头像时使用
+            if (newUserId) {
+              formData.userId = newUserId
+              // 调用头像上传组件的手动上传方法
+              if (avatarUploadRef.value) {
+                await avatarUploadRef.value.uploadImageToServer()
+              }
+            }
           } else {
+            // 编辑用户，直接更新
             await fetchUpdateUser(formData)
+            // 编辑时如果修改了头像，autoUpload为true会自动上传
           }
+
           ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
           dialogVisible.value = false
           emit('submit')

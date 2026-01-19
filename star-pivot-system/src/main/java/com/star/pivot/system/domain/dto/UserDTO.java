@@ -45,7 +45,10 @@ public class UserDTO {
      */
     @Email(message = "邮箱格式不正确")
     private String email;
-
+    /**
+     * 头像
+     */
+    private String avatar;
     /**
      * 手机号码
      */

@@ -3,6 +3,7 @@ package com.star.pivot.system.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.system.domain.dto.RoleDTO;
+import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
 import com.star.pivot.system.domain.dto.RoleQueryDTO;
 import com.star.pivot.system.domain.entity.SysRole;
 
@@ -29,5 +30,9 @@ public interface SysRoleService extends IService<SysRole> {
     boolean changeRoleStatus(Long roleId, String status);
 
     List<Long> selectDeptIdsByRoleId(Long roleId);
+
+    boolean assignPermission(RolePermissionAssignDTO rolePermissionAssignDTO);
+
+    List<Long> getMenuIdsByRoleId(Long roleId);
 }
 
