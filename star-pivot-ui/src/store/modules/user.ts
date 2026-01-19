@@ -44,6 +44,23 @@ import { useMenuStore } from './menu'
 import { StorageConfig } from '@/utils/storage/storage-config'
 
 /**
+ * 清理 Pinia 持久化存储（只清登录态相关）
+ * 说明：
+ * - 项目使用版本化 key：sys-v{version}-{storeId}
+ * - 部分 store 内又额外声明了 persist.key（如 user/worktab），为兼容两种情况都做清理
+ */
+function clearAuthRelatedPersistedStorage() {
+  const storeIds = ['userStore', 'worktabStore', 'user', 'worktab']
+  storeIds.forEach((id) => {
+    try {
+      localStorage.removeItem(StorageConfig.generateStorageKey(id))
+    } catch {
+      // ignore
+    }
+  })
+}
+
+/**
  * 用户状态管理
  * 管理用户登录状态、个人信息、语言设置、搜索历史、锁屏状态等
  */
@@ -147,6 +164,24 @@ export const useUserStore = defineStore(
         localStorage.setItem(StorageConfig.LAST_USER_ID_KEY, String(currentUserId))
       }
 
+      // 清理动态路由/菜单（必须早于跳转，否则可能残留动态路由）
+      try {
+        const menuStore = useMenuStore()
+        menuStore.removeAllDynamicRoutes()
+        menuStore.setMenuList([])
+        menuStore.clearRemoveRouteFns()
+        menuStore.setHomePath('')
+      } catch {
+        // ignore
+      }
+
+      // 清理工作台标签页（登出即清空登录态相关 UI 状态）
+      try {
+        useWorktabStore().clearAll()
+      } catch {
+        // ignore
+      }
+
       // 清空用户信息
       info.value = {}
       // 重置登录状态
@@ -161,11 +196,10 @@ export const useUserStore = defineStore(
       refreshToken.value = ''
       // 清除本地存储中的登录信息
       localStorage.removeItem('login-info')
-      // 注意：不清空工作台标签页，等下次登录时根据用户判断
+      // 清理登录态相关的 Pinia 持久化缓存（避免刷新后回显旧状态）
+      clearAuthRelatedPersistedStorage()
       // 移除iframe路由缓存
       sessionStorage.removeItem('iframeRoutes')
-      // 清空主页路径
-      useMenuStore().setHomePath('')
       // 重置路由状态
       resetRouterState(500)
       // 跳转到登录页，携带当前路由作为 redirect 参数

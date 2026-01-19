@@ -88,6 +88,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             }
             log.debug("普通用户查询到菜单，userId: {}, menuCount: {}", userId, allMenu.size());
         }
+        // 将按钮权限(SysMenu.menuType = F)合并到父级菜单的perms字段中，
+        // 方便前端基于路由meta.authList做按钮级权限控制
+        mergeButtonPermsToParent(allMenu);
         // 构建菜单树，并过滤掉有按钮子节点的菜单
         return buildUserMenuTree(allMenu, ROOT_PARENT_ID);
     }
@@ -326,6 +329,98 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         }
 
         return tree;
+    }
+
+    /**
+     * 将按钮权限合并到父级菜单
+     *
+     * <p>约定：
+     * <ul>
+     *   <li>按钮菜单：menuType = F，perms 为具体权限标识（如 system:user:add）</li>
+     *   <li>父级菜单（页面级）：menuType = M / C</li>
+     *   <li>同一父级下多个按钮的 perms 会合并为逗号分隔字符串，并去重</li>
+     *   <li>如果父级本身已有 perms，会一并合并并去重</li>
+     * </ul>
+     *
+     * <p>这样前端在根据 /sys/menu/userMenuTree 构建路由时，
+     * 就可以直接从每个页面级菜单的 perms 中得到该用户实际拥有的按钮权限列表，
+     * 再通过 meta.authList + v-auth/useAuth 实现按钮级展示控制。
+     *
+     * @param allMenu 当前用户拥有的完整菜单列表（包含按钮）
+     */
+    private void mergeButtonPermsToParent(List<SysMenu> allMenu) {
+        if (allMenu == null || allMenu.isEmpty()) {
+            return;
+        }
+
+        // 1. 按父菜单ID聚合按钮权限
+        // key: parentId, value: 该父菜单下所有按钮的权限标识集合
+        var buttonPermsByParent = new java.util.HashMap<Long, java.util.Set<String>>();
+
+        for (SysMenu menu : allMenu) {
+            if (menu == null) {
+                continue;
+            }
+            // 只处理按钮类型
+            if (!Constants.MenuType.BUTTON.equals(menu.getMenuType())) {
+                continue;
+            }
+            Long parentId = menu.getParentId();
+            if (parentId == null) {
+                continue;
+            }
+            String perms = menu.getPerms();
+            if (!StringUtils.hasText(perms)) {
+                continue;
+            }
+            // 支持逗号分隔的多权限
+            String[] splitPerms = perms.split(",");
+            java.util.Set<String> permSet = buttonPermsByParent
+                    .computeIfAbsent(parentId, k -> new java.util.LinkedHashSet<>());
+            for (String perm : splitPerms) {
+                if (StringUtils.hasText(perm)) {
+                    permSet.add(perm.trim());
+                }
+            }
+        }
+
+        if (buttonPermsByParent.isEmpty()) {
+            return;
+        }
+
+        // 2. 将聚合后的按钮权限写回对应父菜单的 perms 字段
+        for (SysMenu menu : allMenu) {
+            if (menu == null) {
+                continue;
+            }
+            // 只合并到非按钮菜单（目录/菜单）
+            if (Constants.MenuType.BUTTON.equals(menu.getMenuType())) {
+                continue;
+            }
+            Long menuId = menu.getMenuId();
+            if (menuId == null) {
+                continue;
+            }
+            java.util.Set<String> childPerms = buttonPermsByParent.get(menuId);
+            if (childPerms == null || childPerms.isEmpty()) {
+                continue;
+            }
+
+            // 合并父级原有的 perms（如果有）
+            java.util.Set<String> merged = new java.util.LinkedHashSet<>(childPerms);
+            String currentPerms = menu.getPerms();
+            if (StringUtils.hasText(currentPerms)) {
+                String[] existing = currentPerms.split(",");
+                for (String perm : existing) {
+                    if (StringUtils.hasText(perm)) {
+                        merged.add(perm.trim());
+                    }
+                }
+            }
+
+            // 重新设置为去重后的逗号分隔字符串
+            menu.setPerms(String.join(",", merged));
+        }
     }
 }
 

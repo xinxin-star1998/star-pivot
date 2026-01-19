@@ -67,7 +67,7 @@
           <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
             <template #left>
               <ElSpace wrap>
-                <ElButton @click="showDialog('add')" v-ripple>新增用户</ElButton>
+                <ElButton @click="showDialog('add')" v-ripple v-auth="'system:user:add'">新增用户</ElButton>
               </ElSpace>
             </template>
           </ArtTableHeader>
@@ -110,8 +110,11 @@
   import { DialogType } from '@/types'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import { useAuth } from '@/hooks/core/useAuth'
 
   defineOptions({ name: 'User' })
+
+  const { hasAuth } = useAuth()
 
   type UserListItem = Api.SystemManage.UserListItem
 
@@ -343,17 +346,36 @@
           label: '操作',
           width: 120,
           fixed: 'right', // 固定列
-          formatter: (row) =>
-            h('div', [
-              h(ArtButtonTable, {
-                type: 'edit',
-                onClick: () => showDialog('edit', row)
-              }),
-              h(ArtButtonTable, {
-                type: 'delete',
-                onClick: () => deleteUser(row)
-              })
-            ])
+          formatter: (row) => {
+            const actions: any[] = []
+
+            // 编辑用户按钮权限：system:user:edit
+            if (hasAuth('system:user:edit')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'edit',
+                  onClick: () => showDialog('edit', row)
+                })
+              )
+            }
+
+            // 删除用户按钮权限：system:user:delete
+            if (hasAuth('system:user:delete')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'delete',
+                  onClick: () => deleteUser(row)
+                })
+              )
+            }
+
+            if (actions.length === 0) {
+              // 无任何操作权限时返回空占位
+              return h('span', { style: 'color: #999' }, '')
+            }
+
+            return h('div', actions)
+          }
         }
       ]
     },

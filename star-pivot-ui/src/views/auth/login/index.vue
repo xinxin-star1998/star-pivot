@@ -105,7 +105,7 @@
   import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
-  import { fetchLogin, fetchCaptcha } from '@/api/auth'
+  import { fetchLogin, fetchCaptcha, fetchVerifyCaptcha } from '@/api/auth'
   import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
   import { useSettingStore } from '@/store/modules/setting'
   import { useCommon } from '@/hooks'
@@ -130,20 +130,12 @@
   const systemName = AppConfig.systemInfo.name
   const formRef = ref<FormInstance>()
 
-  // 生成UUID
-  const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0
-      const v = c === 'x' ? r : (r & 0x3 | 0x8)
-      return v.toString(16)
-    })
-  }
-
   const formData = reactive({
     username: '',
     password: '',
     rememberPassword: true,
-    captchaId: generateUUID(),
+    /** 当前验证码 token，由服务端生成 */
+    captchaToken: '',
     captcha: ''
   })
 
@@ -168,17 +160,31 @@
       const valid = await formRef.value.validate()
       if (!valid) return
 
-      loading.value = true
       captchaError.value = ''
 
+      // 先校验验证码，获取一次性 proof
+      if (!formData.captchaToken) {
+        captchaError.value = '请先获取验证码'
+        return
+      }
+
+      loading.value = true
+
+      const verifyRes = await fetchVerifyCaptcha({
+        captchaToken: formData.captchaToken,
+        code: formData.captcha,
+        scene: 'login'
+      })
+
+      const captchaProof = verifyRes.captchaProof
+
       // 登录请求
-      const { username, password, captchaId, captcha } = formData
+      const { username, password } = formData
 
       const response = await fetchLogin({
-        username: username,
+        username,
         password,
-        captchaId,
-        captcha,
+        captchaProof,
         rememberPassword: formData.rememberPassword
       })
 
@@ -249,8 +255,8 @@
     captchaError.value = ''
     
     try {
-      formData.captchaId = generateUUID()
-      const response = await fetchCaptcha(formData.captchaId)
+      const response = await fetchCaptcha()
+      formData.captchaToken = response.captchaToken
       captchaImage.value = response.captchaImage
     } catch (error) {
       console.error('获取验证码失败:', error)

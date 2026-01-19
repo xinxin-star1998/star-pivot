@@ -65,6 +65,7 @@
   import { ElMessageBox } from 'element-plus'
   import { useUserStore } from '@/store/modules/user'
   import { mittBus } from '@/utils/sys'
+  import { fetchLogout } from '@/api/auth'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
 
   defineOptions({ name: 'ArtUserMenu' })
@@ -102,7 +103,10 @@
         cancelButtonText: t('common.cancel'),
         customClass: 'login-out-dialog'
       }).then(() => {
-        userStore.logOut()
+        // 手动登出：尽力通知后端加入 token 黑名单（失败也不影响前端清理）
+        fetchLogout()
+          .catch(() => void 0)
+          .finally(() => userStore.logOut())
       })
     }, 200)
   }

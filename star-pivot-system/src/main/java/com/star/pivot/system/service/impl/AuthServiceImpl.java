@@ -34,9 +34,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponse login(LoginRequest request) {
         try {
-            // 1. 验证验证码
-            if (!captchaService.validateCaptcha(request.getCaptchaId(), request.getCaptcha())) {
-                throw new ServiceException("验证码错误", 401);
+            // 1. 验证验证码 proof（一次性）
+            if (!captchaService.validateAndConsumeCaptchaProof(request.getCaptchaProof(), "login")) {
+                throw new ServiceException("验证码错误或已失效", 401);
             }
             
             // 2. 使用 AuthenticationManager 进行认证
