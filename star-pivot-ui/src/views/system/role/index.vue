@@ -21,7 +21,7 @@
       >
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增角色</ElButton>
+            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:role:add'">新增角色</ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -66,8 +66,11 @@
   import { ElTag, ElMessageBox } from 'element-plus'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import { useAuth } from '@/hooks/core/useAuth'
 
   defineOptions({ name: 'Role' })
+
+  const { hasAuth } = useAuth()
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -163,18 +166,22 @@
                   {
                     key: 'permission',
                     label: '分配菜单',
-                    icon: 'ri:user-3-line'
+                    icon: 'ri:user-3-line',
+                    // 分配菜单视为角色编辑权限的一部分
+                    auth: 'system:role:edit'
                   },
                   {
                     key: 'edit',
                     label: '编辑角色',
-                    icon: 'ri:edit-2-line'
+                    icon: 'ri:edit-2-line',
+                    auth: 'system:role:edit'
                   },
                   {
                     key: 'delete',
                     label: '删除角色',
                     icon: 'ri:delete-bin-4-line',
-                    color: '#f56c6c'
+                    color: '#f56c6c',
+                    auth: 'system:role:delete'
                   }
                 ],
                 onClick: (item: ButtonMoreItem) => buttonMoreClick(item, row)

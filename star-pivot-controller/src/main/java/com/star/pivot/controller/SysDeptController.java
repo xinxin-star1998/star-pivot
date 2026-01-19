@@ -7,6 +7,7 @@ import com.star.pivot.system.service.SysDeptService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class SysDeptController {
      * 
      * @return 部门树列表，包含所有部门及其层级关系
      */
+    @PreAuthorize("hasAuthority('system:dept:query')")
     @GetMapping("/tree")
     public Result<List<DeptVO>> tree() {
         List<DeptVO> deptTree = deptService.selectDeptTree();
@@ -41,6 +43,7 @@ public class SysDeptController {
      * @param deptId 部门ID
      * @return 指定ID的部门详细信息
      */
+    @PreAuthorize("hasAuthority('system:dept:query')")
     @GetMapping("/{deptId}")
     public Result<DeptVO> getInfo(@PathVariable("deptId") Long deptId) {
         DeptVO deptVO = deptService.selectDeptById(deptId);
@@ -53,6 +56,7 @@ public class SysDeptController {
      * @param deptDTO 部门数据传输对象
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:dept:add')")
     @PostMapping
     public Result<?> add(@Valid @RequestBody DeptDTO deptDTO) {
         boolean success = deptService.insertDept(deptDTO);
@@ -65,6 +69,7 @@ public class SysDeptController {
      * @param deptDTO 部门数据传输对象
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:dept:edit')")
     @PutMapping
     public Result<?> edit(@Valid @RequestBody DeptDTO deptDTO) {
         boolean success = deptService.updateDept(deptDTO);
@@ -77,6 +82,7 @@ public class SysDeptController {
      * @param deptId 部门ID
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:dept:delete')")
     @DeleteMapping("/{deptId}")
     public Result<?> remove(@PathVariable("deptId") Long deptId) {
         boolean success = deptService.deleteDept(deptId);

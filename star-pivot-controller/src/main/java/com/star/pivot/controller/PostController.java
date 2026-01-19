@@ -10,7 +10,7 @@ import com.star.pivot.system.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +35,7 @@ public class PostController {
      * @param queryDTO 岗位查询参数对象
      * @return 分页的岗位列表结果
      */
+    @PreAuthorize("hasAuthority('system:post:query')")
     @PostMapping("/list")
     public Result<PageResponse<PostVO>> list(@RequestBody PostQueryDTO queryDTO) {
         PageResponse<PostVO> page = postService.selectPostPage(queryDTO);
@@ -43,6 +44,7 @@ public class PostController {
     /**
      * 查询所有岗位简洁列表接口
      */
+    @PreAuthorize("hasAuthority('system:post:query')")
     @GetMapping("/simpleList")
     public Result<List<PostBo>> simpleList() {
         List<PostBo> postBos = postService.selectPost();
@@ -53,6 +55,7 @@ public class PostController {
      * 
      * @return 所有岗位列表
      */
+    @PreAuthorize("hasAuthority('system:post:query')")
     @GetMapping("/all")
     public Result<List<PostVO>> all() {
         List<PostVO> page = postService.all();
@@ -65,6 +68,7 @@ public class PostController {
      * @param postId 岗位ID
      * @return 指定ID的岗位详细信息
      */
+    @PreAuthorize("hasAuthority('system:post:query')")
     @GetMapping("/{postId}")
     public Result<PostVO> getInfo(@PathVariable Long postId) {
         PostVO postVO = postService.selectPostById(postId);
@@ -77,6 +81,7 @@ public class PostController {
      * @param postDTO 岗位数据传输对象
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:post:add')")
     @PostMapping
     public Result<?> add(@Valid @RequestBody PostDTO postDTO) {
         boolean success = postService.insertPost(postDTO);
@@ -89,6 +94,7 @@ public class PostController {
      * @param postDTO 岗位数据传输对象
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:post:edit')")
     @PutMapping
     public Result<?> edit(@Valid @RequestBody PostDTO postDTO) {
         boolean success = postService.updatePost(postDTO);
@@ -101,6 +107,7 @@ public class PostController {
      * @param postIds 岗位ID数组
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:post:delete')")
     @DeleteMapping("/{postIds}")
     public Result<?> remove(@PathVariable Long[] postIds) {
         boolean success = postService.deletePostByIds(postIds);

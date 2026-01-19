@@ -9,6 +9,7 @@ import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.service.SysRoleService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class SysRoleController {
      * @param roleQueryDTO 角色查询参数对象
      * @return 分页的角色列表结果
      */
+    @PreAuthorize("hasAuthority('system:role:query')")
     @PostMapping("/list")
     public Result<PageResponse<SysRole>> list(@RequestBody RoleQueryDTO roleQueryDTO){
         PageResponse<SysRole> result = sysRoleService.selectRoleList(roleQueryDTO);
@@ -35,6 +37,7 @@ public class SysRoleController {
      * 
      * @return 所有角色列表，用于下拉选择
      */
+    @PreAuthorize("hasAuthority('system:role:query')")
     @GetMapping("/select")
     public Result<List<SysRole>> select(){
         return Result.success(sysRoleService.list());
@@ -45,6 +48,7 @@ public class SysRoleController {
      * @param roleId 角色ID
      * @return 指定ID的角色信息
      */
+    @PreAuthorize("hasAuthority('system:role:query')")
     @GetMapping("/{roleId}")
     public Result<SysRole> getInfo(@PathVariable("roleId") Long roleId) {
         SysRole roleVO = sysRoleService.selectRoleById(roleId);
@@ -57,6 +61,7 @@ public class SysRoleController {
      * @param roleDTO 角色数据传输对象
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:role:add')")
     @PostMapping("/addRole")
     public Result<?> add(@Valid @RequestBody RoleDTO roleDTO) {
         boolean success = sysRoleService.insertRole(roleDTO);
@@ -69,6 +74,7 @@ public class SysRoleController {
      * @param roleDTO 角色数据传输对象
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:role:edit')")
     @PutMapping("updateRole")
     public Result<?> edit(@Valid @RequestBody RoleDTO roleDTO) {
         boolean success = sysRoleService.updateRole(roleDTO);
@@ -81,6 +87,7 @@ public class SysRoleController {
      * @param roleIds 角色ID数组
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:role:delete')")
     @DeleteMapping("/{roleIds}")
     public Result<?> remove(@PathVariable("roleIds") Long[] roleIds) {
         boolean success = sysRoleService.deleteRoleByIds(roleIds);
@@ -93,6 +100,7 @@ public class SysRoleController {
      * @param roleDTO 角色数据传输对象，包含角色ID和状态
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:role:edit')")
     @PutMapping("/changeStatus")
     public Result<?> changeStatus(@RequestBody RoleDTO roleDTO) {
         boolean success = sysRoleService.changeRoleStatus(roleDTO.getRoleId(), roleDTO.getStatus());
@@ -101,6 +109,7 @@ public class SysRoleController {
     /**
      * 分配角色权限接口（菜单权限和部门权限）
      */
+    @PreAuthorize("hasAuthority('system:role:edit')")
     @PostMapping("/assignPermission")
     public Result<?> assignPermission(@RequestBody RolePermissionAssignDTO rolePermissionAssignDTO) {
         boolean success = sysRoleService.assignPermission(rolePermissionAssignDTO);
@@ -112,6 +121,7 @@ public class SysRoleController {
      * @param roleId 角色ID
      * @return 该角色关联的部门ID列表
      */
+    @PreAuthorize("hasAuthority('system:role:query')")
     @GetMapping("/{roleId}/deptIds")
     public Result<List<Long>> getDeptIds(@PathVariable("roleId") Long roleId) {
         List<Long> deptIds = sysRoleService.selectDeptIdsByRoleId(roleId);
@@ -123,6 +133,7 @@ public class SysRoleController {
      * @param roleId 角色ID
      * @return 指定角色拥有的菜单列表
      */
+    @PreAuthorize("hasAuthority('system:role:query')")
     @GetMapping("/getMenuIdsByRoleId/{roleId}")
     public Result<List<Long>> getMenuIdsByRoleId(@PathVariable("roleId") Long roleId){
         List<Long> menuIds = sysRoleService.getMenuIdsByRoleId(roleId);

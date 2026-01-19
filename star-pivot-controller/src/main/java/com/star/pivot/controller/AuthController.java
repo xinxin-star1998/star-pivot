@@ -1,6 +1,9 @@
 package com.star.pivot.controller;
 
 import com.star.pivot.common.domain.Result;
+import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
+import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
+import com.star.pivot.system.domain.bo.CaptchaVerifyResponse;
 import com.star.pivot.system.domain.bo.LoginRequest;
 import com.star.pivot.system.domain.bo.LoginResponse;
 import com.star.pivot.system.domain.entity.SysMenu;
@@ -14,17 +17,13 @@ import com.star.pivot.system.utils.JwtBlackListManager;
 import com.star.pivot.system.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import javax.imageio.ImageIO;
-
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,33 +96,29 @@ public class AuthController {
     }
 
     /**
-     * 获取验证码接口
-     * 
-     * @param captchaId 验证码ID
-     * @return 验证码图片（Base64格式）
+     * 获取验证码接口（服务端生成 captchaToken）
+     *
+     * @param scene 业务场景，可选，默认 login
+     * @return 包含 captchaToken 和 Base64 图片
      */
     @GetMapping("/captcha")
-    public Result<Map<String, Object>> getCaptcha(@RequestParam String captchaId) {
+    public Result<CaptchaIssueResponse> getCaptcha(@RequestParam(value = "scene", required = false) String scene) {
         try {
-            // 生成验证码图片
-            BufferedImage image = captchaService.generateCaptcha(captchaId);
-            
-            // 将图片转换为Base64
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            ImageIO.write(image, "png", outputStream);
-            byte[] imageBytes = outputStream.toByteArray();
-            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
-            outputStream.close();
-            
-            // 返回验证码图片
-            Map<String, Object> result = new HashMap<>();
-            result.put("captchaId", captchaId);
-            result.put("captchaImage", "data:image/png;base64," + base64Image);
-            return Result.success(result);
+            CaptchaIssueResponse response = captchaService.generateCaptcha(scene != null ? scene : "login");
+            return Result.success(response);
         } catch (Exception e) {
             log.error("生成验证码失败", e);
             return Result.error(500, "生成验证码失败");
         }
+    }
+
+    /**
+     * 校验验证码，一次性，返回 proof
+     */
+    @PostMapping("/captcha/verify")
+    public Result<CaptchaVerifyResponse> verifyCaptcha(@RequestBody CaptchaVerifyRequest request) {
+        CaptchaVerifyResponse response = captchaService.verifyCaptcha(request);
+        return Result.success(response);
     }
 
     /**
@@ -133,10 +128,11 @@ public class AuthController {
      * @return 当前用户信息，包含用户基本信息、角色列表和权限菜单
      */
     @GetMapping("/userinfo")
-    public Result<Map<String, Object>> getCurrentUser(Authentication authentication) {
+    public ResponseEntity<Result<Map<String, Object>>> getCurrentUser(Authentication authentication) {
         // 从Authentication中获取当前用户信息
         if (authentication == null || !authentication.isAuthenticated()) {
-            return Result.error(401, "用户未认证");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Result.error(401, "用户未认证"));
         }
 
         String username = authentication.getName();
@@ -144,7 +140,8 @@ public class AuthController {
         // 根据用户名查询用户信息
         SysUser user = sysUserService.getUserByUsername(username);
         if (user == null) {
-            return Result.error(404, "用户不存在");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Result.error(404, "用户不存在"));
         }
 
         // 查询用户的角色和权限
@@ -166,6 +163,6 @@ public class AuthController {
         userInfo.put("roles", roles);
         userInfo.put("permissions", permissions);
 
-        return Result.success(userInfo);
+        return ResponseEntity.ok(Result.success(userInfo));
     }
 }

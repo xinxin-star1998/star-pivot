@@ -1,5 +1,6 @@
 package com.star.pivot.system.utils;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit;
  * @author stardust
  * @date 2024-01-01
  */
+@Slf4j
 @Component
 public class RedisCache {
 
@@ -51,7 +53,13 @@ public class RedisCache {
         if (timeout <= 0) {
             throw new IllegalArgumentException("过期时间必须大于0");
         }
-        redisTemplate.opsForValue().set(key, value, timeout, timeUnit);
+        try {
+            redisTemplate.opsForValue().set(key, value, timeout, timeUnit);
+            log.debug("Redis存储成功，key: {}, timeout: {} {}", key, timeout, timeUnit);
+        } catch (Exception e) {
+            log.error("Redis存储失败，key: {}, error: {}", key, e.getMessage(), e);
+            throw new RuntimeException("Redis操作失败: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -65,8 +73,15 @@ public class RedisCache {
         if (key == null) {
             throw new IllegalArgumentException("缓存key不能为空");
         }
-        ValueOperations<String, Object> operation = redisTemplate.opsForValue();
-        return (T) operation.get(key);
+        try {
+            ValueOperations<String, Object> operation = redisTemplate.opsForValue();
+            T result = (T) operation.get(key);
+            log.debug("Redis获取，key: {}, result: {}", key, result != null ? "存在" : "不存在");
+            return result;
+        } catch (Exception e) {
+            log.error("Redis获取失败，key: {}, error: {}", key, e.getMessage(), e);
+            throw new RuntimeException("Redis操作失败: " + e.getMessage(), e);
+        }
     }
 
     /**

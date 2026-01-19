@@ -9,6 +9,7 @@ import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -35,6 +36,7 @@ public class SysUserController {
      * @param userReqBo 用户查询参数
      * @return 分页结果
      */
+    @PreAuthorize("hasAuthority('system:user:query')")
     @PostMapping("/pageList")
     public Result<PageResponse<UserVO>> pageList(@RequestBody UserReqBo userReqBo) {
         PageResponse<UserVO> pageResponse = sysUserService.pageList(userReqBo);
@@ -47,6 +49,7 @@ public class SysUserController {
      * @param userId 用户ID
      * @return 指定ID的用户详细信息
      */
+    @PreAuthorize("hasAuthority('system:user:query')")
     @GetMapping("/{userId}")
     public Result<UserVO> getUserById(@PathVariable("userId") Long userId) {
         UserVO userVO = sysUserService.selectByUserId(userId);
@@ -59,6 +62,7 @@ public class SysUserController {
      * @param userDTO 用户数据对象
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:user:add')")
     @PostMapping("add")
     public Result<?> addUser(@RequestBody UserDTO userDTO) {
         boolean success = sysUserService.addUser(userDTO);
@@ -71,6 +75,7 @@ public class SysUserController {
      * @param userDTO 用户数据对象
      * @return 操作结果，成功或失败的响应
      */
+    @PreAuthorize("hasAuthority('system:user:edit')")
     @PostMapping("update")
     public Result<?> updateUser(@RequestBody UserDTO userDTO) {
         boolean success = sysUserService.updateUser(userDTO);
@@ -80,6 +85,7 @@ public class SysUserController {
     /**
      * 删除用户
      */
+    @PreAuthorize("hasAuthority('system:user:delete')")
     @DeleteMapping("/{userIds}")
     public Result<?> remove(@PathVariable Long[] userIds) {
         // 不能删除自己
@@ -97,6 +103,7 @@ public class SysUserController {
     /**
      * 重置密码
      */
+    @PreAuthorize("hasAuthority('system:user:edit')")
     @PostMapping("/resetPwd")
     public Result<?> resetPwd(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
         boolean success = sysUserService.resetUserPassword(
@@ -109,6 +116,7 @@ public class SysUserController {
     /**
      * 修改用户状态
      */
+    @PreAuthorize("hasAuthority('system:user:edit')")
     @PostMapping("/changeStatus")
     public Result<?> changeStatus(@RequestBody UserDTO userDTO) {
         boolean success = sysUserService.changeUserStatus(userDTO.getUserId(), userDTO.getStatus());

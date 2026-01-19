@@ -60,13 +60,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = jwtUtil.getUsernameFromToken(token);
                 log.info("Token验证成功，用户: {}", username);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                // 仅在上下文中尚未存在认证信息时才进行设置，避免覆盖其他认证
+                if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                log.debug("用户 {} 认证成功，权限: {}", username, userDetails.getAuthorities());
+                    log.debug("用户 {} 认证成功，权限: {}", username, userDetails.getAuthorities());
+                } else {
+                    log.debug("SecurityContext 已包含认证信息，跳过重复认证");
+                }
             } else {
                 log.warn("Token验证失败或已过期");
             }
