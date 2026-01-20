@@ -13,8 +13,8 @@
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
   import imgUrl from '@imgs/svg/403.svg'
-  
+
   defineOptions({ name: 'Exception403' })
-  
+
   const { t } = useI18n()
 </script>

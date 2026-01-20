@@ -14,6 +14,7 @@ import com.star.pivot.system.mapper.SysMenuMapper;
 import com.star.pivot.system.mapper.SysRoleMapper;
 import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
+import com.star.pivot.system.service.UserPermissionCacheService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -49,6 +50,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     private final RoleMenuMapper roleMenuMapper;
     private final SysMenuMapper sysMenuMapper;
     private final SysRoleMapper sysRoleMapper;
+    private final UserPermissionCacheService userPermissionCacheService;
 
     @Override
     @Cacheable(cacheNames = "menuTree", key = "'all'")
@@ -75,9 +77,10 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         log.debug("是否为admin用户，userId: {}, isAdmin: {}", userId, isAdmin);
         
         if (isAdmin) {
-            // admin用户查询所有菜单（用于构建树结构）
+            // admin用户查询所有可见且正常的菜单（用于构建树结构）
             LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.orderByAsc(SysMenu::getOrderNum);
+            queryWrapper.eq(SysMenu::getStatus, Constants.Status.NORMAL)
+                    .orderByAsc(SysMenu::getOrderNum);
             allMenu = this.list(queryWrapper);
             log.debug("admin用户查询到所有菜单，userId: {}, menuCount: {}", userId, allMenu != null ? allMenu.size() : 0);
         } else {
@@ -124,6 +127,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         boolean result = this.save(menu);
         if (result) {
             log.info("新增菜单成功: menuId={}, menuName={}", menu.getMenuId(), menu.getMenuName());
+            // 清除所有用户权限缓存（菜单变更可能影响所有用户权限）
+            userPermissionCacheService.clearAllUserPermissionCache();
         } else {
             log.error("新增菜单失败: menuName={}", menuDTO.getMenuName());
         }
@@ -163,6 +168,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         boolean result = this.updateById(menu);
         if (result) {
             log.info("修改菜单成功: menuId={}, menuName={}", menu.getMenuId(), menu.getMenuName());
+            // 清除所有用户权限缓存（菜单变更可能影响所有用户权限）
+            userPermissionCacheService.clearAllUserPermissionCache();
         } else {
             log.error("修改菜单失败: menuId={}", menuDTO.getMenuId());
         }
@@ -196,6 +203,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         boolean result = this.removeById(menuId);
         if (result) {
             log.info("删除菜单成功: menuId={}", menuId);
+            // 清除所有用户权限缓存（菜单变更可能影响所有用户权限）
+            userPermissionCacheService.clearAllUserPermissionCache();
         } else {
             log.error("删除菜单失败: menuId={}", menuId);
         }

@@ -1,5 +1,6 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.constants.Constants;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
@@ -21,7 +22,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -59,34 +59,73 @@ public class AuthController {
     /**
      * 用户登出接口
      * 
+     * <p>该接口采用幂等性设计，无论调用多少次，结果都是一致的：
+     * <ul>
+     *   <li>如果没有提供token，直接返回成功</li>
+     *   <li>如果token无效或已过期，直接返回成功（避免恶意请求刷日志）</li>
+     *   <li>如果token有效，将其加入黑名单后返回成功</li>
+     * </ul>
+     * 
+     * @param authHeader 可选的Authorization请求头，格式：Bearer {token}
      * @return 登出结果响应
      */
     @PostMapping("/logout")
-    public Result<Void> logout(@RequestHeader("Authorization") String authHeader) {
-        // 从SecurityContext中获取当前用户信息
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = null;
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            username = userDetails.getUsername();
+    public Result<Void> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        // 如果没有提供Authorization头，直接返回成功（幂等性设计）
+        if (authHeader == null || authHeader.trim().isEmpty()) {
+            SecurityContextHolder.clearContext();
+            return Result.success("登出成功");
         }
 
         // 从请求头中提取JWT令牌
         String token = null;
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
+        if (authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7).trim();
         }
 
-        // 如果提取到令牌，则将其加入黑名单
-        if (token != null && jwtUtil.validateToken(token)) {
+        // 如果没有提取到有效的token格式，直接返回成功（幂等性设计）
+        if (token == null || token.isEmpty()) {
+            SecurityContextHolder.clearContext();
+            log.debug("登出请求未提供有效的token格式，已清除SecurityContext");
+            return Result.success("登出成功");
+        }
+
+        // 验证token是否有效
+        if (!jwtUtil.validateToken(token)) {
+            // Token无效或已过期，直接返回成功（幂等性设计）
+            // 使用debug级别日志，避免恶意请求刷日志
+            SecurityContextHolder.clearContext();
+            log.debug("登出请求的token无效或已过期，已清除SecurityContext");
+            return Result.success("登出成功");
+        }
+
+        // Token有效，尝试将其加入黑名单
+        try {
             // 获取令牌的剩余过期时间
             long expirationTime = jwtUtil.getClaimsFromToken(token).getExpiration().getTime() - System.currentTimeMillis();
             if (expirationTime > 0) {
                 jwtBlackListManager.addToBlackList(token, expirationTime);
-                log.info("用户 {} 的令牌已加入黑名单", username);
+                
+                // 获取用户名用于日志记录
+                String username = null;
+                try {
+                    username = jwtUtil.getUsernameFromToken(token);
+                } catch (Exception e) {
+                    log.debug("获取用户名失败: {}", e.getMessage());
+                }
+                
+                if (username != null) {
+                    log.info("用户 {} 的令牌已加入黑名单", username);
+                } else {
+                    log.info("令牌已加入黑名单");
+                }
+            } else {
+                log.debug("Token已过期，无需加入黑名单");
             }
-        } else {
-            log.warn("无法从请求头中提取有效的JWT令牌");
+        } catch (Exception e) {
+            // 如果获取token信息失败（如解析异常），记录日志但不影响登出流程
+            // 确保接口的幂等性和稳定性
+            log.warn("处理token黑名单时发生异常，但登出流程继续: {}", e.getMessage());
         }
 
         // 清除SecurityContext
@@ -149,7 +188,7 @@ public class AuthController {
         
         List<SysMenu> permissions;
         // 检查用户是否拥有admin角色，如果有则查询所有菜单树
-        if (roles.stream().anyMatch(role -> "admin".equals(role.getRoleKey()))) {
+        if (roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()))) {
             // 如果用户角色包含admin，则查询所有菜单树
             permissions = sysMenuService.menuTree();
         } else {

@@ -67,7 +67,9 @@
           <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
             <template #left>
               <ElSpace wrap>
-                <ElButton @click="showDialog('add')" v-ripple v-auth="'system:user:add'">新增用户</ElButton>
+                <ElButton @click="showDialog('add')" v-ripple v-auth="'system:user:add'"
+                  >新增用户</ElButton
+                >
               </ElSpace>
             </template>
           </ArtTableHeader>

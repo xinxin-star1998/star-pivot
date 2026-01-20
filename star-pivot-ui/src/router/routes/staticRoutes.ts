@@ -55,6 +55,18 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     meta: { title: '500', isHideTab: true }
   },
   {
+    path: '/result/success',
+    name: 'ResultSuccess',
+    component: () => import('@views/result/success/index.vue'),
+    meta: { title: '操作成功', isHideTab: true }
+  },
+  {
+    path: '/result/fail',
+    name: 'ResultFail',
+    component: () => import('@views/result/fail/index.vue'),
+    meta: { title: '操作失败', isHideTab: true }
+  },
+  {
     path: '/outside',
     component: () => import('@views/index/index.vue'),
     name: 'Outside',
@@ -68,7 +80,7 @@ export const staticRoutes: AppRouteRecordRaw[] = [
         meta: { title: 'iframe' }
       }
     ]
-  },
+  }
   // 字典数据页面路由
   // {
   //   path: '/data',

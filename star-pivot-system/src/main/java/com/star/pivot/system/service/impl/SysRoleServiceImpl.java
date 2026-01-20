@@ -16,6 +16,7 @@ import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.UserRole;
 import com.star.pivot.system.mapper.*;
 import com.star.pivot.system.service.SysRoleService;
+import com.star.pivot.system.service.UserPermissionCacheService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     private SysDeptMapper sysDeptMapper;
     @Autowired
     private SysMenuMapper sysMenuMapper;
+    @Autowired
+    private UserPermissionCacheService userPermissionCacheService;
     @Override
     public PageResponse<SysRole> selectRoleList(RoleQueryDTO roleQueryDTO) {
         PageResponse<SysRole> pageResponse = new PageResponse<>();
@@ -291,6 +294,11 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         if(!deptIds.isEmpty()){
             roleDeptMapper.batchSave(roleId, deptIds);
         }
+        
+        // 5.清除所有用户权限缓存（角色权限变更可能影响多个用户）
+        // 注意：这里清除所有用户缓存是为了简化实现，实际可以只清除拥有该角色的用户缓存
+        userPermissionCacheService.clearAllUserPermissionCache();
+        
         return true;
     }
 

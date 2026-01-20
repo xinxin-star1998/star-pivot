@@ -60,15 +60,15 @@
 </template>
 
 <script setup lang="ts">
-import {useI18n} from 'vue-i18n'
-import {useRouter} from 'vue-router'
-import {ElMessageBox} from 'element-plus'
-import {useUserStore} from '@/store/modules/user'
-import {mittBus} from '@/utils/sys'
-import {fetchLogout} from '@/api/auth'
-import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import { useI18n } from 'vue-i18n'
+  import { useRouter } from 'vue-router'
+  import { ElMessageBox } from 'element-plus'
+  import { useUserStore } from '@/store/modules/user'
+  import { mittBus } from '@/utils/sys'
+  import { fetchLogout } from '@/api/auth'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
 
-defineOptions({ name: 'ArtUserMenu' })
+  defineOptions({ name: 'ArtUserMenu' })
 
   const router = useRouter()
   const { t } = useI18n()

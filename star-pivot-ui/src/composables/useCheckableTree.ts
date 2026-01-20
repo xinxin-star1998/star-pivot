@@ -168,4 +168,3 @@ export function useCheckableTree<T extends AnyRecord>(options: UseCheckableTreeO
     applyCheckedKeys
   }
 }
-

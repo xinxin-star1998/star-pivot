@@ -51,8 +51,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 检查令牌是否在黑名单中
             if (jwtBlackListManager.isBlackListed(token)) {
                 log.info("Token在黑名单中，拒绝访问: {}", token.substring(0, Math.min(20, token.length())));
-                // 继续执行请求，但不设置认证信息
-                filterChain.doFilter(request, response);
+                // Token在黑名单中，直接返回401，不继续处理
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":401,\"msg\":\"Token已失效，请重新登录\"}");
                 return;
             }
 

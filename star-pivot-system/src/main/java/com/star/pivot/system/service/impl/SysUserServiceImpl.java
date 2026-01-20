@@ -14,9 +14,11 @@ import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.*;
 import com.star.pivot.system.mapper.*;
 import com.star.pivot.system.service.SysUserService;
+import com.star.pivot.system.service.UserPermissionCacheService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -49,6 +51,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private PostMapper postMapper;
     @Autowired
     private SysRoleMapper sysRoleMapper;
+    @Autowired
+    private UserPermissionCacheService userPermissionCacheService;
     /**
      * 用户分页查询
      *
@@ -173,6 +177,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 if (!userDTO.getRoleIds().isEmpty()) {
                     insertUserRoles(userDTO.getUserId(), userDTO.getRoleIds());
                 }
+                
+                // 清除用户权限缓存（角色变更会影响权限）
+                userPermissionCacheService.clearUserPermissionCache(userDTO.getUserName());
             }
 
             // 更新岗位关联

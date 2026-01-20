@@ -74,8 +74,7 @@ function normalizeRequestUrl(url: string): string {
   if (!url.startsWith('/api/')) return url
 
   const base = (VITE_API_URL || '').trim()
-  const baseHasApi =
-    base === '/api' || base.endsWith('/api') || base.includes('/api/')
+  const baseHasApi = base === '/api' || base.endsWith('/api') || base.includes('/api/')
 
   return baseHasApi ? url.replace(/^\/api/, '') : url
 }

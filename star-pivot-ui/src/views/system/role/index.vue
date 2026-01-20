@@ -21,7 +21,9 @@
       >
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:role:add'">新增角色</ElButton>
+            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:role:add'"
+              >新增角色</ElButton
+            >
           </ElSpace>
         </template>
       </ArtTableHeader>

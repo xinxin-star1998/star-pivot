@@ -4,6 +4,8 @@ import com.star.pivot.system.domain.bo.MetaVo;
 import com.star.pivot.system.domain.bo.RouterVo;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.service.SysMenuService;
+import com.star.pivot.system.utils.SecurityContextUtils;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,12 +23,15 @@ public class RouterController {
     
     /**
      * 获取动态路由
+     * 根据当前用户权限返回对应的路由列表
      * @return 动态路由列表
      */
+    @PreAuthorize("hasAuthority('system:menu:query')")
     @GetMapping("/dynamic-routes")
     public List<RouterVo> getDynamicRoutes() {
-        // 获取菜单树
-        List<SysMenu> menuTree = sysMenuService.menuTree();
+        // 根据当前用户权限获取菜单树，而不是返回所有菜单
+        Long userId = SecurityContextUtils.getUserId();
+        List<SysMenu> menuTree = sysMenuService.getUserMenuTree(userId);
         
         // 转换为路由树
         return buildRouterTree(menuTree);
