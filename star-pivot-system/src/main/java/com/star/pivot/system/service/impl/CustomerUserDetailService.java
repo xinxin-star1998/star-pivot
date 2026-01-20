@@ -1,4 +1,5 @@
 package com.star.pivot.system.service.impl;
+
 import com.star.pivot.common.constants.Constants;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
@@ -9,7 +10,6 @@ import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.utils.LoginUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

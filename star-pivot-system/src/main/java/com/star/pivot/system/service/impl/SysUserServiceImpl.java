@@ -18,17 +18,12 @@ import com.star.pivot.system.service.UserPermissionCacheService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -134,7 +129,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public UserVO selectByUserId(Long userId) {
-        UserVO vo = new UserVO();
+        UserVO vo;
         //查询用户信息
         SysUser user = this.getById(userId);
         vo = convertToVO(user);

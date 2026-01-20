@@ -11,26 +11,21 @@ import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.mapper.RoleMenuMapper;
 import com.star.pivot.system.mapper.SysMenuMapper;
-import com.star.pivot.system.mapper.SysRoleMapper;
 import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.UserPermissionCacheService;
 import com.star.pivot.system.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * 菜单权限表(SysMenu)表服务实现类
@@ -48,8 +43,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     private final SysUserService sysUserService;
     private final RoleMenuMapper roleMenuMapper;
-    private final SysMenuMapper sysMenuMapper;
-    private final SysRoleMapper sysRoleMapper;
+//    private final SysMenuMapper sysMenuMapper;
+//    private final SysRoleMapper sysRoleMapper;
     private final UserPermissionCacheService userPermissionCacheService;
 
     @Override
