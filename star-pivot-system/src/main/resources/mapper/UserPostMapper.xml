@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.star.pivot.system.mapper.UserPostMapper">
+
+    <!--
+      批量插入用户与岗位关联关系
+      说明：使用单条 INSERT 多值 VALUES 的方式，一次性写入多条记录，提升插入性能
+    -->
+    <insert id="insertBatchUserPosts">
+        INSERT INTO sys_user_post (user_id, post_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.userId}, #{item.postId})
+        </foreach>
+    </insert>
+
+</mapper>
+

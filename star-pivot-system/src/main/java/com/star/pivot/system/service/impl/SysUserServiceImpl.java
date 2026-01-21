@@ -262,14 +262,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (roleIds == null || roleIds.isEmpty()) {
             return;
         }
-        
-        // 循环插入（已在事务中，保证数据一致性）
+
+        // 构建用户角色关联集合，使用批量插入提升性能
+        List<UserRole> userRoles = new ArrayList<>(roleIds.size());
         for (Long roleId : roleIds) {
             UserRole userRole = new UserRole();
             userRole.setUserId(userId);
             userRole.setRoleId(roleId);
-            userRoleMapper.insert(userRole);
+            userRoles.add(userRole);
         }
+        userRoleMapper.insertBatchUserRoles(userRoles);
     }
 
     /**
@@ -279,14 +281,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (postIds == null || postIds.isEmpty()) {
             return;
         }
-        
-        // 循环插入（已在事务中，保证数据一致性）
+
+        // 构建用户岗位关联集合，使用批量插入提升性能
+        List<UserPost> userPosts = new ArrayList<>(postIds.size());
         for (Long postId : postIds) {
             UserPost userPost = new UserPost();
             userPost.setUserId(userId);
             userPost.setPostId(postId);
-            userPostMapper.insert(userPost);
+            userPosts.add(userPost);
         }
+        userPostMapper.insertBatchUserPosts(userPosts);
     }
     /**
      * 批量转换为VO，解决N+1查询问题

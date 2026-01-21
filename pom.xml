@@ -55,7 +55,7 @@
         <!-- Apache Commons 版本 -->
         <commons-lang3.version>3.17.0</commons-lang3.version>
         <!-- Apache POI  excel工具 -->
-        <poi.version>4.1.2</poi.version>
+        <poi.version>5.2.5</poi.version>
         <!-- 解析客户端操作系统、浏览器等 -->
         <yauaa.version>7.1.0</yauaa.version>
         <!-- Apache OSHI 获取操作系统信息 -->

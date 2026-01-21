@@ -32,7 +32,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Result<Void>> handleBusinessException(BusinessException e) {
-        log.error("业务异常：{}", e.getMessage(), e);
+        // 业务异常通常是可预期的，使用 warn 级别记录日志，避免干扰系统级错误告警
+        log.warn("业务异常：{}", e.getMessage(), e);
         Integer code = e.getCode();
         if (code == null) {
             code = 500;
@@ -45,12 +46,14 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ServiceException.class)
     public ResponseEntity<Result<Void>> handleServiceException(ServiceException e) {
-        log.error("业务异常：{}", e.getMessage(), e);
+        // ServiceException 一般封装的是内部服务错误，这里只在日志中记录详细信息，对外返回通用提示，避免暴露内部实现或敏感信息
+        log.error("服务异常：{}", e.getMessage(), e);
         Integer code = e.getCode();
         if (code == null) {
             code = 500;
         }
-        return ResponseEntity.status(toHttpStatus(code)).body(Result.error(code, e.getMessage()));
+        return ResponseEntity.status(toHttpStatus(code))
+                .body(Result.error(code, "服务暂时不可用，请稍后重试或联系管理员"));
     }
 
     /**
@@ -58,9 +61,10 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Result<Void>> handleAuthenticationException(AuthenticationException e) {
-        log.error("认证异常：{}", e.getMessage());
+        // 认证异常详细原因仅记录在日志中，避免对外暴露具体失败原因（例如账号是否存在）
+        log.warn("认证异常：{}", e.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Result.error(401, "认证失败：" + e.getMessage()));
+                .body(Result.error(401, "认证失败，用户名或密码错误"));
     }
 
     /**
@@ -68,7 +72,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Result<Void>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        log.error("参数校验异常：{}", e.getMessage());
+        // 参数校验异常只返回用户可理解的提示语，不直接透出底层异常信息
+        log.warn("参数校验异常：{}", e.getMessage());
         String message = e.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
@@ -81,7 +86,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BindException.class)
     public ResponseEntity<Result<Void>> handleBindException(BindException e) {
-        log.error("参数绑定异常：{}", e.getMessage());
+        log.warn("参数绑定异常：{}", e.getMessage());
         String message = e.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
@@ -125,9 +130,10 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Result<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
+        // 非法参数异常不直接把内部校验规则对外暴露，只返回统一提示
         log.warn("参数非法：{}", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Result.error(400, "参数错误：" + e.getMessage()));
+                .body(Result.error(400, "请求参数不合法，请检查后重试"));
     }
 
     /**
@@ -136,11 +142,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Result<Void>> handleException(Exception e) {
         log.error("系统异常：", e);
-        // 生产环境不暴露详细错误信息
+        // 对外统一返回通用文案，不随日志级别变化，避免在生产环境误暴露内部错误信息
         String message = "系统异常，请联系管理员";
-        if (log.isDebugEnabled()) {
-            message = "系统异常：" + e.getMessage();
-        }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Result.error(500, message));
     }
