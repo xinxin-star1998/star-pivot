@@ -27,7 +27,7 @@
         <!-- Spring Security 版本（随 Spring Boot 版本） -->
         <spring-security.version>6.3.4</spring-security.version>
         <!-- MyBatis-Plus 版本 -->
-<!--        <mybatis-plus.version>3.5.15</mybatis-plus.version>-->
+<!--        <mybatis-plus.version>3.5.8</mybatis-plus.version>-->
         <mybatis-plus.version>3.5.8</mybatis-plus.version>
 
         <!-- MyBatis-Spring 版本 -->
@@ -196,7 +196,7 @@
 <!--                <version>${commons-io.version}</version>-->
 <!--            </dependency>-->
             <dependency>
-                <groupId>org.apache.commons</groupId>
+                <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons-io.version}</version>
             </dependency>

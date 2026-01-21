@@ -11,7 +11,7 @@
  Target Server Version : 50743
  File Encoding         : 65001
 
- Date: 20/01/2026 13:36:20
+ Date: 21/01/2026 15:41:20
 */
 
 SET NAMES utf8mb4;
@@ -44,11 +44,27 @@ CREATE TABLE `gen_table`  (
   `update_time` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`table_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '代码生成业务表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 21 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '代码生成业务表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_table
 -- ----------------------------
+INSERT INTO `gen_table` VALUES (5, 'sys_logininfor', '系统访问记录', NULL, NULL, 'SysLogininfor', 'crud', '', 'com.star.pivot.system', 'system', 'logininfor', '系统访问记录', 'xinxin', '0', '/', NULL, 'admin', '2026-01-21 00:36:00', '', NULL, NULL);
+INSERT INTO `gen_table` VALUES (6, 'sys_menu', '菜单权限表', NULL, NULL, 'SysMenu', 'crud', '', 'com.star.pivot.system', 'system', 'menu', '菜单权限', 'xinxin', '0', '/', NULL, 'admin', '2026-01-21 00:36:00', '', NULL, NULL);
+INSERT INTO `gen_table` VALUES (7, 'sys_notice', '通知公告表', NULL, NULL, 'SysNotice', 'crud', '', 'com.star.pivot.system', 'system', 'notice', '通知公告', 'xinxin', '0', '/', NULL, 'admin', '2026-01-21 00:36:00', '', NULL, NULL);
+INSERT INTO `gen_table` VALUES (8, 'sys_oper_log', '操作日志记录', NULL, NULL, 'SysOperLog', 'crud', '', 'com.star.pivot.system', 'system', 'log', '操作日志记录', 'xinxin', '0', '/', NULL, 'admin', '2026-01-21 00:36:00', '', NULL, NULL);
+INSERT INTO `gen_table` VALUES (9, 'sys_post', '岗位信息表', NULL, NULL, 'SysPost', 'crud', '', 'com.star.pivot.system', 'system', 'post', '岗位信息', 'xinxin', '0', '/', NULL, 'admin', '2026-01-21 00:36:00', '', NULL, NULL);
+INSERT INTO `gen_table` VALUES (10, 'sys_role', '角色信息表', NULL, NULL, 'SysRole', 'crud', '', 'com.star.pivot.system', 'system', 'role', '角色信息', 'xinxin', '0', '/', NULL, 'admin', '2026-01-21 00:36:00', '', NULL, NULL);
+INSERT INTO `gen_table` VALUES (11, 'sys_dept', '部门表', NULL, NULL, 'SysDept', 'crud', 'element-plus', 'com.star.pivot.system', 'system', 'dept', '部门', 'xinxin', '0', '/', '{\"treeCode\":\"\",\"treeName\":\"\",\"treeParentCode\":\"\",\"parentMenuId\":2}', 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55', '');
+INSERT INTO `gen_table` VALUES (12, 'sys_dict_data', '字典数据表', NULL, NULL, 'SysDictData', 'crud', '', 'com.star.pivot.system', 'system', 'data', '字典数据', 'xinxin', '0', '/', NULL, 'admin', '2026-01-21 00:36:06', '', NULL, NULL);
+INSERT INTO `gen_table` VALUES (13, 'sys_dict_type', '字典类型表', NULL, NULL, 'SysDictType', 'crud', '', 'com.star.pivot.system', 'system', 'type', '字典类型', 'xinxin', '0', '/', NULL, 'admin', '2026-01-21 00:36:06', '', NULL, NULL);
+INSERT INTO `gen_table` VALUES (14, 'sys_job', '定时任务调度表', NULL, NULL, 'SysJob', 'crud', '', 'com.star.pivot.system', 'system', 'job', '定时任务调度', 'xinxin', '0', '/', NULL, 'admin', '2026-01-21 00:36:06', '', NULL, NULL);
+INSERT INTO `gen_table` VALUES (15, 'sys_job_log', '定时任务调度日志表', NULL, NULL, 'SysJobLog', 'crud', 'element-plus', 'com.star.pivot.system', 'system', 'log', '定时任务调度日志', 'xinxin', '1', 'F:\\project0117\\gen', '{\"treeCode\":\"\",\"treeName\":\"\",\"treeParentCode\":\"\",\"parentMenuId\":0}', 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:28', '111');
+INSERT INTO `gen_table` VALUES (16, 'sys_role_dept', '角色与部门关联表', NULL, NULL, 'SysRoleDept', 'crud', 'element-plus', 'com.star.pivot.system', 'system', 'dept', '角色与部门关联', 'xinxin', '0', '/', '{\"treeCode\":\"\",\"treeName\":\"\",\"treeParentCode\":\"\",\"parentMenuId\":2}', 'admin', '2026-01-21 00:36:07', '', '2026-01-21 13:38:17', '');
+INSERT INTO `gen_table` VALUES (17, 'sys_role_menu', '角色与菜单关联表', NULL, NULL, 'SysRoleMenu', 'crud', 'element-plus', 'com.star.pivot.system', 'system', 'menu', '角色与菜单关联', 'xinxin', '0', '/', '{\"treeCode\":\"\",\"treeName\":\"\",\"treeParentCode\":\"\",\"parentMenuId\":2}', 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:45', '');
+INSERT INTO `gen_table` VALUES (18, 'sys_user', '用户信息表', '', '', 'SysUser', 'crud', 'element-plus', 'com.star.pivot.system', 'system', 'user', '用户信息', 'xinxin', '0', '/', '{\"treeCode\":\"\",\"treeName\":\"\",\"treeParentCode\":\"\",\"parentMenuId\":2}', 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:32', '111');
+INSERT INTO `gen_table` VALUES (19, 'sys_user_post', '用户与岗位关联表', NULL, NULL, 'SysUserPost', 'crud', 'element-plus', 'com.star.pivot.system', 'system', 'post', '用户与岗位关联', 'xinxin', '0', '/', '{\"treeCode\":\"\",\"treeName\":\"\",\"treeParentCode\":\"\",\"parentMenuId\":2}', 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:02:00', '');
+INSERT INTO `gen_table` VALUES (20, 'sys_user_role', '用户与角色关联表', NULL, NULL, 'SysUserRole', 'crud', 'element-plus', 'com.star.pivot.system', 'system', 'role', '用户与角色关联', 'xinxin', '0', '/', '{\"treeCode\":\"\",\"treeName\":\"\",\"treeParentCode\":\"\",\"parentMenuId\":2}', 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:02:07', '');
 
 -- ----------------------------
 -- Table structure for gen_table_column
@@ -78,11 +94,181 @@ CREATE TABLE `gen_table_column`  (
   `update_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
   `update_time` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`column_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '代码生成业务表字段' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 225 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '代码生成业务表字段' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_table_column
 -- ----------------------------
+INSERT INTO `gen_table_column` VALUES (55, 5, 'info_id', '访问ID', 'bigint(20)', 'Long', 'infoId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (56, 5, 'user_name', '用户账号', 'varchar(50)', 'String', 'userName', '0', '0', '0', '1', '1', '1', '1', 'LIKE', 'input', '', 2, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (57, 5, 'ipaddr', '登录IP地址', 'varchar(128)', 'String', 'ipaddr', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (58, 5, 'login_location', '登录地点', 'varchar(255)', 'String', 'loginLocation', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 4, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (59, 5, 'browser', '浏览器类型', 'varchar(50)', 'String', 'browser', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 5, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (60, 5, 'os', '操作系统', 'varchar(50)', 'String', 'os', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 6, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (61, 5, 'status', '登录状态（0成功 1失败）', 'char(1)', 'String', 'status', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'radio', '', 7, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (62, 5, 'msg', '提示消息', 'varchar(255)', 'String', 'msg', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 8, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (63, 5, 'login_time', '访问时间', 'datetime', 'Date', 'loginTime', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'datetime', '', 9, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (64, 6, 'menu_id', '菜单ID', 'bigint(20)', 'Long', 'menuId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (65, 6, 'menu_name', '菜单名称', 'varchar(50)', 'String', 'menuName', '0', '0', '1', '1', '1', '1', '1', 'LIKE', 'input', '', 2, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (66, 6, 'parent_id', '父菜单ID', 'bigint(20)', 'Long', 'parentId', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (67, 6, 'order_num', '显示顺序', 'int(4)', 'Integer', 'orderNum', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 4, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (68, 6, 'path', '路由地址', 'varchar(200)', 'String', 'path', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 5, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (69, 6, 'component', '组件路径', 'varchar(255)', 'String', 'component', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 6, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (70, 6, 'query', '路由参数', 'varchar(255)', 'String', 'query', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 7, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (71, 6, 'route_name', '路由名称', 'varchar(50)', 'String', 'routeName', '0', '0', '0', '1', '1', '1', '1', 'LIKE', 'input', '', 8, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (72, 6, 'is_frame', '是否为外链（0是 1否）', 'int(1)', 'Integer', 'isFrame', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 9, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (73, 6, 'is_cache', '是否缓存（0缓存 1不缓存）', 'int(1)', 'Integer', 'isCache', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 10, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (74, 6, 'menu_type', '菜单类型（M目录 C菜单 F按钮）', 'char(1)', 'String', 'menuType', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'select', '', 11, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (75, 6, 'visible', '菜单状态（0显示 1隐藏）', 'char(1)', 'String', 'visible', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 12, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (76, 6, 'status', '菜单状态（0正常 1停用）', 'char(1)', 'String', 'status', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'radio', '', 13, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (77, 6, 'perms', '权限标识', 'varchar(100)', 'String', 'perms', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 14, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (78, 6, 'icon', '菜单图标', 'varchar(100)', 'String', 'icon', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 15, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (79, 6, 'create_by', '创建者', 'varchar(64)', 'String', 'createBy', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 16, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (80, 6, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'datetime', '', 17, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (81, 6, 'update_by', '更新者', 'varchar(64)', 'String', 'updateBy', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'input', '', 18, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (82, 6, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'datetime', '', 19, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (83, 6, 'remark', '备注', 'varchar(500)', 'String', 'remark', '0', '0', '0', '1', '1', '1', NULL, 'EQ', 'textarea', '', 20, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (84, 7, 'notice_id', '公告ID', 'int(4)', 'Integer', 'noticeId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (85, 7, 'notice_title', '公告标题', 'varchar(50)', 'String', 'noticeTitle', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (86, 7, 'notice_type', '公告类型（1通知 2公告）', 'char(1)', 'String', 'noticeType', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'select', '', 3, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (87, 7, 'notice_content', '公告内容', 'longblob', 'String', 'noticeContent', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'editor', '', 4, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (88, 7, 'status', '公告状态（0正常 1关闭）', 'char(1)', 'String', 'status', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'radio', '', 5, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (89, 7, 'create_by', '创建者', 'varchar(64)', 'String', 'createBy', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 6, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (90, 7, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'datetime', '', 7, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (91, 7, 'update_by', '更新者', 'varchar(64)', 'String', 'updateBy', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'input', '', 8, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (92, 7, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'datetime', '', 9, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (93, 7, 'remark', '备注', 'varchar(255)', 'String', 'remark', '0', '0', '0', '1', '1', '1', NULL, 'EQ', 'input', '', 10, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (94, 8, 'oper_id', '日志主键', 'bigint(20)', 'Long', 'operId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (95, 8, 'title', '模块标题', 'varchar(50)', 'String', 'title', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (96, 8, 'business_type', '业务类型（0其它 1新增 2修改 3删除）', 'int(2)', 'Integer', 'businessType', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'select', '', 3, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (97, 8, 'method', '方法名称', 'varchar(200)', 'String', 'method', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 4, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (98, 8, 'request_method', '请求方式', 'varchar(10)', 'String', 'requestMethod', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 5, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (99, 8, 'operator_type', '操作类别（0其它 1后台用户 2手机端用户）', 'int(1)', 'Integer', 'operatorType', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'select', '', 6, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (100, 8, 'oper_name', '操作人员', 'varchar(50)', 'String', 'operName', '0', '0', '0', '1', '1', '1', '1', 'LIKE', 'input', '', 7, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (101, 8, 'dept_name', '部门名称', 'varchar(50)', 'String', 'deptName', '0', '0', '0', '1', '1', '1', '1', 'LIKE', 'input', '', 8, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (102, 8, 'oper_url', '请求URL', 'varchar(255)', 'String', 'operUrl', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 9, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (103, 8, 'oper_ip', '主机地址', 'varchar(128)', 'String', 'operIp', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 10, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (104, 8, 'oper_location', '操作地点', 'varchar(255)', 'String', 'operLocation', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 11, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (105, 8, 'oper_param', '请求参数', 'varchar(2000)', 'String', 'operParam', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'textarea', '', 12, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (106, 8, 'json_result', '返回参数', 'varchar(2000)', 'String', 'jsonResult', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'textarea', '', 13, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (107, 8, 'status', '操作状态（0正常 1异常）', 'int(1)', 'Integer', 'status', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'radio', '', 14, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (108, 8, 'error_msg', '错误消息', 'varchar(2000)', 'String', 'errorMsg', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'textarea', '', 15, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (109, 8, 'oper_time', '操作时间', 'datetime', 'Date', 'operTime', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'datetime', '', 16, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (110, 8, 'cost_time', '消耗时间', 'bigint(20)', 'Long', 'costTime', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 17, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (111, 9, 'post_id', '岗位ID', 'bigint(20)', 'Long', 'postId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (112, 9, 'post_code', '岗位编码', 'varchar(64)', 'String', 'postCode', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (113, 9, 'post_name', '岗位名称', 'varchar(50)', 'String', 'postName', '0', '0', '1', '1', '1', '1', '1', 'LIKE', 'input', '', 3, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (114, 9, 'post_sort', '显示顺序', 'int(4)', 'Integer', 'postSort', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 4, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (115, 9, 'status', '状态（0正常 1停用）', 'char(1)', 'String', 'status', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'radio', '', 5, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (116, 9, 'create_by', '创建者', 'varchar(64)', 'String', 'createBy', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 6, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (117, 9, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'datetime', '', 7, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (118, 9, 'update_by', '更新者', 'varchar(64)', 'String', 'updateBy', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'input', '', 8, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (119, 9, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'datetime', '', 9, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (120, 9, 'remark', '备注', 'varchar(500)', 'String', 'remark', '0', '0', '0', '1', '1', '1', NULL, 'EQ', 'textarea', '', 10, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (121, 10, 'role_id', '角色ID', 'bigint(20)', 'Long', 'roleId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (122, 10, 'role_name', '角色名称', 'varchar(30)', 'String', 'roleName', '0', '0', '1', '1', '1', '1', '1', 'LIKE', 'input', '', 2, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (123, 10, 'role_key', '角色权限字符串', 'varchar(100)', 'String', 'roleKey', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (124, 10, 'role_sort', '显示顺序', 'int(4)', 'Integer', 'roleSort', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 4, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (125, 10, 'data_scope', '数据范围（1：全部数据权限 2：自定数据权限 3：本部门数据权限 4：本部门及以下数据权限）', 'char(1)', 'String', 'dataScope', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 5, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (126, 10, 'menu_check_strictly', '菜单树选择项是否关联显示', 'tinyint(1)', 'Integer', 'menuCheckStrictly', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 6, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (127, 10, 'dept_check_strictly', '部门树选择项是否关联显示', 'tinyint(1)', 'Integer', 'deptCheckStrictly', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 7, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (128, 10, 'status', '角色状态（0正常 1停用）', 'char(1)', 'String', 'status', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'radio', '', 8, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (129, 10, 'del_flag', '删除标志（0代表存在 2代表删除）', 'char(1)', 'String', 'delFlag', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 9, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (130, 10, 'create_by', '创建者', 'varchar(64)', 'String', 'createBy', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 10, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (131, 10, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'datetime', '', 11, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (132, 10, 'update_by', '更新者', 'varchar(64)', 'String', 'updateBy', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'input', '', 12, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (133, 10, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'datetime', '', 13, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (134, 10, 'remark', '备注', 'varchar(500)', 'String', 'remark', '0', '0', '0', '1', '1', '1', NULL, 'EQ', 'textarea', '', 14, 'admin', '2026-01-21 00:36:00', '', NULL);
+INSERT INTO `gen_table_column` VALUES (135, 11, 'dept_id', '部门id', 'bigint(20)', 'Long', 'deptId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (136, 11, 'parent_id', '父部门id', 'bigint(20)', 'Long', 'parentId', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (137, 11, 'ancestors', '祖级列表', 'varchar(50)', 'String', 'ancestors', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (138, 11, 'dept_name', '部门名称', 'varchar(30)', 'String', 'deptName', '0', '0', '0', '1', '1', '1', '1', 'LIKE', 'input', '', 4, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (139, 11, 'order_num', '显示顺序', 'int(4)', 'Integer', 'orderNum', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 5, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (140, 11, 'leader', '负责人', 'varchar(20)', 'String', 'leader', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 6, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (141, 11, 'phone', '联系电话', 'varchar(11)', 'String', 'phone', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 7, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (142, 11, 'email', '邮箱', 'varchar(50)', 'String', 'email', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 8, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (143, 11, 'status', '部门状态（0正常 1停用）', 'char(1)', 'String', 'status', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'radio', '', 9, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (144, 11, 'del_flag', '删除标志（0代表存在 2代表删除）', 'char(1)', 'String', 'delFlag', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 10, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (145, 11, 'create_by', '创建者', 'varchar(64)', 'String', 'createBy', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 11, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (146, 11, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'datetime', '', 12, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (147, 11, 'update_by', '更新者', 'varchar(64)', 'String', 'updateBy', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'input', '', 13, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (148, 11, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'datetime', '', 14, 'admin', '2026-01-21 00:36:06', '', '2026-01-21 15:02:55');
+INSERT INTO `gen_table_column` VALUES (149, 12, 'dict_code', '字典编码', 'bigint(20)', 'Long', 'dictCode', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (150, 12, 'dict_sort', '字典排序', 'int(4)', 'Integer', 'dictSort', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (151, 12, 'dict_label', '字典标签', 'varchar(100)', 'String', 'dictLabel', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (152, 12, 'dict_value', '字典键值', 'varchar(100)', 'String', 'dictValue', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 4, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (153, 12, 'dict_type', '字典类型', 'varchar(100)', 'String', 'dictType', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'select', '', 5, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (154, 12, 'css_class', '样式属性（其他样式扩展）', 'varchar(100)', 'String', 'cssClass', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 6, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (155, 12, 'list_class', '表格回显样式', 'varchar(100)', 'String', 'listClass', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 7, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (156, 12, 'is_default', '是否默认（Y是 N否）', 'char(1)', 'String', 'isDefault', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 8, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (157, 12, 'status', '状态（0正常 1停用）', 'char(1)', 'String', 'status', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'radio', '', 9, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (158, 12, 'create_by', '创建者', 'varchar(64)', 'String', 'createBy', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 10, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (159, 12, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'datetime', '', 11, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (160, 12, 'update_by', '更新者', 'varchar(64)', 'String', 'updateBy', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'input', '', 12, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (161, 12, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'datetime', '', 13, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (162, 12, 'remark', '备注', 'varchar(500)', 'String', 'remark', '0', '0', '0', '1', '1', '1', NULL, 'EQ', 'textarea', '', 14, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (163, 13, 'dict_id', '字典主键', 'bigint(20)', 'Long', 'dictId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (164, 13, 'dict_name', '字典名称', 'varchar(100)', 'String', 'dictName', '0', '0', '0', '1', '1', '1', '1', 'LIKE', 'input', '', 2, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (165, 13, 'dict_type', '字典类型', 'varchar(100)', 'String', 'dictType', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'select', '', 3, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (166, 13, 'status', '状态（0正常 1停用）', 'char(1)', 'String', 'status', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'radio', '', 4, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (167, 13, 'create_by', '创建者', 'varchar(64)', 'String', 'createBy', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 5, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (168, 13, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'datetime', '', 6, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (169, 13, 'update_by', '更新者', 'varchar(64)', 'String', 'updateBy', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'input', '', 7, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (170, 13, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'datetime', '', 8, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (171, 13, 'remark', '备注', 'varchar(500)', 'String', 'remark', '0', '0', '0', '1', '1', '1', NULL, 'EQ', 'textarea', '', 9, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (172, 14, 'job_id', '任务ID', 'bigint(20)', 'Long', 'jobId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (173, 14, 'job_name', '任务名称', 'varchar(64)', 'String', 'jobName', '1', '0', '0', '1', NULL, NULL, NULL, 'LIKE', 'input', '', 2, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (174, 14, 'job_group', '任务组名', 'varchar(64)', 'String', 'jobGroup', '1', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (175, 14, 'invoke_target', '调用目标字符串', 'varchar(500)', 'String', 'invokeTarget', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'textarea', '', 4, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (176, 14, 'cron_expression', 'cron执行表达式', 'varchar(255)', 'String', 'cronExpression', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 5, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (177, 14, 'misfire_policy', '计划执行错误策略（1立即执行 2执行一次 3放弃执行）', 'varchar(20)', 'String', 'misfirePolicy', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 6, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (178, 14, 'concurrent', '是否并发执行（0允许 1禁止）', 'char(1)', 'String', 'concurrent', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 7, 'admin', '2026-01-21 00:36:06', '', NULL);
+INSERT INTO `gen_table_column` VALUES (179, 14, 'status', '状态（0正常 1暂停）', 'char(1)', 'String', 'status', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'radio', '', 8, 'admin', '2026-01-21 00:36:07', '', NULL);
+INSERT INTO `gen_table_column` VALUES (180, 14, 'create_by', '创建者', 'varchar(64)', 'String', 'createBy', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 9, 'admin', '2026-01-21 00:36:07', '', NULL);
+INSERT INTO `gen_table_column` VALUES (181, 14, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'datetime', '', 10, 'admin', '2026-01-21 00:36:07', '', NULL);
+INSERT INTO `gen_table_column` VALUES (182, 14, 'update_by', '更新者', 'varchar(64)', 'String', 'updateBy', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'input', '', 11, 'admin', '2026-01-21 00:36:07', '', NULL);
+INSERT INTO `gen_table_column` VALUES (183, 14, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'datetime', '', 12, 'admin', '2026-01-21 00:36:07', '', NULL);
+INSERT INTO `gen_table_column` VALUES (184, 14, 'remark', '备注信息', 'varchar(500)', 'String', 'remark', '0', '0', '0', '1', '1', '1', NULL, 'EQ', 'textarea', '', 13, 'admin', '2026-01-21 00:36:07', '', NULL);
+INSERT INTO `gen_table_column` VALUES (185, 15, 'job_log_id', '任务日志ID', 'bigint(20)', 'Long', 'jobLogId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:28');
+INSERT INTO `gen_table_column` VALUES (186, 15, 'job_name', '任务名称', 'varchar(64)', 'String', 'jobName', '0', '0', '1', '1', '1', '1', '1', 'LIKE', 'input', '', 2, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:28');
+INSERT INTO `gen_table_column` VALUES (187, 15, 'job_group', '任务组名', 'varchar(64)', 'String', 'jobGroup', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:28');
+INSERT INTO `gen_table_column` VALUES (188, 15, 'invoke_target', '调用目标字符串', 'varchar(500)', 'String', 'invokeTarget', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'textarea', '', 4, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:28');
+INSERT INTO `gen_table_column` VALUES (189, 15, 'job_message', '日志信息', 'varchar(500)', 'String', 'jobMessage', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'textarea', '', 5, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:28');
+INSERT INTO `gen_table_column` VALUES (190, 15, 'status', '执行状态（0正常 1失败）', 'char(1)', 'String', 'status', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'radio', '', 6, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:28');
+INSERT INTO `gen_table_column` VALUES (191, 15, 'exception_info', '异常信息', 'varchar(2000)', 'String', 'exceptionInfo', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'textarea', '', 7, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:28');
+INSERT INTO `gen_table_column` VALUES (192, 15, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'datetime', '', 8, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:28');
+INSERT INTO `gen_table_column` VALUES (193, 16, 'id', '主键ID', 'bigint(20)', 'Long', 'id', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 13:38:17');
+INSERT INTO `gen_table_column` VALUES (194, 16, 'role_id', '角色ID', 'bigint(20)', 'Long', 'roleId', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 13:38:17');
+INSERT INTO `gen_table_column` VALUES (195, 16, 'dept_id', '部门ID', 'bigint(20)', 'Long', 'deptId', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 13:38:17');
+INSERT INTO `gen_table_column` VALUES (196, 17, 'id', '主键ID', 'bigint(20)', 'Long', 'id', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:45');
+INSERT INTO `gen_table_column` VALUES (197, 17, 'role_id', '角色ID', 'bigint(20)', 'Long', 'roleId', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:45');
+INSERT INTO `gen_table_column` VALUES (198, 17, 'menu_id', '菜单ID', 'bigint(20)', 'Long', 'menuId', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:01:45');
+INSERT INTO `gen_table_column` VALUES (199, 18, 'user_id', '用户ID', 'bigint(20)', 'Long', 'userId', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (200, 18, 'dept_id', '部门ID', 'bigint(20)', 'Long', 'deptId', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (201, 18, 'user_name', '用户账号', 'varchar(30)', 'String', 'userName', '0', '0', '1', '1', '1', '1', '1', 'LIKE', 'input', '', 3, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (202, 18, 'nick_name', '用户昵称', 'varchar(30)', 'String', 'nickName', '0', '0', '1', '1', '1', '1', '1', 'LIKE', 'input', '', 4, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (203, 18, 'user_type', '用户类型（00系统用户）', 'varchar(2)', 'String', 'userType', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'select', '', 5, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (204, 18, 'email', '用户邮箱', 'varchar(50)', 'String', 'email', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 6, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (205, 18, 'phonenumber', '手机号码', 'varchar(11)', 'String', 'phonenumber', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 7, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (206, 18, 'sex', '用户性别（0男 1女 2未知）', 'char(1)', 'String', 'sex', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'select', 'sys_user_sex', 8, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (207, 18, 'avatar', '头像地址', 'varchar(500)', 'String', 'avatar', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'textarea', '', 9, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (208, 18, 'password', '密码', 'varchar(100)', 'String', 'password', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 10, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (209, 18, 'status', '账号状态（0正常 1停用）', 'char(1)', 'String', 'status', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'radio', 'sys_common_status', 11, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (210, 18, 'del_flag', '删除标志（0代表存在 2代表删除）', 'char(1)', 'String', 'delFlag', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', 'is_delete_status', 12, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (211, 18, 'login_ip', '最后登录IP', 'varchar(128)', 'String', 'loginIp', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'input', '', 13, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (212, 18, 'login_date', '最后登录时间', 'datetime', 'Date', 'loginDate', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'datetime', '', 14, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (213, 18, 'pwd_update_date', '密码最后更新时间', 'datetime', 'Date', 'pwdUpdateDate', '0', '0', '0', '1', '1', '1', '1', 'EQ', 'datetime', '', 15, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (214, 18, 'create_by', '创建者', 'varchar(64)', 'String', 'createBy', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 16, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (215, 18, 'create_time', '创建时间', 'datetime', 'Date', 'createTime', '0', '0', '0', '1', NULL, NULL, NULL, 'EQ', 'datetime', '', 17, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (216, 18, 'update_by', '更新者', 'varchar(64)', 'String', 'updateBy', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'input', '', 18, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (217, 18, 'update_time', '更新时间', 'datetime', 'Date', 'updateTime', '0', '0', '0', '1', '1', NULL, NULL, 'EQ', 'datetime', '', 19, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (218, 18, 'remark', '备注', 'varchar(500)', 'String', 'remark', '0', '0', '0', '1', '1', '1', NULL, 'EQ', 'textarea', '', 20, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 11:21:33');
+INSERT INTO `gen_table_column` VALUES (219, 19, 'id', '主键ID', 'bigint(20)', 'Long', 'id', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:02:00');
+INSERT INTO `gen_table_column` VALUES (220, 19, 'user_id', '用户ID', 'bigint(20)', 'Long', 'userId', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:02:00');
+INSERT INTO `gen_table_column` VALUES (221, 19, 'post_id', '岗位ID', 'bigint(20)', 'Long', 'postId', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:02:00');
+INSERT INTO `gen_table_column` VALUES (222, 20, 'id', '主键ID', 'bigint(20)', 'Long', 'id', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:02:07');
+INSERT INTO `gen_table_column` VALUES (223, 20, 'user_id', '用户ID', 'bigint(20)', 'Long', 'userId', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:02:07');
+INSERT INTO `gen_table_column` VALUES (224, 20, 'role_id', '角色ID', 'bigint(20)', 'Long', 'roleId', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-21 00:36:07', '', '2026-01-21 15:02:07');
 
 -- ----------------------------
 -- Table structure for sys_dept
@@ -306,7 +492,7 @@ CREATE TABLE `sys_menu`  (
   `update_time` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '备注',
   PRIMARY KEY (`menu_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 73 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '菜单权限表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 74 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '菜单权限表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_menu
@@ -355,6 +541,7 @@ INSERT INTO `sys_menu` VALUES (69, '字典类型查询', 12, 4, '', '', NULL, ''
 INSERT INTO `sys_menu` VALUES (70, '字典数据查询', 65, 4, '', '', NULL, '', 1, 1, 'F', '0', '0', 'system:data:query', '#', 'admin', '2026-01-19 21:33:59', '', NULL, '字典数据查询');
 INSERT INTO `sys_menu` VALUES (71, '系统工具', 0, 3, '/tools', '', NULL, 'SystemTools', 1, 1, 'M', '0', '0', '', 'clarity:tools-line', 'admin', '2026-01-20 13:08:43', '', NULL, '系统工具');
 INSERT INTO `sys_menu` VALUES (72, '代码生成', 71, 1, 'generator', '/tools/generator/index', NULL, 'GenerateTools', 1, 1, 'C', '0', '0', 'tools:generator:list', 'mdi:generator-mobile', 'admin', '2026-01-20 13:15:59', 'admin', '2026-01-20 13:25:42', '代码生成');
+INSERT INTO `sys_menu` VALUES (73, '列表查询', 72, 1, '', '', NULL, '', 1, 1, 'F', '0', '0', 'tool:gen:query', '#', 'admin', '2026-01-20 14:56:43', '', NULL, '列表查询');
 
 -- ----------------------------
 -- Table structure for sys_notice

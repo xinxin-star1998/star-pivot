@@ -101,9 +101,12 @@ public class CaptchaServiceImpl implements CaptchaService {
     public CaptchaIssueResponse generateCaptcha(String scene) {
         // 生成随机验证码和 token
         String code = generateRandomCode();
+        // 为了让验证码校验对大小写不敏感，这里统一将用于校验的验证码转换为小写再参与哈希计算
+        // 图片中仍然绘制原始 code（包含大小写），用户输入时可以任意大小写组合
+        String normalizedCode = code.toLowerCase();
         String captchaToken = generateRandomToken();
         String salt = generateRandomSalt();
-        String hash = hashCode(code, salt);
+        String hash = hashCode(normalizedCode, salt);
 
         // 记录状态（不存明文）
         CaptchaState state = new CaptchaState();
@@ -166,7 +169,9 @@ public class CaptchaServiceImpl implements CaptchaService {
             throw new ServiceException("验证码尝试次数过多，请重新获取", 401);
         }
 
-        String inputHash = hashCode(request.getCode(), state.getSalt());
+        // 为了让验证码校验对大小写不敏感，这里统一将用户输入转换为小写再参与哈希计算
+        String normalizedInputCode = request.getCode().toLowerCase();
+        String inputHash = hashCode(normalizedInputCode, state.getSalt());
         boolean match = inputHash.equals(state.getCodeHash());
 
         if (!match) {

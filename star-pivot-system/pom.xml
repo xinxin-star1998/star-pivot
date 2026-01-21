@@ -32,23 +32,11 @@
             <artifactId>star-pivot-common</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <!-- Spring Security -->
         <dependency>
             <groupId>com.star.pivot.security</groupId>
             <artifactId>star-pivot-security</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-        </dependency>
-        <!-- JWT -->
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
         </dependency>
         <!-- MinIO 依赖 -->
         <dependency>
