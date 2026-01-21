@@ -1,4 +1,4 @@
-package com.star.pivot.system.utils;
+package com.star.pivot.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

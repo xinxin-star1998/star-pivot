@@ -1,4 +1,4 @@
-package com.star.pivot.system.utils;
+package com.star.pivot.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

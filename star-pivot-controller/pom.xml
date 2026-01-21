@@ -70,6 +70,11 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>com.star.pivot.security</groupId>
+            <artifactId>star-pivot-security</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>com.star.pivot.generator</groupId>
             <artifactId>star-pivot-generator</artifactId>
             <version>0.0.1-SNAPSHOT</version>

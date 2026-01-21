@@ -1,7 +1,5 @@
 package com.star.pivot.security;
 
-import com.star.pivot.system.utils.JwtBlackListManager;
-import com.star.pivot.system.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,8 +18,8 @@ import java.io.IOException;
 /**
  * 基于 JWT 的认证过滤器
  * <p>
- * 注意：该类位于 controller 模块中，只负责 HTTP 层的认证拦截，
- * 具体的 JWT 解析、黑名单管理等能力由 system 模块提供。
+ * 注意：该类位于安全模块中，只负责 HTTP 层的认证拦截，
+ * 具体的 JWT 解析、黑名单管理等能力由安全模块提供。
  */
 @Slf4j
 @Component

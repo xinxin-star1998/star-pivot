@@ -1,7 +1,7 @@
 package com.star.pivot.security;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,8 +22,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Spring Security 配置
@@ -31,6 +33,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
+@EnableConfigurationProperties({CorsProperties.class, StarPivotSecurityProperties.class})
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -38,20 +41,10 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-
-    /**
-     * CORS允许的域名，多个用逗号分隔
-     * 生产环境建议通过环境变量配置：CORS_ALLOWED_ORIGINS=https://example.com,https://www.example.com
-     */
-    @Value("${cors.allowed-origins:*}")
-    private String allowedOrigins;
-
-    /**
-     * 是否允许直接访问 Swagger/Knife4j 文档
-     * 非生产环境默认开启，生产环境建议通过配置关闭：security.swagger-permit-all=false
-     */
-    @Value("${security.swagger-permit-all:true}")
-    private boolean swaggerPermitAll;
+    private final CorsProperties corsProperties;
+    private final StarPivotSecurityProperties securityProperties;
+    private final List<PermitAllPathProvider> permitAllPathProviders;
+    private final List<HttpSecurityCustomizer> httpSecurityCustomizers;
 
     /**
      * 密码编码器
@@ -105,18 +98,13 @@ public class SecurityConfig {
                 // 配置请求授权
                 .authorizeHttpRequests(auth -> {
                     // 允许登录和验证码相关接口匿名访问（注意：如果配置了context-path，Spring Security会自动处理）
-                    auth.requestMatchers(
-                                    "/auth/login",
-                                    "/api/auth/login",
-                                    "/auth/captcha",
-                                    "/api/auth/captcha",
-                                    "/auth/captcha/verify",
-                                    "/api/auth/captcha/verify"
-                            )
-                            .permitAll();
+                    String[] permitAllPaths = resolvePermitAllPaths();
+                    if (permitAllPaths.length > 0) {
+                        auth.requestMatchers(permitAllPaths).permitAll();
+                    }
 
                     // 是否允许 Swagger 相关路径匿名访问
-                    if (swaggerPermitAll) {
+                    if (securityProperties.isSwaggerPermitAll()) {
                         auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
                                         "/swagger-resources/**", "/webjars/**")
                                 .permitAll();
@@ -128,7 +116,56 @@ public class SecurityConfig {
                 // 添加 JWT 过滤器
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
+        // 额外扩展：允许其他模块对 HttpSecurity 进行二次定制（例如追加过滤器、追加授权规则等）
+        for (HttpSecurityCustomizer customizer : httpSecurityCustomizers) {
+            customizer.customize(http);
+        }
+
         return http.build();
+    }
+
+    /**
+     * 汇总放行路径：
+     * <ul>
+     *   <li>安全模块内置默认放行（登录/验证码）</li>
+     *   <li>配置项 security.permit-all-paths</li>
+     *   <li>其他模块通过 PermitAllPathProvider 提供的扩展放行</li>
+     * </ul>
+     */
+    private String[] resolvePermitAllPaths() {
+        List<String> paths = new ArrayList<>();
+
+        // 内置默认放行路径
+        paths.addAll(List.of(
+                "/auth/login",
+                "/api/auth/login",
+                "/auth/captcha",
+                "/api/auth/captcha",
+                "/auth/captcha/verify",
+                "/api/auth/captcha/verify"
+        ));
+
+        // 配置文件追加放行路径
+        if (securityProperties.getPermitAllPaths() != null) {
+            paths.addAll(securityProperties.getPermitAllPaths());
+        }
+
+        // 其他模块追加放行路径
+        if (permitAllPathProviders != null) {
+            for (PermitAllPathProvider provider : permitAllPathProviders) {
+                List<String> providerPaths = provider.permitAllPaths();
+                if (providerPaths != null) {
+                    paths.addAll(providerPaths);
+                }
+            }
+        }
+
+        return paths.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .distinct()
+                .toArray(String[]::new);
     }
 
     @Bean
@@ -136,6 +173,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // 根据配置决定使用允许的域名列表还是允许所有域名
+        String allowedOrigins = corsProperties.getAllowedOrigins();
         if ("*".equals(allowedOrigins)) {
             // 开发环境：允许所有域名
             configuration.addAllowedOriginPattern("*");

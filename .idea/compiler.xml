@@ -11,6 +11,7 @@
         <module name="star-pivot-system" />
         <module name="star-pivot-controller" />
         <module name="star-pivot-common" />
+        <module name="star-pivot-security" />
       </profile>
     </annotationProcessing>
   </component>
@@ -20,6 +21,7 @@
       <module name="star-pivot-common" options="-parameters" />
       <module name="star-pivot-controller" options="-parameters" />
       <module name="star-pivot-generator" options="-parameters" />
+      <module name="star-pivot-security" options="-parameters" />
       <module name="star-pivot-system" options="-parameters" />
     </option>
   </component>
