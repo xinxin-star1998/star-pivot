@@ -7,7 +7,7 @@ import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.ResetPasswordDTO;
 import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.service.SysUserService;
-import com.star.pivot.system.utils.SecurityContextUtils;
+import com.star.pivot.security.utils.SecurityContextUtils;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

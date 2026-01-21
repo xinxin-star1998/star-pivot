@@ -4,7 +4,7 @@ import com.star.pivot.system.domain.bo.MetaVo;
 import com.star.pivot.system.domain.bo.RouterVo;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.service.SysMenuService;
-import com.star.pivot.system.utils.SecurityContextUtils;
+import com.star.pivot.security.utils.SecurityContextUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

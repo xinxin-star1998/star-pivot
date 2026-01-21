@@ -14,7 +14,7 @@ import com.star.pivot.system.domain.entity.DictType;
 import com.star.pivot.system.mapper.DictDataMapper;
 import com.star.pivot.system.mapper.DictTypeMapper;
 import com.star.pivot.system.service.DictTypeService;
-import com.star.pivot.system.utils.SecurityContextUtils;
+import com.star.pivot.security.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;

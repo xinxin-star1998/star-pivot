@@ -15,7 +15,7 @@ import com.star.pivot.system.domain.entity.*;
 import com.star.pivot.system.mapper.*;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.UserPermissionCacheService;
-import com.star.pivot.system.utils.SecurityContextUtils;
+import com.star.pivot.security.utils.SecurityContextUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
