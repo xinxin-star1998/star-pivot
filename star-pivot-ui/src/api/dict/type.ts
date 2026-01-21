@@ -50,6 +50,14 @@ export function fetchGetDictTypeList(params?: DictTypeSearchParams) {
     data: params || {}
   })
 }
+/**
+ * 获取字典类型下拉列表
+ */
+export function fetchGetDictTypeSelectList() {
+  return request.get<SysDictType[]>({
+    url: '/api/sys/dict/type/selectList'
+  })
+}
 
 /**
  * 根据ID获取字典类型详情

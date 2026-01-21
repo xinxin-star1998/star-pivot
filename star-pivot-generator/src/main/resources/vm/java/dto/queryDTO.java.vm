@@ -1,0 +1,33 @@
+package ${packageName}.domain.dto;
+
+import lombok.Data;
+
+/**
+ * ${functionName}查询DTO
+ * 
+ * @author ${author}
+ * @date ${datetime}
+ */
+@Data
+public class ${ClassName}QueryDTO {
+
+    /**
+     * 页码
+     */
+    private Integer pageNum = 1;
+
+    /**
+     * 每页数量
+     */
+    private Integer pageSize = 10;
+
+#foreach ($column in $columns)
+#if($column.query)
+    /**
+     * $column.columnComment
+     */
+    private $column.javaType $column.javaField;
+
+#end
+#end
+}

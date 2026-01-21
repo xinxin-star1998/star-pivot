@@ -1,6 +1,6 @@
 package com.star.pivot.system.service.impl;
 
-import com.star.pivot.common.constants.Constants;
+import com.star.pivot.common.domain.Constants;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;

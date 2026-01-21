@@ -1,0 +1,54 @@
+package com.star.pivot.generator.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.star.pivot.generator.domain.entity.GenTableColumn;
+import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
+
+/**
+ * 代码生成表Mapper接口
+ *
+ * @author xinxin
+ * @since 2025-01-17
+ */
+@Mapper
+public interface GenTableColumnMapper extends BaseMapper<GenTableColumn> {
+    /**
+     * 查询业务字段列表
+     *
+     * @param tableId 业务字段编号
+     * @return 业务字段集合
+     */
+    public List<GenTableColumn> selectGenTableColumnListByTableId(Long tableId);
+    /**
+     * 根据表名称查询列信息
+     *
+     * @param tableName 表名称
+     * @return 列信息
+     */
+    public List<GenTableColumn> selectDbTableColumnsByName(String tableName);
+    /**
+     * 新增业务字段
+     *
+     * @param genTableColumn 业务字段信息
+     * @return 结果
+     */
+    public int insertGenTableColumn(GenTableColumn genTableColumn);
+    /**
+     * 修改业务字段
+     *
+     * @param genTableColumn 业务字段信息
+     * @return 结果
+     */
+    public int updateGenTableColumn(GenTableColumn genTableColumn);
+    /**
+     * 批量删除业务字段
+     *
+     * @param ids 需要删除的数据ID
+     * @return 结果
+     */
+    public int deleteGenTableColumnByIds(Long[] ids);
+
+    void deleteGenTableColumns(List<GenTableColumn> delColumns);
+}

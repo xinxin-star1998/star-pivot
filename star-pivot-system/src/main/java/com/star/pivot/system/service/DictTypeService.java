@@ -7,6 +7,8 @@ import com.star.pivot.system.domain.dto.DictTypeDTO;
 import com.star.pivot.system.domain.dto.DictTypeQueryDTO;
 import com.star.pivot.system.domain.entity.DictType;
 
+import java.util.List;
+
 /**
  * 字典类型服务接口
  *
@@ -63,5 +65,7 @@ public interface DictTypeService extends IService<DictType> {
      * @return 是否唯一
      */
     boolean checkDictTypeUnique(String dictType, Long dictId);
+
+    List<DictTypeVO> selectList();
 }
 

@@ -1,6 +1,6 @@
 package com.star.pivot.controller;
 
-import com.star.pivot.common.constants.Constants;
+import com.star.pivot.common.domain.Constants;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;

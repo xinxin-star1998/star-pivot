@@ -114,8 +114,15 @@ axiosInstance.interceptors.request.use(
 
 /** 响应拦截器 */
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse<BaseResponse>) => {
-    const { code, msg, message } = response.data
+  (response: AxiosResponse<BaseResponse | Blob>) => {
+    // 如果是 blob 响应类型，直接返回响应，不进行 JSON 解析
+    if (response.config.responseType === 'blob' || response.data instanceof Blob) {
+      return response
+    }
+    
+    // JSON 响应类型，进行常规处理
+    const data = response.data as BaseResponse
+    const { code, msg, message } = data
     const messageText = msg || message || $t('httpMsg.requestFailed')
     if (code === ApiStatus.success) return response
     if (code === ApiStatus.unauthorized) handleUnauthorizedError(messageText)
@@ -211,17 +218,25 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
   }
 
   try {
-    const res = await axiosInstance.request<BaseResponse<T>>(config)
+    const res = await axiosInstance.request<BaseResponse<T> | Blob>(config)
 
+    // 如果是 blob 响应类型，直接返回 blob 对象
+    if (config.responseType === 'blob' || res.data instanceof Blob) {
+      return res.data as T
+    }
+
+    // JSON 响应类型，进行常规处理
+    const jsonData = res.data as BaseResponse<T>
+    
     // 显示成功消息
     if (config.showSuccessMessage) {
-      const successMsg = res.data.msg || res.data.message
+      const successMsg = jsonData.msg || jsonData.message
       if (successMsg) {
         showSuccess(successMsg)
       }
     }
 
-    return res.data.data as T
+    return jsonData.data as T
   } catch (error) {
     if (error instanceof HttpError && error.code !== ApiStatus.unauthorized) {
       const showMsg = config.showErrorMessage !== false

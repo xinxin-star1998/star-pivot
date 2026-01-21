@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 字典类型管理控制器
  *
@@ -36,6 +38,15 @@ public class DictTypeController {
         return Result.success(page);
     }
 
+    /**
+     * 下拉字典类型列表
+     * @return 下拉字典类型列表 list
+     */
+    @GetMapping("/selectList")
+    public Result<List<DictTypeVO>> selectList() {
+        List<DictTypeVO> list = dictTypeService.selectList();
+        return Result.success(list);
+    }
     /**
      * 根据字典类型ID查询详情
      */

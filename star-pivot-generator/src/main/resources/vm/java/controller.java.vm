@@ -1,0 +1,125 @@
+package ${packageName}.controller;
+
+import java.util.List;
+import com.star.pivot.common.domain.PageResponse;
+import com.star.pivot.common.domain.Result;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import jakarta.validation.Valid;
+import ${packageName}.domain.${ClassName};
+import ${packageName}.service.I${ClassName}Service;
+#if($table.crud || $table.sub)
+import ${packageName}.domain.dto.${ClassName}QueryDTO;
+import ${packageName}.domain.bo.${ClassName}VO;
+#end
+import ${packageName}.domain.dto.${ClassName}DTO;
+
+/**
+ * ${functionName}控制器
+ * 
+ * @author ${author}
+ * @date ${datetime}
+ */
+@Slf4j
+@RestController
+@RequestMapping("/${moduleName}/${businessName}")
+@RequiredArgsConstructor
+public class ${ClassName}Controller
+{
+    private final I${ClassName}Service ${className}Service;
+
+    /**
+     * 分页查询${functionName}列表
+     * 
+     * @param queryDTO 查询参数
+     * @return 分页结果
+     */
+    @PreAuthorize("hasAuthority('${permissionPrefix}:query')")
+    @PostMapping("/list")
+#if($table.crud || $table.sub)
+    public Result<PageResponse<${ClassName}VO>> list(@RequestBody ${ClassName}QueryDTO queryDTO)
+    {
+        PageResponse<${ClassName}VO> page = ${className}Service.select${ClassName}Page(queryDTO);
+        return Result.success(page);
+    }
+#elseif($table.tree)
+    public Result<List<${ClassName}VO>> list(${ClassName}QueryDTO queryDTO)
+    {
+        // 树形结构查询逻辑
+        List<${ClassName}> list = ${className}Service.list();
+        List<${ClassName}VO> voList = list.stream()
+                .map(item -> {
+                    ${ClassName}VO vo = new ${ClassName}VO();
+                    org.springframework.beans.BeanUtils.copyProperties(item, vo);
+                    return vo;
+                })
+                .collect(java.util.stream.Collectors.toList());
+        return Result.success(voList);
+    }
+#end
+
+    /**
+     * 获取${functionName}详细信息
+     * 
+     * @param ${pkColumn.javaField} ${functionName}主键
+     * @return ${functionName}信息
+     */
+    @PreAuthorize("hasAuthority('${permissionPrefix}:query')")
+    @GetMapping(value = "/{${pkColumn.javaField}}")
+    public Result<${ClassName}VO> getInfo(@PathVariable("${pkColumn.javaField}") ${pkColumn.javaType} ${pkColumn.javaField})
+    {
+        ${ClassName}VO ${className}VO = ${className}Service.select${ClassName}By${pkColumn.capJavaField}(${pkColumn.javaField});
+        return Result.success(${className}VO);
+    }
+
+    /**
+     * 新增${functionName}
+     * 
+     * @param ${className}DTO ${functionName}信息
+     * @return 操作结果
+     */
+    @PreAuthorize("hasAuthority('${permissionPrefix}:add')")
+    @PostMapping
+    public Result<?> add(@Valid @RequestBody ${ClassName}DTO ${className}DTO)
+    {
+        boolean success = ${className}Service.insert${ClassName}(${className}DTO);
+        return success ? Result.success("新增${functionName}成功") : Result.error("新增${functionName}失败");
+    }
+
+    /**
+     * 修改${functionName}
+     * 
+     * @param ${className}DTO ${functionName}信息
+     * @return 操作结果
+     */
+    @PreAuthorize("hasAuthority('${permissionPrefix}:edit')")
+    @PutMapping
+    public Result<?> edit(@Valid @RequestBody ${ClassName}DTO ${className}DTO)
+    {
+        boolean success = ${className}Service.update${ClassName}(${className}DTO);
+        return success ? Result.success("修改${functionName}成功") : Result.error("修改${functionName}失败");
+    }
+
+    /**
+     * 删除${functionName}
+     * 
+     * @param ${pkColumn.javaField}s 需要删除的${functionName}主键数组
+     * @return 操作结果
+     */
+    @PreAuthorize("hasAuthority('${permissionPrefix}:remove')")
+    @DeleteMapping("/{${pkColumn.javaField}s}")
+    public Result<?> remove(@PathVariable ${pkColumn.javaType}[] ${pkColumn.javaField}s)
+    {
+        boolean success = ${className}Service.delete${ClassName}By${pkColumn.capJavaField}s(${pkColumn.javaField}s);
+        return success ? Result.success("删除${functionName}成功") : Result.error("删除${functionName}失败");
+    }
+}

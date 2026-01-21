@@ -92,6 +92,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 // 启用 CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // 配置认证提供者
+                .authenticationProvider(authenticationProvider())
                 // 使用无状态会话（JWT）
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -19,8 +19,8 @@ export interface SysPost {
 /**
  * 获取岗位列表（分页）
  */
-export function fetchGetPostList(params: Api.post.PostSearchParams) {
-  return request.post<Api.post.PostList>({
+export function fetchGetPostList(params: Api.Post.PostSearchParams) {
+  return request.post<Api.Post.PostList>({
     url: '/api/sys/post/list',
     data: params
   })
@@ -77,7 +77,7 @@ export function fetchDeletePost(postIds: number[]) {
  * 下拉岗位列表
  */
 export function fetchGetPostSelect() {
-  return request.get<Api.post.PostBo>({
+  return request.get<Api.Post.PostBo>({
     url: '/api/sys/post/simpleList'
   })
 }

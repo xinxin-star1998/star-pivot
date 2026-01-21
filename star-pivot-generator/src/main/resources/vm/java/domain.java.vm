@@ -1,0 +1,43 @@
+package ${packageName}.domain.entity;
+
+#foreach ($import in $importList)
+import ${import};
+#end
+import lombok.Data;
+import com.star.pivot.common.domain.BaseEntity;
+#if($table.tree)
+import com.star.pivot.common.domain.TreeEntity;
+#end
+
+/**
+ * ${functionName}实体类 ${tableName}
+ * 
+ * @author ${author}
+ * @date ${datetime}
+ */
+@Data
+#if($table.crud || $table.sub)
+public class ${ClassName} extends BaseEntity
+#elseif($table.tree)
+public class ${ClassName} extends TreeEntity
+#end
+{
+    private static final long serialVersionUID = 1L;
+
+#foreach ($column in $columns)
+#if(!$table.isSuperColumn($column.javaField))
+    /**
+     * $column.columnComment
+     */
+    private $column.javaType $column.javaField;
+
+#end
+#end
+#if($table.sub)
+    /**
+     * ${subTable.functionName}信息列表
+     */
+    private List<${subClassName}> ${subclassName}List;
+
+#end
+}

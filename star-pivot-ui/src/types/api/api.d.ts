@@ -247,4 +247,47 @@ declare namespace Api {
       postName: string
     }
   }
+
+  /** 代码生成类型 */
+  namespace Generator {
+    /** 代码生成表列表响应 */
+    interface GenTableList {
+      total: number
+      rows: GenTableListItem[]
+      pageNum: number
+      pageSize: number
+      pageCount: number
+    }
+
+    /** 代码生成表列表项 */
+    interface GenTableListItem {
+      tableId: number
+      tableName: string
+      tableComment: string
+      subTableName?: string
+      subTableFkName?: string
+      className: string
+      tplCategory?: string
+      tplWebType?: string
+      packageName?: string
+      moduleName?: string
+      businessName?: string
+      functionName?: string
+      functionAuthor?: string
+      genType?: string
+      genPath?: string
+      options?: string
+      createTime?: string
+      updateTime?: string
+      createBy?: string
+      updateBy?: string
+      remark?: string
+    }
+
+    /** 代码生成表搜索参数 */
+    type GenTableSearchParams = Partial<
+      Pick<GenTableListItem, 'tableName' | 'tableComment' | 'className'>
+    > &
+      Api.Common.CommonSearchParams
+  }
 }

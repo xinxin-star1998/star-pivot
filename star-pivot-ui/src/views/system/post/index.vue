@@ -58,7 +58,7 @@
 
   defineOptions({ name: 'Post' })
 
-  type PostListItem = Api.post.PostListItem
+  type PostListItem = Api.Post.PostListItem
 
   // 弹窗相关
   const dialogType = ref<DialogType>('add')

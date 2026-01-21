@@ -1,276 +1,173 @@
 package com.star.pivot.common.constants;
 
+import java.util.Locale;
+import io.jsonwebtoken.Claims;
+
 /**
- * 通用常量
- *
- * @author stardust
- * @since 2024-01-01
+ * 通用常量信息
+ * 
+ * @author ruoyi
  */
-public class Constants {
+public class Constants
+{
+    /**
+     * UTF-8 字符集
+     */
+    public static final String UTF8 = "UTF-8";
 
     /**
-     * 成功标记
+     * GBK 字符集
      */
-    public static final Integer SUCCESS = 200;
+    public static final String GBK = "GBK";
 
     /**
-     * 失败标记
+     * 系统语言
      */
-    public static final Integer FAIL = 500;
+    public static final Locale DEFAULT_LOCALE = Locale.SIMPLIFIED_CHINESE;
+
+    /**
+     * www主域
+     */
+    public static final String WWW = "www.";
+
+    /**
+     * http请求
+     */
+    public static final String HTTP = "http://";
+
+    /**
+     * https请求
+     */
+    public static final String HTTPS = "https://";
+
+    /**
+     * 通用成功标识
+     */
+    public static final String SUCCESS = "0";
+
+    /**
+     * 通用失败标识
+     */
+    public static final String FAIL = "1";
 
     /**
      * 登录成功
      */
-    public static final String LOGIN_SUCCESS = "登录成功";
+    public static final String LOGIN_SUCCESS = "Success";
 
     /**
-     * 退出成功
+     * 注销
      */
-    public static final String LOGOUT_SUCCESS = "退出成功";
+    public static final String LOGOUT = "Logout";
 
     /**
-     * 注册成功
+     * 注册
      */
-    public static final String REGISTER_SUCCESS = "注册成功";
+    public static final String REGISTER = "Register";
 
     /**
-     * 删除成功
+     * 登录失败
      */
-    public static final String DELETE_SUCCESS = "删除成功";
+    public static final String LOGIN_FAIL = "Error";
 
     /**
-     * 操作成功
+     * 所有权限标识
      */
-    public static final String OPERATION_SUCCESS = "操作成功";
+    public static final String ALL_PERMISSION = "*:*:*";
 
     /**
-     * 操作失败
+     * 管理员角色权限标识
      */
-    public static final String OPERATION_FAIL = "操作失败";
+    public static final String SUPER_ADMIN = "admin";
 
     /**
-     * 数据权限范围
+     * 角色权限分隔符
      */
-    public static class DataScope {
-        /**
-         * 全部数据权限
-         */
-        public static final String ALL = "1";
-
-        /**
-         * 自定数据权限
-         */
-        public static final String CUSTOM = "2";
-
-        /**
-         * 本部门数据权限
-         */
-        public static final String DEPT = "3";
-
-        /**
-         * 本部门及以下数据权限
-         */
-        public static final String DEPT_AND_CHILD = "4";
-
-        /**
-         * 仅本人数据权限
-         */
-        public static final String SELF = "5";
-    }
+    public static final String ROLE_DELIMITER = ",";
 
     /**
-     * 菜单类型
+     * 权限标识分隔符
      */
-    public static class MenuType {
-        /**
-         * 目录
-         */
-        public static final String CATALOG = "M";
-
-        /**
-         * 菜单
-         */
-        public static final String MENU = "C";
-
-        /**
-         * 按钮
-         */
-        public static final String BUTTON = "F";
-    }
+    public static final String PERMISSION_DELIMITER = ",";
 
     /**
-     * 状态
+     * 验证码有效期（分钟）
      */
-    public static class Status {
-        /**
-         * 正常
-         */
-        public static final String NORMAL = "0";
-
-        /**
-         * 停用
-         */
-        public static final String DISABLE = "1";
-    }
+    public static final Integer CAPTCHA_EXPIRATION = 2;
 
     /**
-     * 显示状态
+     * 令牌
      */
-    public static class Visible {
-        /**
-         * 显示
-         */
-        public static final String SHOW = "0";
-
-        /**
-         * 隐藏
-         */
-        public static final String HIDE = "1";
-    }
+    public static final String TOKEN = "token";
 
     /**
-     * 是否
+     * 令牌前缀
      */
-    public static class YesNo {
-        /**
-         * 是
-         */
-        public static final String YES = "Y";
-
-        /**
-         * 否
-         */
-        public static final String NO = "N";
-    }
+    public static final String TOKEN_PREFIX = "Bearer ";
 
     /**
-     * 删除标志
+     * 令牌前缀
      */
-    public static class DelFlag {
-        /**
-         * 正常
-         */
-        public static final String NORMAL = "0";
-
-        /**
-         * 删除
-         */
-        public static final String DELETE = "2";
-    }
+    public static final String LOGIN_USER_KEY = "login_user_key";
 
     /**
-     * 操作类型
+     * 用户ID
      */
-    public static class BusinessType {
-        /**
-         * 其它
-         */
-        public static final int OTHER = 0;
-
-        /**
-         * 新增
-         */
-        public static final int INSERT = 1;
-
-        /**
-         * 修改
-         */
-        public static final int UPDATE = 2;
-
-        /**
-         * 删除
-         */
-        public static final int DELETE = 3;
-
-        /**
-         * 授权
-         */
-        public static final int GRANT = 4;
-
-        /**
-         * 导出
-         */
-        public static final int EXPORT = 5;
-
-        /**
-         * 导入
-         */
-        public static final int IMPORT = 6;
-
-        /**
-         * 强退
-         */
-        public static final int FORCE = 7;
-
-        /**
-         * 生成代码
-         */
-        public static final int GENCODE = 8;
-
-        /**
-         * 清空数据
-         */
-        public static final int CLEAN = 9;
-    }
+    public static final String JWT_USERID = "userid";
 
     /**
-     * 操作状态
+     * 用户名称
      */
-    public static class OperStatus {
-        /**
-         * 正常
-         */
-        public static final int NORMAL = 0;
-
-        /**
-         * 异常
-         */
-        public static final int EXCEPTION = 1;
-    }
+    public static final String JWT_USERNAME = Claims.SUBJECT;
 
     /**
-     * 登录状态
+     * 用户头像
      */
-    public static class LoginStatus {
-        /**
-         * 成功
-         */
-        public static final String SUCCESS = "0";
-
-        /**
-         * 失败
-         */
-        public static final String FAIL = "1";
-    }
+    public static final String JWT_AVATAR = "avatar";
 
     /**
-     * 用户类型
+     * 创建时间
      */
-    public static class UserType {
-        /**
-         * 后台用户
-         */
-        public static final int BACKEND = 1;
-
-        /**
-         * 手机端用户
-         */
-        public static final int MOBILE = 2;
-    }
+    public static final String JWT_CREATED = "created";
 
     /**
-     * 超级管理员角色标识
+     * 用户权限
      */
-    public static final String ADMIN_ROLE_KEY = "admin";
+    public static final String JWT_AUTHORITIES = "authorities";
 
     /**
-     * 超级管理员用户ID
+     * 资源映射路径 前缀
      */
-    public static final Long ADMIN_USER_ID = 1L;
+    public static final String RESOURCE_PREFIX = "/profile";
 
     /**
-     * 默认密码
+     * RMI 远程方法调用
      */
-    public static final String DEFAULT_PASSWORD = "123456";
+    public static final String LOOKUP_RMI = "rmi:";
+
+    /**
+     * LDAP 远程方法调用
+     */
+    public static final String LOOKUP_LDAP = "ldap:";
+
+    /**
+     * LDAPS 远程方法调用
+     */
+    public static final String LOOKUP_LDAPS = "ldaps:";
+
+    /**
+     * 自动识别json对象白名单配置（仅允许解析的包名，范围越小越安全）
+     */
+    public static final String[] JSON_WHITELIST_STR = { "com.star.pivot" };
+
+    /**
+     * 定时任务白名单配置（仅允许访问的包名，如其他需要可以自行添加）
+     */
+    public static final String[] JOB_WHITELIST_STR = { "com.star.pivot.quartz.task"   };
+
+    /**
+     * 定时任务违规的字符
+     */
+    public static final String[] JOB_ERROR_STR = { "java.net.URL", "javax.naming.InitialContext", "org.yaml.snakeyaml",
+            "com.star.pivot.common.utils.file", "com.star.pivot.common.config", "com.star.pivot.generator" };
 }
-

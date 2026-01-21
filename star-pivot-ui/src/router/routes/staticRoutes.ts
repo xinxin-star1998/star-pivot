@@ -80,6 +80,21 @@ export const staticRoutes: AppRouteRecordRaw[] = [
         meta: { title: 'iframe' }
       }
     ]
+  },
+  // 代码生成编辑页（静态路由，避免依赖菜单权限）
+  {
+    path: '/tool/gen',
+    component: () => import('@views/index/index.vue'),
+    name: 'GenToolLayout',
+    meta: { title: '代码生成', isHideTab: true },
+    children: [
+      {
+        path: '/tool/gen/edit/:tableId',
+        name: 'GenEdit',
+        component: () => import('@views/tools/generator/modules/gen-edit.vue'),
+        meta: { title: '修改生成配置', isHideTab: true }
+      }
+    ]
   }
   // 字典数据页面路由
   // {

@@ -100,7 +100,6 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref, onMounted, nextTick } from 'vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchDeleteUser, fetchGetUserList, fetchUpdateUserStatus } from '@/api/user/user'

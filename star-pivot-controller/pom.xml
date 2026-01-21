@@ -13,11 +13,6 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>star-pivot-controller</name>
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
     <dependencies>
         <!-- Spring Boot Web Starter -->
         <dependency>
@@ -72,6 +67,11 @@
         <dependency>
             <groupId>com.star.pivot.system</groupId>
             <artifactId>star-pivot-system</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot.generator</groupId>
+            <artifactId>star-pivot-generator</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>

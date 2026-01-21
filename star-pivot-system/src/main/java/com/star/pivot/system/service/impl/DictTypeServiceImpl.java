@@ -156,6 +156,11 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
         return this.count(wrapper) == 0;
     }
 
+    @Override
+    public List<DictTypeVO> selectList() {
+        return this.list().stream().map(this::convertToVO).collect(Collectors.toList());
+    }
+
     /**
      * 转换为VO
      */
