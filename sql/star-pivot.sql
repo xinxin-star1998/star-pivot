@@ -11,7 +11,7 @@
  Target Server Version : 50743
  File Encoding         : 65001
 
- Date: 21/01/2026 15:41:20
+ Date: 23/01/2026 15:00:52
 */
 
 SET NAMES utf8mb4;
@@ -460,11 +460,12 @@ CREATE TABLE `sys_logininfor`  (
   PRIMARY KEY (`info_id`) USING BTREE,
   INDEX `idx_sys_logininfor_s`(`status`) USING BTREE,
   INDEX `idx_sys_logininfor_lt`(`login_time`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统访问记录' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统访问记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_logininfor
 -- ----------------------------
+INSERT INTO `sys_logininfor` VALUES (3, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-23 14:28:26');
 
 -- ----------------------------
 -- Table structure for sys_menu
@@ -492,7 +493,7 @@ CREATE TABLE `sys_menu`  (
   `update_time` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '备注',
   PRIMARY KEY (`menu_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 74 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '菜单权限表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 81 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '菜单权限表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_menu
@@ -503,7 +504,7 @@ INSERT INTO `sys_menu` VALUES (3, '控制台', 1, 1, 'console', '/dashboard/cons
 INSERT INTO `sys_menu` VALUES (4, '菜单管理', 2, 1, 'menu', '/system/menu', NULL, 'SystemMenu', 1, 1, 'C', '0', '0', 'system:menu:list', 'ep:menu', 'system', '2025-12-31 16:34:16', '', '2026-01-02 21:12:33', '菜单管理模块');
 INSERT INTO `sys_menu` VALUES (5, '角色管理', 2, 2, 'role', '/system/role', NULL, 'SystemRole', 1, 1, 'C', '0', '0', 'system:role:list', 'oui:app-users-roles', 'system', '2025-12-31 16:34:16', '', '2026-01-02 21:30:56', '角色管理模块');
 INSERT INTO `sys_menu` VALUES (6, '用户管理', 2, 3, 'user', '/system/user', NULL, 'SystemUser', 1, 1, 'C', '0', '0', 'system:user:list', 'mdi:user', 'system', '2025-12-31 16:34:16', '', '2026-01-02 21:31:51', '用户管理模块');
-INSERT INTO `sys_menu` VALUES (7, '个人中心', 2, 8, 'user-center', '/system/user-center', NULL, 'SystemUserCenter', 1, 1, 'C', '1', '0', 'system:user-center:list', 'ri:profile-line', 'system', '2025-12-31 16:34:16', 'admin', '2026-01-16 20:41:32', '个人中心模块');
+INSERT INTO `sys_menu` VALUES (7, '个人中心', 2, 14, 'user-center', '/system/user-center', NULL, 'SystemUserCenter', 1, 1, 'C', '1', '0', 'system:user-center:list', 'ri:profile-line', 'system', '2025-12-31 16:34:16', 'admin', '2026-01-23 13:48:52', '个人中心模块');
 INSERT INTO `sys_menu` VALUES (8, '部门管理', 2, 4, 'dept', '/system/dept', NULL, 'SystemDept', 1, 1, 'C', '0', '0', 'system:dept:list', 'ri:organization-chart', '', '2026-01-02 21:04:34', '', '2026-01-02 21:36:43', '部门管理模块');
 INSERT INTO `sys_menu` VALUES (9, '岗位管理', 2, 5, 'post', '/system/post/index', NULL, 'PostManage', 1, 1, 'C', '0', '0', 'system:post:list', 'picon:post', 'xinxin', '2026-01-04 19:23:51', 'xinxin', '2026-01-04 19:25:02', '岗位管理模块');
 INSERT INTO `sys_menu` VALUES (12, '字典管理', 2, 6, 'dict', '/system/dict/index', NULL, 'DictManage', 1, 1, 'C', '0', '0', 'system:type:list', 'arcticons:zdict', 'admin', '2026-01-05 12:28:54', 'admin', '2026-01-19 21:37:20', '字典管理模块。有：字典数据   字典类型');
@@ -542,6 +543,13 @@ INSERT INTO `sys_menu` VALUES (70, '字典数据查询', 65, 4, '', '', NULL, ''
 INSERT INTO `sys_menu` VALUES (71, '系统工具', 0, 3, '/tools', '', NULL, 'SystemTools', 1, 1, 'M', '0', '0', '', 'clarity:tools-line', 'admin', '2026-01-20 13:08:43', '', NULL, '系统工具');
 INSERT INTO `sys_menu` VALUES (72, '代码生成', 71, 1, 'generator', '/tools/generator/index', NULL, 'GenerateTools', 1, 1, 'C', '0', '0', 'tools:generator:list', 'mdi:generator-mobile', 'admin', '2026-01-20 13:15:59', 'admin', '2026-01-20 13:25:42', '代码生成');
 INSERT INTO `sys_menu` VALUES (73, '列表查询', 72, 1, '', '', NULL, '', 1, 1, 'F', '0', '0', 'tool:gen:query', '#', 'admin', '2026-01-20 14:56:43', '', NULL, '列表查询');
+INSERT INTO `sys_menu` VALUES (74, '日志管理', 2, 8, 'log', '', NULL, 'LogManager', 1, 1, 'M', '0', '0', '', 'mdi:math-log', 'admin', '2026-01-23 13:37:05', 'admin', '2026-01-23 13:47:13', '');
+INSERT INTO `sys_menu` VALUES (75, '操作日志', 74, 1, 'oper', '/system/log/oper/index', NULL, 'OperLog', 1, 1, 'C', '0', '0', 'system:log:list', 'icon-park-solid:log', 'admin', '2026-01-23 13:40:41', '', NULL, '操作日志');
+INSERT INTO `sys_menu` VALUES (76, '登录日志', 74, 2, 'login', '/system/log/login/index', NULL, 'LoginInfoLog', 1, 1, 'C', '0', '0', 'system:login:list', 'icon-park-solid:log', 'admin', '2026-01-23 13:51:37', '', NULL, '登录日志');
+INSERT INTO `sys_menu` VALUES (77, '清空日志', 75, 2, '', '', NULL, '', 1, 1, 'F', '0', '0', 'system:operlog:delete', '#', 'admin', '2026-01-23 13:57:43', '', NULL, '清空日志');
+INSERT INTO `sys_menu` VALUES (78, '日志查询', 75, 1, '', '', NULL, '', 1, 1, 'F', '0', '0', 'system:operlog:query', '#', 'admin', '2026-01-23 13:58:02', '', NULL, '日志查询');
+INSERT INTO `sys_menu` VALUES (79, '日志查询', 76, 1, '', '', NULL, '', 1, 1, 'F', '0', '0', 'system:logininfor:query', '#', 'admin', '2026-01-23 14:24:26', '', NULL, '日志查询');
+INSERT INTO `sys_menu` VALUES (80, '日志删除', 76, 2, '', '', NULL, '', 1, 1, 'F', '0', '0', 'system:logininfor:delete', '#', 'admin', '2026-01-23 14:24:41', '', NULL, '日志删除');
 
 -- ----------------------------
 -- Table structure for sys_notice
@@ -593,11 +601,15 @@ CREATE TABLE `sys_oper_log`  (
   INDEX `idx_sys_oper_log_bt`(`business_type`) USING BTREE,
   INDEX `idx_sys_oper_log_s`(`status`) USING BTREE,
   INDEX `idx_sys_oper_log_ot`(`oper_time`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志记录' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 70 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_oper_log
 -- ----------------------------
+INSERT INTO `sys_oper_log` VALUES (66, '操作日志', 3, 'com.star.pivot.controller.SysOperLogController.clean()', 'DELETE', 1, 'admin', '研发部门', '/api/sys/operlog/clean', '0:0:0:0:0:0:0:1', '', '', '{\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1769151362853}', 0, '', '2026-01-23 14:56:03', 2);
+INSERT INTO `sys_oper_log` VALUES (67, '操作日志', 0, 'com.star.pivot.controller.SysOperLogController.pageList()', 'POST', 1, 'admin', '研发部门', '/api/sys/operlog/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=1, rows=[OperLogVO(operId=66, title=操作日志, businessType=3, method=com.star.pivot.controller.SysOperLogController.clean(), requestMethod=DELETE, operatorType=1, operName=admin, deptName=研发部门, operUrl=/api/sys/operlog/clean, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=, jsonResult={\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1769151362853}, status=0, errorMsg=, operTime=2026-01-23T14:56:03, costTime=2)], pageNum=1, pageSize=20, pageCount=1), timestamp=1769151362878)', 0, '', '2026-01-23 14:56:03', 8);
+INSERT INTO `sys_oper_log` VALUES (68, '操作日志', 0, 'com.star.pivot.controller.SysOperLogController.pageList()', 'POST', 1, 'admin', '研发部门', '/api/sys/operlog/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=2, rows=[OperLogVO(operId=67, title=操作日志, businessType=0, method=com.star.pivot.controller.SysOperLogController.pageList(), requestMethod=POST, operatorType=1, operName=admin, deptName=研发部门, operUrl=/api/sys/operlog/pageList, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}], jsonResult=Result(code=200, message=操作成功, data=PageResponse(total=1, rows=[OperLogVO(operId=66, title=操作日志, businessType=3, method=com.star.pivot.controller.SysOperLogController.clean(), requestMethod=DELETE, operatorType=1, operName=admin, deptName=研发部门, operUrl=/api/sys/operlog/clean, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=, jsonResult={\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1769151362853}, status=0, errorMsg=, operTime=2026-01-23T14:56:03, costTime=2)], pageNum=1, pageSize=20, pageCount=1), timestamp=1769151362878), status=0, errorMsg=, operTime=2026-01-23T14:56:03, costTime=8), OperLogVO(operId=66, title=操作日志, businessType=3, method=com.star.pivot.controller.SysOperLogController.clean(), requestMethod=DELETE, operatorType=1, operName=admin, deptName=研发部门, operUrl=/api/sys/operlog/clean, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=, jsonResult={\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1769151362853}, status=0, errorMsg=, operTime=2026-01-23T14:56:03, costTime=2)], pageNum=1, pageSize=20, pageCount=1), timestamp=1769151368691)', 0, '', '2026-01-23 14:56:09', 4);
+INSERT INTO `sys_oper_log` VALUES (69, '操作日志', 0, 'com.star.pivot.controller.SysOperLogController.pageList()', 'POST', 1, 'admin', '研发部门', '/api/sys/operlog/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=3, rows=[OperLogVO(operId=68, title=操作日志, businessType=0, method=com.star.pivot.controller.SysOperLogController.pageList(), requestMethod=POST, operatorType=1, operName=admin, deptName=研发部门, operUrl=/api/sys/operlog/pageList, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}], jsonResult=Result(code=200, message=操作成功, data=PageResponse(total=2, rows=[OperLogVO(operId=67, title=操作日志, businessType=0, method=com.star.pivot.controller.SysOperLogController.pageList(), requestMethod=POST, operatorType=1, operName=admin, deptName=研发部门, operUrl=/api/sys/operlog/pageList, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}], jsonResult=Result(code=200, message=操作成功, data=PageResponse(total=1, rows=[OperLogVO(operId=66, title=操作日志, businessType=3, method=com.star.pivot.controller.SysOperLogController.clean(), requestMethod=DELETE, operatorType=1, operName=admin, deptName=研发部门, operUrl=/api/sys/operlog/clean, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=, jsonResult={\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1769151362853}, status=0, errorMsg=, operTime=2026-01-23T14:56:03, costTime=2)], pageNum=1, pageSize=20, pageCount=1), timestamp=1769151362878), status=0, errorMsg=, operTime=2026-01-23T14:56:03, costTime=8), OperLogVO(operId=66, title=操作日志, businessType=3, method=com.star.pivot.controller.SysOperLogController.clean(), requestMethod=DELETE, operatorType=1, operName=admin, deptName=研发部门, operUrl=/api/sys/operlog/clean, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=, jsonResult={\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1769151362853}, status=...', 0, '', '2026-01-23 14:56:19', 5);
 
 -- ----------------------------
 -- Table structure for sys_post
@@ -752,11 +764,11 @@ CREATE TABLE `sys_user`  (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, 103, 'admin', '超级管理员', '00', 'admin@163.com', '18518712878', '0', 'http://localhost:9000/star-pivot-avatar/user/1/avatar_0df9cd7e-3403-4e86-aa24-527d8dd68773.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin%2F20260114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260114T113329Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=7330e3bcb3d80c0967a82bde163d6fccb92e14b45d2ab6fdc20b56910f5b2c7d', '$2a$10$FTKzzUPrLDbNfKoWn9e1y.B6D0MX0HeHBPHFRfcx3R2Ane73gMbf6', '0', '0', '0:0:0:0:0:0:0:1', '2025-12-29 22:16:38', '2026-01-04 18:13:47', 'admin', '2025-12-28 13:46:34', 'admin', '2026-01-14 19:33:30', '超级管理员');
-INSERT INTO `sys_user` VALUES (2, 105, 'user', '用户管理员', '00', 'user@qq.com', '15666666666', '1', 'http://localhost:9000/star-pivot-avatar/user/2/avatar_2948fb7b-ff9f-46e9-8fb7-7f5a956e5f51.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin%2F20260114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260114T113322Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=2e00ceeeb8dbc30cad89b42afd667a763dc17f769065c80de944d5b5f06984f8', '$2a$12$eYocwR0zs3iWKl7gsvHVQ.KLDTWvXqecm.29aXPi3IAF.mmkARVR.', '0', '0', '0:0:0:0:0:0:0:1', '2025-12-29 22:08:54', '2025-12-28 13:46:34', 'admin', '2025-12-28 13:46:34', 'admin', '2026-01-14 19:33:23', '测试员--用户管理员');
-INSERT INTO `sys_user` VALUES (100, 100, 'xinxin', '辛鑫', '00', '1092203240@qq.com', '18834581124', '0', 'http://localhost:9000/star-pivot-avatar/user/100/avatar_efca1f13-3fb3-4c06-a761-3ce0e250ff6e.webp?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin%2F20260114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260114T120100Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=b8ae2de0bed6fb76360b036318d7d009a646938c185d84900636345905c85ceb', '$2a$12$eYocwR0zs3iWKl7gsvHVQ.KLDTWvXqecm.29aXPi3IAF.mmkARVR.', '0', '0', '', NULL, NULL, 'admin', '2026-01-04 15:34:36', 'admin', '2026-01-14 20:01:02', '作者，超级管理员');
-INSERT INTO `sys_user` VALUES (101, 105, 'test', '测试用户', '00', '123@qq.com', '18825454547', '0', 'http://localhost:9000/star-pivot-avatar/user/101/avatar_9b01cf60-86a4-40de-8c61-9dfae181742f.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin%2F20260114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260114T113246Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=debaa1ed00322d30dbc78c2bad4db0d43eeb866ba2ad624536069d9d0b14d943', '$2a$10$YdqAWweActfkWOaWEjz9p.bBWqNWVdT9EQ2OHcUODgFg.f3ma13Va', '0', '0', '', NULL, NULL, 'admin', '2026-01-04 16:50:12', 'admin', '2026-01-14 19:32:49', '测试用户专属');
-INSERT INTO `sys_user` VALUES (102, 107, 'zhangsan', '张三', '00', 'zhangsan@qq.com', '18812345678', '0', 'http://localhost:9000/star-pivot-avatar/user/102/avatar_1f9474bd-8188-4e50-b6c9-48631319193a.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin%2F20260114%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260114T120048Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=d7dfe0f5c626b629920d98ff7e6c44692b39c19e47ebb2e323c151897e22daf4', '$2a$10$cmueflWIca3U8waJO3gSv.HAEhTFvygR7lGdMto630Nbs2GcXXTpy', '0', '0', '', NULL, NULL, 'admin', '2026-01-14 18:04:51', 'admin', '2026-01-14 20:00:51', '张三-普通员工');
+INSERT INTO `sys_user` VALUES (1, 103, 'admin', '超级管理员', '00', 'admin@163.com', '18518712878', '0', 'http://star-pivot.oss-cn-beijing.aliyuncs.com/user/1/avatar_37095539-08cc-4144-939d-3bfc21544285.png?Expires=1769755973&OSSAccessKeyId=LTAI5tG8uSJeTeuRYEY4x3nG&Signature=GBduTIFnse2SvajNx39DIjiKpQs%3D', '$2a$10$FTKzzUPrLDbNfKoWn9e1y.B6D0MX0HeHBPHFRfcx3R2Ane73gMbf6', '0', '0', '0:0:0:0:0:0:0:1', '2025-12-29 22:16:38', '2026-01-04 18:13:47', 'admin', '2025-12-28 13:46:34', 'admin', '2026-01-23 14:52:54', '超级管理员');
+INSERT INTO `sys_user` VALUES (2, 105, 'user', '用户管理员', '00', 'user@qq.com', '15666666666', '1', 'http://star-pivot.oss-cn-beijing.aliyuncs.com/user/2/avatar_e69f4419-e074-46d5-8f21-9fe3d9ee3d11.webp?Expires=1769755975&OSSAccessKeyId=LTAI5tG8uSJeTeuRYEY4x3nG&Signature=aWBPH6OmGOIeDUT%2BTy6fiwewNl4%3D', '$2a$12$eYocwR0zs3iWKl7gsvHVQ.KLDTWvXqecm.29aXPi3IAF.mmkARVR.', '0', '0', '0:0:0:0:0:0:0:1', '2025-12-29 22:08:54', '2025-12-28 13:46:34', 'admin', '2025-12-28 13:46:34', 'admin', '2026-01-23 14:52:56', '测试员--用户管理员');
+INSERT INTO `sys_user` VALUES (100, 100, 'xinxin', '辛鑫', '00', '1092203240@qq.com', '18834581124', '0', 'http://star-pivot.oss-cn-beijing.aliyuncs.com/user/100/avatar_ffd558a6-581e-4ea2-9ad6-ae00241e18d2.webp?Expires=1769755971&OSSAccessKeyId=LTAI5tG8uSJeTeuRYEY4x3nG&Signature=NEMgsQG4whmFPMIOEkFKqiyVybM%3D', '$2a$12$eYocwR0zs3iWKl7gsvHVQ.KLDTWvXqecm.29aXPi3IAF.mmkARVR.', '0', '0', '', NULL, NULL, 'admin', '2026-01-04 15:34:36', 'admin', '2026-01-23 14:52:52', '作者，超级管理员');
+INSERT INTO `sys_user` VALUES (101, 105, 'test', '测试用户', '00', '123@qq.com', '18825454547', '0', 'http://star-pivot.oss-cn-beijing.aliyuncs.com/user/101/avatar_d8469ca8-ae83-4766-af77-5178181294bd.png?Expires=1769755969&OSSAccessKeyId=LTAI5tG8uSJeTeuRYEY4x3nG&Signature=r7KC5854d4qRfxCDUhGhk0Ztnro%3D', '$2a$10$YdqAWweActfkWOaWEjz9p.bBWqNWVdT9EQ2OHcUODgFg.f3ma13Va', '0', '0', '', NULL, NULL, 'admin', '2026-01-04 16:50:12', 'admin', '2026-01-23 14:52:50', '测试用户专属');
+INSERT INTO `sys_user` VALUES (102, 107, 'zhangsan', '张三', '00', 'zhangsan@qq.com', '18812345678', '1', 'http://star-pivot.oss-cn-beijing.aliyuncs.com/user/102/avatar_bfe7b78b-3e54-4a14-be8f-85e74c7abbcb.webp?Expires=1769755945&OSSAccessKeyId=LTAI5tG8uSJeTeuRYEY4x3nG&Signature=45TyVskk5t6gF44mLNV7mfoik7M%3D', '$2a$10$cmueflWIca3U8waJO3gSv.HAEhTFvygR7lGdMto630Nbs2GcXXTpy', '0', '0', '', NULL, NULL, 'admin', '2026-01-14 18:04:51', 'admin', '2026-01-23 14:52:29', '张三-普通员工');
 
 -- ----------------------------
 -- Table structure for sys_user_post
@@ -768,16 +780,16 @@ CREATE TABLE `sys_user_post`  (
   `post_id` bigint(20) NOT NULL COMMENT '岗位ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `idx_user_post`(`user_id`, `post_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 133 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户与岗位关联表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 149 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户与岗位关联表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_user_post
 -- ----------------------------
-INSERT INTO `sys_user_post` VALUES (130, 1, 1);
-INSERT INTO `sys_user_post` VALUES (129, 2, 2);
-INSERT INTO `sys_user_post` VALUES (132, 100, 1);
-INSERT INTO `sys_user_post` VALUES (128, 101, 4);
-INSERT INTO `sys_user_post` VALUES (131, 102, 4);
+INSERT INTO `sys_user_post` VALUES (147, 1, 1);
+INSERT INTO `sys_user_post` VALUES (148, 2, 2);
+INSERT INTO `sys_user_post` VALUES (146, 100, 1);
+INSERT INTO `sys_user_post` VALUES (145, 101, 4);
+INSERT INTO `sys_user_post` VALUES (144, 102, 4);
 
 -- ----------------------------
 -- Table structure for sys_user_role
@@ -789,15 +801,15 @@ CREATE TABLE `sys_user_role`  (
   `role_id` bigint(20) NOT NULL COMMENT '角色ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `idx_user_role`(`user_id`, `role_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 135 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户与角色关联表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 151 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户与角色关联表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_user_role
 -- ----------------------------
-INSERT INTO `sys_user_role` VALUES (132, 1, 1);
-INSERT INTO `sys_user_role` VALUES (131, 2, 2);
-INSERT INTO `sys_user_role` VALUES (134, 100, 1);
-INSERT INTO `sys_user_role` VALUES (130, 101, 2);
-INSERT INTO `sys_user_role` VALUES (133, 102, 2);
+INSERT INTO `sys_user_role` VALUES (149, 1, 1);
+INSERT INTO `sys_user_role` VALUES (150, 2, 2);
+INSERT INTO `sys_user_role` VALUES (148, 100, 1);
+INSERT INTO `sys_user_role` VALUES (147, 101, 2);
+INSERT INTO `sys_user_role` VALUES (146, 102, 2);
 
 SET FOREIGN_KEY_CHECKS = 1;
