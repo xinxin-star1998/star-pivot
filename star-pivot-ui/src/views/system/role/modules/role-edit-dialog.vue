@@ -388,12 +388,19 @@
 
     try {
       await roleForm.value.validate()
-      // 获取选中的菜单ID
-      const menuIds = menuTreeRef.value?.getCheckedKeys() || []
+      // 获取选中的菜单ID和半选中的菜单ID
+      const checkedKeys = menuTreeRef.value?.getCheckedKeys() || []
+      const halfCheckedKeys = menuTreeRef.value?.getHalfCheckedKeys() || []
+      // 合并完全选中和半选中的节点ID，确保父级菜单ID被传递
+      const allMenuKeys = [...checkedKeys, ...halfCheckedKeys]
+      // 去重并过滤出数字类型的ID
+      const menuIds = Array.from(new Set(allMenuKeys)).filter(
+        (key: any) => typeof key === 'number'
+      ) as number[]
 
       const submitData = {
         ...form,
-        menuIds: menuIds.filter((key: any) => typeof key === 'number') as number[]
+        menuIds
       }
 
       // 根据弹窗类型调用对应的API

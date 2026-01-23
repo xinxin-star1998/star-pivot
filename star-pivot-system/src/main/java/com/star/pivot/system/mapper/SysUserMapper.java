@@ -23,11 +23,7 @@ import java.util.List;
 @Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
 
-    IPage<SysUser> selectPageList(Page<SysUser> page, @Param("userReqBo") UserReqBo userReqBo,
-                                   @Param("dataScope") String dataScope,
-                                   @Param("deptIds") List<Long> deptIds,
-                                   @Param("userId") Long userId,
-                                   @Param("needFilter") Boolean needFilter);
+    IPage<SysUser> selectPageList(Page<SysUser> page, @Param("userReqBo") UserReqBo userReqBo);
 
     List<SysRole> getRolesByUserId(@Param("userId") Long userId);
 

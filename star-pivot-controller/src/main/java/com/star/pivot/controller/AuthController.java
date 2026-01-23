@@ -256,12 +256,9 @@ public class AuthController {
         List<SysRole> roles = sysUserService.getRolesByUserId(user.getUserId());
         
         List<SysMenu> permissions;
-        // 检查用户是否拥有admin角色或全部数据权限，如果有则查询所有菜单树
-        boolean isAdmin = roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
-        boolean hasAllDataScope = roles.stream()
-                .anyMatch(role -> Constants.DataScope.ALL.equals(role.getDataScope()));
-        if (isAdmin || hasAllDataScope) {
-            // 如果用户角色包含admin或拥有全部数据权限，则查询所有菜单树
+        // 检查用户是否拥有admin角色，如果有则查询所有菜单树
+        if (roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()))) {
+            // 如果用户角色包含admin，则查询所有菜单树
             permissions = sysMenuService.menuTree();
         } else {
             // 否则只查询用户有权限的菜单

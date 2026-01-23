@@ -68,24 +68,17 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         log.debug("用户角色列表，userId: {}, roles: {}", userId, roles);
         
         List<SysMenu> allMenu;
-        // 获取用户角色对应的菜单
-        // 1. roleKey == admin 时，查询全部菜单
-        // 2. 或者有角色的 dataScope == '1'（全部数据权限）时，也查询全部菜单
+        // 获取用户角色对应的菜单，roleKey == admin 时，查询全部菜单
         boolean isAdmin = roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
-        boolean hasAllDataScope = roles.stream()
-                .anyMatch(role -> Constants.DataScope.ALL.equals(role.getDataScope()));
-        boolean shouldQueryAllMenu = isAdmin || hasAllDataScope;
+        log.debug("是否为admin用户，userId: {}, isAdmin: {}", userId, isAdmin);
         
-        log.debug("用户菜单权限判断，userId: {}, isAdmin: {}, hasAllDataScope: {}, shouldQueryAllMenu: {}", 
-                userId, isAdmin, hasAllDataScope, shouldQueryAllMenu);
-        
-        if (shouldQueryAllMenu) {
-            // admin用户或拥有全部数据权限的用户，查询所有可见且正常的菜单（用于构建树结构）
+        if (isAdmin) {
+            // admin用户查询所有可见且正常的菜单（用于构建树结构）
             LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(SysMenu::getStatus, Constants.Status.NORMAL)
                     .orderByAsc(SysMenu::getOrderNum);
             allMenu = this.list(queryWrapper);
-            log.debug("查询到所有菜单，userId: {}, menuCount: {}", userId, allMenu != null ? allMenu.size() : 0);
+            log.debug("admin用户查询到所有菜单，userId: {}, menuCount: {}", userId, allMenu != null ? allMenu.size() : 0);
         } else {
             // 获取用户角色对应的菜单
             allMenu = sysUserService.getMenuByUserId(userId);

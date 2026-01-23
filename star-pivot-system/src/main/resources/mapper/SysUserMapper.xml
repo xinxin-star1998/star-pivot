@@ -69,47 +69,6 @@
             <if test="userReqBo.deptId != null">
                 and u.dept_id = #{userReqBo.deptId}
             </if>
-            <!-- 数据权限过滤 -->
-            <if test="needFilter != null and needFilter == true">
-                <choose>
-                    <!-- 仅本人数据权限 -->
-                    <when test="dataScope != null and dataScope == '5'">
-                        <if test="userId != null">
-                            and u.user_id = #{userId}
-                        </if>
-                    </when>
-                    <!-- 仅本人+部门权限（取并集） -->
-                    <when test="dataScope != null and dataScope == '6'">
-                        and (
-                            <if test="userId != null">
-                                u.user_id = #{userId}
-                            </if>
-                            <if test="userId != null and deptIds != null and deptIds.size() > 0">
-                                or
-                            </if>
-                            <if test="deptIds != null and deptIds.size() > 0">
-                                u.dept_id in
-                                <foreach collection="deptIds" item="deptId" open="(" separator="," close=")">
-                                    #{deptId}
-                                </foreach>
-                            </if>
-                        )
-                    </when>
-                    <!-- 本部门数据权限、本部门及以下数据权限、自定数据权限 -->
-                    <when test="dataScope != null and (dataScope == '2' or dataScope == '3' or dataScope == '4')">
-                        <if test="deptIds != null and deptIds.size() > 0">
-                            and u.dept_id in
-                            <foreach collection="deptIds" item="deptId" open="(" separator="," close=")">
-                                #{deptId}
-                            </foreach>
-                        </if>
-                    </when>
-                    <!-- 其他情况：无权限，返回空结果 -->
-                    <otherwise>
-                        and 1 = 0
-                    </otherwise>
-                </choose>
-            </if>
         </where>
         order by u.create_time desc
     </select>

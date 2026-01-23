@@ -18,7 +18,6 @@ import com.star.pivot.system.mapper.*;
 import com.star.pivot.system.service.AccountLockService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.UserPermissionCacheService;
-import com.star.pivot.system.utils.DataScopeHelper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,11 +52,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private UserPermissionCacheService userPermissionCacheService;
     @Autowired
     private AccountLockService accountLockService;
-    @Autowired
-    private RoleDeptMapper roleDeptMapper;
-    @Autowired
-    private SysDeptMapper sysDeptMapper;
-    
     /**
      * 用户分页查询
      *
@@ -67,36 +61,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public PageResponse<UserVO> pageList(UserReqBo userReqBo) {
         PageResponse<UserVO> pageResponse = new PageResponse<>();
-        
-        // 获取当前用户的数据权限范围
-        Long currentUserId = SecurityContextUtils.getUserId();
-        SysUser currentUser = null;
-        List<SysRole> roles = null;
-        DataScopeHelper.DataScopeResult dataScopeResult = null;
-        
-        if (currentUserId != null) {
-            currentUser = this.getById(currentUserId);
-            if (currentUser != null) {
-                roles = this.getRolesByUserId(currentUserId);
-                dataScopeResult = DataScopeHelper.getDataScope(currentUser, roles, roleDeptMapper, sysDeptMapper);
-            }
-        }
-        
-        // 如果未获取到数据权限结果，创建一个默认的（需要过滤但无权限）
-        if (dataScopeResult == null) {
-            dataScopeResult = new DataScopeHelper.DataScopeResult(null, new ArrayList<>(), currentUserId, true);
-        }
-        
         // 分页查询
         Page<SysUser> page = new Page<>(userReqBo.getPageNum(), userReqBo.getPageSize());
-        IPage<SysUser> pageList = sysUserMapper.selectPageList(
-                page, 
-                userReqBo,
-                dataScopeResult.getDataScope(),
-                dataScopeResult.getDeptIds(),
-                dataScopeResult.getUserId(),
-                dataScopeResult.isNeedFilter()
-        );
+        IPage<SysUser> pageList = sysUserMapper.selectPageList(page, userReqBo);
         
         List<SysUser> userList = pageList.getRecords();
         List<UserVO> voList = convertToVOList(userList);
