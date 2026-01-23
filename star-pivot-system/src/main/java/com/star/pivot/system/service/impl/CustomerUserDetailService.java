@@ -63,12 +63,16 @@ public class CustomerUserDetailService implements UserDetailsService {
         // 查询用户角色
         List<SysRole> roles = roleMapper.selectRolesByUserId(user.getUserId());
         
-        // 遍历roles，如果roleKey === admin，查询所有权限菜单
+        // 检查用户是否拥有admin角色或dataScope=1的角色，如果有则查询所有权限菜单
+        boolean isAdmin = roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
+        // 检查是否有角色的dataScope为1（全部数据权限）
+        boolean hasAllDataScope = roles.stream().anyMatch(role -> Constants.DataScope.ALL.equals(role.getDataScope()));
+        
         List<SysMenu> permissions;
-        if (roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()))) {
+        if (isAdmin || hasAllDataScope) {
             // 获取所有菜单（用于构建树结构）
             permissions = sysMenuMapper.selectList(null);
-            log.debug("Admin用户，加载所有菜单权限: {}", username);
+            log.debug("Admin用户或拥有全部数据权限的用户，加载所有菜单权限: {}", username);
         } else {
             // 获取用户权限
             permissions = sysMenuMapper.selectPermissionsByUserId(user.getUserId());

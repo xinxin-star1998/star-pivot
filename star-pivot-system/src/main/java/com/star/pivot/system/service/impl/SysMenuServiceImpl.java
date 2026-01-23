@@ -70,15 +70,18 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         List<SysMenu> allMenu;
         // 获取用户角色对应的菜单，roleKey == admin 时，查询全部菜单
         boolean isAdmin = roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
+        // 检查是否有角色的dataScope为1（全部数据权限）
+        boolean hasAllDataScope = roles.stream().anyMatch(role -> Constants.DataScope.ALL.equals(role.getDataScope()));
         log.debug("是否为admin用户，userId: {}, isAdmin: {}", userId, isAdmin);
+        log.debug("是否有全部数据权限，userId: {}, hasAllDataScope: {}", userId, hasAllDataScope);
         
-        if (isAdmin) {
-            // admin用户查询所有可见且正常的菜单（用于构建树结构）
+        if (isAdmin || hasAllDataScope) {
+            // admin用户或拥有全部数据权限的用户查询所有可见且正常的菜单（用于构建树结构）
             LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(SysMenu::getStatus, Constants.Status.NORMAL)
                     .orderByAsc(SysMenu::getOrderNum);
             allMenu = this.list(queryWrapper);
-            log.debug("admin用户查询到所有菜单，userId: {}, menuCount: {}", userId, allMenu != null ? allMenu.size() : 0);
+            log.debug("用户查询到所有菜单，userId: {}, menuCount: {}", userId, allMenu != null ? allMenu.size() : 0);
         } else {
             // 获取用户角色对应的菜单
             allMenu = sysUserService.getMenuByUserId(userId);
