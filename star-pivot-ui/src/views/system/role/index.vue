@@ -58,10 +58,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ButtonMoreItem } from '@/components/core/forms/art-button-more/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchDeleteRole, fetchGetRoleList } from '@/api/role/role'
-  import ArtButtonMore from '@/components/core/forms/art-button-more/index.vue'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import RoleSearch from './modules/role-search.vue'
   import RoleEditDialog from './modules/role-edit-dialog.vue'
   import RolePermissionDialog from './modules/role-permission-dialog.vue'
@@ -135,7 +134,7 @@
         {
           prop: 'remark',
           label: '角色描述',
-          minWidth: 150,
+          minWidth: 50,
           showOverflowTooltip: true
         },
         {
@@ -159,36 +158,49 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 80,
+          width: 200,
           fixed: 'right',
-          formatter: (row) =>
-            h('div', [
-              h(ArtButtonMore, {
-                list: [
-                  {
-                    key: 'permission',
-                    label: '分配菜单',
-                    icon: 'ri:user-3-line',
-                    // 分配菜单视为角色编辑权限的一部分
-                    auth: 'system:role:edit'
-                  },
-                  {
-                    key: 'edit',
-                    label: '编辑角色',
-                    icon: 'ri:edit-2-line',
-                    auth: 'system:role:edit'
-                  },
-                  {
-                    key: 'delete',
-                    label: '删除角色',
-                    icon: 'ri:delete-bin-4-line',
-                    color: '#f56c6c',
-                    auth: 'system:role:delete'
-                  }
-                ],
-                onClick: (item: ButtonMoreItem) => buttonMoreClick(item, row)
-              })
-            ])
+          formatter: (row) => {
+            const actions: any[] = []
+
+            // 分配菜单按钮权限：system:role:edit
+            if (hasAuth('system:role:edit')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  icon: 'ri:user-3-line',
+                  iconClass: 'bg-primary/12 text-primary',
+                  onClick: () => showPermissionDialog(row)
+                })
+              )
+            }
+
+            // 编辑角色按钮权限：system:role:edit
+            if (hasAuth('system:role:edit')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'edit',
+                  onClick: () => showDialog('edit', row)
+                })
+              )
+            }
+
+            // 删除角色按钮权限：system:role:delete
+            if (hasAuth('system:role:delete')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'delete',
+                  onClick: () => deleteRole(row)
+                })
+              )
+            }
+
+            // 无任何操作权限时返回空占位
+            if (actions.length === 0) {
+              return h('span', { style: 'color: #999' }, '')
+            }
+
+            return h('div', actions)
+          }
         }
       ]
     }
@@ -216,20 +228,6 @@
     getData()
   }
 
-  const buttonMoreClick = (item: ButtonMoreItem, row: RoleListItem) => {
-    switch (item.key) {
-      case 'permission':
-        showPermissionDialog(row)
-        break
-      case 'edit':
-        showDialog('edit', row)
-        break
-      case 'delete':
-        deleteRole(row)
-        break
-    }
-  }
-
   const showPermissionDialog = (roleId: RoleListItem) => {
     permissionDialog.value = true
     currentRoleData.value = roleId
@@ -245,7 +243,7 @@
         await fetchDeleteRole([row.roleId])
         refreshData()
       })
-      .catch((error) => {
+      .catch((error: any) => {
         // 用户取消操作时不显示错误（Element Plus 会 reject，但这是正常的用户行为）
         // API 调用失败的错误已在 HTTP 拦截器中统一处理并显示错误消息
         if (import.meta.env.DEV && error !== 'cancel') {
