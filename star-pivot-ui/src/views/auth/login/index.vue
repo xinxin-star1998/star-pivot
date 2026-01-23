@@ -163,6 +163,11 @@
   const handleSubmit = async () => {
     if (!formRef.value) return
 
+    // 防止重复提交：如果正在加载中，直接返回
+    if (loading.value) {
+      return
+    }
+
     try {
       // 表单验证
       const valid = await formRef.value.validate()
@@ -176,6 +181,7 @@
         return
       }
 
+      // 立即设置 loading 状态，防止重复点击
       loading.value = true
 
       const verifyRes = await fetchVerifyCaptcha({

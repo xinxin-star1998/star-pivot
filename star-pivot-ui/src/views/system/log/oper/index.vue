@@ -1,73 +1,21 @@
 <!-- 操作日志页面 -->
 <template>
   <div class="oper-log-page art-full-height">
-    <ElCard class="art-table-card" shadow="never">
-      <!-- 搜索栏 -->
-      <div class="search-container">
-        <ElForm :model="searchForm" :inline="true" class="search-form">
-          <ElFormItem label="模块标题">
-            <ElInput
-              v-model="searchForm.title"
-              placeholder="请输入模块标题"
-              clearable
-              style="width: 200px"
-              @keyup.enter="handleSearch"
-            />
-          </ElFormItem>
-          <ElFormItem label="业务类型">
-            <ElSelect
-              v-model="searchForm.businessType"
-              placeholder="请选择业务类型"
-              clearable
-              style="width: 150px"
-            >
-              <ElOption label="其它" :value="0" />
-              <ElOption label="新增" :value="1" />
-              <ElOption label="修改" :value="2" />
-              <ElOption label="删除" :value="3" />
-            </ElSelect>
-          </ElFormItem>
-          <ElFormItem label="操作人员">
-            <ElInput
-              v-model="searchForm.operName"
-              placeholder="请输入操作人员"
-              clearable
-              style="width: 150px"
-              @keyup.enter="handleSearch"
-            />
-          </ElFormItem>
-          <ElFormItem label="操作状态">
-            <ElSelect
-              v-model="searchForm.status"
-              placeholder="请选择操作状态"
-              clearable
-              style="width: 150px"
-            >
-              <ElOption label="正常" :value="0" />
-              <ElOption label="异常" :value="1" />
-            </ElSelect>
-          </ElFormItem>
-          <ElFormItem label="操作时间">
-            <ElDatePicker
-              v-model="dateRange"
-              type="datetimerange"
-              range-separator="至"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
-              format="YYYY-MM-DD HH:mm:ss"
-              value-format="YYYY-MM-DD HH:mm:ss"
-              style="width: 400px"
-            />
-          </ElFormItem>
-          <ElFormItem>
-            <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
-            <ElButton @click="resetSearchParams" v-ripple>重置</ElButton>
-          </ElFormItem>
-        </ElForm>
+    <!-- 搜索栏 -->
+    <ElCollapseTransition>
+      <div v-show="showSearchBar">
+        <OperLogSearch v-model="searchForm" @search="handleSearch" @reset="resetSearchParams" />
       </div>
+    </ElCollapseTransition>
 
+    <ElCard class="art-table-card" shadow="never" :style="cardStyle">
       <!-- 表格头部 -->
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
+      <ArtTableHeader
+        v-model:columns="columnChecks"
+        v-model:showSearchBar="showSearchBar"
+        :loading="loading"
+        @refresh="refreshData"
+      >
         <template #left>
           <ElSpace wrap>
             <ElButton
@@ -107,31 +55,36 @@
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
   import { fetchGetOperLogList, fetchDeleteOperLog, fetchCleanOperLog } from '@/api/log/operlog'
-  import { ElMessageBox, ElMessage, ElTag, ElButton } from 'element-plus'
+  import { ElMessageBox, ElMessage, ElTag, ElButton, ElCollapseTransition } from 'element-plus'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
   import type { OperLogListItem, OperLogSearchParams } from '@/types/api/operlog'
   import OperLogDetail from './modules/oper-log-detail.vue'
+  import OperLogSearch from './modules/oper-log-search.vue'
 
   defineOptions({ name: 'OperLog' })
 
   const { hasAuth } = useAuth()
 
-  // 搜索表单
-  const searchForm = ref<OperLogSearchParams>({
+  // 搜索栏显示状态
+  const showSearchBar = ref(true)
+
+  // 卡片样式（根据搜索栏显示状态动态调整）
+  const cardStyle = computed(() => ({
+    'margin-top': showSearchBar.value ? '12px' : '0'
+  }))
+
+  // 搜索表单（包含 dateRange 用于搜索组件）
+  const searchForm = ref<OperLogSearchParams & { dateRange?: [string, string] | null }>({
     title: undefined,
     businessType: undefined,
     operName: undefined,
     status: undefined,
     startTime: undefined,
     endTime: undefined,
-    pageNum: 1,
-    pageSize: 20
+    dateRange: null
   })
-
-  // 日期范围
-  const dateRange = ref<[string, string] | null>(null)
 
   // 选中行
   const selectedRows = ref<OperLogListItem[]>([])
@@ -156,7 +109,6 @@
     core: {
       apiFn: fetchGetOperLogList,
       apiParams: {
-        pageNum: 1,
         pageSize: 20
       },
       immediate: true, // 确保页面加载时自动获取数据
@@ -277,16 +229,14 @@
 
   /**
    * 搜索
+   * @param params 搜索参数（已由搜索组件处理日期范围转换）
    */
-  const handleSearch = () => {
-    if (dateRange.value && dateRange.value.length === 2) {
-      searchForm.value.startTime = dateRange.value[0]
-      searchForm.value.endTime = dateRange.value[1]
-    } else {
-      searchForm.value.startTime = undefined
-      searchForm.value.endTime = undefined
+  const handleSearch = (params?: OperLogSearchParams) => {
+    // 如果传入了参数，使用传入的参数（搜索组件已处理日期范围）
+    if (params) {
+      Object.assign(searchForm.value, params)
     }
-    searchForm.value.pageNum = 1
+    // 使用 getData 方法（实际是 getDataByPage），会自动重置到第一页并清空当前搜索条件的缓存
     getData(searchForm.value)
   }
 
@@ -301,10 +251,8 @@
       status: undefined,
       startTime: undefined,
       endTime: undefined,
-      pageNum: 1,
-      pageSize: 20
+      dateRange: null
     }
-    dateRange.value = null
     resetTableSearchParams()
     getData(searchForm.value)
   }
@@ -406,16 +354,5 @@
 <style scoped lang="scss">
   .oper-log-page {
     padding: 20px;
-  }
-
-  .search-container {
-    margin-bottom: 20px;
-    padding: 20px;
-    background: #f5f7fa;
-    border-radius: 4px;
-  }
-
-  .search-form {
-    margin: 0;
   }
 </style>
