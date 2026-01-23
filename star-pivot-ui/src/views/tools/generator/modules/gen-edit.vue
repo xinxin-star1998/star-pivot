@@ -293,7 +293,9 @@
       const menuData = (menuRes as any)?.data ?? menuRes
       parentMenus.value = Array.isArray(menuData) ? menuData : []
     } catch (error) {
-      console.error('获取代码生成信息失败：', error)
+      if (import.meta.env.DEV) {
+        console.error('获取代码生成信息失败：', error)
+      }
       ElMessage.error('获取代码生成信息失败')
     } finally {
       loading.value = false

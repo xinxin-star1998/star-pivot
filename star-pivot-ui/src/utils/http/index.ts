@@ -84,7 +84,9 @@ async function tryRefreshToken(): Promise<string | null> {
 
     return null
   } catch (error) {
-    console.error('[HTTP] 刷新令牌失败:', error)
+    if (import.meta.env.DEV) {
+      console.error('[HTTP] 刷新令牌失败:', error)
+    }
     return null
   }
 }

@@ -51,6 +51,7 @@ import { useWorktabStore } from '@/store/modules/worktab'
 import { fetchGetUserInfo } from '@/api/auth'
 import { ApiStatus } from '@/utils/http/status'
 import { isHttpError } from '@/utils/http/error'
+import { safeLog, safeWarn } from '@/utils'
 import {
   RouteRegistry,
   MenuProcessor,
@@ -281,21 +282,21 @@ async function handleDynamicRoutes(
 
   try {
     // 1. 获取用户信息
-    console.log('[RouteGuard] 开始获取用户信息...')
+    safeLog('[RouteGuard] 开始获取用户信息...')
     await fetchUserInfo()
-    console.log('[RouteGuard] 用户信息获取成功')
+    safeLog('[RouteGuard] 用户信息获取成功')
 
     // 2. 获取菜单数据
-    console.log('[RouteGuard] 开始获取菜单数据...')
+    safeLog('[RouteGuard] 开始获取菜单数据...')
     const menuList = await menuProcessor.getMenuList()
-    console.log('[RouteGuard] 菜单数据获取成功，菜单数量:', menuList.length)
+    safeLog('[RouteGuard] 菜单数据获取成功，菜单数量:', menuList.length)
 
     // 3. 验证菜单数据
     if (!menuProcessor.validateMenuList(menuList)) {
       console.error('[RouteGuard] 菜单数据验证失败，菜单列表为空或格式错误')
       // 如果菜单列表为空，可能是用户没有菜单权限，跳转到403页面
       if (menuList.length === 0) {
-        console.warn('[RouteGuard] 用户没有菜单权限，跳转到403页面')
+        safeWarn('[RouteGuard] 用户没有菜单权限，跳转到403页面')
         routeInitInProgress = false
         closeLoading()
         next({ name: 'Exception403', replace: true })
@@ -308,9 +309,9 @@ async function handleDynamicRoutes(
     DynamicRouteAppender.appendDynamicRoutes(menuList)
 
     // 4. 注册动态路由
-    console.log('[RouteGuard] 开始注册动态路由...')
+    safeLog('[RouteGuard] 开始注册动态路由...')
     routeRegistry?.register(menuList)
-    console.log('[RouteGuard] 动态路由注册成功')
+    safeLog('[RouteGuard] 动态路由注册成功')
 
     // 5. 保存菜单数据到 store
     const menuStore = useMenuStore()
@@ -340,7 +341,7 @@ async function handleDynamicRoutes(
       closeLoading()
 
       // 输出警告信息
-      console.warn(`[RouteGuard] 用户无权限访问路径: ${to.path}，已跳转到首页`)
+      safeWarn(`[RouteGuard] 用户无权限访问路径: ${to.path}，已跳转到首页`)
 
       // 直接跳转到首页
       next({
@@ -369,7 +370,7 @@ async function handleDynamicRoutes(
 
     // 401 错误：axios 拦截器已处理退出登录，取消当前导航
     if (isUnauthorizedError(error)) {
-      console.warn('[RouteGuard] 401未授权错误，已取消导航')
+      safeWarn('[RouteGuard] 401未授权错误，已取消导航')
       // 重置状态，允许重新登录后再次初始化
       routeInitInProgress = false
       next(false)

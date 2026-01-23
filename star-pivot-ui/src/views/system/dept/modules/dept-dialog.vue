@@ -198,7 +198,6 @@
       // 编辑模式：获取完整的部门详情
       try {
         const deptDetail = await fetchGetDeptById(props.deptData.deptId)
-        console.log('部门详情数据:', deptDetail)
         if (deptDetail) {
           Object.assign(formData, {
             deptId: deptDetail.deptId,

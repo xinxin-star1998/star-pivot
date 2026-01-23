@@ -5,7 +5,9 @@ import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.system.domain.dto.RoleDTO;
 import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
 import com.star.pivot.system.domain.dto.RoleQueryDTO;
+import com.star.pivot.system.domain.dto.UserRoleDTO;
 import com.star.pivot.system.domain.entity.SysRole;
+import com.star.pivot.system.domain.entity.UserRole;
 
 import java.util.List;
 
@@ -34,5 +36,9 @@ public interface SysRoleService extends IService<SysRole> {
     boolean assignPermission(RolePermissionAssignDTO rolePermissionAssignDTO);
 
     List<Long> getMenuIdsByRoleId(Long roleId);
+
+    boolean assignUser(UserRoleDTO userRoleDTO);
+
+    boolean cancelUser(UserRole userRole);
 }
 

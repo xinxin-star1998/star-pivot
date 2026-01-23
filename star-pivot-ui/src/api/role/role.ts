@@ -99,3 +99,56 @@ export function fetchGetRoleDeptIds(roleId: number) {
     url: `/api/sys/role/${roleId}/deptIds`
   })
 }
+type AssignUserReqBo = {
+  roleId: string | number
+  userName?: string
+  phonenumber?: string
+  pageNum?: number
+  pageSize?: number
+}
+/**
+ * 当前角色ID已分配的用户列表（分页）
+ */
+export function fetchGetUserListByRoleId(data: AssignUserReqBo) {
+  return request.post<Api.SystemManage.UserList>({
+    url: '/api/sys/role/allocatedList',
+    data
+  })
+}
+//当前角色id未分配的用户 分页 unallocatedList
+export function fetchGetUserListNotInByRoleId(data: AssignUserReqBo) {
+  return request.post<Api.SystemManage.UserList>({
+    url: '/api/sys/role/unallocatedList',
+    data
+  })
+}
+type UserRoleDTO = {
+  roleId: string | number
+  userIds: string[] | number[]
+}
+/**
+ * 分配用户
+ */
+export function fetchAssignUser(data: UserRoleDTO) {
+  return request.post({
+    url: '/api/sys/role/assignUser',
+    data,
+    showSuccessMessage: true
+  })
+}
+
+type UnassignUserDTO = {
+  userId: number
+  roleId: string | number
+}
+
+/**
+ * 取消用户授权
+ */
+export function fetchCancelUser(data: UnassignUserDTO) {
+  return request.del({
+    url: '/api/sys/role/cancelUser',
+    data,
+    showSuccessMessage: true
+  })
+}

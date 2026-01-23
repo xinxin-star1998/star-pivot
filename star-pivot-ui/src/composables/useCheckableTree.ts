@@ -1,4 +1,4 @@
-import { computed, nextTick, ref } from 'vue'
+// Vue API 通过 unplugin-auto-import 自动导入，无需显式导入
 
 export interface UseCheckableTreeOptions {
   keyField: string

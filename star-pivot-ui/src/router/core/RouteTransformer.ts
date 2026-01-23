@@ -77,9 +77,11 @@ export class RouteTransformer {
           this.handleNormalRoute(converted, undefined, depth)
         } else if (children && children.length > 0) {
           // 目录类型且有子菜单，允许使用 Layout（支持多级路由）
-          console.log(
-            `[RouteTransformer] 目录 "${route.meta?.title || route.path}" (depth: ${depth}) 有子菜单，使用 Layout`
-          )
+          if (import.meta.env.DEV) {
+            console.log(
+              `[RouteTransformer] 目录 "${route.meta?.title || route.path}" (depth: ${depth}) 有子菜单，使用 Layout`
+            )
+          }
           // 标记这是 Layout 组件
           converted.meta.isLayout = true
           this.handleNormalRoute(converted, component as string, depth)

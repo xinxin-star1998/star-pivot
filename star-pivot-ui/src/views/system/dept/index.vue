@@ -287,7 +287,6 @@
    * @param params 参数
    */
   const handleSearch = (params: Record<string, any>) => {
-    console.log('搜索参数:', params)
     Object.assign(searchForm.value, params)
   }
 
@@ -313,7 +312,6 @@
    * 显示部门弹窗
    */
   const showDialog = (type: DialogType, row?: SysDept): void => {
-    console.log('打开弹窗:', { type, row })
     dialogType.value = type
     if (type === 'add' && row) {
       // 新增子部门，设置父部门ID

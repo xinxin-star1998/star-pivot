@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.star.pivot.system.domain.bo.UserReqBo;
+import com.star.pivot.system.domain.dto.AssignUserReqBo;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -21,10 +23,18 @@ import java.util.List;
 @Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
 
-    IPage<SysUser> selectPageList(Page<SysUser> page, @Param("userReqBo") UserReqBo userReqBo);
+    IPage<SysUser> selectPageList(Page<SysUser> page, @Param("userReqBo") UserReqBo userReqBo,
+                                   @Param("dataScope") String dataScope,
+                                   @Param("deptIds") List<Long> deptIds,
+                                   @Param("userId") Long userId,
+                                   @Param("needFilter") Boolean needFilter);
 
     List<SysRole> getRolesByUserId(@Param("userId") Long userId);
 
     List<SysMenu> getMenuByUserId(@Param("userId") Long userId);
+
+    IPage<SysUser> getUserListByRoleId(Page<SysUser> page, @Param("assignUserReqBo") AssignUserReqBo assignUserReqBo);
+
+    IPage<SysUser> unallocatedList(Page<SysUser> page, AssignUserReqBo assignUserReqBo);
 }
 

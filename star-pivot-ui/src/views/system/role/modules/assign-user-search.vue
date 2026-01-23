@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+  import { ref, computed } from 'vue'
+
   interface Props {
     modelValue: Record<string, any>
   }
@@ -35,30 +37,17 @@
   // 表单配置
   const formItems = computed(() => [
     {
-      label: '部门名称',
-      key: 'deptName',
+      label: '用户名称',
+      key: 'userName',
       type: 'input',
-      placeholder: '请输入部门名称',
+      placeholder: '请输入用户名称',
       clearable: true
     },
     {
-      label: '负责人',
-      key: 'leader',
+      label: '手机号',
+      key: 'phonenumber',
       type: 'input',
-      props: { placeholder: '请输入负责人' }
-    },
-    {
-      label: '状态',
-      key: 'status',
-      type: 'select',
-      props: {
-        placeholder: '请选择状态',
-        clearable: true,
-        options: [
-          { label: '正常', value: '0' },
-          { label: '停用', value: '1' }
-        ]
-      }
+      props: { placeholder: '请输入手机号', maxlength: '11' }
     }
   ])
 

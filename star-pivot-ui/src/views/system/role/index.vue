@@ -47,10 +47,9 @@
       :role-data="currentRoleData"
       @success="refreshData"
     />
-
     <!-- 菜单权限弹窗 -->
-    <RolePermissionDialog
-      v-model="permissionDialog"
+    <AssignDataScopeDialog
+      v-model="assignDataScopeDialog"
       :role-data="currentRoleData"
       @success="refreshData"
     />
@@ -60,18 +59,20 @@
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
   import { fetchDeleteRole, fetchGetRoleList } from '@/api/role/role'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtButtonMore, {
+    type ButtonMoreItem
+  } from '@/components/core/forms/art-button-more/index.vue'
   import RoleSearch from './modules/role-search.vue'
   import RoleEditDialog from './modules/role-edit-dialog.vue'
-  import RolePermissionDialog from './modules/role-permission-dialog.vue'
+  import AssignDataScopeDialog from './modules/assign-dataScope-dialog.vue'
   import { ElTag, ElMessageBox } from 'element-plus'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import { useAuth } from '@/hooks/core/useAuth'
+  import { useRouter } from 'vue-router'
 
   defineOptions({ name: 'Role' })
 
-  const { hasAuth } = useAuth()
+  const router = useRouter()
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -87,8 +88,10 @@
   const showSearchBar = ref(false)
 
   const dialogVisible = ref(false)
-  const permissionDialog = ref(false)
+  const assignDataScopeDialog = ref(false)
   const currentRoleData = ref<RoleListItem | undefined>(undefined)
+
+  const dialogType = ref<'add' | 'edit'>('add')
 
   const {
     columns,
@@ -161,52 +164,61 @@
           width: 200,
           fixed: 'right',
           formatter: (row) => {
-            const actions: any[] = []
+            const menuList: ButtonMoreItem[] = [
+              {
+                key: 'assignDataScope',
+                label: '数据权限',
+                icon: 'ri:shield-keyhole-line',
+                color: 'var(--el-color-primary)',
+                auth: 'system:role:assignDataScope'
+              },
+              {
+                key: 'edit',
+                label: '编辑角色',
+                icon: 'ri:pencil-line',
+                color: 'var(--el-color-info)',
+                auth: 'system:role:edit'
+              },
+              {
+                key: 'delete',
+                label: '删除角色',
+                icon: 'ri:delete-bin-5-line',
+                color: 'var(--el-color-danger)',
+                auth: 'system:role:delete'
+              },
+              {
+                key: 'assignUser',
+                label: '分配用户',
+                icon: 'ri:user-line',
+                color: 'var(--el-color-primary)',
+                auth: 'system:role:allocatedList'
+              }
+            ]
 
-            // 分配菜单按钮权限：system:role:edit
-            if (hasAuth('system:role:edit')) {
-              actions.push(
-                h(ArtButtonTable, {
-                  icon: 'ri:user-3-line',
-                  iconClass: 'bg-primary/12 text-primary',
-                  onClick: () => showPermissionDialog(row)
-                })
-              )
-            }
-
-            // 编辑角色按钮权限：system:role:edit
-            if (hasAuth('system:role:edit')) {
-              actions.push(
-                h(ArtButtonTable, {
-                  type: 'edit',
-                  onClick: () => showDialog('edit', row)
-                })
-              )
-            }
-
-            // 删除角色按钮权限：system:role:delete
-            if (hasAuth('system:role:delete')) {
-              actions.push(
-                h(ArtButtonTable, {
-                  type: 'delete',
-                  onClick: () => deleteRole(row)
-                })
-              )
-            }
-
-            // 无任何操作权限时返回空占位
-            if (actions.length === 0) {
-              return h('span', { style: 'color: #999' }, '')
-            }
-
-            return h('div', actions)
+            return h(ArtButtonMore, {
+              list: menuList,
+              onClick: (item: ButtonMoreItem) => {
+                switch (item.key) {
+                  case 'assignDataScope':
+                    showAssignDataScopeDialog(row)
+                    break
+                  case 'edit':
+                    showDialog('edit', row)
+                    break
+                  case 'delete':
+                    deleteRole(row)
+                    break
+                  case 'assignUser':
+                    assignUser(row)
+                    break
+                }
+              }
+            })
           }
         }
       ]
     }
   })
-
-  const dialogType = ref<'add' | 'edit'>('add')
 
   const showDialog = (type: 'add' | 'edit', row?: RoleListItem) => {
     dialogVisible.value = true
@@ -228,9 +240,9 @@
     getData()
   }
 
-  const showPermissionDialog = (roleId: RoleListItem) => {
-    permissionDialog.value = true
-    currentRoleData.value = roleId
+  const showAssignDataScopeDialog = (row: RoleListItem) => {
+    assignDataScopeDialog.value = true
+    currentRoleData.value = row
   }
 
   const deleteRole = (row: RoleListItem) => {
@@ -250,5 +262,19 @@
           console.error('删除角色失败:', error)
         }
       })
+  }
+
+  /**
+   * 分配用户
+   * @param row 角色数据
+   */
+  const assignUser = (row: RoleListItem) => {
+    // 跳转到分配用户页面，使用 name 方式跳转以支持 params
+    router.push({
+      name: 'AssignUser',
+      params: {
+        roleId: row.roleId
+      }
+    })
   }
 </script>

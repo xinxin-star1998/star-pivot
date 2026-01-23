@@ -187,7 +187,6 @@
       // 编辑模式：获取完整的用户详情（包含 roleIds 和 postIds）
       try {
         const userDetail = await fetchGetUserById(row.userId)
-        console.log('用户详情数据:', userDetail)
         if (userDetail) {
           // 处理角色ID：可能是 roleIds 数组，也可能是 userRoles 数组
           let roleIdsArray: any[] = []
@@ -202,7 +201,6 @@
 
           // 转换为字符串数组，与 roleCode 格式一致
           const roleIds = roleIdsArray.map((id: any) => id?.toString() || '').filter(Boolean)
-          console.log('处理后的角色ID:', roleIds)
 
           // 处理岗位ID
           const postIds = Array.isArray((userDetail as any).postIds)
@@ -224,8 +222,6 @@
             postIds,
             remark: userDetail.remark || ''
           })
-
-          console.log('表单数据已设置，roleIds:', formData.roleIds)
         }
       } catch (error) {
         console.error('获取用户详情失败:', error)

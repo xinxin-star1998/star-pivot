@@ -105,7 +105,6 @@
       // 编辑模式：获取完整的岗位详情
       try {
         const postDetail = await fetchGetPostById(props.postData.postId)
-        console.log('岗位详情数据:', postDetail)
         if (postDetail) {
           Object.assign(formData, {
             postId: postDetail.postId || 0,

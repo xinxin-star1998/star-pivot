@@ -60,6 +60,7 @@ public class GenController {
     /**
      * 查询数据库列表
      */
+    @PreAuthorize("hasAuthority('tool:gen:query')")
     @PostMapping("/db/list")
     public Result<PageResponse<GenTableVO>> dbTableList(@RequestBody GenTableQueryDTO queryDTO)
     {
@@ -69,6 +70,7 @@ public class GenController {
     /**
      * 查询数据表字段列表
      */
+    @PreAuthorize("hasAuthority('tool:gen:query')")
     @GetMapping(value = "/column/{tableId}")
     public Result<List<GenTableColumn>> columnList(@PathVariable Long tableId)
     {
@@ -79,6 +81,7 @@ public class GenController {
     /**
      * 导入表结构（保存）
      */
+    @PreAuthorize("hasAuthority('tool:gen:import')")
     @PostMapping("/importTable")
     public Result<?> importTableSave(@RequestBody Map<String, String> body)
     {
@@ -97,6 +100,7 @@ public class GenController {
     /**
      * 获取代码生成信息
      */
+    @PreAuthorize("hasAuthority('tool:gen:query')")
     @GetMapping(value = "/{tableId}")
     public Result<Map<String,Object>> getInfo(@PathVariable Long tableId)
     {
@@ -191,6 +195,7 @@ public class GenController {
     /**
      * 生成代码（下载方式）
      */
+    @PreAuthorize("hasAuthority('tool:gen:create')")
     @GetMapping("/download/{tableName}")
     public void download(HttpServletResponse response, @PathVariable("tableName") String tableName) throws IOException
     {

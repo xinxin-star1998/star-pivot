@@ -8,15 +8,17 @@ import com.star.pivot.common.domain.Constants;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.exception.BusinessException;
 import com.star.pivot.common.utils.SecurityUtils;
+import com.star.pivot.security.utils.SecurityContextUtils;
 import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;
+import com.star.pivot.system.domain.dto.AssignUserReqBo;
 import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.*;
 import com.star.pivot.system.mapper.*;
 import com.star.pivot.system.service.AccountLockService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.UserPermissionCacheService;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.system.utils.DataScopeHelper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,6 +53,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private UserPermissionCacheService userPermissionCacheService;
     @Autowired
     private AccountLockService accountLockService;
+    @Autowired
+    private RoleDeptMapper roleDeptMapper;
+    @Autowired
+    private SysDeptMapper sysDeptMapper;
+    
     /**
      * 用户分页查询
      *
@@ -60,9 +67,36 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public PageResponse<UserVO> pageList(UserReqBo userReqBo) {
         PageResponse<UserVO> pageResponse = new PageResponse<>();
+        
+        // 获取当前用户的数据权限范围
+        Long currentUserId = SecurityContextUtils.getUserId();
+        SysUser currentUser = null;
+        List<SysRole> roles = null;
+        DataScopeHelper.DataScopeResult dataScopeResult = null;
+        
+        if (currentUserId != null) {
+            currentUser = this.getById(currentUserId);
+            if (currentUser != null) {
+                roles = this.getRolesByUserId(currentUserId);
+                dataScopeResult = DataScopeHelper.getDataScope(currentUser, roles, roleDeptMapper, sysDeptMapper);
+            }
+        }
+        
+        // 如果未获取到数据权限结果，创建一个默认的（需要过滤但无权限）
+        if (dataScopeResult == null) {
+            dataScopeResult = new DataScopeHelper.DataScopeResult(null, new ArrayList<>(), currentUserId, true);
+        }
+        
         // 分页查询
         Page<SysUser> page = new Page<>(userReqBo.getPageNum(), userReqBo.getPageSize());
-        IPage<SysUser> pageList = sysUserMapper.selectPageList(page, userReqBo);
+        IPage<SysUser> pageList = sysUserMapper.selectPageList(
+                page, 
+                userReqBo,
+                dataScopeResult.getDataScope(),
+                dataScopeResult.getDeptIds(),
+                dataScopeResult.getUserId(),
+                dataScopeResult.isNeedFilter()
+        );
         
         List<SysUser> userList = pageList.getRecords();
         List<UserVO> voList = convertToVOList(userList);
@@ -256,6 +290,39 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 批量更新
         this.updateBatchById(userList);
         return true;
+    }
+
+    /**
+     * 根据角色ID查询用户列表
+     */
+    @Override
+    public PageResponse<SysUser> getUserListByRoleId(AssignUserReqBo assignUserReqBo) {
+        PageResponse<SysUser> pageResponse = new PageResponse<>();
+        // 分页查询
+        Page<SysUser> page = new Page<>(assignUserReqBo.getPageNum(), assignUserReqBo.getPageSize());
+        IPage<SysUser> pageList = sysUserMapper.getUserListByRoleId(page,assignUserReqBo);
+        // 转换为分页结果
+        pageResponse.setTotal(pageList.getTotal());
+        pageResponse.setRows(pageList.getRecords());
+        pageResponse.setPageNum(assignUserReqBo.getPageNum().longValue());
+        pageResponse.setPageSize(assignUserReqBo.getPageSize().longValue());
+        pageResponse.setPageCount(pageList.getPages());
+        return pageResponse;
+    }
+
+    @Override
+    public PageResponse<SysUser> unallocatedList(AssignUserReqBo assignUserReqBo) {
+        PageResponse<SysUser> pageResponse = new PageResponse<>();
+        // 分页查询
+        Page<SysUser> page = new Page<>(assignUserReqBo.getPageNum(), assignUserReqBo.getPageSize());
+        IPage<SysUser> pageList = sysUserMapper.unallocatedList(page,assignUserReqBo);
+        // 转换为分页结果
+        pageResponse.setTotal(pageList.getTotal());
+        pageResponse.setRows(pageList.getRecords());
+        pageResponse.setPageNum(assignUserReqBo.getPageNum().longValue());
+        pageResponse.setPageSize(assignUserReqBo.getPageSize().longValue());
+        pageResponse.setPageCount(pageList.getPages());
+        return pageResponse;
     }
 
     /**

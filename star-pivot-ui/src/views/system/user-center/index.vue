@@ -330,7 +330,8 @@
     confirmPassword: [
       { required: true, message: '请再次输入新密码', trigger: 'blur' },
       {
-        validator: (rule, value, callback) => {
+        // 自定义校验：两次输入密码必须一致
+        validator: (_rule: any, value: string, callback: (error?: Error) => void) => {
           if (value !== pwdForm.newPassword) {
             callback(new Error('两次输入的密码不一致'))
           } else {
@@ -357,34 +358,23 @@
   const getUserDetail = async () => {
     let currentUserId: number | undefined = userInfo.value?.userId
 
-    // 打印当前用户信息，用于调试
-    console.log('当前用户信息:', userInfo.value)
-    console.log('用户信息类型:', typeof userInfo.value)
-    console.log('用户信息键:', userInfo.value ? Object.keys(userInfo.value) : 'null')
-    console.log('userId 值:', currentUserId)
-    console.log('userId 类型:', typeof currentUserId)
-
     // 如果用户信息中没有 userId，尝试重新获取用户信息
     if (!currentUserId) {
       loading.value = true
       try {
-        console.log('用户信息中没有 userId，尝试重新获取用户信息...')
         const responseData = await fetchGetUserInfo()
-        console.log('重新获取的完整响应数据:', responseData)
-        console.log('响应数据类型:', typeof responseData)
-        console.log('响应数据键:', responseData ? Object.keys(responseData) : 'null')
 
         // 后端返回的数据结构是 { user: {...}, roles: [...], permissions: [...] }
         // 用户信息在 user 字段中
         const userInfoData = (responseData as any)?.user || responseData
-        console.log('提取的用户信息:', userInfoData)
-        console.log('用户信息中的 userId:', userInfoData?.userId)
 
         if (userInfoData?.userId) {
           // 构造符合 Api.Auth.UserInfo 格式的数据
           const permissions = (responseData as any)?.permissions || []
           const roles = (responseData as any)?.roles || []
-          const formattedUserInfo: Api.Auth.UserInfo = {
+          // 注意：项目内对 userInfo 的运行时结构存在历史兼容写法，这里保持现有字段不变
+          // 类型层面通过 any 兼容，避免影响现有逻辑
+          const formattedUserInfo = {
             userId: userInfoData.userId,
             userName: userInfoData.userName || '',
             nickName: userInfoData.nickName,
@@ -392,21 +382,24 @@
             avatar: userInfoData.avatar,
             buttons: permissions.map((p: any) => p.perms || ''),
             roles: roles.map((r: any) => r.roleKey || r.roleName || '')
-          }
+          } as any
           // 更新 store 中的用户信息
           userStore.setUserInfo(formattedUserInfo)
           // 直接使用获取到的 userId，不依赖computed更新
           currentUserId = userInfoData.userId
-          console.log('用户信息已更新，userId:', currentUserId)
         } else {
           ElMessage.warning('未获取到用户ID，请重新登录')
-          console.error('重新获取的用户信息中没有 userId:', userInfoData)
-          console.error('完整响应数据:', responseData)
+          if (import.meta.env.DEV) {
+            console.error('重新获取的用户信息中没有 userId:', userInfoData)
+            console.error('完整响应数据:', responseData)
+          }
           loading.value = false
           return
         }
       } catch (error) {
-        console.error('获取用户信息失败:', error)
+        if (import.meta.env.DEV) {
+          console.error('获取用户信息失败:', error)
+        }
         ElMessage.error('获取用户信息失败，请重新登录')
         loading.value = false
         return
@@ -416,16 +409,16 @@
     // 确保有 userId 后再获取详情
     if (!currentUserId) {
       ElMessage.warning('未获取到用户ID，请重新登录')
-      console.error('最终检查：仍然没有 userId')
+      if (import.meta.env.DEV) {
+        console.error('最终检查：仍然没有 userId')
+      }
       loading.value = false
       return
     }
 
     loading.value = true
     try {
-      console.log('使用 userId 获取用户详情:', currentUserId)
       const res = await fetchGetUserById(currentUserId)
-      console.log('获取到的用户详情:', res)
       if (res) {
         userDetail.value = res
         // 填充表单数据
@@ -443,7 +436,9 @@
         savedFormData.value = { ...form }
       }
     } catch (error) {
-      console.error('获取用户详情失败:', error)
+      if (import.meta.env.DEV) {
+        console.error('获取用户详情失败:', error)
+      }
       ElMessage.error('获取用户详情失败')
     } finally {
       loading.value = false
@@ -456,7 +451,7 @@
   const saveUserInfo = async () => {
     if (!ruleFormRef.value) return
 
-    await ruleFormRef.value.validate(async (valid) => {
+    await ruleFormRef.value.validate(async (valid: boolean) => {
       if (valid) {
         saving.value = true
         try {
@@ -477,7 +472,9 @@
           })
           isEdit.value = false
         } catch (error) {
-          console.error('保存用户信息失败:', error)
+          if (import.meta.env.DEV) {
+            console.error('保存用户信息失败:', error)
+          }
           ElMessage.error('保存用户信息失败')
         } finally {
           saving.value = false
@@ -530,7 +527,7 @@
   const savePassword = async () => {
     if (!pwdFormRef.value) return
 
-    await pwdFormRef.value.validate(async (valid) => {
+    await pwdFormRef.value.validate(async (valid: boolean) => {
       if (valid) {
         if (!userDetail.value?.userId) {
           ElMessage.warning('未获取到用户ID')
@@ -550,7 +547,9 @@
           isEditPwd.value = false
           pwdFormRef.value?.clearValidate()
         } catch (error) {
-          console.error('修改密码失败:', error)
+          if (import.meta.env.DEV) {
+            console.error('修改密码失败:', error)
+          }
           ElMessage.error('修改密码失败')
         } finally {
           savingPwd.value = false

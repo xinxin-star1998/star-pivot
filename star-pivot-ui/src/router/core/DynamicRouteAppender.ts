@@ -37,6 +37,9 @@ export class DynamicRouteAppender {
     // 追加字典数据明细路由
     this.appendDictDataRoute(menuList)
 
+    // 追加分配用户路由
+    this.appendAssignUserRoute(menuList)
+
     // 可以在这里继续追加其他前端动态路由
 
     return menuList
@@ -69,7 +72,9 @@ export class DynamicRouteAppender {
       }
 
       menuList.push(userCenterRoute)
-      console.log('[DynamicRouteAppender] 已动态追加个人中心路由')
+      if (import.meta.env.DEV) {
+        console.log('[DynamicRouteAppender] 已动态追加个人中心路由')
+      }
     }
   }
 
@@ -111,7 +116,47 @@ export class DynamicRouteAppender {
       }
 
       menuList.push(dictDataRoute)
-      console.log('[DynamicRouteAppender] 已动态追加字典数据明细路由')
+      if (import.meta.env.DEV) {
+        console.log('[DynamicRouteAppender] 已动态追加字典数据明细路由')
+      }
+    }
+  }
+
+  /**
+   * 追加「分配用户」路由（数据库不存菜单）
+   * @param menuList 菜单列表
+   */
+  static appendAssignUserRoute(menuList: AppRouteRecord[]): void {
+    const existsAssignUser = menuList.some(
+      (route: AppRouteRecord) =>
+        route.name === 'AssignUser' || route.path?.includes('/system/role/assign-user')
+    )
+
+    if (!existsAssignUser) {
+      const assignUserRoute: AppRouteRecord = {
+        // 分配用户页面路径，带上动态参数 roleId
+        path: '/system/role/assign-user/:roleId',
+        name: 'AssignUser',
+        // 注意：这里以 `/` 开头，对应视图文件 `src/views/system/role/assign-user.vue`
+        component: '/system/role/assign-user',
+        meta: {
+          title: '分配用户',
+          // 不在菜单树中显示，只通过点击"分配用户"按钮进入
+          isHide: true,
+          // 指定父级菜单路径，用于面包屑、高亮等
+          parentPath: '/system/role',
+          keepAlive: true,
+          isHideTab: true
+        },
+        menuType: 'C',
+        status: '0',
+        orderNum: 1001
+      }
+
+      menuList.push(assignUserRoute)
+      if (import.meta.env.DEV) {
+        console.log('[DynamicRouteAppender] 已动态追加分配用户路由')
+      }
     }
   }
 }

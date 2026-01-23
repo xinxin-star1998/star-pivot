@@ -200,7 +200,6 @@
    * @param params 参数
    */
   const handleSearch = (params: Record<string, any>) => {
-    console.log(params)
     // 搜索参数赋值
     Object.assign(searchParams, params)
     getData()
@@ -210,7 +209,6 @@
    * 显示岗位弹窗
    */
   const showDialog = (type: DialogType, row?: PostListItem): void => {
-    console.log('打开弹窗:', { type, row })
     dialogType.value = type
     currentPostData.value = row || {}
     nextTick(() => {
@@ -222,7 +220,6 @@
    * 删除岗位
    */
   const deletePost = (row: PostListItem): void => {
-    console.log('删除岗位:', row)
     ElMessageBox.confirm(`确定要删除岗位"${row.postName}"吗？`, '删除岗位', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -283,7 +280,6 @@
    */
   const handleSelectionChange = (selection: PostListItem[]): void => {
     selectedRows.value = selection
-    console.log('选中行数据:', selectedRows.value)
   }
 
   /**
