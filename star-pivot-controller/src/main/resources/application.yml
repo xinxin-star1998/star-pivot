@@ -1,57 +1,36 @@
-server:
-  port: 8080
-  servlet:
-    context-path: /api
+# Spring Boot 父配置文件
+# 通过 spring.profiles.active 控制激活哪个环境配置文件
+# 可选值: dev, test, prod
+# 也可以通过启动参数指定: --spring.profiles.active=dev
 
 spring:
   application:
     name: permission-system
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev} # 默认激活开发环境，可通过环境变量或启动参数覆盖
   servlet:
     multipart:
       max-file-size: 10MB # 限制上传文件大小
       max-request-size: 10MB
-  
   # 禁用数据库初始化依赖检测（修复MyBatis-Plus与Spring Boot 3.x兼容性问题）
   sql:
     init:
       mode: never
-  
-  # 允许循环引用
-#  main:
-#    allow-circular-references: true
-  
-  # 数据源配置
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    # 生产环境请启用SSL：useSSL=true&requireSSL=true
-    url: ${DB_URL:jdbc:mysql://localhost:3306/star-pivot?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
-  
-
-  
   # Jackson 配置
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
-    # Redis配置
-  data:
-    redis:
-      # 默认使用本地 Redis，避免误连外网或生产环境
-      host: ${REDIS_HOST:127.0.0.1}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-      database: ${REDIS_DATABASE:0}
-      timeout: ${REDIS_TIMEOUT:2000ms}
 
-# MyBatis-Plus 配置
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# MyBatis-Plus 公共配置
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    # 生产环境建议使用 none，开发环境可以使用 stdout
-    log-impl: ${MYBATIS_LOG_IMPL:org.apache.ibatis.logging.stdout.StdOutImpl}
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: com.star.pivot.system.domain,com.star.pivot.generator.domain
   global-config:
@@ -61,32 +40,23 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# JWT 配置
+# JWT 公共配置
 jwt:
-  # 生产环境请通过环境变量 JWT_SECRET 配置，不要直接写在配置文件中
-  secret: ${JWT_SECRET:Dj4G8272xJONkOqkn1pM8q1n+U5MPLrRUCjXun3/Yeo=}
   expiration: ${JWT_EXPIRATION:86400000} # 24小时，单位：毫秒
 
-# CORS 配置
+# CORS 公共配置
 cors:
-  # 生产环境请通过环境变量 CORS_ALLOWED_ORIGINS 配置具体域名，多个用逗号分隔
-  # 开发环境可以使用 * 允许所有域名
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+  # 具体允许的域名在各环境配置文件中设置
 
-# 日志配置
+# 日志公共配置
 logging:
   level:
-    com.star.pivot: ${LOG_LEVEL:info}
-    org.springframework.security: ${SECURITY_LOG_LEVEL:warn}
-    org.apache.ibatis: ${SQL_LOG_LEVEL:OFF}
+    root: info
 
-
+# MinIO 公共配置
 minio:
-  endpoint: http://localhost:9000 # API 地址
-  access-key: admin # 账号
-  secret-key: admin123456 # 密码
   bucket-name: star-pivot-avatar # 存储桶名称（需提前创建）
-  url-prefix: http://localhost:9000 # 访问文件的前缀（前端展示用）
+
 # 代码生成配置
 gen:
   # 作者

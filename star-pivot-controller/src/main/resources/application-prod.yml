@@ -1,52 +1,42 @@
-server:
-  port: 8080
-  servlet:
-    context-path: /api
+# 生产环境配置文件
+# 激活方式: spring.profiles.active=prod
+# 注意: 生产环境所有敏感信息必须通过环境变量配置，不要使用默认值
 
 spring:
-  application:
-    name: permission-system
-  profiles:
-    active: prod
-  
-  # 数据源配置 - 生产环境必须使用环境变量
+  # 数据源配置 - 生产环境必须使用环境变量，且必须启用SSL
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    # 生产环境必须启用SSL
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    # 生产环境必须启用SSL，URL格式: jdbc:mysql://host:port/database?useSSL=true&requireSSL=true&serverTimezone=GMT%2B8
+    url: ${DB_URL} # 必须通过环境变量配置
+    username: ${DB_USERNAME} # 必须通过环境变量配置
+    password: ${DB_PASSWORD} # 必须通过环境变量配置
+  
+  # Redis配置 - 生产环境
+  data:
+    redis:
+      host: ${REDIS_HOST} # 必须通过环境变量配置
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD} # 生产环境建议设置密码
+      database: ${REDIS_DATABASE:0}
+      timeout: ${REDIS_TIMEOUT:2000ms}
 
-  # Jackson 配置
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: GMT+8
-
-# MyBatis-Plus 配置
+# MyBatis-Plus 生产环境配置
 mybatis-plus:
   configuration:
-    map-underscore-to-camel-case: true
     # 生产环境使用SLF4J日志实现，不输出SQL到控制台
     log-impl: ${MYBATIS_LOG_IMPL:org.apache.ibatis.logging.slf4j.Slf4jImpl}
-  mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.star.pivot.system.domain
-  global-config:
-    db-config:
-      id-type: auto
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
 
-# JWT 配置 - 生产环境必须使用环境变量
+# JWT 生产环境配置
 jwt:
-  secret: ${JWT_SECRET:Dj4G8272xJONkOqkn1pM8q1n+U5MPLrRUCjXun3/Yeo=}
-  expiration: ${JWT_EXPIRATION:86400000} # 24小时，单位：毫秒
+  # 生产环境必须通过环境变量配置密钥，不要使用默认值
+  secret: ${JWT_SECRET} # 必须通过环境变量配置
 
-# CORS 配置 - 生产环境必须配置具体域名
+# CORS 生产环境配置
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  # 生产环境必须配置具体域名，多个用逗号分隔，不允许使用 *
+  allowed-origins: ${CORS_ALLOWED_ORIGINS} # 必须通过环境变量配置，例如: https://www.example.com,https://admin.example.com
 
-# 日志配置
+# 日志生产环境配置
 logging:
   level:
     root: info
@@ -58,4 +48,11 @@ logging:
     name: logs/star-pivot.log
     max-size: 10MB
     max-history: 30
+
+# MinIO 生产环境配置
+minio:
+  endpoint: ${MINIO_ENDPOINT} # 必须通过环境变量配置
+  access-key: ${MINIO_ACCESS_KEY} # 必须通过环境变量配置
+  secret-key: ${MINIO_SECRET_KEY} # 必须通过环境变量配置
+  url-prefix: ${MINIO_URL_PREFIX} # 必须通过环境变量配置，用于前端访问文件
 
