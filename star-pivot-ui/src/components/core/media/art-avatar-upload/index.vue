@@ -1,29 +1,34 @@
 <template>
   <div class="art-avatar-upload">
-    <div class="avatar-preview" :style="{ width: size + 'px', height: size + 'px' }">
+    <div
+      class="avatar-preview"
+      :class="{ 'avatar-editable': showActions }"
+      :style="{ width: size + 'px', height: size + 'px' }"
+      @click="showActions ? triggerFileInput() : null"
+    >
       <img v-if="imageUrl && imageUrl !== ''" :src="imageUrl" alt="头像预览" class="avatar-img" />
       <div v-else class="avatar-placeholder">
         <i class="iconfont icon-camera"></i>
         <span>{{ placeholder }}</span>
       </div>
+      <!-- 删除图标：悬浮时显示在右上角 -->
+      <div
+        v-if="showActions && imageUrl && imageUrl !== ''"
+        class="avatar-delete-icon"
+        @click.stop="handleDelete"
+        title="删除头像"
+      >
+        <ArtSvgIcon icon="ri:close-line" />
+      </div>
     </div>
-    <div class="avatar-actions">
-      <input
-        ref="fileInput"
-        type="file"
-        accept="image/*"
-        class="file-input"
-        @change="handleFileChange"
-      />
-      <button type="button" class="upload-btn" @click="triggerFileInput">
-        <i class="iconfont icon-upload"></i>
-        {{ imageUrl ? '更换头像' : '上传头像' }}
-      </button>
-      <button v-if="imageUrl" type="button" class="delete-btn" @click="handleDelete">
-        <i class="iconfont icon-delete"></i>
-        删除头像
-      </button>
-    </div>
+    <!-- 隐藏的文件输入 -->
+    <input
+      ref="fileInput"
+      type="file"
+      accept="image/*"
+      class="file-input"
+      @change="handleFileChange"
+    />
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
   </div>
 </template>
@@ -31,6 +36,7 @@
 <script setup lang="ts">
   import { ref, watch, onMounted } from 'vue'
   import { fetchUploadAvatar, fetchDeleteAvatar, fetchGetAvatarPresignedUrl } from '@/api/user/user'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
 
   // Props
   const props = defineProps({
@@ -59,6 +65,11 @@
     usePresignedUrl: {
       type: Boolean,
       default: false
+    },
+    // 是否显示操作按钮（上传/删除），设为 false 时只显示头像预览
+    showActions: {
+      type: Boolean,
+      default: true
     }
   })
 
@@ -263,11 +274,20 @@
       border-radius: 50%;
       overflow: hidden;
       border: 2px dashed #d9d9d9;
-      cursor: pointer;
       transition: all 0.3s ease;
 
-      &:hover {
-        border-color: #1890ff;
+      &.avatar-editable {
+        cursor: pointer;
+
+        &:hover {
+          border-color: #1890ff;
+
+          // 悬浮时显示删除图标
+          .avatar-delete-icon {
+            opacity: 1;
+            visibility: visible;
+          }
+        }
       }
 
       .avatar-img {
@@ -295,46 +315,42 @@
           font-size: 14px;
         }
       }
-    }
 
-    .avatar-actions {
-      display: flex;
-      gap: 12px;
-
-      .file-input {
-        display: none;
-      }
-
-      .upload-btn,
-      .delete-btn {
+      // 删除图标：悬浮时显示在右上角
+      .avatar-delete-icon {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 24px;
+        height: 24px;
+        background-color: rgba(0, 0, 0, 0.6);
+        border-radius: 0 0 0 50%;
         display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        border: 1px solid #d9d9d9;
-        border-radius: 4px;
-        background-color: #fff;
-        color: #666;
+        justify-content: center;
         cursor: pointer;
-        font-size: 14px;
         transition: all 0.3s ease;
+        z-index: 10;
+        // 默认隐藏，悬浮时显示
+        opacity: 0;
+        visibility: hidden;
+        color: #fff;
+        font-size: 16px;
+        user-select: none;
+
+        .art-svg-icon {
+          color: #fff;
+          font-size: 16px;
+        }
 
         &:hover {
-          color: #1890ff;
-          border-color: #1890ff;
-        }
-
-        i {
-          font-size: 14px;
+          background-color: rgba(255, 77, 79, 0.8);
         }
       }
+    }
 
-      .delete-btn {
-        &:hover {
-          color: #ff4d4f;
-          border-color: #ff4d4f;
-        }
-      }
+    .file-input {
+      display: none;
     }
 
     .error-message {

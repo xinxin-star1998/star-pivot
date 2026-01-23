@@ -13,8 +13,9 @@
   >
     <template #reference>
       <img
-        class="size-8.5 mr-5 c-p rounded-full max-sm:w-6.5 max-sm:h-6.5 max-sm:mr-[16px]"
-        src="@imgs/user/avatar.webp"
+        :key="avatarDisplayKey"
+        class="size-8.5 mr-5 c-p rounded-full max-sm:w-6.5 max-sm:h-6.5 max-sm:mr-[16px] object-cover"
+        :src="avatarDisplayUrl"
         alt="avatar"
       />
     </template>
@@ -22,14 +23,15 @@
       <div class="pt-3">
         <div class="flex-c pb-1 px-0">
           <img
-            class="w-10 h-10 mr-3 ml-0 overflow-hidden rounded-full float-left"
-            src="@imgs/user/avatar.webp"
+            :key="avatarDisplayKey"
+            class="w-10 h-10 mr-3 ml-0 overflow-hidden rounded-full float-left object-cover"
+            :src="avatarDisplayUrl"
           />
           <div class="w-[calc(100%-60px)] h-full">
             <span class="block text-sm font-medium text-g-800 truncate">{{
-              userInfo.user?.username
+              userInfo.user?.username ?? userInfo.userName
             }}</span>
-            <span class="block mt-0.5 text-xs text-g-500 truncate">{{ userInfo.user?.email }}</span>
+            <span class="block mt-0.5 text-xs text-g-500 truncate">{{ userInfo.user?.email ?? userInfo.email }}</span>
           </div>
         </div>
         <ul class="py-4 mt-3 border-t border-g-300/80">
@@ -63,10 +65,12 @@
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
+  import { storeToRefs } from 'pinia'
   import { useUserStore } from '@/store/modules/user'
   import { mittBus } from '@/utils/sys'
   import { fetchLogout } from '@/api/auth'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import defaultAvatarImg from '@imgs/user/avatar.webp'
 
   defineOptions({ name: 'ArtUserMenu' })
 
@@ -76,6 +80,32 @@
 
   const { getUserInfo: userInfo } = storeToRefs(userStore)
   const userMenuPopover = ref()
+
+  /** 用户头像：优先顶层 avatar（本地更新后），否则 user.avatar，无则用默认图 */
+  const avatarUrl = computed(() => {
+    const u = userInfo.value as any
+    const url = u?.avatar ?? u?.user?.avatar
+    return url && String(url).trim() ? url : defaultAvatarImg
+  })
+
+  /** 头像展示 URL：远程图在更新后加 cache-bust，避免下拉复用 DOM 导致旧图不刷新 */
+  const avatarDisplayUrl = computed(() => {
+    const url = avatarUrl.value
+    if (typeof url !== 'string' || url.startsWith('data:') || url.startsWith('/')) return url
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      const u = userInfo.value as any
+      const v = u?.avatarUpdatedAt ?? u?.user?.avatarUpdatedAt
+      if (v != null && v !== '') return `${url}${url.includes('?') ? '&' : '?'}t=${v}`
+    }
+    return url
+  })
+
+  /** 用于 :key，头像或版本变化时强制重新渲染（修复 ElPopover 下拉内头像不更新） */
+  const avatarDisplayKey = computed(() => {
+    const u = userInfo.value as any
+    const v = u?.avatarUpdatedAt ?? u?.user?.avatarUpdatedAt ?? ''
+    return `${String(avatarUrl.value)}|${v}`
+  })
 
   /**
    * 页面跳转

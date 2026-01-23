@@ -145,7 +145,13 @@
                 <ElInput v-model="form.phonenumber" :disabled="!isEdit" />
               </ElFormItem>
               <ElFormItem label="头像" prop="avatar" class="ml-5">
-                <ElInput v-model="form.avatar" :disabled="!isEdit" placeholder="头像URL" />
+                <art-avatar-upload
+                  v-model="form.avatar"
+                  :userId="String(userDetail.userId || (userInfo as any)?.userId || '')"
+                  :auto-upload="isEdit"
+                  :show-actions="isEdit"
+                  :size="120"
+                />
               </ElFormItem>
             </ElRow>
 
@@ -242,6 +248,7 @@
   import defaultAvatarImg from '@imgs/user/avatar.webp'
   import bgImageImg from '@imgs/user/bg.webp'
   import { useSettingStore } from '@/store/modules/setting'
+  import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
 
   defineOptions({ name: 'UserCenter' })
 
@@ -460,8 +467,14 @@
           }
           await fetchUpdateUser(updateData)
           ElMessage.success('保存成功')
-          // 重新获取用户详情
+          // 重新获取用户详情（包含最新头像）
           await getUserDetail()
+          // 同步头像到 store，便于顶部下拉立即展示最新头像
+          // 使用 userDetail.avatar（从服务器获取的最新值）而不是 form.avatar（可能还未同步）
+          userStore.setUserInfo({
+            avatar: userDetail.value.avatar || form.avatar,
+            avatarUpdatedAt: Date.now()
+          })
           isEdit.value = false
         } catch (error) {
           console.error('保存用户信息失败:', error)

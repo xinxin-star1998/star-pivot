@@ -94,6 +94,7 @@
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElTreeSelect } from 'element-plus'
+  import { useUserStore } from '@/store/modules/user'
   import { fetchGetRoleSelect } from '@/api/role/role'
   import { fetchGetPostSelect } from '@/api/post/post'
   import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
@@ -116,6 +117,7 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const userStore = useUserStore()
 
   // 角色列表数据
   const roleList = ref<RoleOption[]>([])
@@ -315,6 +317,15 @@
             // 编辑用户，直接更新
             await fetchUpdateUser(formData)
             // 编辑时如果修改了头像，autoUpload为true会自动上传
+            // 若编辑的是当前登录用户，同步头像到 store，便于顶部下拉立即展示最新头像
+            const cur = userStore.getUserInfo as any
+            const curId = cur?.userId ?? cur?.user?.userId
+            if (curId != null && String(formData.userId) === String(curId)) {
+              userStore.setUserInfo({
+                avatar: formData.avatar,
+                avatarUpdatedAt: Date.now()
+              })
+            }
           }
 
           ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
