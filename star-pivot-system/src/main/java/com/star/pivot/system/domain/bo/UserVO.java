@@ -111,5 +111,10 @@ public class UserVO {
      * 岗位名称列表
      */
     private List<String> postNames;
+
+    /**
+     * 账户是否被锁定（true=已锁定，false=未锁定）
+     */
+    private Boolean isLocked;
 }
 

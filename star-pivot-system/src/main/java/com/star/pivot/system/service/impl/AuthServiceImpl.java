@@ -6,11 +6,14 @@ import com.star.pivot.system.domain.bo.LoginRequest;
 import com.star.pivot.system.domain.bo.LoginResponse;
 import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.domain.entity.SysUser;
+import com.star.pivot.system.service.AccountLockService;
 import com.star.pivot.system.service.AuthService;
 import com.star.pivot.system.service.CaptchaService;
+import com.star.pivot.system.service.LoginRateLimitService;
 import com.star.pivot.system.service.SysLogininforService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.security.JwtUtil;
+import com.star.pivot.security.RefreshTokenManager;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +37,13 @@ import java.util.Map;
 public class AuthServiceImpl implements AuthService {
     
     private final JwtUtil jwtUtil;
+    private final RefreshTokenManager refreshTokenManager;
     private final AuthenticationManager authenticationManager;
     private final SysUserService userService;
     private final CaptchaService captchaService;
     private final SysLogininforService sysLogininforService;
+    private final LoginRateLimitService rateLimitService;
+    private final AccountLockService accountLockService;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -56,15 +62,26 @@ public class AuthServiceImpl implements AuthService {
         logininfor.setLoginTime(LocalDateTime.now());
         
         try {
-            // 1. 验证验证码 proof（一次性）
+            // 1. 检查账户是否被锁定（在验证码之前检查，避免浪费验证码）
+            accountLockService.checkAccountLocked(request.getUsername());
+            
+            // 2. 检查IP维度限流
+            rateLimitService.checkIpRateLimit(ipaddr);
+            
+            // 3. 检查IP+用户名维度限流
+            rateLimitService.checkIpUsernameRateLimit(ipaddr, request.getUsername());
+            
+            // 4. 验证验证码 proof（一次性）
             if (!captchaService.validateAndConsumeCaptchaProof(request.getCaptchaProof(), "login")) {
                 logininfor.setStatus("1");
                 logininfor.setMsg("验证码错误或已失效");
                 sysLogininforService.saveLogininfor(logininfor);
+                // 验证码错误也记录失败次数
+                accountLockService.recordLoginFailure(request.getUsername());
                 throw new ServiceException("验证码错误或已失效", 401);
             }
             
-            // 2. 使用 AuthenticationManager 进行认证
+            // 5. 使用 AuthenticationManager 进行认证
             UsernamePasswordAuthenticationToken authenticationToken = 
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
             authenticationManager.authenticate(authenticationToken);
@@ -79,19 +96,28 @@ public class AuthServiceImpl implements AuthService {
                 throw new ServiceException("用户不存在", 404);
             }
             
-            // 4. 生成 JWT Token
+            // 4. 生成访问令牌（Access Token）
             Map<String, Object> claims = new HashMap<>();
             claims.put("username", request.getUsername());
             claims.put("userId", user.getUserId());
             String token = jwtUtil.generateToken(request.getUsername(), claims);
-            
-            // 5. 返回登录响应
+
+            // 5. 生成刷新令牌（Refresh Token），用于后续无感刷新
+            String refreshToken = refreshTokenManager.generateAndStoreRefreshToken(user.getUserId());
+
+            // 6. 返回登录响应
             LoginResponse response = new LoginResponse();
             response.setToken(token);
+            response.setRefreshToken(refreshToken);
             response.setUsername(request.getUsername());
             response.setNickname(user.getNickName());
 
-            // 6. 记录登录成功日志
+            // 7. 登录成功，清除失败记录和限流计数
+            accountLockService.clearLoginFailures(request.getUsername());
+            rateLimitService.clearIpRateLimit(ipaddr);
+            rateLimitService.clearIpUsernameRateLimit(ipaddr, request.getUsername());
+            
+            // 8. 记录登录成功日志
             logininfor.setStatus("0");
             logininfor.setMsg("登录成功");
             sysLogininforService.saveLogininfor(logininfor);
@@ -100,6 +126,8 @@ public class AuthServiceImpl implements AuthService {
             return response;
         } catch (AuthenticationException e) {
             log.error("认证失败: {}", e.getMessage());
+            // 记录登录失败
+            accountLockService.recordLoginFailure(request.getUsername());
             // 记录登录失败日志
             logininfor.setStatus("1");
             logininfor.setMsg("用户名或密码错误");
@@ -107,6 +135,10 @@ public class AuthServiceImpl implements AuthService {
             throw new ServiceException("用户名或密码错误", 401);
         } catch (ServiceException e) {
             // ServiceException已经在上面处理了，这里不需要重复记录
+            // 但如果是账户锁定或限流异常，不需要再记录失败次数（已经在对应服务中处理）
+            if (e.getCode() != 423 && e.getCode() != 429) {
+                // 其他业务异常（如验证码错误）已在上面记录失败次数
+            }
             throw e;
         } catch (Exception e) {
             log.error("登录异常: {}", e.getMessage(), e);

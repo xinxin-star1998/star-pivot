@@ -9,7 +9,7 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增部门</ElButton>
+            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:dept:add'">新增部门</ElButton>
             <ElButton @click="toggleExpand" v-ripple>
               {{ isExpanded ? '收起' : '展开' }}
             </ElButton>
@@ -44,6 +44,7 @@
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTableColumns } from '@/hooks/core/useTableColumns'
+  import { useAuth } from '@/hooks/core/useAuth'
   import DeptSearch from './modules/dept-search.vue'
   import DeptDialog from './modules/dept-dialog.vue'
   import { ElMessageBox, ElMessage, ElTag } from 'element-plus'
@@ -53,6 +54,9 @@
   import { fetchGetDeptTree, fetchDeleteDept, type SysDept } from '@/api/dept/dept'
 
   defineOptions({ name: 'Dept' })
+
+  // 权限检查
+  const { hasAuth } = useAuth()
 
   // 状态管理
   const loading = ref(false)
@@ -231,21 +235,45 @@
       fixed: 'right',
       formatter: (row: SysDept) => {
         const buttonStyle = { style: 'text-align: right' }
-        return h('div', buttonStyle, [
-          h(ArtButtonTable, {
-            type: 'add',
-            onClick: () => showDialog('add', row),
-            title: '新增子部门'
-          }),
-          h(ArtButtonTable, {
-            type: 'edit',
-            onClick: () => showDialog('edit', row)
-          }),
-          h(ArtButtonTable, {
-            type: 'delete',
-            onClick: () => deleteDept(row)
-          })
-        ])
+        const actions: any[] = []
+
+        // 新增子部门按钮权限：system:dept:add
+        if (hasAuth('system:dept:add')) {
+          actions.push(
+            h(ArtButtonTable, {
+              type: 'add',
+              onClick: () => showDialog('add', row),
+              title: '新增子部门'
+            })
+          )
+        }
+
+        // 编辑部门按钮权限：system:dept:edit
+        if (hasAuth('system:dept:edit')) {
+          actions.push(
+            h(ArtButtonTable, {
+              type: 'edit',
+              onClick: () => showDialog('edit', row)
+            })
+          )
+        }
+
+        // 删除部门按钮权限：system:dept:remove
+        if (hasAuth('system:dept:remove')) {
+          actions.push(
+            h(ArtButtonTable, {
+              type: 'delete',
+              onClick: () => deleteDept(row)
+            })
+          )
+        }
+
+        if (actions.length === 0) {
+          // 无任何操作权限时返回空占位
+          return h('span', { style: 'color: #999' }, '')
+        }
+
+        return h('div', buttonStyle, actions)
       }
     }
   ])

@@ -20,7 +20,12 @@
       >
         <template #left>
           <ElButton @click="goBack" v-ripple plain> 返回 </ElButton>
-          <ElButton @click="handleAdd" v-ripple :disabled="!selectedDictType">
+          <ElButton
+            @click="handleAdd"
+            v-ripple
+            v-auth="'system:data:add'"
+            :disabled="!selectedDictType"
+          >
             新增字典数据
           </ElButton>
         </template>
@@ -68,8 +73,12 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { useAuth } from '@/hooks/core/useAuth'
 
   defineOptions({ name: 'DictData' })
+
+  // 权限控制
+  const { hasAuth } = useAuth()
 
   // 路由相关
   const route = useRoute()
@@ -142,14 +151,7 @@
 
   // 表格列配置
   const { columnChecks, columns } = useTableColumns(() => [
-    {
-      prop: 'dictLabel',
-      label: '序号',
-      width: 80,
-      formatter: (_, __, index: number) => {
-        return index + 1
-      }
-    },
+    { type: 'index', width: 60, label: '序号' },
     {
       prop: 'dictCode',
       label: '字典编码',
@@ -210,17 +212,34 @@
       width: 180,
       align: 'right',
       formatter: (row: SysDictData) => {
-        const buttonStyle = { style: 'text-align: right' }
-        return h('div', buttonStyle, [
-          h(ArtButtonTable, {
-            type: 'edit',
-            onClick: () => handleEdit(row)
-          }),
-          h(ArtButtonTable, {
-            type: 'delete',
-            onClick: () => handleDelete(row)
-          })
-        ])
+        const actions: any[] = []
+
+        // 编辑字典数据按钮权限：system:data:edit
+        if (hasAuth('system:data:edit')) {
+          actions.push(
+            h(ArtButtonTable, {
+              type: 'edit',
+              onClick: () => handleEdit(row)
+            })
+          )
+        }
+
+        // 删除字典数据按钮权限：system:data:delete
+        if (hasAuth('system:data:delete')) {
+          actions.push(
+            h(ArtButtonTable, {
+              type: 'delete',
+              onClick: () => handleDelete(row)
+            })
+          )
+        }
+
+        if (actions.length === 0) {
+          // 无任何操作权限时返回空占位
+          return h('span', { style: 'color: #999' }, '')
+        }
+
+        return h('div', { style: 'text-align: right' }, actions)
       }
     }
   ])
@@ -229,8 +248,8 @@
   const tableData = ref<SysDictData[]>([])
 
   onMounted(() => {
-    // 从路由参数获取字典类型
-    const routeDictType = route.query.dictType as string
+    // 从路由路径参数获取字典类型
+    const routeDictType = route.params.dictType as string
     if (routeDictType) {
       searchFilters.dictType = routeDictType
       selectedDictType.value = routeDictType
@@ -431,7 +450,8 @@
    * 返回字典类型页面
    */
   const goBack = () => {
-    router.go(-1) // 返回上一页
+    // 直接跳转到字典管理页面，更可靠
+    router.push({ path: '/system/dict' })
   }
 </script>
 

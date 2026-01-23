@@ -52,6 +52,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     public List<SysMenu> menuTree() {
         // 查询所有权限
         LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysMenu::getStatus, Constants.Status.NORMAL);
         queryWrapper.orderByAsc(SysMenu::getOrderNum);
         List<SysMenu> allMenu = this.list(queryWrapper);
 

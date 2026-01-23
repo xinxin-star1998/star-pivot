@@ -13,6 +13,7 @@ import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.*;
 import com.star.pivot.system.mapper.*;
+import com.star.pivot.system.service.AccountLockService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.UserPermissionCacheService;
 import com.star.pivot.security.utils.SecurityContextUtils;
@@ -48,6 +49,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private SysRoleMapper sysRoleMapper;
     @Autowired
     private UserPermissionCacheService userPermissionCacheService;
+    @Autowired
+    private AccountLockService accountLockService;
     /**
      * 用户分页查询
      *
@@ -382,6 +385,18 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             voList.add(vo);
         }
         
+        // 7. 批量查询账户锁定状态
+        if (accountLockService != null) {
+            for (UserVO vo : voList) {
+                if (vo.getUserName() != null) {
+                    boolean isLocked = accountLockService.isAccountLocked(vo.getUserName());
+                    vo.setIsLocked(isLocked);
+                } else {
+                    vo.setIsLocked(false);
+                }
+            }
+        }
+        
         return voList;
     }
     
@@ -458,6 +473,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 }
             }
             vo.setPostNames(postNames);
+        }
+
+        // 查询账户锁定状态
+        if (accountLockService != null && user.getUserName() != null) {
+            boolean isLocked = accountLockService.isAccountLocked(user.getUserName());
+            vo.setIsLocked(isLocked);
+        } else {
+            vo.setIsLocked(false);
         }
 
         return vo;

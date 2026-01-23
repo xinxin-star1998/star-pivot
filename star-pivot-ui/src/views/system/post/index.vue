@@ -9,12 +9,13 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增岗位</ElButton>
+            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:post:add'">新增岗位</ElButton>
             <ElButton
               type="danger"
               :disabled="selectedRows.length === 0"
               @click="handleBatchDelete"
               v-ripple
+              v-auth="'system:post:remove'"
             >
               批量删除
             </ElButton>
@@ -48,6 +49,7 @@
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
+  import { useAuth } from '@/hooks/core/useAuth'
   import { fetchGetPostList, fetchDeletePost, fetchUpdatePost } from '@/api/post/post'
   import PostSearch from './modules/post-search.vue'
   import PostDialog from './modules/post-dialog.vue'
@@ -57,6 +59,9 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
 
   defineOptions({ name: 'Post' })
+
+  // 权限检查
+  const { hasAuth } = useAuth()
 
   type PostListItem = Api.Post.PostListItem
 
@@ -155,17 +160,36 @@
           label: '操作',
           width: 120,
           fixed: 'right', // 固定列
-          formatter: (row) =>
-            h('div', [
-              h(ArtButtonTable, {
-                type: 'edit',
-                onClick: () => showDialog('edit', row)
-              }),
-              h(ArtButtonTable, {
-                type: 'delete',
-                onClick: () => deletePost(row)
-              })
-            ])
+          formatter: (row) => {
+            const actions: any[] = []
+
+            // 编辑岗位按钮权限：system:post:edit
+            if (hasAuth('system:post:edit')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'edit',
+                  onClick: () => showDialog('edit', row)
+                })
+              )
+            }
+
+            // 删除岗位按钮权限：system:post:remove
+            if (hasAuth('system:post:remove')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'delete',
+                  onClick: () => deletePost(row)
+                })
+              )
+            }
+
+            if (actions.length === 0) {
+              // 无任何操作权限时返回空占位
+              return h('span', { style: 'color: #999' }, '')
+            }
+
+            return h('div', actions)
+          }
         }
       ]
     }

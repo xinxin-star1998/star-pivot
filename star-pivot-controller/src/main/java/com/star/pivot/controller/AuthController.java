@@ -17,6 +17,7 @@ import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.security.JwtBlackListManager;
 import com.star.pivot.security.JwtUtil;
+import com.star.pivot.security.RefreshTokenManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,7 @@ public class AuthController {
     private final JwtBlackListManager jwtBlackListManager;
     private final JwtUtil jwtUtil;
     private final CaptchaService captchaService;
+    private final RefreshTokenManager refreshTokenManager;
 
     /**
      * 用户登录接口
@@ -56,6 +58,63 @@ public class AuthController {
     public Result<LoginResponse> login(@RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
         return Result.success("登录成功", response);
+    }
+
+    /**
+     * 使用刷新令牌获取新的访问令牌
+     *
+     * <p>设计说明：
+     * <ul>
+     *   <li>刷新令牌只验证「是否为指定用户的有效刷新令牌」，不再校验密码</li>
+     *   <li>接口本身无需携带旧的 Access Token，可在 Access Token 过期后单独调用</li>
+     *   <li>刷新成功后会颁发新的 Access Token，并轮换新的刷新令牌（一次性使用）</li>
+     * </ul>
+     */
+    @PostMapping("/refresh")
+    public Result<LoginResponse> refreshToken(@RequestBody Map<String, String> body) {
+        if (body == null) {
+            return Result.error(400, "请求体不能为空");
+        }
+
+        String refreshToken = body.get("refreshToken");
+        if (refreshToken == null || refreshToken.trim().isEmpty()) {
+            return Result.error(400, "刷新令牌不能为空");
+        }
+
+        // 为了简化传参，这里约定前端同时传递用户名，用于反查用户并校验 refreshToken
+        String username = body.get("username");
+        if (username == null || username.trim().isEmpty()) {
+            return Result.error(400, "用户名不能为空");
+        }
+
+        SysUser user = sysUserService.getUserByUsername(username);
+        if (user == null) {
+            return Result.error(404, "用户不存在");
+        }
+
+        Long userId = user.getUserId();
+        // 校验刷新令牌是否有效
+        if (!refreshTokenManager.validateRefreshToken(userId, refreshToken)) {
+            return Result.error(401, "刷新令牌无效或已过期，请重新登录");
+        }
+
+        // 刷新成功：先吊销旧的刷新令牌，再生成新的访问令牌和刷新令牌
+        refreshTokenManager.revokeRefreshToken(userId);
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("username", username);
+        claims.put("userId", userId);
+        String newAccessToken = jwtUtil.generateToken(username, claims);
+
+        String newRefreshToken = refreshTokenManager.generateAndStoreRefreshToken(userId);
+
+        LoginResponse response = new LoginResponse();
+        response.setToken(newAccessToken);
+        response.setRefreshToken(newRefreshToken);
+        response.setUsername(username);
+        response.setNickname(user.getNickName());
+
+        return Result.success("令牌刷新成功", response);
     }
 
     /**
@@ -111,8 +170,10 @@ public class AuthController {
                 
                 // 获取用户名用于日志记录
                 String username = null;
+                Long userId = null;
                 try {
                     username = jwtUtil.getUsernameFromToken(token);
+                    userId = jwtUtil.getUserIdFromToken(token);
                 } catch (Exception e) {
                     log.debug("获取用户名失败: {}", e.getMessage());
                 }
@@ -121,6 +182,11 @@ public class AuthController {
                     log.info("用户 {} 的令牌已加入黑名单", username);
                 } else {
                     log.info("令牌已加入黑名单");
+                }
+
+                // 同步吊销该用户的刷新令牌，避免登出后仍可刷新
+                if (userId != null) {
+                    refreshTokenManager.revokeRefreshToken(userId);
                 }
             } else {
                 log.debug("Token已过期，无需加入黑名单");

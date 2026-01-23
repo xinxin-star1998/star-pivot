@@ -19,7 +19,7 @@
         @refresh="handleRefresh"
       >
         <template #left>
-          <ElButton @click="handleAddMenu" v-ripple> 添加菜单 </ElButton>
+          <ElButton @click="handleAddMenu" v-ripple v-auth="'system:menu:add'"> 添加菜单 </ElButton>
           <ElButton @click="toggleExpand" v-ripple>
             {{ isExpanded ? '收起' : '展开' }}
           </ElButton>
@@ -55,6 +55,7 @@
   import { deepClone, findInTree, safeError } from '@/utils'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTableColumns } from '@/hooks/core/useTableColumns'
+  import { useAuth } from '@/hooks/core/useAuth'
   import type { AppRouteRecord } from '@/types/router'
   import MenuDialog from './modules/menu-dialog.vue'
   import {
@@ -73,6 +74,9 @@
   import { MENU_TYPE_CONFIG, STATUS_CONFIG, INITIAL_SEARCH_STATE } from './constants'
 
   defineOptions({ name: 'Menus' })
+
+  // 权限检查
+  const { hasAuth } = useAuth()
 
   // 状态管理
   const loading = ref(false)
@@ -348,46 +352,68 @@
       align: 'right',
       formatter: (row: AppRouteRecord) => {
         const buttonStyle = { style: 'text-align: right' }
+        const buttons: any[] = []
 
         // 如果是权限按钮（包括isAuthButton和menuType='F'），显示编辑和删除按钮
         if (row.meta?.isAuthButton || row.menuType === 'F') {
-          return h('div', buttonStyle, [
-            h(ArtButtonTable, {
-              type: 'edit',
-              onClick: () => handleEditAuth(row)
-            }),
-            h(ArtButtonTable, {
-              type: 'delete',
-              onClick: () => handleDeleteAuth(row)
-            })
-          ])
+          // 编辑权限按钮权限：system:menu:edit
+          if (hasAuth('system:menu:edit')) {
+            buttons.push(
+              h(ArtButtonTable, {
+                type: 'edit',
+                onClick: () => handleEditAuth(row)
+              })
+            )
+          }
+
+          // 删除权限按钮权限：system:menu:remove
+          if (hasAuth('system:menu:remove')) {
+            buttons.push(
+              h(ArtButtonTable, {
+                type: 'delete',
+                onClick: () => handleDeleteAuth(row)
+              })
+            )
+          }
+        } else {
+          // 非权限按钮菜单：显示"新增权限"和"编辑"按钮
+          // 无论是否已有权限按钮子节点，都允许添加更多
+          // 新增权限按钮权限：system:menu:add
+          if (hasAuth('system:menu:add')) {
+            buttons.push(
+              h(ArtButtonTable, {
+                type: 'add',
+                onClick: () => handleAddAuth(row),
+                title: '新增权限'
+              })
+            )
+          }
+
+          // 编辑菜单按钮权限：system:menu:edit
+          if (hasAuth('system:menu:edit')) {
+            buttons.push(
+              h(ArtButtonTable, {
+                type: 'edit',
+                onClick: () => handleEditMenu(row)
+              })
+            )
+          }
+
+          // 删除菜单按钮权限：system:menu:remove
+          if (hasAuth('system:menu:remove')) {
+            buttons.push(
+              h(ArtButtonTable, {
+                type: 'delete',
+                onClick: () => handleDeleteMenu(row)
+              })
+            )
+          }
         }
 
-        const buttons = []
-
-        // 非权限按钮菜单：显示"新增权限"和"编辑"按钮
-        // 无论是否已有权限按钮子节点，都允许添加更多
-        if (!row.meta?.isAuthButton && row.menuType !== 'F') {
-          buttons.push(
-            h(ArtButtonTable, {
-              type: 'add',
-              onClick: () => handleAddAuth(row),
-              title: '新增权限'
-            }),
-            h(ArtButtonTable, {
-              type: 'edit',
-              onClick: () => handleEditMenu(row)
-            })
-          )
+        if (buttons.length === 0) {
+          // 无任何操作权限时返回空占位
+          return h('span', { style: 'color: #999' }, '')
         }
-
-        // 删除按钮
-        buttons.push(
-          h(ArtButtonTable, {
-            type: 'delete',
-            onClick: () => handleDeleteMenu(row)
-          })
-        )
 
         return h('div', buttonStyle, buttons)
       }

@@ -102,7 +102,7 @@
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchDeleteUser, fetchGetUserList, fetchUpdateUserStatus } from '@/api/user/user'
+  import { fetchDeleteUser, fetchGetUserList, fetchUpdateUserStatus, fetchUnlockUser } from '@/api/user/user'
   import { fetchGetDeptTree, SysDept } from '@/api/dept/dept'
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
@@ -345,7 +345,7 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 120,
+          width: 180,
           fixed: 'right', // 固定列
           formatter: (row) => {
             const actions: any[] = []
@@ -358,6 +358,17 @@
                   onClick: () => showDialog('edit', row)
                 })
               )
+              
+              // 解锁账户按钮（管理员操作）- 只在账户被锁定时显示
+              if (row.isLocked === true) {
+                actions.push(
+                  h(ArtButtonTable, {
+                    icon: 'ri:lock-unlock-line',
+                    iconClass: 'bg-warning/12 text-warning',
+                    onClick: () => unlockUser(row)
+                  })
+                )
+              }
             }
 
             // 删除用户按钮权限：system:user:delete
@@ -474,6 +485,33 @@
       ElMessage.error('更新状态失败')
       // 刷新列表以恢复原状态
       refreshData()
+    }
+  }
+
+  /**
+   * 解锁账户（管理员操作）
+   */
+  const unlockUser = async (row: UserListItem): Promise<void> => {
+    try {
+      await ElMessageBox.confirm(
+        `确定要解锁用户 "${row.userName}" 的账户吗？`,
+        '解锁账户',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      )
+      await fetchUnlockUser(row.userId)
+      ElMessage.success('账户解锁成功')
+      refreshData()
+    } catch (error: any) {
+      if (error !== 'cancel') {
+        console.error('解锁账户失败:', error)
+        // 后端返回的消息会包含在 error 中，直接显示
+        const errorMsg = error?.message || error?.response?.data?.msg || '解锁失败'
+        ElMessage.error(errorMsg)
+      }
     }
   }
 </script>

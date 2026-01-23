@@ -116,7 +116,7 @@ public class GenController {
 
      /**
      * 创建表结构（保存）
-     * 
+        * 
      * <p>注意：此接口需要 admin 角色或 tool:gen:add 权限
      */
     @PreAuthorize("@ss.hasRole('admin') or hasAuthority('tool:gen:add')")

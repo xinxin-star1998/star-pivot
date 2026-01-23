@@ -109,3 +109,13 @@ export function fetchGetAvatarPresignedUrl(filePath: string) {
     }
   })
 }
+
+/**
+ * 管理员解锁账户
+ * 解除因登录失败次数过多而被锁定的账户
+ */
+export function fetchUnlockUser(userId: number) {
+  return request.post({
+    url: `/api/sys/user/unlock/${userId}`
+  })
+}

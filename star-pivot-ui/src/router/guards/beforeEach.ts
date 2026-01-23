@@ -51,7 +51,13 @@ import { useWorktabStore } from '@/store/modules/worktab'
 import { fetchGetUserInfo } from '@/api/auth'
 import { ApiStatus } from '@/utils/http/status'
 import { isHttpError } from '@/utils/http/error'
-import { RouteRegistry, MenuProcessor, IframeRouteManager, RoutePermissionValidator } from '../core'
+import {
+  RouteRegistry,
+  MenuProcessor,
+  IframeRouteManager,
+  RoutePermissionValidator,
+  DynamicRouteAppender
+} from '../core'
 
 // 路由注册器实例
 let routeRegistry: RouteRegistry | null = null
@@ -297,6 +303,9 @@ async function handleDynamicRoutes(
       }
       throw new Error('获取菜单列表失败，菜单数据格式错误')
     }
+
+    // 3.1 前端动态追加路由（数据库不存菜单）
+    DynamicRouteAppender.appendDynamicRoutes(menuList)
 
     // 4. 注册动态路由
     console.log('[RouteGuard] 开始注册动态路由...')

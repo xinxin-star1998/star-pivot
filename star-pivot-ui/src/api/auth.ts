@@ -59,3 +59,16 @@ export function fetchVerifyCaptcha(data: { captchaToken: string; code: string; s
     data
   })
 }
+
+/**
+ * 刷新访问令牌
+ * @param data 刷新令牌请求参数
+ * @returns 新的登录响应（包含新的访问令牌和刷新令牌）
+ */
+export function fetchRefreshToken(data: { username: string; refreshToken: string }) {
+  return request.post<Api.Auth.LoginResponse>({
+    url: '/api/auth/refresh',
+    data,
+    showErrorMessage: false // 刷新失败时不显示错误消息，由拦截器统一处理
+  })
+}

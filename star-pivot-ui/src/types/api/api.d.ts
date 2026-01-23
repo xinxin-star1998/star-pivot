@@ -77,6 +77,8 @@ declare namespace Api {
       token: string
       username: string
       nickname: string
+      /** 刷新令牌，用于在访问令牌过期后无感刷新 */
+      refreshToken?: string
     }
 
     /** 用户信息 */
@@ -161,6 +163,8 @@ declare namespace Api {
       updateTime?: string
       delFlag?: number
       remark?: string
+      /** 账户是否被锁定（true=已锁定，false=未锁定） */
+      isLocked?: boolean
     }
     interface UserBo {
       userId: number
