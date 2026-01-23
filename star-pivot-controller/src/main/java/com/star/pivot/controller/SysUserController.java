@@ -41,6 +41,7 @@ public class SysUserController {
      * @param userReqBo 用户查询参数
      * @return 分页结果
      */
+    @Log(title = "用户管理", businessType = 0)
     @PreAuthorize("hasAuthority('system:user:query')")
     @PostMapping("/pageList")
     public Result<PageResponse<UserVO>> pageList(@RequestBody UserReqBo userReqBo) {
@@ -54,6 +55,7 @@ public class SysUserController {
      * @param userId 用户ID
      * @return 指定ID的用户详细信息
      */
+    @Log(title = "用户管理", businessType = 0)
     @PreAuthorize("hasAuthority('system:user:query')")
     @GetMapping("/{userId}")
     public Result<UserVO> getUserById(@PathVariable("userId") Long userId) {
