@@ -1,5 +1,6 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.annotation.Log;
 import com.star.pivot.common.domain.Constants;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
@@ -50,6 +51,7 @@ public class AuthController {
      * @param request 登录请求参数，包含用户名和密码
      * @return 登录响应结果，包含用户信息和认证令牌
      */
+    @Log(title = "用户登录", businessType = 0)
     @PostMapping("/login")
     public Result<LoginResponse> login(@RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
@@ -69,6 +71,7 @@ public class AuthController {
      * @param authHeader 可选的Authorization请求头，格式：Bearer {token}
      * @return 登出结果响应
      */
+    @Log(title = "用户登出", businessType = 0)
     @PostMapping("/logout")
     public Result<Void> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         // 如果没有提供Authorization头，直接返回成功（幂等性设计）

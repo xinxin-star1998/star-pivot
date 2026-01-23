@@ -4,6 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * 启动类
@@ -13,6 +14,7 @@ import org.springframework.cache.annotation.EnableCaching;
 @SpringBootApplication(scanBasePackages = "com.star.pivot")
 @MapperScan("com.star.pivot.*.mapper")
 @EnableCaching
+@EnableAsync
 public class StarPivotApplication {
     public static void main(String[] args) {
         SpringApplication.run(StarPivotApplication.class, args);
@@ -22,7 +24,7 @@ public class StarPivotApplication {
                 StarPivot权限管理系统启动成功！
                 访问地址: http://localhost:8080
                 API文档: http://localhost:8080/doc.html
-                MinIO地址: http://localhost:9000
+                文件存储: 阿里云 OSS
                 ========================================
                 """);
     }

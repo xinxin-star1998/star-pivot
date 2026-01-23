@@ -2,7 +2,7 @@ package com.star.pivot.controller;
 
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.common.exception.ServiceException;
-import com.star.pivot.common.utils.MinioUtil;
+import com.star.pivot.common.utils.OssUtil;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,7 +29,7 @@ import java.util.Map;
 public class AvatarController {
 
     @Autowired
-    private MinioUtil minioUtil;
+    private OssUtil ossUtil;
 
     /**
      * 检查当前用户是否有权限操作指定用户ID的资源
@@ -71,14 +71,24 @@ public class AvatarController {
     /**
      * 从文件路径中提取用户ID
      * 
-     * @param filePath 文件路径，格式：user/{userId}/avatar_xxx.xxx
+     * @param filePath 文件路径，格式：avatar/{userId}.{suffix} 或 user/{userId}/avatar_xxx.xxx（兼容旧格式）
      * @return 用户ID字符串，如果无法提取则返回 null
      */
     private String extractUserIdFromPath(String filePath) {
         if (filePath == null || filePath.isEmpty()) {
             return null;
         }
-        // 路径格式：user/{userId}/avatar_xxx.xxx
+        // 新路径格式：avatar/{userId}.{suffix}
+        if (filePath.startsWith("avatar/")) {
+            String fileName = filePath.substring(7); // 移除 "avatar/" 前缀
+            // 提取文件名（去掉后缀）
+            int dotIndex = fileName.lastIndexOf(".");
+            if (dotIndex > 0) {
+                return fileName.substring(0, dotIndex);
+            }
+            return fileName;
+        }
+        // 兼容旧路径格式：user/{userId}/avatar_xxx.xxx
         if (filePath.startsWith("user/")) {
             String[] parts = filePath.split("/");
             if (parts.length >= 2) {
@@ -113,12 +123,12 @@ public class AvatarController {
             
             if (usePresignedUrl) {
                 // 使用临时访问链接
-                String presignedUrl = minioUtil.uploadAvatarWithPresignedUrl(file, userId);
+                String presignedUrl = ossUtil.uploadAvatarWithPresignedUrl(file, userId);
                 data.put("avatarUrl", presignedUrl);
                 data.put("isPresigned", "true");
             } else {
                 // 使用完整访问URL
-                String avatarUrl = minioUtil.uploadAvatarWithUrl(file, userId);
+                String avatarUrl = ossUtil.uploadAvatarWithUrl(file, userId);
                 data.put("avatarUrl", avatarUrl);
                 data.put("isPresigned", "false");
             }
@@ -154,7 +164,7 @@ public class AvatarController {
                 throw new ServiceException("无权访问该用户的头像", 403);
             }
 
-            String presignedUrl = minioUtil.getPresignedUrl(filePath);
+            String presignedUrl = ossUtil.getPresignedUrl(filePath);
             Map<String, String> data = new HashMap<>();
             data.put("presignedUrl", presignedUrl);
             return Result.success("获取成功", data);
@@ -179,7 +189,7 @@ public class AvatarController {
                 throw new ServiceException("无权删除该用户的头像", 403);
             }
 
-            minioUtil.deleteAvatar(userId);
+            ossUtil.deleteAvatar(userId);
             return Result.success("删除成功");
         } catch (ServiceException e) {
             throw e;

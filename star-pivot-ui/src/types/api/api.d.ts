@@ -289,5 +289,38 @@ declare namespace Api {
       Pick<GenTableListItem, 'tableName' | 'tableComment' | 'className'>
     > &
       Api.Common.CommonSearchParams
+
+    /** 操作日志列表 */
+    type OperLogList = Api.Common.PaginatedResponse<OperLogListItem>
+
+    /** 操作日志列表项 */
+    interface OperLogListItem {
+      operId: number
+      title?: string
+      businessType?: number
+      method?: string
+      requestMethod?: string
+      operatorType?: number
+      operName?: string
+      deptName?: string
+      operUrl?: string
+      operIp?: string
+      operLocation?: string
+      operParam?: string
+      jsonResult?: string
+      status?: number
+      errorMsg?: string
+      operTime?: string
+      costTime?: number
+    }
+
+    /** 操作日志搜索参数 */
+    type OperLogSearchParams = Partial<
+      Pick<OperLogListItem, 'title' | 'businessType' | 'operName' | 'status'>
+    > &
+      Api.Common.CommonSearchParams & {
+        startTime?: string
+        endTime?: string
+      }
   }
 }

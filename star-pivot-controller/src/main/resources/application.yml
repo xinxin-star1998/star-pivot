@@ -53,9 +53,9 @@ logging:
   level:
     root: info
 
-# MinIO 公共配置
-minio:
-  bucket-name: star-pivot-avatar # 存储桶名称（需提前创建）
+# 阿里云 OSS 公共配置
+oss:
+  bucket-name: star-pivot # 存储桶名称（需提前创建）
 
 # 代码生成配置
 gen:

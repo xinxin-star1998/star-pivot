@@ -1,5 +1,6 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.annotation.Log;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.UserReqBo;
@@ -62,6 +63,7 @@ public class SysUserController {
      * @param userDTO 用户数据对象
      * @return 操作结果，成功或失败的响应
      */
+    @Log(title = "用户管理", businessType = 1)
     @PreAuthorize("hasAuthority('system:user:add')")
     @PostMapping("add")
     public Result<?> addUser(@RequestBody UserDTO userDTO) {
@@ -75,6 +77,7 @@ public class SysUserController {
      * @param userDTO 用户数据对象
      * @return 操作结果，成功或失败的响应
      */
+    @Log(title = "用户管理", businessType = 2)
     @PreAuthorize("hasAuthority('system:user:edit')")
     @PostMapping("update")
     public Result<?> updateUser(@RequestBody UserDTO userDTO) {
@@ -85,6 +88,7 @@ public class SysUserController {
     /**
      * 删除用户
      */
+    @Log(title = "用户管理", businessType = 3)
     @PreAuthorize("hasAuthority('system:user:delete')")
     @DeleteMapping("/{userIds}")
     public Result<?> remove(@PathVariable Long[] userIds) {
@@ -103,6 +107,7 @@ public class SysUserController {
     /**
      * 重置密码
      */
+    @Log(title = "用户管理", businessType = 2)
     @PreAuthorize("hasAuthority('system:user:edit')")
     @PostMapping("/resetPwd")
     public Result<?> resetPwd(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
