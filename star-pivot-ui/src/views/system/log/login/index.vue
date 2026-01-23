@@ -123,7 +123,6 @@
     loading,
     pagination,
     getData,
-    resetSearchParams: resetTableSearchParams,
     handleSizeChange,
     handleCurrentChange,
     refreshData
@@ -261,9 +260,7 @@
       endTime: undefined,
       dateRange: null
     }
-    // 重置表格搜索参数
-    resetTableSearchParams()
-    // 重新获取数据
+    // 直接使用重置后的搜索表单重新获取数据（getData 内部会重置到第一页）
     getData(searchForm.value)
   }
 

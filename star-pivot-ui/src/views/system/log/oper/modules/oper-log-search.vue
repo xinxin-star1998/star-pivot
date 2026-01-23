@@ -4,6 +4,8 @@
     v-model="formData"
     :items="formItems"
     :rules="rules"
+    :show-reset="true"
+    :show-search="true"
     @reset="handleReset"
     @search="handleSearch"
   >

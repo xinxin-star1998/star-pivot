@@ -100,7 +100,6 @@
     loading,
     pagination,
     getData,
-    resetSearchParams: resetTableSearchParams,
     handleSizeChange,
     handleCurrentChange,
     refreshData
@@ -244,6 +243,7 @@
    * 重置搜索参数
    */
   const resetSearchParams = () => {
+    // 重置搜索表单
     searchForm.value = {
       title: undefined,
       businessType: undefined,
@@ -253,7 +253,7 @@
       endTime: undefined,
       dateRange: null
     }
-    resetTableSearchParams()
+    // 直接使用重置后的搜索表单重新获取数据（getData 内部会重置到第一页）
     getData(searchForm.value)
   }
 
