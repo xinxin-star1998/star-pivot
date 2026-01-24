@@ -406,7 +406,8 @@
   })
 
   const dialogTitle = computed(() => {
-    const menuTypeMap = {
+    // 使用宽泛的 Record 类型，避免以 any 索引窄类型对象导致的 TS 报错
+    const menuTypeMap: Record<string, string> = {
       M: '目录',
       C: '菜单',
       F: '按钮'
@@ -695,7 +696,7 @@
    */
   watch(
     () => props.visible,
-    async (newVal) => {
+    async (newVal: boolean) => {
       if (newVal) {
         // 先加载上级菜单选项
         await loadParentMenuOptions()
@@ -722,12 +723,17 @@
   /**
    * 监听上级菜单变化，自动调整菜单类型
    */
-  watch([() => form.parentId, () => getParentMenuType.value], ([newParentId, newParentType]) => {
-    if (newParentType === 'C' && form.menuType === 'M') {
-      // 如果上级菜单是'C'（菜单），且当前选择的是'M'（目录），则自动切换到'C'（菜单）
-      form.menuType = 'C'
+  watch(
+    [() => form.parentId, () => getParentMenuType.value],
+    ([newParentId, newParentType]: [number | undefined, string | undefined]) => {
+      if (newParentType === 'C' && form.menuType === 'M') {
+        // 如果上级菜单是'C'（菜单），且当前选择的是'M'（目录），则自动切换到'C'（菜单）
+        if (newParentId !== undefined) {
+          form.menuType = 'C'
+        }
+      }
     }
-  })
+  )
 
   /**
    * 监听菜单类型变化，更新验证规则

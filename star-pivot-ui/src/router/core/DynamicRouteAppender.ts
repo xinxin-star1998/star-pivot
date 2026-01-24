@@ -5,6 +5,7 @@
  *
  * ## 主要功能
  *
+ * - 追加首页（工作台）路由（数据库不存菜单）
  * - 追加个人中心路由（数据库不存菜单）
  * - 追加字典数据明细路由（数据库不存菜单）
  * - 支持扩展其他前端动态路由
@@ -31,6 +32,9 @@ export class DynamicRouteAppender {
    * @returns 更新后的菜单列表
    */
   static appendDynamicRoutes(menuList: AppRouteRecord[]): AppRouteRecord[] {
+    // 追加首页（工作台）路由，置于最前
+    this.appendDashboardConsoleRoute(menuList)
+
     // 追加个人中心路由
     this.appendUserCenterRoute(menuList)
 
@@ -43,6 +47,89 @@ export class DynamicRouteAppender {
     // 可以在这里继续追加其他前端动态路由
 
     return menuList
+  }
+
+  /**
+   * 追加「首页（工作台）」路由（数据库不存菜单）
+   * 对应视图：@/views/dashboard/console/index.vue，与 HOME_PAGE_PATH 一致
+   * 结构：仪表盘（父级目录）-> 工作台（子菜单）
+   * @param menuList 菜单列表
+   */
+  static appendDashboardConsoleRoute(menuList: AppRouteRecord[]): void {
+    // 检查是否已存在工作台路由（通过路径或名称）
+    const existsConsole = menuList.some((route: AppRouteRecord) => {
+      if (route.name === 'Console' || route.path === '/dashboard/console') {
+        return true
+      }
+      // 检查是否在子路由中
+      if (route.path === '/dashboard' && route.children) {
+        return route.children.some((child) => child.name === 'Console' || child.path === 'console')
+      }
+      return false
+    })
+
+    if (existsConsole) {
+      return
+    }
+
+    // 查找是否已存在仪表盘父级目录
+    let dashboardParent = menuList.find(
+      (route: AppRouteRecord) => route.path === '/dashboard' && route.menuType === 'M'
+    )
+
+    if (!dashboardParent) {
+      // 创建仪表盘父级目录
+      dashboardParent = {
+        path: '/dashboard',
+        name: 'Dashboard',
+        component: '/index/index', // 使用 Layout
+        meta: {
+          title: 'menus.dashboard.title',
+          icon: 'ri:dashboard-3-line',
+          keepAlive: true
+        },
+        menuType: 'M',
+        status: '0',
+        orderNum: 0,
+        children: []
+      }
+      menuList.unshift(dashboardParent)
+      if (import.meta.env.DEV) {
+        console.log('[DynamicRouteAppender] 已创建仪表盘父级目录')
+      }
+    }
+
+    // 确保 children 数组存在
+    if (!dashboardParent.children) {
+      dashboardParent.children = []
+    }
+
+    // 检查子路由中是否已存在工作台
+    const existsConsoleChild = dashboardParent.children.some(
+      (child) => child.name === 'Console' || child.path === 'console'
+    )
+
+    if (!existsConsoleChild) {
+      // 创建工作台子路由
+      const consoleRoute: AppRouteRecord = {
+        path: 'console', // 相对路径
+        name: 'Console',
+        component: '/dashboard/console/index',
+        meta: {
+          title: 'menus.dashboard.console',
+          icon: 'ri:dashboard-3-line',
+          keepAlive: true
+        },
+        menuType: 'C',
+        status: '0',
+        orderNum: 0
+      }
+
+      dashboardParent.children.push(consoleRoute)
+      if (import.meta.env.DEV) {
+        console.log('[DynamicRouteAppender] 已动态追加首页（工作台）路由到仪表盘目录下')
+      }
+    }
   }
 
   /**
@@ -101,7 +188,7 @@ export class DynamicRouteAppender {
           isHide: true,
           // 指定父级菜单路径，用于面包屑、高亮等
           parentPath: '/system/dict',
-          keepAlive: true,
+          keepAlive: true
           // 手动配置权限列表，因为该路由不在数据库中，无法从菜单获取 perms
           // authList: [
           //   { title: '查询字典数据', authMark: 'system:data:query' },

@@ -39,6 +39,11 @@ interface AuthBinding extends DirectiveBinding {
   value: string
 }
 
+/**
+ * 记录已绑定 v-auth 指令的元素，用于在路由或权限变化时重新校验
+ */
+const authElements = new Set<{ el: HTMLElement; binding: AuthBinding }>()
+
 function checkAuthPermission(el: HTMLElement, binding: AuthBinding): void {
   // 获取当前路由的权限列表
   const authList = (router.currentRoute.value.meta.authList as Array<{ authMark: string }>) || []
@@ -59,9 +64,30 @@ function removeElement(el: HTMLElement): void {
 }
 
 const authDirective: Directive = {
-  mounted: checkAuthPermission,
-  updated: checkAuthPermission
+  mounted(el, binding: AuthBinding) {
+    authElements.add({ el, binding })
+    checkAuthPermission(el, binding)
+  },
+  updated(el, binding: AuthBinding) {
+    checkAuthPermission(el, binding)
+  },
+  beforeUnmount(el) {
+    // 组件卸载时移除对应元素记录，避免内存泄漏
+    for (const item of authElements) {
+      if (item.el === el) {
+        authElements.delete(item)
+        break
+      }
+    }
+  }
 }
+
+// 监听路由切换，在每次路由变化后重新校验所有已绑定元素的权限
+router.afterEach(() => {
+  authElements.forEach(({ el, binding }) => {
+    checkAuthPermission(el, binding)
+  })
+})
 
 export function setupAuthDirective(app: App): void {
   app.directive('auth', authDirective)

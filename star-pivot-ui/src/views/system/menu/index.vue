@@ -227,25 +227,6 @@
   }
 
   /**
-   * 检查菜单行是否有权限按钮子节点
-   * @param row 菜单行数据
-   * @returns 是否有权限按钮子节点
-   */
-  const hasAuthButtonChildren = (row: AppRouteRecord): boolean => {
-    // 检查子节点中是否有权限按钮
-    if (row.children && row.children.length > 0) {
-      return row.children.some(
-        (child) =>
-          // 通过 authList 转换的权限按钮
-          child.meta?.isAuthButton === true ||
-          // 直接从数据库返回的按钮类型（menuType='F'）
-          child.menuType === 'F'
-      )
-    }
-    return false
-  }
-
-  /**
    * 获取菜单类型信息
    * @param row 菜单行数据
    * @returns 菜单类型信息（文本和颜色）
@@ -366,8 +347,8 @@
             )
           }
 
-          // 删除权限按钮权限：system:menu:remove
-          if (hasAuth('system:menu:remove')) {
+          // 删除权限按钮权限：system:menu:delete
+          if (hasAuth('system:menu:delete')) {
             buttons.push(
               h(ArtButtonTable, {
                 type: 'delete',
@@ -399,8 +380,8 @@
             )
           }
 
-          // 删除菜单按钮权限：system:menu:remove
-          if (hasAuth('system:menu:remove')) {
+          // 删除菜单按钮权限：system:menu:delete
+          if (hasAuth('system:menu:delete')) {
             buttons.push(
               h(ArtButtonTable, {
                 type: 'delete',
@@ -530,7 +511,9 @@
    * 检查是否有搜索条件
    */
   const hasSearchFilters = computed(() => {
-    return Object.values(searchFilters).some((v) => v?.trim())
+    return Object.values(searchFilters).some((v) =>
+      typeof v === 'string' ? v.trim() : v !== undefined && v !== null
+    )
   })
 
   /**
@@ -681,7 +664,8 @@
     }
 
     try {
-      ElMessageBox.confirm(
+      // 使用 await 确保真正等待用户在确认框中的选择，避免误删
+      await ElMessageBox.confirm(
         `确定要删除该${isAuthButton ? '权限' : '菜单'}吗？删除后无法恢复`,
         '提示',
         {
@@ -695,7 +679,8 @@
       ElMessage.success('删除成功')
       await getMenuList()
     } catch (error) {
-      if (error !== 'cancel') {
+      // 用户点击取消/关闭时，Element Plus 会抛出 'cancel' 或 'close' 等错误标识，这里统一视为正常中断
+      if (error !== 'cancel' && error !== 'close') {
         safeError(`删除${isAuthButton ? '权限' : '菜单'}失败:`, error)
         ElMessage.error('删除失败')
       }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.common.domain.Constants;
+import com.star.pivot.common.domain.DataScope;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.exception.BusinessException;
 import com.star.pivot.common.utils.SecurityUtils;
@@ -18,6 +19,7 @@ import com.star.pivot.system.mapper.*;
 import com.star.pivot.system.service.AccountLockService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.UserPermissionCacheService;
+import com.star.pivot.system.utils.DataScopeService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private UserPermissionCacheService userPermissionCacheService;
     @Autowired
     private AccountLockService accountLockService;
+    @Autowired
+    private DataScopeService dataScopeService;
     /**
      * 用户分页查询
      *
@@ -60,14 +64,22 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      */
     @Override
     public PageResponse<UserVO> pageList(UserReqBo userReqBo) {
-        PageResponse<UserVO> pageResponse = new PageResponse<>();
-        // 分页查询
         Page<SysUser> page = new Page<>(userReqBo.getPageNum(), userReqBo.getPageSize());
-        IPage<SysUser> pageList = sysUserMapper.selectPageList(page, userReqBo);
+        // 1. 获取当前用户数据权限
+        DataScope dataScope = dataScopeService.getCurrentUserDataScope();
+        // 2. 构造查询参数（MyBatis参数传递）
+        Map<String, Object> param = new HashMap<>();
+        param.put("dataScope", dataScope);
+        param.put("deptIds", dataScope.getDeptIds());
+        param.put("userDeptId", dataScope.getUserDeptId()); // 使用DataScope中的userDeptId，避免重复查询
+        param.put("userId", dataScope.getUserId());
+        param.put("userReqBo",userReqBo);
+        //3.分页查询数据
+        IPage<SysUser> pageList = sysUserMapper.selectPageList(page, param);
         
         List<SysUser> userList = pageList.getRecords();
         List<UserVO> voList = convertToVOList(userList);
-        
+        PageResponse<UserVO> pageResponse = new PageResponse<>();
         // 转换为分页结果
         pageResponse.setTotal(pageList.getTotal());
         pageResponse.setRows(voList);
@@ -267,7 +279,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         PageResponse<SysUser> pageResponse = new PageResponse<>();
         // 分页查询
         Page<SysUser> page = new Page<>(assignUserReqBo.getPageNum(), assignUserReqBo.getPageSize());
-        IPage<SysUser> pageList = sysUserMapper.getUserListByRoleId(page,assignUserReqBo);
+        
+        // 获取当前用户数据权限
+        DataScope dataScope = dataScopeService.getCurrentUserDataScope();
+        Map<String, Object> param = new HashMap<>();
+        param.put("dataScope", dataScope);
+        param.put("deptIds", dataScope.getDeptIds());
+        param.put("userDeptId", dataScope.getUserDeptId());
+        param.put("userId", dataScope.getUserId());
+        param.put("assignUserReqBo", assignUserReqBo);
+        
+        IPage<SysUser> pageList = sysUserMapper.getUserListByRoleId(page, param);
         // 转换为分页结果
         pageResponse.setTotal(pageList.getTotal());
         pageResponse.setRows(pageList.getRecords());
@@ -282,7 +304,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         PageResponse<SysUser> pageResponse = new PageResponse<>();
         // 分页查询
         Page<SysUser> page = new Page<>(assignUserReqBo.getPageNum(), assignUserReqBo.getPageSize());
-        IPage<SysUser> pageList = sysUserMapper.unallocatedList(page,assignUserReqBo);
+        
+        // 获取当前用户数据权限
+        DataScope dataScope = dataScopeService.getCurrentUserDataScope();
+        Map<String, Object> param = new HashMap<>();
+        param.put("dataScope", dataScope);
+        param.put("deptIds", dataScope.getDeptIds());
+        param.put("userDeptId", dataScope.getUserDeptId());
+        param.put("userId", dataScope.getUserId());
+        param.put("assignUserReqBo", assignUserReqBo);
+        
+        IPage<SysUser> pageList = sysUserMapper.unallocatedList(page, param);
         // 转换为分页结果
         pageResponse.setTotal(pageList.getTotal());
         pageResponse.setRows(pageList.getRecords());

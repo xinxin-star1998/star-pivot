@@ -29,11 +29,11 @@ export interface SysMenu {
 }
 
 /**
- * 获取菜单列表（从后端获取）
+ * 获取当前用户菜单列表（从后端获取，已与路由接口合并至 /router）
  */
 export function fetchGetMenuList() {
   return request.get<SysMenu[]>({
-    url: '/api/sys/menu/userMenuTree'
+    url: '/api/router/userMenuTree'
   })
 }
 

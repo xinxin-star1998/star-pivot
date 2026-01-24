@@ -3,70 +3,37 @@ package com.star.pivot.controller;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
-import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.SysMenuService;
-import com.star.pivot.system.service.SysUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 /**
- * 菜单控制器
+ * 菜单管理控制器
+ * <p>
+ * 提供菜单的增删改查等管理接口，需 system:menu:* 权限。当前用户菜单树已迁移至 {@link RouterController#getUserMenuTree}。
+ * </p>
  */
 @RestController
 @RequestMapping("/sys/menu")
 @RequiredArgsConstructor
 public class SysMenuController {
-    
+
     private final SysMenuService sysMenuService;
-    private final SysUserService sysUserService;
 
     /**
      * 查询所有菜单树接口（管理员使用）
-     * 
+     *
      * @return 菜单树列表，包含所有菜单项及其层级关系
      */
     @PreAuthorize("hasAuthority('system:menu:query')")
     @GetMapping("/menuTree")
     public Result<List<SysMenu>> menuTree() {
-        // 从数据库查询所有菜单树
         List<SysMenu> menuTree = sysMenuService.menuTree();
         return Result.success(menuTree);
-    }
-
-    /**
-     * 获取当前用户的菜单树接口（根据用户权限）
-     * 
-     * @param authentication Spring Security认证对象
-     * @return 当前用户有权限的菜单树列表
-     */
-    @PreAuthorize("hasAuthority('system:menu:query')")
-    @GetMapping("/userMenuTree")
-    public ResponseEntity<Result<List<SysMenu>>> getUserMenuTree(Authentication authentication) {
-        // 从Authentication中获取当前用户信息
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Result.error(401, "用户未认证"));
-        }
-
-        String username = authentication.getName();
-        
-        // 根据用户名查询用户信息
-        SysUser user = sysUserService.getUserByUsername(username);
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Result.error(404, "用户不存在"));
-        }
-
-        // 查询用户有权限的菜单树
-        List<SysMenu> menuTree = sysMenuService.getUserMenuTree(user.getUserId());
-        return ResponseEntity.ok(Result.success(menuTree));
     }
 
     /**

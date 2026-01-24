@@ -1,40 +1,98 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.MetaVo;
 import com.star.pivot.system.domain.bo.RouterVo;
 import com.star.pivot.system.domain.entity.SysMenu;
+import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.SysMenuService;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.system.service.SysUserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.RequiredArgsConstructor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+/**
+ * 路由与当前用户菜单控制器
+ * <p>
+ * 提供动态路由、当前用户菜单树等与登录用户强相关的接口，已登录即可访问。
+ * </p>
+ */
 @RestController
 @RequestMapping("/router")
 @RequiredArgsConstructor
 public class RouterController {
-    
+
     private final SysMenuService sysMenuService;
-    
+    private final SysUserService sysUserService;
+
+    /**
+     * 获取当前用户的菜单树（根据用户权限）
+     * <p>
+     * 从 Authentication 解析用户，再查询其有权限的菜单树。与 dynamic-routes 共用同一套解析逻辑。
+     * </p>
+     *
+     * @param authentication Spring Security 认证对象
+     * @return 当前用户有权限的菜单树，未认证或用户不存在时返回 401/404
+     */
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/userMenuTree")
+    public ResponseEntity<Result<List<SysMenu>>> getUserMenuTree(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Result.error(401, "用户未认证"));
+        }
+        List<SysMenu> menuTree = getCurrentUserMenuTree(authentication);
+        if (menuTree == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Result.error(404, "用户不存在"));
+        }
+        return ResponseEntity.ok(Result.success(menuTree));
+    }
+
     /**
      * 获取动态路由
-     * 根据当前用户权限返回对应的路由列表
-     * @return 动态路由列表
+     * <p>
+     * 根据当前用户权限获取菜单树并转为路由列表（仅本人路由，已登录即可访问）。
+     * </p>
+     *
+     * @param authentication Spring Security 认证对象
+     * @return 动态路由列表，无法解析用户时返回空列表
      */
-    @PreAuthorize("hasAuthority('system:menu:query')")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/dynamic-routes")
-    public List<RouterVo> getDynamicRoutes() {
-        // 根据当前用户权限获取菜单树，而不是返回所有菜单
-        Long userId = SecurityContextUtils.getUserId();
-        List<SysMenu> menuTree = sysMenuService.getUserMenuTree(userId);
-        
-        // 转换为路由树
+    public List<RouterVo> getDynamicRoutes(Authentication authentication) {
+        List<SysMenu> menuTree = getCurrentUserMenuTree(authentication);
+        if (menuTree == null || menuTree.isEmpty()) {
+            return Collections.emptyList();
+        }
         return buildRouterTree(menuTree);
+    }
+
+    /**
+     * 根据当前认证信息解析用户并获取其菜单树（共用逻辑）
+     *
+     * @param authentication 认证信息，可为 null
+     * @return 当前用户的菜单树；未认证或用户不存在时返回 null
+     */
+    private List<SysMenu> getCurrentUserMenuTree(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        String username = authentication.getName();
+        SysUser user = sysUserService.getUserByUsername(username);
+        if (user == null) {
+            return null;
+        }
+        return sysMenuService.getUserMenuTree(user.getUserId());
     }
     
     /**
