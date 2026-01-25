@@ -6,9 +6,9 @@
         <div class="card-header">
           <span>Druid 数据库监控</span>
           <div>
-            <ElSwitch 
-              v-model="includeSlowSql" 
-              active-text="包含慢SQL" 
+            <ElSwitch
+              v-model="includeSlowSql"
+              active-text="包含慢SQL"
               inactive-text="仅统计"
               style="margin-right: 10px"
               @change="handleSlowSqlToggle"
@@ -30,128 +30,131 @@
         <!-- 数据源为 Druid 时展示监控卡片 -->
         <div v-else-if="druidInfo && druidInfo.available !== false">
           <ElRow :gutter="20">
-          <!-- 数据源信息 -->
-          <ElCol :xs="24" :sm="12" :md="8">
-            <ElCard shadow="hover">
-              <template #header>数据源信息</template>
-              <ElDescriptions :column="1" border>
-                <ElDescriptionsItem label="数据源名称">
-                  {{ druidInfo.name || '-' }}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="数据库类型">
-                  {{ druidInfo.dbType || '-' }}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="驱动类名">
-                  {{ druidInfo.driverClassName || '-' }}
-                </ElDescriptionsItem>
-              </ElDescriptions>
-            </ElCard>
-          </ElCol>
+            <!-- 数据源信息 -->
+            <ElCol :xs="24" :sm="12" :md="8">
+              <ElCard shadow="hover">
+                <template #header>数据源信息</template>
+                <ElDescriptions :column="1" border>
+                  <ElDescriptionsItem label="数据源名称">
+                    {{ druidInfo?.name || '-' }}
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="数据库类型">
+                    {{ druidInfo?.dbType || '-' }}
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="驱动类名">
+                    {{ druidInfo?.driverClassName || '-' }}
+                  </ElDescriptionsItem>
+                </ElDescriptions>
+              </ElCard>
+            </ElCol>
 
-          <!-- 连接池信息 -->
-          <ElCol :xs="24" :sm="12" :md="8">
-            <ElCard shadow="hover">
-              <template #header>连接池信息</template>
-              <ElDescriptions :column="1" border>
-                <ElDescriptionsItem label="初始连接数">
-                  {{ druidInfo.connectionPool?.initialSize || 0 }}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="最小空闲连接数">
-                  {{ druidInfo.connectionPool?.minIdle || 0 }}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="最大活跃连接数">
-                  {{ druidInfo.connectionPool?.maxActive || 0 }}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="当前连接数">
-                  {{ druidInfo.connectionPool?.activeCount || 0 }}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="活跃连接峰值">
-                  {{ druidInfo.connectionPool?.activePeak || 0 }}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="连接池使用率">
-                  <span :class="getUsageClass(druidInfo.connectionPool?.usage || 0)">
-                    {{ formatPercent(druidInfo.connectionPool?.usage || 0) }}
+            <!-- 连接池信息 -->
+            <ElCol :xs="24" :sm="12" :md="8">
+              <ElCard shadow="hover">
+                <template #header>连接池信息</template>
+                <ElDescriptions :column="1" border>
+                  <ElDescriptionsItem label="初始连接数">
+                    {{ druidInfo?.connectionPool?.initialSize || 0 }}
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="最小空闲连接数">
+                    {{ druidInfo?.connectionPool?.minIdle || 0 }}
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="最大活跃连接数">
+                    {{ druidInfo?.connectionPool?.maxActive || 0 }}
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="当前连接数">
+                    {{ druidInfo?.connectionPool?.activeCount || 0 }}
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="活跃连接峰值">
+                    {{ druidInfo?.connectionPool?.activePeak || 0 }}
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="连接池使用率">
+                    <span :class="getUsageClass(druidInfo.connectionPool?.usage || 0)">
+                      {{ formatPercent(druidInfo?.connectionPool?.usage || 0) }}
+                    </span>
+                  </ElDescriptionsItem>
+                </ElDescriptions>
+                <ElProgress
+                  :percentage="druidInfo.connectionPool?.usage || 0"
+                  :color="getProgressColor(druidInfo.connectionPool?.usage || 0)"
+                  :stroke-width="8"
+                  style="margin-top: 10px"
+                />
+              </ElCard>
+            </ElCol>
+
+            <!-- SQL 统计信息 -->
+            <ElCol :xs="24" :sm="12" :md="8">
+              <ElCard shadow="hover">
+                <template #header>SQL 统计信息</template>
+                <ElDescriptions :column="1" border>
+                  <ElDescriptionsItem label="SQL 执行总数">
+                    {{ formatNumber(druidInfo?.sqlStat?.executeCount || 0) }}
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="SQL 执行总耗时">
+                    {{ formatNumber(druidInfo?.sqlStat?.executeMillisTotal || 0) }} ms
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="平均执行时间">
+                    {{ formatNumber(druidInfo?.sqlStat?.executeMillisAvg || 0, 2) }} ms
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="慢 SQL 数量">
+                    <ElTag type="warning">
+                      {{ formatNumber(druidInfo?.sqlStat?.slowSqlCount || 0) }}
+                    </ElTag>
+                  </ElDescriptionsItem>
+                  <ElDescriptionsItem label="错误 SQL 数量">
+                    <ElTag type="danger">
+                      {{ formatNumber(druidInfo?.sqlStat?.errorSqlCount || 0) }}
+                    </ElTag>
+                  </ElDescriptionsItem>
+                </ElDescriptions>
+              </ElCard>
+            </ElCol>
+          </ElRow>
+
+          <!-- 慢SQL列表（如果包含） -->
+          <ElCard
+            v-if="showSlowSqlList && druidInfo?.slowSqlList && druidInfo?.slowSqlList.length > 0"
+            shadow="hover"
+            style="margin-top: 20px"
+          >
+            <template #header>
+              <div class="card-header">
+                <span>慢SQL列表</span>
+                <ElSwitch v-model="showSlowSqlList" active-text="显示" inactive-text="隐藏" />
+              </div>
+            </template>
+            <ElTable :data="druidInfo?.slowSqlList" border stripe>
+              <ElTableColumn prop="sqlId" label="SQL ID" width="100" />
+              <ElTableColumn prop="sqlText" label="SQL语句" min-width="300" show-overflow-tooltip>
+                <template #default="{ row }">
+                  <ElTooltip :content="row.sqlText" placement="top" :show-after="300">
+                    <div class="sql-text">{{ row?.sqlText }}</div>
+                  </ElTooltip>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn prop="executeCount" label="执行次数" width="100" />
+              <ElTableColumn prop="executeTimeAvg" label="平均执行时间(ms)" width="150" sortable>
+                <template #default="{ row }">
+                  <span :class="getTimeClass(row.executeTimeAvg || 0)">
+                    {{ formatNumber(row?.executeTimeAvg || 0, 2) }}
                   </span>
-                </ElDescriptionsItem>
-              </ElDescriptions>
-              <ElProgress
-                :percentage="druidInfo.connectionPool?.usage || 0"
-                :color="getProgressColor(druidInfo.connectionPool?.usage || 0)"
-                :stroke-width="8"
-                style="margin-top: 10px"
-              />
-            </ElCard>
-          </ElCol>
-
-          <!-- SQL 统计信息 -->
-          <ElCol :xs="24" :sm="12" :md="8">
-            <ElCard shadow="hover">
-              <template #header>SQL 统计信息</template>
-              <ElDescriptions :column="1" border>
-                <ElDescriptionsItem label="SQL 执行总数">
-                  {{ formatNumber(druidInfo.sqlStat?.executeCount || 0) }}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="SQL 执行总耗时">
-                  {{ formatNumber(druidInfo.sqlStat?.executeMillisTotal || 0) }} ms
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="平均执行时间">
-                  {{ formatNumber(druidInfo.sqlStat?.executeMillisAvg || 0, 2) }} ms
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="慢 SQL 数量">
-                  <ElTag type="warning">
-                    {{ formatNumber(druidInfo.sqlStat?.slowSqlCount || 0) }}
-                  </ElTag>
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="错误 SQL 数量">
-                  <ElTag type="danger">
-                    {{ formatNumber(druidInfo.sqlStat?.errorSqlCount || 0) }}
-                  </ElTag>
-                </ElDescriptionsItem>
-              </ElDescriptions>
-            </ElCard>
-          </ElCol>
-        </ElRow>
-
-        <!-- 慢SQL列表（如果包含） -->
-        <ElCard v-if="showSlowSqlList && druidInfo.slowSqlList && druidInfo.slowSqlList.length > 0" 
-                shadow="hover" style="margin-top: 20px">
-          <template #header>
-            <div class="card-header">
-              <span>慢SQL列表</span>
-              <ElSwitch v-model="showSlowSqlList" active-text="显示" inactive-text="隐藏" />
-            </div>
-          </template>
-          <ElTable :data="druidInfo.slowSqlList" border stripe>
-            <ElTableColumn prop="sqlId" label="SQL ID" width="100" />
-            <ElTableColumn prop="sqlText" label="SQL语句" min-width="300" show-overflow-tooltip>
-              <template #default="{ row }">
-                <ElTooltip :content="row.sqlText" placement="top" :show-after="300">
-                  <div class="sql-text">{{ row.sqlText }}</div>
-                </ElTooltip>
-              </template>
-            </ElTableColumn>
-            <ElTableColumn prop="executeCount" label="执行次数" width="100" />
-            <ElTableColumn prop="executeTimeAvg" label="平均执行时间(ms)" width="150" sortable>
-              <template #default="{ row }">
-                <span :class="getTimeClass(row.executeTimeAvg || 0)">
-                  {{ formatNumber(row.executeTimeAvg || 0, 2) }}
-                </span>
-              </template>
-            </ElTableColumn>
-            <ElTableColumn prop="executeTimeMax" label="最大执行时间(ms)" width="150" />
-            <ElTableColumn prop="slowCount" label="慢SQL次数" width="120">
-              <template #default="{ row }">
-                <ElTag type="warning">{{ row.slowCount || 0 }}</ElTag>
-              </template>
-            </ElTableColumn>
-            <ElTableColumn prop="errorCount" label="错误次数" width="100">
-              <template #default="{ row }">
-                <ElTag v-if="(row.errorCount || 0) > 0" type="danger">{{ row.errorCount }}</ElTag>
-                <span v-else>0</span>
-              </template>
-            </ElTableColumn>
-          </ElTable>
-        </ElCard>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn prop="executeTimeMax" label="最大执行时间(ms)" width="150" />
+              <ElTableColumn prop="slowCount" label="慢SQL次数" width="120">
+                <template #default="{ row }">
+                  <ElTag type="warning">{{ row?.slowCount || 0 }}</ElTag>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn prop="errorCount" label="错误次数" width="100">
+                <template #default="{ row }">
+                  <ElTag v-if="(row.errorCount || 0) > 0" type="danger">{{ row?.errorCount }}</ElTag>
+                  <span v-else>0</span>
+                </template>
+              </ElTableColumn>
+            </ElTable>
+          </ElCard>
         </div>
       </div>
     </ElCard>

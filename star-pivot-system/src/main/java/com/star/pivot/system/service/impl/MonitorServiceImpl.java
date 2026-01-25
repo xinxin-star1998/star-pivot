@@ -478,7 +478,7 @@ public class MonitorServiceImpl implements MonitorService {
         try {
             // 先测试 Redis 连接是否正常
             try {
-                String pingResult = redisTemplate.execute((RedisCallback<String>) RedisConnectionCommands::ping);
+                String pingResult = redisTemplate.execute(RedisConnectionCommands::ping);
                 if (!"PONG".equals(pingResult)) {
                     log.error("Redis 连接测试失败：PING 命令返回异常结果: {}", pingResult);
                     RedisMonitorVO vo = new RedisMonitorVO();
@@ -530,9 +530,8 @@ public class MonitorServiceImpl implements MonitorService {
                             // 使用反射调用 info() 方法，避免类型转换问题
                             java.lang.reflect.Method infoMethod = nativeConnection.getClass().getMethod("info");
                             Object result = infoMethod.invoke(nativeConnection);
-                            if (result instanceof String) {
-                                String resultStr = (String) result;
-                                if (resultStr != null && !resultStr.isEmpty()) {
+                            if (result instanceof String resultStr) {
+                                if (!resultStr.isEmpty()) {
                                     return resultStr;
                                 }
                             }
@@ -771,7 +770,7 @@ public class MonitorServiceImpl implements MonitorService {
             // 刷新令牌的 key 格式为 "jwt:refresh:user:{userId}"
             Set<String> keys = scanKeys("jwt:refresh:user:*");
             
-            if (keys != null && !keys.isEmpty()) {
+            if (!keys.isEmpty()) {
                 // 批量查询优化：先收集所有 userId
                 List<Long> userIds = new ArrayList<>();
                 Map<String, Long> keyToUserIdMap = new HashMap<>();
@@ -1106,22 +1105,22 @@ public class MonitorServiceImpl implements MonitorService {
         try {
             // 使用并发检查提升性能，每个检查项最多等待3秒
             CompletableFuture<Map<String, Object>> dbFuture = 
-                CompletableFuture.supplyAsync(() -> checkDatabaseHealth())
+                CompletableFuture.supplyAsync(this::checkDatabaseHealth)
                     .orTimeout(3, TimeUnit.SECONDS)
                     .exceptionally(ex -> createErrorHealth("数据库检查超时或异常: " + ex.getMessage()));
             
             CompletableFuture<Map<String, Object>> redisFuture = 
-                CompletableFuture.supplyAsync(() -> checkRedisHealth())
+                CompletableFuture.supplyAsync(this::checkRedisHealth)
                     .orTimeout(3, TimeUnit.SECONDS)
                     .exceptionally(ex -> createErrorHealth("Redis检查超时或异常: " + ex.getMessage()));
             
             CompletableFuture<Map<String, Object>> diskFuture = 
-                CompletableFuture.supplyAsync(() -> checkDiskHealth())
+                CompletableFuture.supplyAsync(this::checkDiskHealth)
                     .orTimeout(3, TimeUnit.SECONDS)
                     .exceptionally(ex -> createErrorHealth("磁盘检查超时或异常: " + ex.getMessage()));
             
             CompletableFuture<Map<String, Object>> jvmFuture = 
-                CompletableFuture.supplyAsync(() -> checkJvmHealth())
+                CompletableFuture.supplyAsync(this::checkJvmHealth)
                     .orTimeout(3, TimeUnit.SECONDS)
                     .exceptionally(ex -> createErrorHealth("JVM检查超时或异常: " + ex.getMessage()));
             
@@ -1196,8 +1195,7 @@ public class MonitorServiceImpl implements MonitorService {
     private Map<String, Object> checkDatabaseHealth() {
         Map<String, Object> health = new HashMap<>();
         try {
-            if (dataSource != null && dataSource instanceof DruidDataSource) {
-                DruidDataSource druidDataSource = (DruidDataSource) dataSource;
+            if (dataSource != null && dataSource instanceof DruidDataSource druidDataSource) {
                 int activeCount = druidDataSource.getActiveCount();
                 int maxActive = druidDataSource.getMaxActive();
                 double usage = maxActive > 0 ? (double) activeCount / maxActive * 100 : 0;
@@ -1365,7 +1363,7 @@ public class MonitorServiceImpl implements MonitorService {
                 
                 // 获取键类型
                 String type = redisTemplate.execute((RedisCallback<String>) connection -> {
-                    DataType dataType = connection.type(key.getBytes());
+                    DataType dataType = connection.keyCommands().type(key.getBytes());
                     return dataType != null ? dataType.code() : "unknown";
                 });
                 keyInfo.setType(type != null ? type : "unknown");
@@ -1426,7 +1424,7 @@ public class MonitorServiceImpl implements MonitorService {
             // 获取键类型
             String type = redisTemplate.execute((RedisCallback<String>) connection -> {
                 try {
-                    DataType dataType = connection.type(key.getBytes());
+                    DataType dataType = connection.keyCommands().type(key.getBytes());
                     return dataType != null ? dataType.code() : "unknown";
                 } catch (Exception e) {
                     log.warn("获取键类型失败，key: {}", key, e);
@@ -1482,7 +1480,7 @@ public class MonitorServiceImpl implements MonitorService {
                 case "hash":
                     // Hash 类型
                     Map<Object, Object> hashValue = redisTemplate.opsForHash().entries(key);
-                    if (hashValue != null && !hashValue.isEmpty()) {
+                    if (!hashValue.isEmpty()) {
                         return formatObjectValue(hashValue, objectMapper);
                     }
                     return "(空哈希)";
@@ -1511,7 +1509,7 @@ public class MonitorServiceImpl implements MonitorService {
                         Map<String, Double> zsetWithScore = new LinkedHashMap<>();
                         for (Object member : zsetValue) {
                             Double score = redisTemplate.opsForZSet().score(key, member);
-                            zsetWithScore.put(member != null ? member.toString() : "null", score != null ? score : 0.0);
+                            zsetWithScore.put(member.toString(), score != null ? score : 0.0);
                         }
                         return formatObjectValue(zsetWithScore, objectMapper);
                     }
@@ -1614,7 +1612,7 @@ public class MonitorServiceImpl implements MonitorService {
                         }
                     } else {
                         // 复杂对象，显示类型和 toString()
-                        sb.append("\"").append(escapeJsonString(fieldValue.getClass().getSimpleName() + ": " + fieldValue.toString())).append("\"");
+                        sb.append("\"").append(escapeJsonString(fieldValue.getClass().getSimpleName() + ": " + fieldValue)).append("\"");
                     }
                     hasFields = true;
                 } catch (Exception e) {
@@ -1707,11 +1705,14 @@ public class MonitorServiceImpl implements MonitorService {
         }
 
         try {
-            // 使用 FLUSHDB 命令清空当前数据库的所有键
             redisTemplate.execute((RedisCallback<Object>) connection -> {
-                connection.flushDb();
+                // 适配 Spring Data Redis 3.x+：使用 RedisServerCommands 执行 FLUSHDB
+                RedisServerCommands serverCommands = connection.serverCommands();
+                // FLUSHDB 有两种模式：ASYNC（异步）/ SYNC（同步），默认用 ASYNC 性能更高
+                serverCommands.flushDb(RedisServerCommands.FlushOption.ASYNC);
                 return null;
             });
+            log.info("Redis 当前数据库已成功清空（FLUSHDB）");
             return true;
         } catch (Exception e) {
             log.error("清空所有缓存失败", e);
