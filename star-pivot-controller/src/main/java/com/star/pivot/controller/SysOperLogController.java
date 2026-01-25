@@ -32,7 +32,7 @@ public class SysOperLogController {
      * @param operLogReqBo 查询参数
      * @return 分页结果
      */
-    @Log(title = "操作日志", businessType = 0)
+    @Log(title = "操作日志")
     @PreAuthorize("hasAuthority('system:operlog:query')")
     @PostMapping("/pageList")
     public Result<PageResponse<OperLogVO>> pageList(@RequestBody OperLogReqBo operLogReqBo) {
@@ -46,7 +46,7 @@ public class SysOperLogController {
      * @param operId 日志ID
      * @return 操作日志详情
      */
-    @Log(title = "操作日志", businessType = 0)
+    @Log(title = "操作日志")
     @PreAuthorize("hasAuthority('system:operlog:query')")
     @GetMapping("/{operId}")
     public Result<OperLogVO> getOperLogById(@PathVariable("operId") Long operId) {

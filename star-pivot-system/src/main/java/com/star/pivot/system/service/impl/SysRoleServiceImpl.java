@@ -1,33 +1,32 @@
   package com.star.pivot.system.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.star.pivot.common.domain.Constants;
-import com.star.pivot.common.domain.PageResponse;
-import com.star.pivot.common.exception.BusinessException;
-import com.star.pivot.system.domain.dto.RoleDTO;
-import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
-import com.star.pivot.system.domain.dto.RoleQueryDTO;
-import com.star.pivot.system.domain.dto.UserRoleDTO;
-import com.star.pivot.system.domain.entity.RoleDept;
-import com.star.pivot.system.domain.entity.RoleMenu;
-import com.star.pivot.system.domain.entity.SysRole;
-import com.star.pivot.system.domain.entity.UserRole;
-import com.star.pivot.system.mapper.*;
-import com.star.pivot.system.service.SysRoleService;
-import com.star.pivot.system.service.UserPermissionCacheService;
-import com.star.pivot.security.utils.SecurityContextUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+  import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+  import com.baomidou.mybatisplus.core.metadata.IPage;
+  import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+  import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+  import com.star.pivot.common.domain.Constants;
+  import com.star.pivot.common.domain.PageResponse;
+  import com.star.pivot.common.exception.BusinessException;
+  import com.star.pivot.security.utils.SecurityContextUtils;
+  import com.star.pivot.system.domain.dto.RoleDTO;
+  import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
+  import com.star.pivot.system.domain.dto.RoleQueryDTO;
+  import com.star.pivot.system.domain.dto.UserRoleDTO;
+  import com.star.pivot.system.domain.entity.RoleMenu;
+  import com.star.pivot.system.domain.entity.SysRole;
+  import com.star.pivot.system.domain.entity.UserRole;
+  import com.star.pivot.system.mapper.*;
+  import com.star.pivot.system.service.SysRoleService;
+  import com.star.pivot.system.service.UserPermissionCacheService;
+  import org.springframework.beans.BeanUtils;
+  import org.springframework.beans.factory.annotation.Autowired;
+  import org.springframework.stereotype.Service;
+  import org.springframework.transaction.annotation.Transactional;
+  import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
+  import java.time.LocalDateTime;
+  import java.util.Collections;
+  import java.util.List;
 
 /**
  * 角色信息表(SysRole)表服务实现类
