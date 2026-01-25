@@ -149,7 +149,11 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteRoleByIds(Long[] roleIds) {
+    public boolean deleteRoleByIds(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return false;
+        }
+        
         for (Long roleId : roleIds) {
             SysRole role = this.getById(roleId);
             if (role != null && !"2".equals(role.getDelFlag())) {

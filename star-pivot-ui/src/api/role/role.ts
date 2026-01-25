@@ -33,13 +33,12 @@ export function fetchUpdateRole(data: Api.SystemManage.RoleListItem) {
 }
 
 /**
- * 删除角色
+ * 删除角色（支持单删和批量删除）
  */
 export function fetchDeleteRole(roleIds: number[]) {
-  // 将数组转换为逗号分隔的字符串，Spring 框架会自动将其转换为数组
-  const roleIdsStr = roleIds.join(',')
   return request.del({
-    url: `/api/sys/role/${roleIdsStr}`,
+    url: '/api/sys/role/delete',
+    data: { ids: roleIds },
     showSuccessMessage: true
   })
 }

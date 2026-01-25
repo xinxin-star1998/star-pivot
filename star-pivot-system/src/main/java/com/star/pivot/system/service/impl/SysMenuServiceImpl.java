@@ -178,34 +178,40 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(cacheNames = "menuTree", allEntries = true)
-    public boolean deleteMenu(Long menuId) {
-        log.info("删除菜单: menuId={}", menuId);
+    public boolean deleteMenuByIds(List<Long> menuIds) {
+        if (menuIds == null || menuIds.isEmpty()) {
+            return false;
+        }
         
-        // 检查是否有子菜单
-        LambdaQueryWrapper<SysMenu> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysMenu::getParentId, menuId);
-        long count = this.count(wrapper);
-        if (count > 0) {
-            log.warn("存在子菜单，不允许删除: menuId={}, 子菜单数量={}", menuId, count);
-            throw new BusinessException("存在子菜单，不允许删除");
-        }
+        log.info("删除菜单: menuIds={}", menuIds);
+        
+        for (Long menuId : menuIds) {
+            // 检查是否有子菜单
+            LambdaQueryWrapper<SysMenu> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(SysMenu::getParentId, menuId);
+            long count = this.count(wrapper);
+            if (count > 0) {
+                log.warn("存在子菜单，不允许删除: menuId={}, 子菜单数量={}", menuId, count);
+                throw new BusinessException("菜单ID " + menuId + " 存在子菜单，不允许删除");
+            }
 
-        // 检查是否有角色使用该菜单
-        LambdaQueryWrapper<RoleMenu> roleMenuWrapper = new LambdaQueryWrapper<>();
-        roleMenuWrapper.eq(RoleMenu::getMenuId, menuId);
-        long roleMenuCount = roleMenuMapper.selectCount(roleMenuWrapper);
-        if (roleMenuCount > 0) {
-            log.warn("菜单已被角色使用，不允许删除: menuId={}, 使用角色数量={}", menuId, roleMenuCount);
-            throw new BusinessException("菜单已被角色使用，不允许删除");
+            // 检查是否有角色使用该菜单
+            LambdaQueryWrapper<RoleMenu> roleMenuWrapper = new LambdaQueryWrapper<>();
+            roleMenuWrapper.eq(RoleMenu::getMenuId, menuId);
+            long roleMenuCount = roleMenuMapper.selectCount(roleMenuWrapper);
+            if (roleMenuCount > 0) {
+                log.warn("菜单已被角色使用，不允许删除: menuId={}, 使用角色数量={}", menuId, roleMenuCount);
+                throw new BusinessException("菜单ID " + menuId + " 已被角色使用，不允许删除");
+            }
         }
-
-        boolean result = this.removeById(menuId);
+        
+        boolean result = this.removeByIds(menuIds);
         if (result) {
-            log.info("删除菜单成功: menuId={}", menuId);
+            log.info("删除菜单成功: menuIds={}", menuIds);
             // 清除所有用户权限缓存（菜单变更可能影响所有用户权限）
             userPermissionCacheService.clearAllUserPermissionCache();
         } else {
-            log.error("删除菜单失败: menuId={}", menuId);
+            log.error("删除菜单失败: menuIds={}", menuIds);
         }
         return result;
     }

@@ -21,11 +21,12 @@ export function fetchGetOperLogById(operId: number) {
 }
 
 /**
- * 删除操作日志
+ * 删除操作日志（支持单删和批量删除）
  */
 export function fetchDeleteOperLog(operIds: number[]) {
   return request.del({
-    url: `/api/sys/operlog/${operIds}`
+    url: '/api/sys/operlog/delete',
+    data: { ids: operIds }
   })
 }
 

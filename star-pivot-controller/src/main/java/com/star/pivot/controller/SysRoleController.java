@@ -1,5 +1,6 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.dto.*;
@@ -84,14 +85,18 @@ public class SysRoleController {
     }
 
     /**
-     * 删除角色接口
+     * 删除角色接口（支持单删和批量删除）
      * 
-     * @param roleIds 角色ID数组
+     * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果，成功或失败的响应
      */
     @PreAuthorize("hasAuthority('system:role:delete')")
-    @DeleteMapping("/{roleIds}")
-    public Result<?> remove(@PathVariable("roleIds") Long[] roleIds) {
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
+        List<Long> roleIds = deleteRequest.getIds();
+        if (roleIds == null || roleIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
         boolean success = sysRoleService.deleteRoleByIds(roleIds);
         return success ? Result.success("删除角色成功") : Result.error("删除角色失败");
     }

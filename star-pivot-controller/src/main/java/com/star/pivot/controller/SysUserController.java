@@ -1,6 +1,7 @@
 package com.star.pivot.controller;
 
 import com.star.pivot.common.annotation.Log;
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.UserReqBo;
@@ -95,12 +96,17 @@ public class SysUserController {
     }
 
     /**
-     * 删除用户
+     * 删除用户（支持单删和批量删除）
      */
     @Log(title = "用户管理", businessType = 3)
     @PreAuthorize("hasAuthority('system:user:delete')")
-    @DeleteMapping("/{userIds}")
-    public Result<?> remove(@PathVariable Long[] userIds) {
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
+        List<Long> userIds = deleteRequest.getIds();
+        if (userIds == null || userIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
+        
         // 不能删除自己
         Long currentUserId = SecurityContextUtils.getUserId();
         for (Long userId : userIds) {

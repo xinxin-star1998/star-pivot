@@ -77,7 +77,7 @@ export function fetchEditSave(genTable: GenTableEditPayload) {
 export function fetchDeleteTable(tableIds: number[]) {
   return request.del<ApiResult<void>>({
     url: '/api/tool/gen/delete',
-    data: { tableIds },
+    data: { ids: tableIds },
     showSuccessMessage: true
   })
 }

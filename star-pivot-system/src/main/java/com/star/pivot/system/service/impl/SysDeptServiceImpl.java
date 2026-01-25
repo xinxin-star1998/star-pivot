@@ -129,25 +129,35 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteDept(Long deptId) {
-        // 检查是否有子部门
-        if (hasChildDept(deptId)) {
-            throw new BusinessException("存在子部门，不允许删除");
+    public boolean deleteDeptByIds(List<Long> deptIds) {
+        if (deptIds == null || deptIds.isEmpty()) {
+            return false;
         }
-
-        // 检查是否有用户
-        if (hasUser(deptId)) {
-            throw new BusinessException("部门存在用户，不允许删除");
-        }
-
-        // 软删除
-        SysDept dept = this.getById(deptId);
-        dept.setDelFlag("2");
+        
         String currentUser = SecurityContextUtils.getUsername();
-        dept.setUpdateBy(currentUser);
-        dept.setUpdateTime(LocalDateTime.now());
+        
+        for (Long deptId : deptIds) {
+            // 检查是否有子部门
+            if (hasChildDept(deptId)) {
+                throw new BusinessException("部门ID " + deptId + " 存在子部门，不允许删除");
+            }
 
-        return this.updateById(dept);
+            // 检查是否有用户
+            if (hasUser(deptId)) {
+                throw new BusinessException("部门ID " + deptId + " 存在用户，不允许删除");
+            }
+
+            // 软删除
+            SysDept dept = this.getById(deptId);
+            if (dept != null && !"2".equals(dept.getDelFlag())) {
+                dept.setDelFlag("2");
+                dept.setUpdateBy(currentUser);
+                dept.setUpdateTime(LocalDateTime.now());
+                this.updateById(dept);
+            }
+        }
+        
+        return true;
     }
 
     @Override

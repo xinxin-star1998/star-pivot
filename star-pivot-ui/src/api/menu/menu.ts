@@ -76,11 +76,14 @@ export function fetchUpdateMenu(data: MenuFormData) {
 }
 
 /**
- * 删除菜单
+ * 删除菜单（支持单删和批量删除）
  */
-export function fetchDeleteMenu(menuId: number) {
+export function fetchDeleteMenu(menuIds: number | number[]) {
+  // 统一转换为数组格式
+  const ids = Array.isArray(menuIds) ? menuIds : [menuIds]
   return request.del({
-    url: `/api/sys/menu/${menuId}`
+    url: '/api/sys/menu/delete',
+    data: { ids }
   })
 }
 /**

@@ -40,11 +40,12 @@ export function fetchUpdateUser(data: Api.SystemManage.UserListItem) {
 }
 
 /**
- * 删除用户
+ * 删除用户（支持单删和批量删除）
  */
 export function fetchDeleteUser(userIds: number[]) {
   return request.del({
-    url: `/api/sys/user/${userIds}`
+    url: '/api/sys/user/delete',
+    data: { ids: userIds }
   })
 }
 

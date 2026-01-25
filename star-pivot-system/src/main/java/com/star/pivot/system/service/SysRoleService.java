@@ -27,7 +27,13 @@ public interface SysRoleService extends IService<SysRole> {
 
     boolean updateRole(RoleDTO roleDTO);
 
-    boolean deleteRoleByIds(Long[] roleIds);
+    /**
+     * 删除角色（支持单删和批量删除）
+     *
+     * @param roleIds 角色ID列表
+     * @return 是否成功
+     */
+    boolean deleteRoleByIds(List<Long> roleIds);
 
     boolean changeRoleStatus(Long roleId, String status);
 

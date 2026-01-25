@@ -44,7 +44,13 @@ public interface SysUserService extends IService<SysUser>, ImportExportService {
 
     boolean resetUserPassword(Long userId, String password);
 
-    boolean deleteUserByIds(Long[] userIds);
+    /**
+     * 删除用户（支持单删和批量删除）
+     *
+     * @param userIds 用户ID列表
+     * @return 是否成功
+     */
+    boolean deleteUserByIds(List<Long> userIds);
 
     PageResponse<SysUser> getUserListByRoleId(AssignUserReqBo assignUserReqBo);
 

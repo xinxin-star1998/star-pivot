@@ -1,5 +1,6 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.DeptVO;
 import com.star.pivot.system.domain.dto.DeptDTO;
@@ -77,15 +78,19 @@ public class SysDeptController {
     }
 
     /**
-     * 删除部门接口
+     * 删除部门接口（支持单删和批量删除）
      * 
-     * @param deptId 部门ID
+     * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果，成功或失败的响应
      */
     @PreAuthorize("hasAuthority('system:dept:delete')")
-    @DeleteMapping("/{deptId}")
-    public Result<?> remove(@PathVariable("deptId") Long deptId) {
-        boolean success = deptService.deleteDept(deptId);
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
+        List<Long> deptIds = deleteRequest.getIds();
+        if (deptIds == null || deptIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
+        boolean success = deptService.deleteDeptByIds(deptIds);
         return success ? Result.success("删除部门成功") : Result.error("删除部门失败");
     }
 }

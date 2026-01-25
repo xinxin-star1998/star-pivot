@@ -1,6 +1,7 @@
 package com.star.pivot.controller;
 
 import com.star.pivot.common.annotation.Log;
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.OperLogReqBo;
@@ -58,16 +59,20 @@ public class SysOperLogController {
     }
 
     /**
-     * 删除操作日志
+     * 删除操作日志（支持单删和批量删除）
      *
-     * @param operIds 日志ID数组
+     * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果
      */
     @Log(title = "操作日志", businessType = 3)
     @PreAuthorize("hasAuthority('system:operlog:delete')")
-    @DeleteMapping("/{operIds}")
-    public Result<?> remove(@PathVariable Long[] operIds) {
-        boolean success = sysOperLogService.removeByIds(java.util.Arrays.asList(operIds));
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
+        java.util.List<Long> operIds = deleteRequest.getIds();
+        if (operIds == null || operIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
+        boolean success = sysOperLogService.removeByIds(operIds);
         return success ? Result.success("删除成功") : Result.error("删除失败");
     }
 

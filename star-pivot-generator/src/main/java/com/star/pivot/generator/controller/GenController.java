@@ -4,11 +4,11 @@ import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.common.sql.SqlUtil;
 import com.star.pivot.generator.config.GenConfig;
-import com.star.pivot.generator.domain.bo.DeleteRequest;
 import com.star.pivot.generator.domain.bo.GenTableVO;
 import com.star.pivot.generator.domain.dto.GenTableQueryDTO;
 import com.star.pivot.generator.domain.entity.GenTable;
@@ -182,7 +182,7 @@ public class GenController {
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest)
     {
-        List<Long> tableIds = deleteRequest.getTableIds();
+        List<Long> tableIds = deleteRequest.getIds();
         if (tableIds == null || tableIds.isEmpty()) {
             return Result.error("删除ID不能为空");
         }

@@ -21,11 +21,12 @@ export function fetchGetLogininforById(infoId: number) {
 }
 
 /**
- * 删除登录日志
+ * 删除登录日志（支持单删和批量删除）
  */
 export function fetchDeleteLogininfor(infoIds: number[]) {
   return request.del({
-    url: `/api/sys/logininfor/${infoIds}`
+    url: '/api/sys/logininfor/delete',
+    data: { ids: infoIds }
   })
 }
 

@@ -1,5 +1,6 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
@@ -62,15 +63,19 @@ public class SysMenuController {
     }
 
     /**
-     * 删除菜单接口
+     * 删除菜单接口（支持单删和批量删除）
      * 
-     * @param menuId 菜单ID
+     * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果，成功或失败的响应
      */
     @PreAuthorize("hasAuthority('system:menu:delete')")
-    @DeleteMapping("/{menuId}")
-    public Result<?> remove(@PathVariable("menuId") Long menuId) {
-        boolean success = sysMenuService.deleteMenu(menuId);
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
+        List<Long> menuIds = deleteRequest.getIds();
+        if (menuIds == null || menuIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
+        boolean success = sysMenuService.deleteMenuByIds(menuIds);
         return success ? Result.success("删除菜单成功") : Result.error("删除菜单失败");
     }
     /**

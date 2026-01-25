@@ -245,13 +245,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteUserByIds(Long[] userIds) {
-        if (userIds == null || userIds.length == 0) {
+    public boolean deleteUserByIds(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
             return false;
         }
         
         // 批量查询用户信息
-        List<SysUser> userList = this.listByIds(List.of(userIds));
+        List<SysUser> userList = this.listByIds(userIds);
         if (userList.isEmpty()) {
             return false;
         }
