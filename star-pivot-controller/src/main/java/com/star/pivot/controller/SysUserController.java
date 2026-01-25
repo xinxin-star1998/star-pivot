@@ -15,6 +15,9 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * 用户信息表(SysUser)表控制层
  *
@@ -166,6 +169,23 @@ public class SysUserController {
         accountLockService.unlockAccount(username);
 
         return Result.success("账户已成功解锁");
+    }
+
+    /**
+     * 批量导入用户（Excel 导入）
+     * 说明：
+     * - 前端会先将 Excel 解析成 List&lt;Map&lt;String, Object&gt;&gt;
+     * - 再直接调用该接口进行批量导入
+     *
+     * @param rowList Excel 解析后的行数据列表
+     * @return 导入结果
+     */
+    @Log(title = "用户管理", businessType = 1)
+    @PreAuthorize("hasAuthority('system:user:import')")
+    @PostMapping("/import")
+    public Result<?> importUsers(@RequestBody List<Map<String, Object>> rowList) {
+        int successCount = sysUserService.importUsers(rowList);
+        return Result.success("成功导入 " + successCount + " 个用户");
     }
 }
 

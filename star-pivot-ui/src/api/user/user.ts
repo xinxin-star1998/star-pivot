@@ -119,3 +119,15 @@ export function fetchUnlockUser(userId: number) {
     url: `/api/sys/user/unlock/${userId}`
   })
 }
+
+/**
+ * 批量导入用户
+ * 前端将 Excel 解析后的数据列表直接提交给后端
+ * @deprecated 请使用 fetchImportData('user', data, options) 替代
+ */
+export function fetchImportUser(data: Array<Record<string, unknown>>) {
+  return request.post({
+    url: '/api/sys/user/import',
+    data
+  })
+}

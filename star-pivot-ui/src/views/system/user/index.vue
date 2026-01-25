@@ -41,9 +41,9 @@
               :default-checked-keys="selectedDeptId ? [selectedDeptId] : []"
               :filter-node-method="filterDeptNode"
               ref="deptTreeRef"
-              @node-click="(data) => handleDeptSelect(data.deptId)"
+              @node-click="(data: SysDept) => handleDeptSelect(data.deptId)"
             >
-              <template #default="{ node, data }">
+              <template #default="{ node }">
                 <span class="custom-tree-node">
                   <span>{{ node.label }}</span>
                 </span>
@@ -70,9 +70,37 @@
                 <ElButton @click="showDialog('add')" v-ripple v-auth="'system:user:add'"
                   >新增用户</ElButton
                 >
+                <ElButton
+                  type="primary"
+                  plain
+                  v-ripple
+                  v-auth="'system:user:import'"
+                  @click="importDialogVisible = true"
+                >
+                  导入用户
+                </ElButton>
+                <ElButton
+                  type="primary"
+                  plain
+                  v-ripple
+                  v-auth="'system:user:export'"
+                  @click="handleExportUsers"
+                >
+                  导出用户
+                </ElButton>
               </ElSpace>
             </template>
           </ArtTableHeader>
+
+          <!-- 通用导入弹窗 -->
+          <ArtImportDialog
+            v-model="importDialogVisible"
+            business-type="user"
+            title="用户导入"
+            :show-overwrite="true"
+            overwrite-label="是否更新已经存在的用户数据"
+            @success="refreshData"
+          />
 
           <!-- 表格 -->
           <ArtTable
@@ -101,12 +129,28 @@
 
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtImportDialog from '@/components/core/forms/art-import-dialog/index.vue'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchDeleteUser, fetchGetUserList, fetchUpdateUserStatus, fetchUnlockUser } from '@/api/user/user'
+  import {
+    fetchDeleteUser,
+    fetchGetUserList,
+    fetchUpdateUserStatus,
+    fetchUnlockUser
+  } from '@/api/user/user'
+  import { fetchExportData } from '@/api/common/import-export'
   import { fetchGetDeptTree, SysDept } from '@/api/dept/dept'
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
-  import { ElMessageBox, ElImage, ElSwitch, ElMessage, ElTree, ElInput } from 'element-plus'
+  import {
+    ElMessageBox,
+    ElImage,
+    ElSwitch,
+    ElMessage,
+    ElTree,
+    ElInput,
+    ElButton,
+    ElIcon
+  } from 'element-plus'
   import { Search } from '@element-plus/icons-vue'
   import { DialogType } from '@/types'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
@@ -123,6 +167,8 @@
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const currentUserData = ref<Partial<UserListItem>>({})
+  // 导入弹窗显隐
+  const importDialogVisible = ref(false)
 
   // 选中行
   const selectedRows = ref<UserListItem[]>([])
@@ -358,7 +404,7 @@
                   onClick: () => showDialog('edit', row)
                 })
               )
-              
+
               // 解锁账户按钮（管理员操作）- 只在账户被锁定时显示
               if (row.isLocked === true) {
                 actions.push(
@@ -493,15 +539,11 @@
    */
   const unlockUser = async (row: UserListItem): Promise<void> => {
     try {
-      await ElMessageBox.confirm(
-        `确定要解锁用户 "${row.userName}" 的账户吗？`,
-        '解锁账户',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      )
+      await ElMessageBox.confirm(`确定要解锁用户 "${row.userName}" 的账户吗？`, '解锁账户', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
       await fetchUnlockUser(row.userId)
       ElMessage.success('账户解锁成功')
       refreshData()
@@ -512,6 +554,21 @@
         const errorMsg = error?.message || error?.response?.data?.msg || '解锁失败'
         ElMessage.error(errorMsg)
       }
+    }
+  }
+
+  /**
+   * 导出用户数据
+   */
+  const handleExportUsers = async () => {
+    try {
+      // 使用当前搜索条件作为导出参数
+      const exportParams = {
+        ...searchForm.value
+      }
+      await fetchExportData('user', exportParams)
+    } catch (error) {
+      console.error('导出用户失败:', error)
     }
   }
 </script>

@@ -11,6 +11,7 @@ import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户信息表(SysUser)表服务接口
@@ -18,7 +19,7 @@ import java.util.List;
  * @author makejava
  * @since 2025-12-28 17:28:24
  */
-public interface SysUserService extends IService<SysUser> {
+public interface SysUserService extends IService<SysUser>, ImportExportService {
     /**
      * 用户分页查询
      *
@@ -48,5 +49,13 @@ public interface SysUserService extends IService<SysUser> {
     PageResponse<SysUser> getUserListByRoleId(AssignUserReqBo assignUserReqBo);
 
     PageResponse<SysUser> unallocatedList(AssignUserReqBo assignUserReqBo);
+
+    /**
+     * 批量导入用户（Excel 导入）
+     *
+     * @param rowList Excel 解析后的行数据列表（key 为表头中文名）
+     * @return 成功导入的用户数量
+     */
+    int importUsers(List<Map<String, Object>> rowList);
 }
 
