@@ -5,9 +5,18 @@
       <template #header>
         <div class="card-header">
           <span>Druid 数据库监控</span>
-          <ElButton type="primary" :icon="Refresh" @click="refreshData" :loading="loading">
-            刷新
-          </ElButton>
+          <div>
+            <ElSwitch 
+              v-model="includeSlowSql" 
+              active-text="包含慢SQL" 
+              inactive-text="仅统计"
+              style="margin-right: 10px"
+              @change="handleSlowSqlToggle"
+            />
+            <ElButton type="primary" :icon="Refresh" @click="refreshData" :loading="loading">
+              刷新
+            </ElButton>
+          </div>
         </div>
       </template>
 
@@ -19,7 +28,8 @@
           class="druid-empty"
         />
         <!-- 数据源为 Druid 时展示监控卡片 -->
-        <ElRow v-else-if="druidInfo && druidInfo.available !== false" :gutter="20">
+        <div v-else-if="druidInfo && druidInfo.available !== false">
+          <ElRow :gutter="20">
           <!-- 数据源信息 -->
           <ElCol :xs="24" :sm="12" :md="8">
             <ElCard shadow="hover">
@@ -101,6 +111,48 @@
             </ElCard>
           </ElCol>
         </ElRow>
+
+        <!-- 慢SQL列表（如果包含） -->
+        <ElCard v-if="showSlowSqlList && druidInfo.slowSqlList && druidInfo.slowSqlList.length > 0" 
+                shadow="hover" style="margin-top: 20px">
+          <template #header>
+            <div class="card-header">
+              <span>慢SQL列表</span>
+              <ElSwitch v-model="showSlowSqlList" active-text="显示" inactive-text="隐藏" />
+            </div>
+          </template>
+          <ElTable :data="druidInfo.slowSqlList" border stripe>
+            <ElTableColumn prop="sqlId" label="SQL ID" width="100" />
+            <ElTableColumn prop="sqlText" label="SQL语句" min-width="300" show-overflow-tooltip>
+              <template #default="{ row }">
+                <ElTooltip :content="row.sqlText" placement="top" :show-after="300">
+                  <div class="sql-text">{{ row.sqlText }}</div>
+                </ElTooltip>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn prop="executeCount" label="执行次数" width="100" />
+            <ElTableColumn prop="executeTimeAvg" label="平均执行时间(ms)" width="150" sortable>
+              <template #default="{ row }">
+                <span :class="getTimeClass(row.executeTimeAvg || 0)">
+                  {{ formatNumber(row.executeTimeAvg || 0, 2) }}
+                </span>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn prop="executeTimeMax" label="最大执行时间(ms)" width="150" />
+            <ElTableColumn prop="slowCount" label="慢SQL次数" width="120">
+              <template #default="{ row }">
+                <ElTag type="warning">{{ row.slowCount || 0 }}</ElTag>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn prop="errorCount" label="错误次数" width="100">
+              <template #default="{ row }">
+                <ElTag v-if="(row.errorCount || 0) > 0" type="danger">{{ row.errorCount }}</ElTag>
+                <span v-else>0</span>
+              </template>
+            </ElTableColumn>
+          </ElTable>
+        </ElCard>
+        </div>
       </div>
     </ElCard>
   </div>
@@ -115,6 +167,9 @@
 
   const loading = ref(false)
   const druidInfo = ref<DruidMonitorInfo | null>(null)
+  const includeSlowSql = ref(false) // 是否包含慢SQL列表
+  const showSlowSqlList = ref(false) // 是否显示慢SQL列表
+  const slowSqlThreshold = ref(5000) // 慢SQL阈值（毫秒）
   let refreshTimer: number | null = null
 
   // 格式化百分比
@@ -152,8 +207,12 @@
   const getData = async () => {
     loading.value = true
     try {
-      const data = await fetchGetDruidMonitorInfo()
+      const data = await fetchGetDruidMonitorInfo(includeSlowSql.value, slowSqlThreshold.value)
       druidInfo.value = data
+      // 如果有慢SQL列表，自动显示
+      if (data.slowSqlList && data.slowSqlList.length > 0) {
+        showSlowSqlList.value = true
+      }
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('获取 Druid 监控信息失败:', error)
@@ -166,6 +225,18 @@
     } finally {
       loading.value = false
     }
+  }
+
+  // 获取时间样式类
+  const getTimeClass = (time: number) => {
+    if (time >= 10000) return 'text-danger'
+    if (time >= 5000) return 'text-warning'
+    return ''
+  }
+
+  // 慢SQL开关切换
+  const handleSlowSqlToggle = () => {
+    refreshData()
   }
 
   // 刷新数据
@@ -226,5 +297,14 @@
 
   .druid-empty {
     padding: 48px 0;
+  }
+
+  .sql-text {
+    font-family: monospace;
+    font-size: 12px;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 </style>

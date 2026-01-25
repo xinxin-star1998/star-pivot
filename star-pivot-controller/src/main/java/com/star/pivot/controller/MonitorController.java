@@ -15,6 +15,7 @@ import com.star.pivot.system.domain.bo.ApiPerformanceReqBo;
 import com.star.pivot.system.service.MonitorAlertService;
 import com.star.pivot.system.service.MonitorService;
 import com.star.pivot.system.service.SlowSqlService;
+import com.star.pivot.system.service.impl.MonitorServiceImpl;
 import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
 import com.star.pivot.system.mapper.SysMonitorApiPerformanceMapper;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,15 +40,18 @@ public class MonitorController {
     private final MonitorAlertService monitorAlertService;
     private final SlowSqlService slowSqlService;
     private final SysMonitorApiPerformanceMapper apiPerformanceMapper;
+    private final com.star.pivot.config.ApiPerformanceAspect apiPerformanceAspect;
 
     public MonitorController(MonitorService monitorService, 
                             MonitorAlertService monitorAlertService,
                             SlowSqlService slowSqlService,
-                            SysMonitorApiPerformanceMapper apiPerformanceMapper) {
+                            SysMonitorApiPerformanceMapper apiPerformanceMapper,
+                            com.star.pivot.config.ApiPerformanceAspect apiPerformanceAspect) {
         this.monitorService = monitorService;
         this.monitorAlertService = monitorAlertService;
         this.slowSqlService = slowSqlService;
         this.apiPerformanceMapper = apiPerformanceMapper;
+        this.apiPerformanceAspect = apiPerformanceAspect;
     }
 
     /**
@@ -65,14 +69,27 @@ public class MonitorController {
 
     /**
      * 获取 Druid 监控信息
+     * <p>
+     * 支持通过参数控制是否返回慢SQL列表，实现慢SQL分析与Druid监控的合并
+     * </p>
      *
-     * @return Druid 监控信息
+     * @param includeSlowSqlList 是否包含慢SQL列表（可选，默认false）
+     * @param slowSqlThreshold 慢SQL阈值（毫秒，可选，默认5000，仅在 includeSlowSqlList=true 时有效）
+     * @return Druid 监控信息（包含慢SQL列表，如果 includeSlowSqlList=true）
      */
     @Log(title = "Druid监控")
     @PreAuthorize("hasAuthority('monitor:druid:query')")
     @GetMapping("/druid")
-    public Result<DruidMonitorVO> getDruidMonitorInfo() {
-        DruidMonitorVO druidInfo = monitorService.getDruidMonitorInfo();
+    public Result<DruidMonitorVO> getDruidMonitorInfo(
+            @RequestParam(required = false, defaultValue = "false") Boolean includeSlowSqlList,
+            @RequestParam(required = false) Long slowSqlThreshold) {
+        // 调用实现类的重载方法获取包含慢SQL列表的监控信息
+        DruidMonitorVO druidInfo;
+        if (includeSlowSqlList != null && includeSlowSqlList) {
+            druidInfo = ((MonitorServiceImpl) monitorService).getDruidMonitorInfo(true, slowSqlThreshold);
+        } else {
+            druidInfo = monitorService.getDruidMonitorInfo();
+        }
         return Result.success(druidInfo);
     }
 
@@ -490,5 +507,21 @@ public class MonitorController {
     public Result<PageResponse<SysMonitorApiPerformance>> getApiPerformancePageList(@RequestBody ApiPerformanceReqBo reqBo) {
         PageResponse<SysMonitorApiPerformance> pageResponse = monitorService.getApiPerformancePageList(reqBo);
         return Result.success(pageResponse);
+    }
+
+    /**
+     * 获取API性能监控统计信息
+     * 
+     * @return 统计信息（总请求数、慢接口数、采样数、队列大小、配置参数等）
+     */
+    @Log(title = "API性能监控")
+    @PreAuthorize("hasAuthority('monitor:api:query')")
+    @GetMapping("/api/stats")
+    public Result<com.star.pivot.config.ApiPerformanceAspect.ApiPerformanceStats> getApiPerformanceStats() {
+        if (apiPerformanceAspect == null) {
+            return Result.error("API性能监控未启用");
+        }
+        com.star.pivot.config.ApiPerformanceAspect.ApiPerformanceStats stats = apiPerformanceAspect.getStats();
+        return Result.success(stats);
     }
 }

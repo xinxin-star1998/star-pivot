@@ -3,6 +3,7 @@ package com.star.pivot.system.domain.bo;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Druid 监控信息 VO
@@ -49,6 +50,11 @@ public class DruidMonitorVO implements Serializable {
      * SQL 统计信息
      */
     private SqlStatInfo sqlStat;
+
+    /**
+     * 慢SQL列表（可选，当需要详细慢SQL信息时返回）
+     */
+    private List<SlowSqlInfo> slowSqlList;
 
     /**
      * 连接池信息
@@ -115,5 +121,56 @@ public class DruidMonitorVO implements Serializable {
          * 错误 SQL 数量
          */
         private Long errorSqlCount;
+    }
+
+    /**
+     * 慢SQL详细信息
+     */
+    @Data
+    public static class SlowSqlInfo implements Serializable {
+        /**
+         * SQL ID（Druid生成的SQL标识）
+         */
+        private String sqlId;
+
+        /**
+         * SQL语句
+         */
+        private String sqlText;
+
+        /**
+         * 执行次数
+         */
+        private Long executeCount;
+
+        /**
+         * 总执行时间（毫秒）
+         */
+        private Long executeTimeTotal;
+
+        /**
+         * 最大执行时间（毫秒）
+         */
+        private Long executeTimeMax;
+
+        /**
+         * 平均执行时间（毫秒）
+         */
+        private Double executeTimeAvg;
+
+        /**
+         * 慢SQL次数
+         */
+        private Long slowCount;
+
+        /**
+         * 错误次数
+         */
+        private Long errorCount;
+
+        /**
+         * 最后执行时间
+         */
+        private Long lastExecuteTime;
     }
 }

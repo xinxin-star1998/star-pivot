@@ -115,6 +115,32 @@ export interface DruidMonitorInfo {
   connectionPool?: ConnectionPoolInfo
   /** SQL 统计信息 */
   sqlStat?: SqlStatInfo
+  /** 慢SQL列表（可选，当需要详细慢SQL信息时返回） */
+  slowSqlList?: SlowSqlInfo[]
+}
+
+/**
+ * 慢SQL详细信息
+ */
+export interface SlowSqlInfo {
+  /** SQL ID（Druid生成的SQL标识） */
+  sqlId?: string
+  /** SQL语句 */
+  sqlText?: string
+  /** 执行次数 */
+  executeCount?: number
+  /** 总执行时间（毫秒） */
+  executeTimeTotal?: number
+  /** 最大执行时间（毫秒） */
+  executeTimeMax?: number
+  /** 平均执行时间（毫秒） */
+  executeTimeAvg?: number
+  /** 慢SQL次数 */
+  slowCount?: number
+  /** 错误次数 */
+  errorCount?: number
+  /** 最后执行时间（时间戳，毫秒） */
+  lastExecuteTime?: number
 }
 
 /**

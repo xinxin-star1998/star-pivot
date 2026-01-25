@@ -259,7 +259,7 @@
         }
 
         // 删除部门按钮权限：system:dept:remove
-        if (hasAuth('system:dept:remove')) {
+        if (hasAuth('system:dept:delete')) {
           actions.push(
             h(ArtButtonTable, {
               type: 'delete',

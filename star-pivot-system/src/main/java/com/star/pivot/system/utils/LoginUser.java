@@ -2,7 +2,9 @@ package com.star.pivot.system.utils;
 
 import com.star.pivot.common.security.LoginUserInfo;
 import com.star.pivot.system.domain.entity.SysUser;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -16,6 +18,8 @@ import java.util.Collection;
  * @since 2024-01-01
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class LoginUser implements UserDetails, LoginUserInfo {
 
     @Serial

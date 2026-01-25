@@ -48,16 +48,19 @@ import java.util.stream.Collectors;
 public class ApiPerformanceAspect {
 
     private final SysMonitorApiPerformanceMapper apiPerformanceMapper;
+    private final StarPivotProperties starPivotProperties;
 
     /**
      * 采样率：只记录10%的请求（高频接口）
+     * 可通过配置 star-pivot.monitor.sampleRate 调整
      */
-    private static final double SAMPLE_RATE = 0.1;
+    private double sampleRate = 0.1;
 
     /**
-     * 慢接口阈值：只记录响应时间超过1秒的接口
+     * 慢接口阈值：只记录响应时间超过此值的接口（毫秒）
+     * 可通过配置 star-pivot.monitor.slowApiThresholdMs 调整
      */
-    private static final long SLOW_API_THRESHOLD = 1000;
+    private long slowApiThreshold = 1000;
 
     /**
      * 批量写入队列大小
@@ -103,6 +106,27 @@ public class ApiPerformanceAspect {
      */
     @PostConstruct
     public void init() {
+        // 从配置中读取参数（如果配置了的话）
+        if (starPivotProperties != null && starPivotProperties.getMonitor() != null) {
+            StarPivotProperties.Monitor monitor = starPivotProperties.getMonitor();
+            
+            // 检查是否启用API性能监控
+            if (monitor.getApiPerformanceEnabled() != null && !monitor.getApiPerformanceEnabled()) {
+                log.info("API性能监控已禁用");
+                return;
+            }
+            
+            // 读取慢接口阈值
+            if (monitor.getSlowApiThresholdMs() != null) {
+                slowApiThreshold = monitor.getSlowApiThresholdMs();
+            }
+            
+            // 读取采样率
+            if (monitor.getSampleRate() != null) {
+                sampleRate = monitor.getSampleRate();
+            }
+        }
+        
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "api-performance-batch-writer");
             t.setDaemon(true);
@@ -118,7 +142,7 @@ public class ApiPerformanceAspect {
         );
         
         log.info("API性能监控切面初始化完成，采样率: {}%, 慢接口阈值: {}ms", 
-                (int)(SAMPLE_RATE * 100), SLOW_API_THRESHOLD);
+                (int)(sampleRate * 100), slowApiThreshold);
     }
 
     /**
@@ -204,14 +228,14 @@ public class ApiPerformanceAspect {
         totalRequests.incrementAndGet();
 
         // 阈值过滤：只记录慢接口（响应时间 > 阈值）
-        if (responseTime <= SLOW_API_THRESHOLD) {
+        if (responseTime <= slowApiThreshold) {
             return;
         }
 
         slowApiRequests.incrementAndGet();
 
         // 采样率控制：高频接口只记录部分请求
-        if (Math.random() >= SAMPLE_RATE) {
+        if (Math.random() >= sampleRate) {
             return;
         }
 
@@ -336,6 +360,60 @@ public class ApiPerformanceAspect {
         } catch (Exception e) {
             log.error("批量保存API性能记录失败", e);
         }
+    }
+
+    /**
+     * 获取统计信息（用于查看监控状态）
+     * 
+     * @return 统计信息
+     */
+    public ApiPerformanceStats getStats() {
+        long total = totalRequests.get();
+        long slow = slowApiRequests.get();
+        long sampled = sampledRequests.get();
+        long queueSize = recordQueue.size();
+        
+        return new ApiPerformanceStats(
+            total,
+            slow,
+            sampled,
+            queueSize,
+            slowApiThreshold,
+            sampleRate,
+            total > 0 ? (double) slow / total * 100 : 0.0
+        );
+    }
+
+    /**
+     * API性能统计信息
+     */
+    public static class ApiPerformanceStats {
+        private final long totalRequests;
+        private final long slowApiRequests;
+        private final long sampledRequests;
+        private final long queueSize;
+        private final long slowApiThreshold;
+        private final double sampleRate;
+        private final double slowApiRate;
+
+        public ApiPerformanceStats(long totalRequests, long slowApiRequests, long sampledRequests,
+                                  long queueSize, long slowApiThreshold, double sampleRate, double slowApiRate) {
+            this.totalRequests = totalRequests;
+            this.slowApiRequests = slowApiRequests;
+            this.sampledRequests = sampledRequests;
+            this.queueSize = queueSize;
+            this.slowApiThreshold = slowApiThreshold;
+            this.sampleRate = sampleRate;
+            this.slowApiRate = slowApiRate;
+        }
+
+        public long getTotalRequests() { return totalRequests; }
+        public long getSlowApiRequests() { return slowApiRequests; }
+        public long getSampledRequests() { return sampledRequests; }
+        public long getQueueSize() { return queueSize; }
+        public long getSlowApiThreshold() { return slowApiThreshold; }
+        public double getSampleRate() { return sampleRate; }
+        public double getSlowApiRate() { return slowApiRate; }
     }
 
     /**

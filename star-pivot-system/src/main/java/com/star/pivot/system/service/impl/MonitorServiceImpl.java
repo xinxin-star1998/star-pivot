@@ -8,6 +8,8 @@ import com.star.pivot.system.domain.bo.RedisCacheVO;
 import com.star.pivot.system.domain.bo.RedisMonitorVO;
 import com.star.pivot.system.domain.bo.ServerInfoVO;
 import com.star.pivot.system.domain.entity.SysUser;
+import com.star.pivot.system.mapper.SysMonitorApiPerformanceMapper;
+import com.star.pivot.system.mapper.SysMonitorHistoryMapper;
 import com.star.pivot.system.service.MonitorService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.SysDeptService;
@@ -83,10 +85,10 @@ public class MonitorServiceImpl implements MonitorService {
     private OnlineUserService onlineUserService;
 
     @Autowired(required = false)
-    private com.star.pivot.system.mapper.SysMonitorHistoryMapper monitorHistoryMapper;
+    private SysMonitorHistoryMapper monitorHistoryMapper;
 
     @Autowired(required = false)
-    private com.star.pivot.system.mapper.SysMonitorApiPerformanceMapper apiPerformanceMapper;
+    private SysMonitorApiPerformanceMapper apiPerformanceMapper;
 
     private static final SystemInfo SYSTEM_INFO = new SystemInfo();
     private static final HardwareAbstractionLayer HAL = SYSTEM_INFO.getHardware();
@@ -295,6 +297,17 @@ public class MonitorServiceImpl implements MonitorService {
 
     @Override
     public DruidMonitorVO getDruidMonitorInfo() {
+        return getDruidMonitorInfo(false, null);
+    }
+
+    /**
+     * 获取 Druid 监控信息（支持包含慢SQL列表）
+     *
+     * @param includeSlowSqlList 是否包含慢SQL列表
+     * @param slowSqlThreshold 慢SQL阈值（毫秒），当 includeSlowSqlList 为 true 时有效，null 则使用默认值 5000
+     * @return Druid 监控信息
+     */
+    public DruidMonitorVO getDruidMonitorInfo(boolean includeSlowSqlList, Long slowSqlThreshold) {
         if (dataSource == null || !(dataSource instanceof DruidDataSource)) {
             DruidMonitorVO vo = new DruidMonitorVO();
             vo.setAvailable(false);
@@ -334,17 +347,68 @@ public class MonitorServiceImpl implements MonitorService {
             long slowSqlCount = 0;
             long errorSqlCount = 0;
 
-            if (sqlList != null) {
-                for (Map<String, Object> sql : sqlList) {
-                    Long count = getLongValue(sql, "ExecuteCount");
-                    Long millis = getLongValue(sql, "ExecuteMillisTotal");
-                    Long slowCount = getLongValue(sql, "SlowCount");
-                    Long errorCount = getLongValue(sql, "ErrorCount");
+            // 慢SQL列表（如果需要）
+            List<DruidMonitorVO.SlowSqlInfo> slowSqlList = null;
+            if (includeSlowSqlList) {
+                slowSqlList = new ArrayList<>();
+                // 默认慢SQL阈值为 5000 毫秒
+                long threshold = (slowSqlThreshold != null && slowSqlThreshold > 0) ? slowSqlThreshold : 5000L;
+                
+                if (sqlList != null) {
+                    for (Map<String, Object> sql : sqlList) {
+                        try {
+                            String sqlId = getStringValue(sql, "ID");
+                            String sqlText = getStringValue(sql, "SQL");
+                            Long count = getLongValue(sql, "ExecuteCount");
+                            Long millis = getLongValue(sql, "ExecuteMillisTotal");
+                            Long maxMillis = getLongValue(sql, "ExecuteMillisMax");
+                            Long slowCount = getLongValue(sql, "SlowCount");
+                            Long errorCount = getLongValue(sql, "ErrorCount");
+                            Long lastExecuteTime = getLongValue(sql, "LastExecuteTime");
 
-                    if (count != null) executeCount += count;
-                    if (millis != null) executeMillisTotal += millis;
-                    if (slowCount != null) slowSqlCount += slowCount;
-                    if (errorCount != null) errorSqlCount += errorCount;
+                            // 累计统计信息
+                            if (count != null) executeCount += count;
+                            if (millis != null) executeMillisTotal += millis;
+                            if (slowCount != null) slowSqlCount += slowCount;
+                            if (errorCount != null) errorSqlCount += errorCount;
+
+                            // 判断是否为慢SQL并添加到列表
+                            if (count != null && count > 0 && millis != null) {
+                                double avgTime = (double) millis / count;
+                                if (avgTime >= threshold || (slowCount != null && slowCount > 0)) {
+                                    DruidMonitorVO.SlowSqlInfo slowSqlInfo = new DruidMonitorVO.SlowSqlInfo();
+                                    slowSqlInfo.setSqlId(sqlId);
+                                    // SQL文本截断到5000字符，避免过长
+                                    slowSqlInfo.setSqlText(sqlText != null ? truncateString(sqlText, 5000) : "");
+                                    slowSqlInfo.setExecuteCount(count);
+                                    slowSqlInfo.setExecuteTimeTotal(millis);
+                                    slowSqlInfo.setExecuteTimeMax(maxMillis);
+                                    slowSqlInfo.setExecuteTimeAvg(avgTime);
+                                    slowSqlInfo.setSlowCount(slowCount != null ? slowCount : 0L);
+                                    slowSqlInfo.setErrorCount(errorCount != null ? errorCount : 0L);
+                                    slowSqlInfo.setLastExecuteTime(lastExecuteTime);
+                                    slowSqlList.add(slowSqlInfo);
+                                }
+                            }
+                        } catch (Exception e) {
+                            log.warn("处理慢SQL信息失败", e);
+                        }
+                    }
+                }
+            } else {
+                // 不包含慢SQL列表时，只统计总数
+                if (sqlList != null) {
+                    for (Map<String, Object> sql : sqlList) {
+                        Long count = getLongValue(sql, "ExecuteCount");
+                        Long millis = getLongValue(sql, "ExecuteMillisTotal");
+                        Long slowCount = getLongValue(sql, "SlowCount");
+                        Long errorCount = getLongValue(sql, "ErrorCount");
+
+                        if (count != null) executeCount += count;
+                        if (millis != null) executeMillisTotal += millis;
+                        if (slowCount != null) slowSqlCount += slowCount;
+                        if (errorCount != null) errorSqlCount += errorCount;
+                    }
                 }
             }
 
@@ -354,6 +418,9 @@ public class MonitorServiceImpl implements MonitorService {
             sqlStatInfo.setSlowSqlCount(slowSqlCount);
             sqlStatInfo.setErrorSqlCount(errorSqlCount);
             monitorVO.setSqlStat(sqlStatInfo);
+            
+            // 设置慢SQL列表
+            monitorVO.setSlowSqlList(slowSqlList);
 
             monitorVO.setAvailable(true);
             return monitorVO;
@@ -379,6 +446,24 @@ public class MonitorServiceImpl implements MonitorService {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    /**
+     * 获取字符串值
+     */
+    private String getStringValue(Map<String, Object> map, String key) {
+        Object value = map.get(key);
+        return value != null ? value.toString() : null;
+    }
+
+    /**
+     * 截断字符串
+     */
+    private String truncateString(String str, int maxLength) {
+        if (str == null || str.length() <= maxLength) {
+            return str;
+        }
+        return str.substring(0, maxLength) + "...";
     }
 
     @Override
