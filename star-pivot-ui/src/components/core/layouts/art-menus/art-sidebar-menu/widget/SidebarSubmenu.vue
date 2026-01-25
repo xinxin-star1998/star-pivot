@@ -57,7 +57,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
   import type { AppRouteRecord } from '@/types/router'
   import { formatMenuTitle } from '@/utils/router'
   import { handleMenuJump } from '@/utils/navigation'

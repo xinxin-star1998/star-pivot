@@ -1,12 +1,14 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
-import com.star.pivot.system.domain.dto.RoleDTO;
-import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
-import com.star.pivot.system.domain.dto.RoleQueryDTO;
+import com.star.pivot.system.domain.dto.*;
 import com.star.pivot.system.domain.entity.SysRole;
+import com.star.pivot.system.domain.entity.SysUser;
+import com.star.pivot.system.domain.entity.UserRole;
 import com.star.pivot.system.service.SysRoleService;
+import com.star.pivot.system.service.SysUserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +21,8 @@ import java.util.List;
 public class SysRoleController {
     @Autowired
     private SysRoleService sysRoleService;
-
+    @Autowired
+    private SysUserService sysUserService;
     /**
      * 角色分页列表接口
      * 
@@ -82,14 +85,18 @@ public class SysRoleController {
     }
 
     /**
-     * 删除角色接口
+     * 删除角色接口（支持单删和批量删除）
      * 
-     * @param roleIds 角色ID数组
+     * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果，成功或失败的响应
      */
     @PreAuthorize("hasAuthority('system:role:delete')")
-    @DeleteMapping("/{roleIds}")
-    public Result<?> remove(@PathVariable("roleIds") Long[] roleIds) {
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
+        List<Long> roleIds = deleteRequest.getIds();
+        if (roleIds == null || roleIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
         boolean success = sysRoleService.deleteRoleByIds(roleIds);
         return success ? Result.success("删除角色成功") : Result.error("删除角色失败");
     }
@@ -107,9 +114,9 @@ public class SysRoleController {
         return success ? Result.success("修改状态成功") : Result.error("修改状态失败");
     }
     /**
-     * 分配角色权限接口（菜单权限和部门权限）
+     * 分配角色权限接口 部门权限
      */
-    @PreAuthorize("hasAuthority('system:role:edit')")
+    @PreAuthorize("hasAuthority('system:role:assignDataScope')")
     @PostMapping("/assignPermission")
     public Result<?> assignPermission(@RequestBody RolePermissionAssignDTO rolePermissionAssignDTO) {
         boolean success = sysRoleService.assignPermission(rolePermissionAssignDTO);
@@ -138,5 +145,47 @@ public class SysRoleController {
     public Result<List<Long>> getMenuIdsByRoleId(@PathVariable("roleId") Long roleId){
         List<Long> menuIds = sysRoleService.getMenuIdsByRoleId(roleId);
         return Result.success("查询成功", menuIds);
+    }
+    /**
+      * 根据角色id获取已分配的用户列表 分页  allocatedList
+     * @param assignUserReqBo 用户请求参数对象
+     * @return 指定角色拥有的用户列表
+     */
+    @PreAuthorize("hasAuthority('system:role:allocatedList')")
+    @PostMapping("/allocatedList")
+    public Result<PageResponse<SysUser>> getUserListByRoleId(@RequestBody AssignUserReqBo assignUserReqBo){
+        PageResponse<SysUser> userPage = sysUserService.getUserListByRoleId(assignUserReqBo);
+        return Result.success("查询成功", userPage);
+    }
+
+    /**
+     * 根据角色id获取 不属于该角色的用户列表 分页
+     * @param assignUserReqBo 用户请求参数对象
+     * @return 指定角色拥有的用户列表
+     */
+    @PreAuthorize("hasAuthority('system:role:unallocatedList')")
+    @PostMapping("/unallocatedList")
+    public Result<PageResponse<SysUser>> getUserListNotInByRoleId(@RequestBody AssignUserReqBo assignUserReqBo){
+        PageResponse<SysUser> userPage = sysUserService.unallocatedList(assignUserReqBo);
+        return Result.success("查询成功", userPage);
+    }
+    /**
+     * 添加userId 和 roleId  到sys_user_role
+     *
+     */
+    @PreAuthorize("hasAuthority('system:role:assignUser')")
+    @PostMapping("/assignUser")
+    public Result<?> assignUser(@RequestBody UserRoleDTO userRoleDTO) {
+        boolean success = sysRoleService.assignUser(userRoleDTO);
+        return success ? Result.success("分配用户成功") : Result.error("分配用户失败");
+    }
+    /*
+     * 根据角色id 用户id 取消授权的用户
+     */
+    @PreAuthorize("hasAuthority('system:role:cancelUser')")
+    @DeleteMapping("/cancelUser")
+    public Result<?> cancelUser(@RequestBody UserRole userRole) {
+        boolean success = sysRoleService.cancelUser(userRole);
+        return success ? Result.success("取消授权成功") : Result.error("取消授权失败");
     }
 }

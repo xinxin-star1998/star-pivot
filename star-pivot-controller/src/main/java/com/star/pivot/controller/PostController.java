@@ -1,5 +1,6 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.PostBo;
@@ -102,14 +103,18 @@ public class PostController {
     }
 
     /**
-     * 删除岗位接口
+     * 删除岗位接口（支持单删和批量删除）
      * 
-     * @param postIds 岗位ID数组
+     * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果，成功或失败的响应
      */
     @PreAuthorize("hasAuthority('system:post:delete')")
-    @DeleteMapping("/{postIds}")
-    public Result<?> remove(@PathVariable Long[] postIds) {
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
+        List<Long> postIds = deleteRequest.getIds();
+        if (postIds == null || postIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
         boolean success = postService.deletePostByIds(postIds);
         return success ? Result.success("删除岗位成功") : Result.error("删除岗位失败");
     }

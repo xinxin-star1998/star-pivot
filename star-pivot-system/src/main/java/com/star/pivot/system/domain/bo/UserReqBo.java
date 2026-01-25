@@ -26,6 +26,7 @@ public class UserReqBo extends PageReqBo {
     private String status;
     private String phonenumber;
     private String email;
+    private String roleId;
     /**
      * 部门ID
      */

@@ -20,6 +20,7 @@ import { ApiStatus } from './status'
 import { HttpError, handleError, showError, showSuccess } from './error'
 import { $t } from '@/locales'
 import { BaseResponse } from '@/types'
+import { fetchRefreshToken } from '@/api/auth'
 
 /** 请求配置常量 */
 const REQUEST_TIMEOUT = 15000
@@ -32,6 +33,70 @@ const UNAUTHORIZED_DEBOUNCE_TIME = 3000
 let isUnauthorizedErrorShown = false
 let unauthorizedTimer: ReturnType<typeof setTimeout> | null = null
 
+/** 刷新令牌状态管理 */
+let isRefreshing = false // 是否正在刷新令牌
+let refreshSubscribers: Array<(token: string) => void> = [] // 等待刷新完成的请求队列
+
+/**
+ * 订阅刷新完成事件
+ * @param cb 刷新完成后的回调函数
+ */
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb)
+}
+
+/**
+ * 通知所有等待的请求刷新已完成
+ * @param token 新的访问令牌
+ */
+function onRefreshed(token: string) {
+  refreshSubscribers.forEach((cb) => cb(token))
+  refreshSubscribers = []
+}
+
+/**
+ * 尝试刷新访问令牌
+ * @returns 刷新成功返回新的访问令牌，失败返回 null
+ */
+async function tryRefreshToken(): Promise<string | null> {
+  const userStore = useUserStore()
+  const refreshToken = userStore.refreshToken
+  const username = userStore.getUserInfo.user?.username
+
+  // 如果没有刷新令牌或用户名，无法刷新
+  if (!refreshToken || !username) {
+    return null
+  }
+
+  try {
+    const response = await fetchRefreshToken({
+      username,
+      refreshToken
+    })
+
+    const { token: newAccessToken, refreshToken: newRefreshToken } = response
+
+    if (newAccessToken) {
+      // 更新令牌（同时更新访问令牌和刷新令牌）
+      userStore.setToken(newAccessToken, newRefreshToken)
+      return newAccessToken
+    }
+
+    return null
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('[HTTP] 刷新令牌失败:', error)
+    }
+    return null
+  }
+}
+
+/** blob 请求时返回的完整响应（含 headers，用于解析 Content-Disposition 等） */
+export interface BlobFullResponse {
+  data: Blob
+  headers: Record<string, string>
+}
+
 /** 扩展 AxiosRequestConfig */
 interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   url: string
@@ -39,6 +104,8 @@ interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   data?: any
   showErrorMessage?: boolean
   showSuccessMessage?: boolean
+  /** blob 请求时是否返回 { data, headers }，便于解析 Content-Disposition 等响应头 */
+  returnFullResponse?: boolean
 }
 
 const { VITE_API_URL, VITE_WITH_CREDENTIALS } = import.meta.env
@@ -119,20 +186,112 @@ axiosInstance.interceptors.response.use(
     if (response.config.responseType === 'blob' || response.data instanceof Blob) {
       return response
     }
-    
+
     // JSON 响应类型，进行常规处理
     const data = response.data as BaseResponse
     const { code, msg, message } = data
     const messageText = msg || message || $t('httpMsg.requestFailed')
     if (code === ApiStatus.success) return response
-    if (code === ApiStatus.unauthorized) handleUnauthorizedError(messageText)
+
+    // 业务层返回 401（HTTP 状态码可能是 200，但业务 code 是 401）
+    if (code === ApiStatus.unauthorized) {
+      const originalRequest = response.config as InternalAxiosRequestConfig & { _retry?: boolean }
+
+      // 如果未重试过，尝试刷新令牌
+      if (!originalRequest._retry) {
+        return handleTokenRefresh(originalRequest)
+          .then(() => {
+            // 刷新成功，重试原请求
+            return axiosInstance(originalRequest) as Promise<AxiosResponse<BaseResponse | Blob>>
+          })
+          .catch(() => {
+            // 刷新失败，执行登出流程
+            handleUnauthorizedError(messageText)
+            throw createHttpError(messageText, code)
+          }) as Promise<AxiosResponse<BaseResponse | Blob>>
+      } else {
+        // 已经重试过，直接处理为未授权错误
+        handleUnauthorizedError(messageText)
+        throw createHttpError(messageText, code)
+      }
+    }
+
     throw createHttpError(messageText, code)
   },
-  (error) => {
-    if (error.response?.status === ApiStatus.unauthorized) handleUnauthorizedError()
+  async (error) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+
+    // HTTP 状态码为 401 且未重试过，尝试刷新令牌
+    if (
+      error.response?.status === ApiStatus.unauthorized &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
+      try {
+        await handleTokenRefresh(originalRequest)
+        // 刷新成功，重试原请求
+        return axiosInstance(originalRequest)
+      } catch {
+        // 刷新失败，执行登出流程
+        handleUnauthorizedError()
+        return Promise.reject(handleError(error))
+      }
+    }
+
     return Promise.reject(handleError(error))
   }
 )
+
+/**
+ * 处理令牌刷新逻辑
+ * @param originalRequest 原始请求配置
+ * @returns Promise<void>
+ */
+async function handleTokenRefresh(
+  originalRequest: InternalAxiosRequestConfig & { _retry?: boolean }
+): Promise<void> {
+  // 如果正在刷新，将当前请求加入等待队列
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      subscribeTokenRefresh((token: string) => {
+        // 更新请求头中的令牌
+        originalRequest.headers.set('Authorization', `Bearer ${token}`)
+        resolve()
+      })
+      // 如果刷新失败，reject
+      setTimeout(() => {
+        if (!isRefreshing) {
+          reject(new Error('刷新令牌超时'))
+        }
+      }, 10000) // 10秒超时
+    })
+  }
+
+  // 标记正在刷新
+  isRefreshing = true
+  originalRequest._retry = true
+
+  try {
+    const newToken = await tryRefreshToken()
+
+    if (newToken) {
+      // 刷新成功，更新请求头
+      originalRequest.headers.set('Authorization', `Bearer ${newToken}`)
+      // 通知所有等待的请求
+      onRefreshed(newToken)
+      isRefreshing = false
+      return Promise.resolve()
+    } else {
+      // 刷新失败
+      isRefreshing = false
+      return Promise.reject(new Error('刷新令牌失败'))
+    }
+  } catch (error) {
+    // 刷新过程出错
+    isRefreshing = false
+    return Promise.reject(error)
+  }
+}
 
 /** 统一创建HttpError */
 function createHttpError(message: string, code: number) {
@@ -220,14 +379,26 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
   try {
     const res = await axiosInstance.request<BaseResponse<T> | Blob>(config)
 
-    // 如果是 blob 响应类型，直接返回 blob 对象
+    // 如果是 blob 响应类型
     if (config.responseType === 'blob' || res.data instanceof Blob) {
+      if (config.returnFullResponse) {
+        const headers: Record<string, string> = {}
+        const h = res.headers as Record<string, unknown>
+        if (h && typeof h === 'object') {
+          for (const k of Object.keys(h)) {
+            const v = h[k]
+            if (typeof v === 'string') headers[k] = v
+            else if (Array.isArray(v) && v.length) headers[k] = String(v[0])
+          }
+        }
+        return { data: res.data as Blob, headers } as T
+      }
       return res.data as T
     }
 
     // JSON 响应类型，进行常规处理
     const jsonData = res.data as BaseResponse<T>
-    
+
     // 显示成功消息
     if (config.showSuccessMessage) {
       const successMsg = jsonData.msg || jsonData.message

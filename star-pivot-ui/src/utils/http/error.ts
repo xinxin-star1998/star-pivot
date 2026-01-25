@@ -26,6 +26,8 @@ import { ElMessage } from 'element-plus'
 import { ApiStatus } from './status'
 import { $t } from '@/locales'
 
+const isProd = import.meta.env.PROD
+
 // 错误响应接口
 export interface ErrorResponse {
   /** 错误状态码 */
@@ -102,18 +104,33 @@ export class HttpError extends Error {
  */
 const getErrorMessage = (status: number): string => {
   const errorMap: Record<number, string> = {
+    [ApiStatus.error]: 'httpMsg.requestFailed',
     [ApiStatus.unauthorized]: 'httpMsg.unauthorized',
     [ApiStatus.forbidden]: 'httpMsg.forbidden',
     [ApiStatus.notFound]: 'httpMsg.notFound',
     [ApiStatus.methodNotAllowed]: 'httpMsg.methodNotAllowed',
     [ApiStatus.requestTimeout]: 'httpMsg.requestTimeout',
     [ApiStatus.internalServerError]: 'httpMsg.internalServerError',
+    [ApiStatus.notImplemented]: 'httpMsg.internalServerError',
     [ApiStatus.badGateway]: 'httpMsg.badGateway',
     [ApiStatus.serviceUnavailable]: 'httpMsg.serviceUnavailable',
     [ApiStatus.gatewayTimeout]: 'httpMsg.gatewayTimeout'
   }
 
   return $t(errorMap[status] || 'httpMsg.internalServerError')
+}
+
+/**
+ * 生产环境对外展示的通用错误消息
+ * - 避免直接暴露后端 msg/message、堆栈等内部细节
+ */
+const getPublicMessage = (code?: number): string => {
+  if (!code) return $t('httpMsg.requestFailed')
+  // 针对常见 HTTP/业务状态码，返回统一的国际化提示
+  if (code in ApiStatus) {
+    return getErrorMessage(code)
+  }
+  return $t('httpMsg.requestFailed')
 }
 
 /**
@@ -124,7 +141,9 @@ const getErrorMessage = (status: number): string => {
 export function handleError(error: AxiosError<ErrorResponse>): never {
   // 处理取消的请求
   if (error.code === 'ERR_CANCELED') {
-    console.warn('Request cancelled:', error.message)
+    if (import.meta.env.DEV) {
+      console.warn('Request cancelled:', error.message)
+    }
     throw new HttpError($t('httpMsg.requestCancelled'), ApiStatus.error)
   }
 
@@ -143,10 +162,13 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
   }
 
   // 优先使用后端返回的消息，如果没有则使用 HTTP 状态码对应的国际化消息
-  const message =
+  const rawMessage =
     backendMessage ||
     (statusCode ? getErrorMessage(statusCode) : error.message) ||
     $t('httpMsg.requestFailed')
+
+  // 生产环境统一对外展示通用错误消息，避免泄露内部实现细节
+  const message = isProd ? getPublicMessage(statusCode) : rawMessage
   throw new HttpError(message, statusCode || ApiStatus.error, {
     data: responseData,
     url: requestConfig?.url,
@@ -160,11 +182,14 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
  * @param showMessage 是否显示错误消息
  */
 export function showError(error: HttpError, showMessage: boolean = true): void {
+  const displayMessage = isProd ? getPublicMessage(error.code) : error.message
   if (showMessage) {
-    ElMessage.error(error.message)
+    ElMessage.error(displayMessage)
   }
   // 记录错误日志
-  console.error('[HTTP Error]', error.toLogData())
+  if (import.meta.env.DEV) {
+    console.error('[HTTP Error]', error.toLogData())
+  }
 }
 
 /**

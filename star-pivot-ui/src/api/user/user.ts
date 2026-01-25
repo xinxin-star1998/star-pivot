@@ -40,11 +40,12 @@ export function fetchUpdateUser(data: Api.SystemManage.UserListItem) {
 }
 
 /**
- * 删除用户
+ * 删除用户（支持单删和批量删除）
  */
 export function fetchDeleteUser(userIds: number[]) {
   return request.del({
-    url: `/api/sys/user/${userIds}`
+    url: '/api/sys/user/delete',
+    data: { ids: userIds }
   })
 }
 
@@ -107,5 +108,27 @@ export function fetchGetAvatarPresignedUrl(filePath: string) {
     params: {
       filePath
     }
+  })
+}
+
+/**
+ * 管理员解锁账户
+ * 解除因登录失败次数过多而被锁定的账户
+ */
+export function fetchUnlockUser(userId: number) {
+  return request.post({
+    url: `/api/sys/user/unlock/${userId}`
+  })
+}
+
+/**
+ * 批量导入用户
+ * 前端将 Excel 解析后的数据列表直接提交给后端
+ * @deprecated 请使用 fetchImportData('user', data, options) 替代
+ */
+export function fetchImportUser(data: Array<Record<string, unknown>>) {
+  return request.post({
+    url: '/api/sys/user/import',
+    data
   })
 }

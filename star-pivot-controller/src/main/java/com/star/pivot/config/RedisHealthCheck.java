@@ -49,6 +49,10 @@ public class RedisHealthCheck implements CommandLineRunner {
             
             // 清理测试数据
             redisTemplate.delete(testKey);
+            
+            // 清除可能存在的旧格式缓存数据（Java 序列化格式）
+            // 这些旧数据会导致 JSON 反序列化失败
+            clearOldFormatCache();
         } catch (Exception e) {
             log.error("==========================================");
             log.error("Redis 连接检查：❌ 失败");
@@ -60,6 +64,39 @@ public class RedisHealthCheck implements CommandLineRunner {
             log.error("4. 网络连接是否正常");
             log.error("==========================================");
             log.error("详细错误：", e);
+        }
+    }
+    
+    /**
+     * 清除旧格式的缓存数据
+     * 
+     * <p>由于缓存序列化方式从 Java 序列化改为 JSON，需要清除旧的缓存数据
+     * 新的缓存数据会使用 "cache:" 前缀，不会与旧数据冲突
+     * 但为了彻底清理，这里清除可能存在的旧缓存 key
+     */
+    private void clearOldFormatCache() {
+        try {
+            // 清除可能存在的旧格式缓存（没有 "cache:" 前缀的缓存）
+            // 注意：这里只清除已知的缓存名称，避免误删其他数据
+            String[] oldCacheNames = {"userPermissions", "menuTree", "dictData"};
+            int clearedCount = 0;
+            
+            for (String cacheName : oldCacheNames) {
+                // 使用 SCAN 命令查找匹配的 key（避免阻塞 Redis）
+                java.util.Set<String> keys = redisTemplate.keys(cacheName + "::*");
+                if (keys != null && !keys.isEmpty()) {
+                    redisTemplate.delete(keys);
+                    clearedCount += keys.size();
+                    log.info("清除旧格式缓存: {} ({} 个 key)", cacheName, keys.size());
+                }
+            }
+            
+            if (clearedCount > 0) {
+                log.info("已清除 {} 个旧格式缓存 key，新的缓存将使用 JSON 序列化格式", clearedCount);
+            }
+        } catch (Exception e) {
+            // 清除旧缓存失败不影响应用启动，只记录警告
+            log.warn("清除旧格式缓存时出现异常（不影响应用运行）: {}", e.getMessage());
         }
     }
 }

@@ -15,7 +15,6 @@
  * @author Art Design Pro Team
  */
 
-import { computed } from 'vue'
 import appConfig from '@/config'
 import type { FastEnterApplication, FastEnterQuickLink } from '@/types/config'
 

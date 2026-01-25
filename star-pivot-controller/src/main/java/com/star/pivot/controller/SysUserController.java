@@ -1,17 +1,23 @@
 package com.star.pivot.controller;
 
 import com.star.pivot.common.annotation.Log;
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.ResetPasswordDTO;
 import com.star.pivot.system.domain.dto.UserDTO;
+import com.star.pivot.system.domain.entity.SysUser;
+import com.star.pivot.system.service.AccountLockService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * 用户信息表(SysUser)表控制层
@@ -26,9 +32,11 @@ public class SysUserController {
      * 服务对象
      */
     private final SysUserService sysUserService;
+    private final AccountLockService accountLockService;
 
-    public SysUserController(SysUserService sysUserService) {
+    public SysUserController(SysUserService sysUserService, AccountLockService accountLockService) {
         this.sysUserService = sysUserService;
+        this.accountLockService = accountLockService;
     }
 
     /**
@@ -37,6 +45,7 @@ public class SysUserController {
      * @param userReqBo 用户查询参数
      * @return 分页结果
      */
+    @Log(title = "用户管理")
     @PreAuthorize("hasAuthority('system:user:query')")
     @PostMapping("/pageList")
     public Result<PageResponse<UserVO>> pageList(@RequestBody UserReqBo userReqBo) {
@@ -50,6 +59,7 @@ public class SysUserController {
      * @param userId 用户ID
      * @return 指定ID的用户详细信息
      */
+    @Log(title = "用户管理")
     @PreAuthorize("hasAuthority('system:user:query')")
     @GetMapping("/{userId}")
     public Result<UserVO> getUserById(@PathVariable("userId") Long userId) {
@@ -86,12 +96,17 @@ public class SysUserController {
     }
 
     /**
-     * 删除用户
+     * 删除用户（支持单删和批量删除）
      */
     @Log(title = "用户管理", businessType = 3)
     @PreAuthorize("hasAuthority('system:user:delete')")
-    @DeleteMapping("/{userIds}")
-    public Result<?> remove(@PathVariable Long[] userIds) {
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
+        List<Long> userIds = deleteRequest.getIds();
+        if (userIds == null || userIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
+        
         // 不能删除自己
         Long currentUserId = SecurityContextUtils.getUserId();
         for (Long userId : userIds) {
@@ -126,6 +141,57 @@ public class SysUserController {
     public Result<?> changeStatus(@RequestBody UserDTO userDTO) {
         boolean success = sysUserService.changeUserStatus(userDTO.getUserId(), userDTO.getStatus());
         return success ? Result.success("修改状态成功") : Result.error("修改状态失败");
+    }
+
+    /**
+     * 管理员解锁账户
+     * 解除因登录失败次数过多而被锁定的账户
+     * 
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    @Log(title = "用户管理", businessType = 2)
+    @PreAuthorize("hasAuthority('system:user:unLock') and @ss.hasRole('admin')")
+    @PostMapping("/unlock/{userId}")
+    public Result<?> unlockUser(@PathVariable("userId") Long userId) {
+        // 1. 根据 userId 查询用户信息
+        SysUser user = sysUserService.getById(userId);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        String username = user.getUserName();
+        if (username == null || username.trim().isEmpty()) {
+            return Result.error("用户名不能为空");
+        }
+
+        // 2. 检查账户是否被锁定
+        boolean isLocked = accountLockService.isAccountLocked(username);
+        if (!isLocked) {
+            return Result.success("账户未被锁定，无需解锁");
+        }
+
+        // 3. 执行解锁操作
+        accountLockService.unlockAccount(username);
+
+        return Result.success("账户已成功解锁");
+    }
+
+    /**
+     * 批量导入用户（Excel 导入）
+     * 说明：
+     * - 前端会先将 Excel 解析成 List&lt;Map&lt;String, Object&gt;&gt;
+     * - 再直接调用该接口进行批量导入
+     *
+     * @param rowList Excel 解析后的行数据列表
+     * @return 导入结果
+     */
+    @Log(title = "用户管理", businessType = 1)
+    @PreAuthorize("hasAuthority('system:user:import')")
+    @PostMapping("/import")
+    public Result<?> importUsers(@RequestBody List<Map<String, Object>> rowList) {
+        int successCount = sysUserService.importUsers(rowList);
+        return Result.success("成功导入 " + successCount + " 个用户");
     }
 }
 

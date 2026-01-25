@@ -31,7 +31,6 @@
  * @author Art Design Pro Team
  */
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
 import { MenuThemeType } from '@/types/store'
 import AppConfig from '@/config'
 import { SystemThemeEnum, MenuThemeEnum, MenuTypeEnum, ContainerWidthEnum } from '@/enums/appEnum'

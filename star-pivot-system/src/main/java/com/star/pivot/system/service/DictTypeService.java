@@ -50,12 +50,12 @@ public interface DictTypeService extends IService<DictType> {
     boolean updateDictType(DictTypeDTO dictTypeDTO);
 
     /**
-     * 删除字典类型
+     * 删除字典类型（支持单删和批量删除）
      *
-     * @param dictIds 字典类型ID数组
+     * @param dictIds 字典类型ID列表
      * @return 是否成功
      */
-    boolean deleteDictTypeByIds(Long[] dictIds);
+    boolean deleteDictTypeByIds(List<Long> dictIds);
 
     /**
      * 检查字典类型是否唯一

@@ -7,7 +7,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watchEffect } from 'vue'
 
   interface Props {
     size?: string | number

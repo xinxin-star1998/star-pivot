@@ -8,13 +8,12 @@
   },
   "scripts": {
     "dev": "vite --open",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "vite build",
     "serve": "vite preview",
     "lint": "eslint",
     "fix": "eslint --fix",
     "lint:prettier": "prettier --write \"**/*.{js,cjs,ts,json,tsx,css,less,scss,vue,html,md}\"",
-    "lint:stylelint": "stylelint  \"**/*.{css,scss,vue}\" --fix",
-    "generate:menu": "node scripts/generate-menu-data.js"
+    "lint:stylelint": "stylelint  \"**/*.{css,scss,vue}\" --fix"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",

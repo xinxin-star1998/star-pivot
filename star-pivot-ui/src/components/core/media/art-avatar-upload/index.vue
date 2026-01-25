@@ -34,7 +34,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue'
   import { fetchUploadAvatar, fetchDeleteAvatar, fetchGetAvatarPresignedUrl } from '@/api/user/user'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
 
@@ -267,7 +266,6 @@
         } else {
           // 非自动上传模式下（新增用户时），只显示本地预览，不触发服务器上传
           // 不更新modelValue，避免将临时的data URL保存到表单中
-          console.log('非自动上传模式：只显示本地预览，不上传服务器')
         }
       }
       reader.readAsDataURL(file)

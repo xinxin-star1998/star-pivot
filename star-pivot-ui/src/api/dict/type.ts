@@ -89,11 +89,11 @@ export function fetchUpdateDictType(data: DictTypeFormData) {
 }
 
 /**
- * 删除字典类型
- * 后端路径参数是数组，格式：/sys/dict/type/{dictIds}
+ * 删除字典类型（支持单删和批量删除）
  */
 export function fetchDeleteDictType(dictIds: number[]) {
   return request.del({
-    url: `/api/sys/dict/type/${dictIds.join(',')}`
+    url: '/api/sys/dict/type/delete',
+    data: { ids: dictIds }
   })
 }

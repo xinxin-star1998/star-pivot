@@ -159,7 +159,7 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
   // 日志工具函数
   const logger = {
     log: (message: string, ...args: unknown[]) => {
-      if (enableLog) {
+      if (enableLog && import.meta.env.DEV) {
         console.log(`[useTable] ${message}`, ...args)
       }
     },

@@ -24,6 +24,35 @@
         <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
         <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
+
+    <!--
+        统一数据权限过滤片段。
+        使用 choose 结合 dataScope/sqlFilter/deptIds/userDeptId/userId 参数，避免 SQL 注入并减少重复代码。
+        注意：param 前缀与 SysUserMapper 中 Service 传入的参数结构保持一致。
+    -->
+    <sql id="dataScopeFilter">
+        <!-- 数据权限过滤：使用choose标签避免SQL注入风险 -->
+        <choose>
+            <when test="param.dataScope != null and param.dataScope.sqlFilter == '1=1'">
+                <!-- 全部数据，不需要额外条件 -->
+            </when>
+            <when test="param.dataScope != null and param.dataScope.sqlFilter == '1=0'">
+                AND 1=0
+            </when>
+            <when test="param.dataScope != null and param.deptIds != null and param.deptIds.size() > 0">
+                AND u.dept_id IN
+                <foreach collection="param.deptIds" item="deptId" open="(" separator="," close=")">
+                    #{deptId}
+                </foreach>
+            </when>
+            <when test="param.userDeptId != null">
+                AND u.dept_id = #{param.userDeptId}
+            </when>
+            <when test="param.userId != null">
+                AND u.create_by = #{param.userId}
+            </when>
+        </choose>
+    </sql>
     <select id="selectPageList" resultMap="SysUserMap">
         select 
             distinct u.user_id,
@@ -48,27 +77,28 @@
         from sys_user u
         <where>
             u.del_flag = '0'
-            <if test="userReqBo.userName != null and userReqBo.userName != ''">
-                and u.user_name like concat('%',#{userReqBo.userName},'%')
+            <if test="param.userReqBo.userName != null and param.userReqBo.userName != ''">
+                and u.user_name like concat('%',#{param.userReqBo.userName},'%')
             </if>
-            <if test="userReqBo.nickName != null and userReqBo.nickName != ''">
-                and u.nick_name like concat('%',#{userReqBo.nickName},'%')
+            <if test="param.userReqBo.nickName != null and param.userReqBo.nickName != ''">
+                and u.nick_name like concat('%',#{param.userReqBo.nickName},'%')
             </if>
-            <if test="userReqBo.status != null and userReqBo.status != ''">
-                and u.status = #{userReqBo.status}
+            <if test="param.userReqBo.status != null and param.userReqBo.status != ''">
+                and u.status = #{param.userReqBo.status}
             </if>
-            <if test="userReqBo.phonenumber != null and userReqBo.phonenumber != ''">
-                and u.phonenumber like concat('%',#{userReqBo.phonenumber},'%')
+            <if test="param.userReqBo.phonenumber != null and param.userReqBo.phonenumber != ''">
+                and u.phonenumber like concat('%',#{param.userReqBo.phonenumber},'%')
             </if>
-            <if test="userReqBo.email != null and userReqBo.email != ''">
-                    and u.email like concat('%',#{userReqBo.email},'%')
-                </if>
-            <if test="userReqBo.sex != null and userReqBo.sex != ''">
-                and u.sex = #{userReqBo.sex}
+            <if test="param.userReqBo.email != null and param.userReqBo.email != ''">
+                    and u.email like concat('%',#{param.userReqBo.email},'%')
             </if>
-            <if test="userReqBo.deptId != null">
-                and u.dept_id = #{userReqBo.deptId}
+            <if test="param.userReqBo.sex != null and param.userReqBo.sex != ''">
+                and u.sex = #{param.userReqBo.sex}
             </if>
+            <if test="param.userReqBo.deptId != null">
+                and u.dept_id = #{param.userReqBo.deptId}
+            </if>
+            <include refid="dataScopeFilter"/>
         </where>
         order by u.create_time desc
     </select>
@@ -91,5 +121,48 @@
            AND p.status = '0'
         ORDER BY p.order_num
     </select>
-
+    <select id="getUserListByRoleId" resultType="com.star.pivot.system.domain.entity.SysUser">
+        select
+            u.*
+        from sys_user u
+        inner join sys_user_role ur on u.user_id = ur.user_id
+        <where>
+            u.del_flag = '0' and u.status = '0'
+            <if test="param.assignUserReqBo.roleId != null">
+                and ur.role_id = #{param.assignUserReqBo.roleId}
+            </if>
+            <if test="param.assignUserReqBo.userName != null and param.assignUserReqBo.userName != ''">
+                and u.user_name like concat('%',#{param.assignUserReqBo.userName},'%')
+            </if>
+            <if test="param.assignUserReqBo.phonenumber != null and param.assignUserReqBo.phonenumber != ''">
+                and u.phonenumber like concat('%',#{param.assignUserReqBo.phonenumber},'%')
+            </if>
+            <include refid="dataScopeFilter"/>
+        </where>
+        order by u.create_time desc
+    </select>
+    <select id="unallocatedList" resultType="com.star.pivot.system.domain.entity.SysUser">
+        select
+        u.*
+        from sys_user u
+        <where>
+            u.del_flag = '0' and u.status = '0'
+            <if test="param.assignUserReqBo.roleId != null">
+                and u.user_id not in(select user_id from sys_user_role where role_id =#{param.assignUserReqBo.roleId} )
+            </if>
+            <if test="param.assignUserReqBo.userName != null and param.assignUserReqBo.userName != ''">
+                and u.user_name like concat('%',#{param.assignUserReqBo.userName},'%')
+            </if>
+            <if test="param.assignUserReqBo.phonenumber != null and param.assignUserReqBo.phonenumber != ''">
+                and u.phonenumber like concat('%',#{param.assignUserReqBo.phonenumber},'%')
+            </if>
+            <include refid="dataScopeFilter"/>
+        </where>
+        order by u.create_time desc
+    </select>
+    <select id="selectDeptIdByUserId" resultType="java.lang.Long">
+        select dept_id
+        from sys_user
+        where del_flag = '0' and status = '0' and user_id = #{userId}
+    </select>
 </mapper>

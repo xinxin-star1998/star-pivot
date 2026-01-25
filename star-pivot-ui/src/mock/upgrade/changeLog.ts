@@ -1,4 +1,3 @@
-import { ref } from 'vue'
 
 interface UpgradeLog {
   version: string // 版本号

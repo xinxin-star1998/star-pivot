@@ -1,6 +1,7 @@
 package com.star.pivot.controller;
 
 import com.star.pivot.common.annotation.Log;
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.LogininforReqBo;
@@ -31,7 +32,7 @@ public class SysLogininforController {
      * @param logininforReqBo 查询参数
      * @return 分页结果
      */
-    @Log(title = "登录日志", businessType = 0)
+    @Log(title = "登录日志")
     @PreAuthorize("hasAuthority('system:logininfor:query')")
     @PostMapping("/pageList")
     public Result<PageResponse<LogininforVO>> pageList(@RequestBody LogininforReqBo logininforReqBo) {
@@ -45,7 +46,7 @@ public class SysLogininforController {
      * @param infoId 日志ID
      * @return 登录日志详情
      */
-    @Log(title = "登录日志", businessType = 0)
+    @Log(title = "登录日志")
     @PreAuthorize("hasAuthority('system:logininfor:query')")
     @GetMapping("/{infoId}")
     public Result<LogininforVO> getLogininforById(@PathVariable("infoId") Long infoId) {
@@ -58,16 +59,20 @@ public class SysLogininforController {
     }
 
     /**
-     * 删除登录日志
+     * 删除登录日志（支持单删和批量删除）
      *
-     * @param infoIds 日志ID数组
+     * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果
      */
     @Log(title = "登录日志", businessType = 3)
     @PreAuthorize("hasAuthority('system:logininfor:delete')")
-    @DeleteMapping("/{infoIds}")
-    public Result<?> remove(@PathVariable Long[] infoIds) {
-        boolean success = sysLogininforService.removeByIds(java.util.Arrays.asList(infoIds));
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
+        java.util.List<Long> infoIds = deleteRequest.getIds();
+        if (infoIds == null || infoIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
+        boolean success = sysLogininforService.removeByIds(infoIds);
         return success ? Result.success("删除成功") : Result.error("删除失败");
     }
 

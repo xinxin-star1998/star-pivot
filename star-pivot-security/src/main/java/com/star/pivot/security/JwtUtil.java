@@ -29,6 +29,18 @@ public class JwtUtil {
     private Long expiration; // 默认24小时，单位：毫秒
 
     /**
+     * 可选的刷新令牌有效期配置
+     *
+     * <p>说明：
+     * <ul>
+     *   <li>Access Token 仍然使用 {@link #expiration} 作为过期时间</li>
+     *   <li>刷新接口在生成新的 Access Token 时，可以根据业务需要决定是否参考该值</li>
+     * </ul>
+     */
+    @Value("${jwt.refresh-expiration:604800000}")
+    private Long refreshExpiration;
+
+    /**
      * 生成密钥
      */
     private SecretKey getSigningKey() {
@@ -75,6 +87,32 @@ public class JwtUtil {
      */
     public String getUsernameFromToken(String token) {
         return getClaimsFromToken(token).getSubject();
+    }
+
+    /**
+     * 从 Token 中获取用户ID
+     *
+     * <p>说明：生成 Token 时需在 claims 中加入 {@code userId} 字段，
+     * 否则该方法会返回 {@code null}。
+     */
+    public Long getUserIdFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        Object userId = claims.get("userId");
+        if (userId == null) {
+            return null;
+        }
+        if (userId instanceof Integer) {
+            return ((Integer) userId).longValue();
+        }
+        if (userId instanceof Long) {
+            return (Long) userId;
+        }
+        try {
+            return Long.valueOf(userId.toString());
+        } catch (NumberFormatException e) {
+            log.warn("从Token中解析userId失败: {}", e.getMessage());
+            return null;
+        }
     }
 
     /**

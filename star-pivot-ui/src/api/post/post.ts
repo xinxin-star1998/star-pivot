@@ -65,11 +65,12 @@ export function fetchUpdatePost(data: SysPost) {
 }
 
 /**
- * 删除岗位
+ * 删除岗位（支持单删和批量删除）
  */
 export function fetchDeletePost(postIds: number[]) {
   return request.del({
-    url: `/api/sys/post/${postIds}`
+    url: '/api/sys/post/delete',
+    data: { ids: postIds }
   })
 }
 

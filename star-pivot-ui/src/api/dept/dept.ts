@@ -59,10 +59,13 @@ export function fetchUpdateDept(data: SysDept) {
 }
 
 /**
- * 删除部门
+ * 删除部门（支持单删和批量删除）
  */
-export function fetchDeleteDept(deptId: number) {
+export function fetchDeleteDept(deptIds: number | number[]) {
+  // 统一转换为数组格式
+  const ids = Array.isArray(deptIds) ? deptIds : [deptIds]
   return request.del({
-    url: `/api/sys/dept/${deptId}`
+    url: '/api/sys/dept/delete',
+    data: { ids }
   })
 }

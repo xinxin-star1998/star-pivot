@@ -24,7 +24,7 @@ public interface GenTableMapper extends BaseMapper<GenTable> {
      * @param sql 表结构
      * @return 结果
      */
-    public int createTable(String sql);
+    int createTable(@Param("sql") String sql);
 
     List<GenTable> selectDbTableListByNames(String[] tableNames);
     /**
@@ -32,7 +32,7 @@ public interface GenTableMapper extends BaseMapper<GenTable> {
      *
      * @return 表信息集合
      */
-    public List<GenTable> selectGenTableAll();
+    List<GenTable> selectGenTableAll();
 
     /**
      * 查询表ID业务信息
@@ -40,14 +40,14 @@ public interface GenTableMapper extends BaseMapper<GenTable> {
      * @param id 业务ID
      * @return 业务信息
      */
-    public GenTable selectGenTableById(Long id);
+    GenTable selectGenTableById(Long id);
     /**
      * 新增业务
      *
      * @param genTable 业务信息
      * @return 结果
      */
-    public int insertGenTable(GenTable genTable);
+    int insertGenTable(GenTable genTable);
 
     /**
      * 分页查询代码生成表列表（XML方式）
@@ -63,22 +63,22 @@ public interface GenTableMapper extends BaseMapper<GenTable> {
      * @param genTable 业务信息
      * @return 结果
      */
-    public int updateGenTable(GenTable genTable);
+    int updateGenTable(GenTable genTable);
 
     IPage<GenTable> selectDbTableList(Page<GenTable> page, @Param("query") GenTableQueryDTO queryDTO);
 
     /**
      * 批量删除业务
      *
-     * @param ids 需要删除的数据ID
+     * @param tableIds 需要删除的数据
      * @return 结果
      */
-    public int deleteGenTableByIds(Long[] ids);
+    int deleteGenTableByIds(List<Long> tableIds);
     /**
      * 查询表名称业务信息
      *
      * @param tableName 表名称
      * @return 业务信息
      */
-    public GenTable selectGenTableByName(String tableName);
+    GenTable selectGenTableByName(String tableName);
 }

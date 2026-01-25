@@ -9,6 +9,7 @@
     @click="handleClick"
   >
     <ArtSvgIcon :icon="iconContent" />
+    <span v-if="label" class="ml-1">{{ label }}</span>
   </div>
 </template>
 
@@ -26,6 +27,8 @@
     iconColor?: string
     /** 按钮背景色 */
     buttonBgColor?: string
+    /** 按钮文本标签 */
+    label?: string
   }
 
   const props = withDefaults(defineProps<Props>(), {})

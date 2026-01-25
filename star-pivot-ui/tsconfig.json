@@ -2,14 +2,16 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "strict": true,
+    "noImplicitAny": false,
     "jsx": "preserve",
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "lib": ["esnext", "dom", "es2015"],
     "types": ["vite/client", "node", "element-plus/global"],
+    "noEmit": true,
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {

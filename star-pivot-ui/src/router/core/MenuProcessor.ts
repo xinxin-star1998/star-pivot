@@ -27,7 +27,9 @@ export class MenuProcessor {
         throw new Error('后端返回的菜单数据格式错误，期望数组类型')
       }
 
-      console.log('[MenuProcessor] 获取到菜单数据:', sysMenuList)
+      if (import.meta.env.DEV) {
+        console.log('[MenuProcessor] 获取到菜单数据:', sysMenuList)
+      }
 
       // 将后端 SysMenu 转换为前端 AppRouteRecord
       const convertedList = this.convertSysMenuToRouteRecord(sysMenuList)
@@ -103,15 +105,19 @@ export class MenuProcessor {
             if (hasChildren) {
               // 任何层级的目录，只要有子菜单，都使用 Layout 来承载子路由
               component = RoutesAlias.Layout
-              console.log(
-                `[MenuProcessor] 目录 "${menu.menuName}" (level: ${level}) 有子菜单，设置为 Layout`
-              )
+              if (import.meta.env.DEV) {
+                console.log(
+                  `[MenuProcessor] 目录 "${menu.menuName}" (level: ${level}) 有子菜单，设置为 Layout`
+                )
+              }
             } else {
               // 目录类型但没有子菜单，不设置 component
               component = undefined
-              console.log(
-                `[MenuProcessor] 目录 "${menu.menuName}" (level: ${level}) 没有子菜单，不设置 component`
-              )
+              if (import.meta.env.DEV) {
+                console.log(
+                  `[MenuProcessor] 目录 "${menu.menuName}" (level: ${level}) 没有子菜单，不设置 component`
+                )
+              }
             }
           }
 

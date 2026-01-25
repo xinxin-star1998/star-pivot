@@ -4,6 +4,7 @@ import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.common.sql.SqlUtil;
@@ -18,7 +19,6 @@ import com.star.pivot.generator.utils.Convert;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -61,6 +61,7 @@ public class GenController {
     /**
      * 查询数据库列表
      */
+    @PreAuthorize("hasAuthority('tool:gen:query')")
     @PostMapping("/db/list")
     public Result<PageResponse<GenTableVO>> dbTableList(@RequestBody GenTableQueryDTO queryDTO)
     {
@@ -70,6 +71,7 @@ public class GenController {
     /**
      * 查询数据表字段列表
      */
+    @PreAuthorize("hasAuthority('tool:gen:query')")
     @GetMapping(value = "/column/{tableId}")
     public Result<List<GenTableColumn>> columnList(@PathVariable Long tableId)
     {
@@ -80,6 +82,7 @@ public class GenController {
     /**
      * 导入表结构（保存）
      */
+    @PreAuthorize("hasAuthority('tool:gen:import')")
     @PostMapping("/importTable")
     public Result<?> importTableSave(@RequestBody Map<String, String> body)
     {
@@ -98,6 +101,7 @@ public class GenController {
     /**
      * 获取代码生成信息
      */
+    @PreAuthorize("hasAuthority('tool:gen:query')")
     @GetMapping(value = "/{tableId}")
     public Result<Map<String,Object>> getInfo(@PathVariable Long tableId)
     {
@@ -108,7 +112,7 @@ public class GenController {
         }
         List<GenTable> tables = genTableService.selectGenTableAll();
         List<GenTableColumn> list = genTableColumnService.selectGenTableColumnListByTableId(tableId);
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("info", table);
         map.put("rows", list);
         map.put("tables", tables);
@@ -117,8 +121,10 @@ public class GenController {
 
      /**
      * 创建表结构（保存）
+        * 
+     * <p>注意：此接口需要 admin 角色或 tool:gen:add 权限
      */
-//     @PreAuthorize("@ss.hasRole('admin')")
+    @PreAuthorize("@ss.hasRole('admin') or hasAuthority('tool:gen:add')")
     @PostMapping("/createTable")
     public Result<?> createTableSave(@RequestBody Map<String, String> body) {
         try {
@@ -130,8 +136,7 @@ public class GenController {
             List<SQLStatement> sqlStatements = SQLUtils.parseStatements(sql, DbType.mysql);
             List<String> tableNames = new ArrayList<>();
             for (SQLStatement sqlStatement : sqlStatements) {
-                if (sqlStatement instanceof MySqlCreateTableStatement) {
-                    MySqlCreateTableStatement createTableStatement = (MySqlCreateTableStatement) sqlStatement;
+                if (sqlStatement instanceof MySqlCreateTableStatement createTableStatement) {
                     // 提取表名（去掉反引号）
                     String tableName = createTableStatement.getTableName().replaceAll("`", "");
                     // 如果表已经存在，则跳过建表，仅做导入
@@ -159,6 +164,7 @@ public class GenController {
     /**
      * 修改保存代码生成业务
      */
+    @PreAuthorize("hasAuthority('tool:gen:edit')")
     @PostMapping("/editSave")
     public Result<?> editSave(@Validated @RequestBody GenTable genTable)
     {
@@ -167,19 +173,27 @@ public class GenController {
         return Result.success("修改成功");
     }
     /**
-     * 删除代码生成
+     * 删除代码生成（支持单删和批量删除）
+     * 
+     * @param deleteRequest 删除请求，包含 ids 数组，格式：{ "ids": [12, 13, 14] }
      */
-    @DeleteMapping("/{tableIds}")
-    public Result<?> remove(@PathVariable Long[] tableIds)
+    @PreAuthorize("hasAuthority('tool:gen:delete')")
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest)
     {
+        List<Long> tableIds = deleteRequest.getIds();
+        if (tableIds == null || tableIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
         genTableService.deleteGenTableByIds(tableIds);
         return Result.success();
     }
     /**
      * 预览代码
      */
+    @PreAuthorize("hasAuthority('tool:gen:preview')")
     @GetMapping("/preview/{tableId}")
-    public Result<Map<String, String>> preview(@PathVariable("tableId") Long tableId) throws IOException
+    public Result<Map<String, String>> preview(@PathVariable("tableId") Long tableId)
     {
         Map<String, String> dataMap = genTableService.previewCode(tableId);
         return Result.success(dataMap);
@@ -187,6 +201,7 @@ public class GenController {
     /**
      * 生成代码（下载方式）
      */
+    @PreAuthorize("hasAuthority('tool:gen:create')")
     @GetMapping("/download/{tableName}")
     public void download(HttpServletResponse response, @PathVariable("tableName") String tableName) throws IOException
     {
@@ -197,6 +212,7 @@ public class GenController {
     /**
      * 生成代码（自定义路径）
      */
+    @PreAuthorize("hasAuthority('tool:gen:create')")
     @GetMapping("/genCode/{tableName}")
     public Result<?> genCode(@PathVariable("tableName") String tableName)
     {
@@ -211,6 +227,7 @@ public class GenController {
     /**
      * 同步数据库
      */
+    @PreAuthorize("hasAuthority('tool:gen:sync')")
     @GetMapping("/syncDb/{tableName}")
     public Result<?> syncDb(@PathVariable("tableName") String tableName)
     {
@@ -221,6 +238,7 @@ public class GenController {
     /**
      * 批量生成代码
      */
+    @PreAuthorize("hasAuthority('tool:gen:create')")
     @GetMapping("/batchGenCode")
     public void batchGenCode(HttpServletResponse response, String tables) throws IOException
     {

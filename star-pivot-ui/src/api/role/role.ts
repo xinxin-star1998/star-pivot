@@ -33,13 +33,12 @@ export function fetchUpdateRole(data: Api.SystemManage.RoleListItem) {
 }
 
 /**
- * 删除角色
+ * 删除角色（支持单删和批量删除）
  */
 export function fetchDeleteRole(roleIds: number[]) {
-  // 将数组转换为逗号分隔的字符串，Spring 框架会自动将其转换为数组
-  const roleIdsStr = roleIds.join(',')
   return request.del({
-    url: `/api/sys/role/${roleIdsStr}`,
+    url: '/api/sys/role/delete',
+    data: { ids: roleIds },
     showSuccessMessage: true
   })
 }
@@ -97,5 +96,58 @@ export function fetchGetRoleMenus(roleId: number) {
 export function fetchGetRoleDeptIds(roleId: number) {
   return request.get<number[]>({
     url: `/api/sys/role/${roleId}/deptIds`
+  })
+}
+type AssignUserReqBo = {
+  roleId: string | number
+  userName?: string
+  phonenumber?: string
+  pageNum?: number
+  pageSize?: number
+}
+/**
+ * 当前角色ID已分配的用户列表（分页）
+ */
+export function fetchGetUserListByRoleId(data: AssignUserReqBo) {
+  return request.post<Api.SystemManage.UserList>({
+    url: '/api/sys/role/allocatedList',
+    data
+  })
+}
+//当前角色id未分配的用户 分页 unallocatedList
+export function fetchGetUserListNotInByRoleId(data: AssignUserReqBo) {
+  return request.post<Api.SystemManage.UserList>({
+    url: '/api/sys/role/unallocatedList',
+    data
+  })
+}
+type UserRoleDTO = {
+  roleId: string | number
+  userIds: string[] | number[]
+}
+/**
+ * 分配用户
+ */
+export function fetchAssignUser(data: UserRoleDTO) {
+  return request.post({
+    url: '/api/sys/role/assignUser',
+    data,
+    showSuccessMessage: true
+  })
+}
+
+type UnassignUserDTO = {
+  userId: number
+  roleId: string | number
+}
+
+/**
+ * 取消用户授权
+ */
+export function fetchCancelUser(data: UnassignUserDTO) {
+  return request.del({
+    url: '/api/sys/role/cancelUser',
+    data,
+    showSuccessMessage: true
   })
 }

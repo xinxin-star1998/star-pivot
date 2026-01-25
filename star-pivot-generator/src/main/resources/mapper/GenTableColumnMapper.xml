@@ -110,9 +110,9 @@
         where column_id = #{columnId}
     </update>
 
-    <delete id="deleteGenTableColumnByIds" parameterType="Long">
+    <delete id="deleteGenTableColumnByIds" parameterType="java.util.List">
         delete from gen_table_column where table_id in
-        <foreach collection="array" item="tableId" open="(" separator="," close=")">
+        <foreach collection="list" item="tableId" open="(" separator="," close=")">
             #{tableId}
         </foreach>
     </delete>

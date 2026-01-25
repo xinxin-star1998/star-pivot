@@ -119,11 +119,11 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(cacheNames = "dictData", allEntries = true)
-    public boolean deleteDictDataByIds(Long[] dictCodes) {
-        for (Long dictCode : dictCodes) {
-            this.removeById(dictCode);
+    public boolean deleteDictDataByIds(List<Long> dictCodes) {
+        if (dictCodes == null || dictCodes.isEmpty()) {
+            return false;
         }
-        return true;
+        return this.removeByIds(dictCodes);
     }
 
     /**

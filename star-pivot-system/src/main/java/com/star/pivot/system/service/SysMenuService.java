@@ -31,7 +31,13 @@ public interface SysMenuService extends IService<SysMenu> {
 
     boolean updateMenu(MenuDTO menuDTO);
 
-    boolean deleteMenu(Long menuId);
+    /**
+     * 删除菜单（支持单删和批量删除）
+     *
+     * @param menuIds 菜单ID列表
+     * @return 是否成功
+     */
+    boolean deleteMenuByIds(List<Long> menuIds);
 
     List<SysMenu> getParent();
 }

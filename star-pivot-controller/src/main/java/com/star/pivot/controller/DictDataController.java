@@ -1,5 +1,6 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.DictDataVO;
@@ -78,11 +79,15 @@ public class DictDataController {
     }
 
     /**
-     * 删除字典数据
+     * 删除字典数据（支持单删和批量删除）
      */
     @PreAuthorize("hasAuthority('system:data:delete')")
-    @DeleteMapping("/{dictCodes}")
-    public Result<?> remove(@PathVariable Long[] dictCodes) {
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
+        List<Long> dictCodes = deleteRequest.getIds();
+        if (dictCodes == null || dictCodes.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
         boolean success = dictDataService.deleteDictDataByIds(dictCodes);
         return success ? Result.success("删除字典数据成功") : Result.error("删除字典数据失败");
     }

@@ -1,4 +1,3 @@
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ContainerWidthEnum } from '@/enums/appEnum'
 import AppConfig from '@/config'

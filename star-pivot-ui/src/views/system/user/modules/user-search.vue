@@ -12,7 +12,6 @@
 
 <script setup lang="ts">
   import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
-  import { ref, computed, onMounted } from 'vue'
 
   interface Props {
     modelValue: Record<string, any>
@@ -102,13 +101,11 @@
 
   // 事件
   function handleReset() {
-    console.log('重置表单')
     emit('reset')
   }
 
   async function handleSearch() {
     await searchBarRef.value.validate()
     emit('search', formData.value)
-    console.log('表单数据', formData.value)
   }
 </script>

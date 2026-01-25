@@ -100,11 +100,11 @@ export function fetchUpdateDictData(data: DictDataFormData) {
 }
 
 /**
- * 删除字典数据
- * 后端路径参数是数组，格式：/sys/dict/data/{dictCodes}
+ * 删除字典数据（支持单删和批量删除）
  */
 export function fetchDeleteDictData(dictCodes: number[]) {
   return request.del({
-    url: `/api/sys/dict/data/${dictCodes.join(',')}`
+    url: '/api/sys/dict/data/delete',
+    data: { ids: dictCodes }
   })
 }

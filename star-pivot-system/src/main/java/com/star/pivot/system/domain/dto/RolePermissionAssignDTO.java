@@ -11,20 +11,25 @@ public class RolePermissionAssignDTO {
      */
     @NotNull(message = "角色ID不能为空")
     private Long roleId;
-
     /**
-     * 菜单ID列表（可为空，空则表示清空该角色所有菜单权限）
+     * 角色名称
      */
-    private List<Long> menuIds;
+    private String roleName;
+    /**
+     * 角色编码
+     */
+    private String roleKey;
+    /**
+     * 数据范围
+     */
+    private String dataScope;
+//    /**
+//     * 菜单ID列表（可为空，空则表示清空该角色所有菜单权限）
+//     */
+//    private List<Long> menuIds;
 
     /**
      * 部门ID列表（可为空，空则表示清空该角色所有部门权限）
      */
     private List<Long> deptIds;
-
-    /*
-     * 操作人ID（用于审计日志）
-     */
-//    @NotNull(message = "操作人ID不能为空")
-//    private Long operatorId;
 }

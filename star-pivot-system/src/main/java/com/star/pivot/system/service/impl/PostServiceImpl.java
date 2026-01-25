@@ -119,7 +119,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deletePostByIds(Long[] postIds) {
+    public boolean deletePostByIds(List<Long> postIds) {
+        if (postIds == null || postIds.isEmpty()) {
+            return false;
+        }
+        
         for (Long postId : postIds) {
             SysPost post = this.getById(postId);
             if (post != null) {

@@ -52,8 +52,19 @@ public class GlobalExceptionHandler {
         if (code == null) {
             code = 500;
         }
+        
+        // 对于特定的业务异常（如账户锁定423、限流429等），返回原始错误消息，便于用户了解具体情况
+        String message;
+        if (code == 423 || code == 429) {
+            // 账户锁定和限流异常，返回原始消息
+            message = e.getMessage();
+        } else {
+            // 其他服务异常，返回通用提示
+            message = "服务暂时不可用，请稍后重试或联系管理员";
+        }
+        
         return ResponseEntity.status(toHttpStatus(code))
-                .body(Result.error(code, "服务暂时不可用，请稍后重试或联系管理员"));
+                .body(Result.error(code, message));
     }
 
     /**
