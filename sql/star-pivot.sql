@@ -11,7 +11,7 @@
  Target Server Version : 50743
  File Encoding         : 65001
 
- Date: 25/01/2026 17:02:31
+ Date: 25/01/2026 17:41:52
 */
 
 SET NAMES utf8mb4;
@@ -120,6 +120,253 @@ INSERT INTO `gen_table_column` VALUES (312, 29, 'post_id', '岗位ID', 'bigint(2
 INSERT INTO `gen_table_column` VALUES (313, 30, 'id', '主键ID', 'bigint(20)', 'Long', 'id', '1', '1', '0', '1', NULL, NULL, NULL, 'EQ', 'input', '', 1, 'admin', '2026-01-25 16:07:44', '', NULL);
 INSERT INTO `gen_table_column` VALUES (314, 30, 'user_id', '用户ID', 'bigint(20)', 'Long', 'userId', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 2, 'admin', '2026-01-25 16:07:44', '', NULL);
 INSERT INTO `gen_table_column` VALUES (315, 30, 'role_id', '角色ID', 'bigint(20)', 'Long', 'roleId', '0', '0', '1', '1', '1', '1', '1', 'EQ', 'input', '', 3, 'admin', '2026-01-25 16:07:44', '', NULL);
+
+-- ----------------------------
+-- Table structure for qrtz_blob_triggers
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_blob_triggers`;
+CREATE TABLE `qrtz_blob_triggers`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `trigger_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_name的外键',
+  `trigger_group` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_group的外键',
+  `blob_data` blob NULL COMMENT '存放持久化Trigger对象',
+  PRIMARY KEY (`sched_name`, `trigger_name`, `trigger_group`) USING BTREE,
+  CONSTRAINT `qrtz_blob_triggers_ibfk_1` FOREIGN KEY (`sched_name`, `trigger_name`, `trigger_group`) REFERENCES `qrtz_triggers` (`sched_name`, `trigger_name`, `trigger_group`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Blob类型的触发器表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_blob_triggers
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for qrtz_calendars
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_calendars`;
+CREATE TABLE `qrtz_calendars`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `calendar_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '日历名称',
+  `calendar` blob NOT NULL COMMENT '存放持久化calendar对象',
+  PRIMARY KEY (`sched_name`, `calendar_name`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '日历信息表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_calendars
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for qrtz_cron_triggers
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_cron_triggers`;
+CREATE TABLE `qrtz_cron_triggers`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `trigger_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_name的外键',
+  `trigger_group` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_group的外键',
+  `cron_expression` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'cron表达式',
+  `time_zone_id` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '时区',
+  PRIMARY KEY (`sched_name`, `trigger_name`, `trigger_group`) USING BTREE,
+  CONSTRAINT `qrtz_cron_triggers_ibfk_1` FOREIGN KEY (`sched_name`, `trigger_name`, `trigger_group`) REFERENCES `qrtz_triggers` (`sched_name`, `trigger_name`, `trigger_group`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Cron类型的触发器表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_cron_triggers
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for qrtz_fired_triggers
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_fired_triggers`;
+CREATE TABLE `qrtz_fired_triggers`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `entry_id` varchar(95) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度器实例id',
+  `trigger_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_name的外键',
+  `trigger_group` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_group的外键',
+  `instance_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度器实例名',
+  `fired_time` bigint(13) NOT NULL COMMENT '触发的时间',
+  `sched_time` bigint(13) NOT NULL COMMENT '定时器制定的时间',
+  `priority` int(11) NOT NULL COMMENT '优先级',
+  `state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '状态',
+  `job_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '任务名称',
+  `job_group` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '任务组名',
+  `is_nonconcurrent` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '是否并发',
+  `requests_recovery` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '是否接受恢复执行',
+  PRIMARY KEY (`sched_name`, `entry_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '已触发的触发器表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_fired_triggers
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for qrtz_job_details
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_job_details`;
+CREATE TABLE `qrtz_job_details`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `job_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '任务名称',
+  `job_group` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '任务组名',
+  `description` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '相关介绍',
+  `job_class_name` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '执行任务类名称',
+  `is_durable` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '是否持久化',
+  `is_nonconcurrent` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '是否并发',
+  `is_update_data` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '是否更新数据',
+  `requests_recovery` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '是否接受恢复执行',
+  `job_data` blob NULL COMMENT '存放持久化job对象',
+  PRIMARY KEY (`sched_name`, `job_name`, `job_group`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '任务详细信息表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_job_details
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for qrtz_locks
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_locks`;
+CREATE TABLE `qrtz_locks`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `lock_name` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '悲观锁名称',
+  PRIMARY KEY (`sched_name`, `lock_name`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '存储的悲观锁信息表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_locks
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for qrtz_paused_trigger_grps
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_paused_trigger_grps`;
+CREATE TABLE `qrtz_paused_trigger_grps`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `trigger_group` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_group的外键',
+  PRIMARY KEY (`sched_name`, `trigger_group`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '暂停的触发器表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_paused_trigger_grps
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for qrtz_scheduler_state
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_scheduler_state`;
+CREATE TABLE `qrtz_scheduler_state`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `instance_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '实例名称',
+  `last_checkin_time` bigint(13) NOT NULL COMMENT '上次检查时间',
+  `checkin_interval` bigint(13) NOT NULL COMMENT '检查间隔时间',
+  PRIMARY KEY (`sched_name`, `instance_name`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '调度器状态表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_scheduler_state
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for qrtz_simple_triggers
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_simple_triggers`;
+CREATE TABLE `qrtz_simple_triggers`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `trigger_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_name的外键',
+  `trigger_group` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_group的外键',
+  `repeat_count` bigint(7) NOT NULL COMMENT '重复的次数统计',
+  `repeat_interval` bigint(12) NOT NULL COMMENT '重复的间隔时间',
+  `times_triggered` bigint(10) NOT NULL COMMENT '已经触发的次数',
+  PRIMARY KEY (`sched_name`, `trigger_name`, `trigger_group`) USING BTREE,
+  CONSTRAINT `qrtz_simple_triggers_ibfk_1` FOREIGN KEY (`sched_name`, `trigger_name`, `trigger_group`) REFERENCES `qrtz_triggers` (`sched_name`, `trigger_name`, `trigger_group`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '简单触发器的信息表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_simple_triggers
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for qrtz_simprop_triggers
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_simprop_triggers`;
+CREATE TABLE `qrtz_simprop_triggers`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `trigger_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_name的外键',
+  `trigger_group` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_triggers表trigger_group的外键',
+  `str_prop_1` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'String类型的trigger的第一个参数',
+  `str_prop_2` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'String类型的trigger的第二个参数',
+  `str_prop_3` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'String类型的trigger的第三个参数',
+  `int_prop_1` int(11) NULL DEFAULT NULL COMMENT 'int类型的trigger的第一个参数',
+  `int_prop_2` int(11) NULL DEFAULT NULL COMMENT 'int类型的trigger的第二个参数',
+  `long_prop_1` bigint(20) NULL DEFAULT NULL COMMENT 'long类型的trigger的第一个参数',
+  `long_prop_2` bigint(20) NULL DEFAULT NULL COMMENT 'long类型的trigger的第二个参数',
+  `dec_prop_1` decimal(13, 4) NULL DEFAULT NULL COMMENT 'decimal类型的trigger的第一个参数',
+  `dec_prop_2` decimal(13, 4) NULL DEFAULT NULL COMMENT 'decimal类型的trigger的第二个参数',
+  `bool_prop_1` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'Boolean类型的trigger的第一个参数',
+  `bool_prop_2` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT 'Boolean类型的trigger的第二个参数',
+  PRIMARY KEY (`sched_name`, `trigger_name`, `trigger_group`) USING BTREE,
+  CONSTRAINT `qrtz_simprop_triggers_ibfk_1` FOREIGN KEY (`sched_name`, `trigger_name`, `trigger_group`) REFERENCES `qrtz_triggers` (`sched_name`, `trigger_name`, `trigger_group`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '同步机制的行锁表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_simprop_triggers
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for qrtz_triggers
+-- ----------------------------
+DROP TABLE IF EXISTS `qrtz_triggers`;
+CREATE TABLE `qrtz_triggers`  (
+  `sched_name` varchar(120) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '调度名称',
+  `trigger_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '触发器的名字',
+  `trigger_group` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '触发器所属组的名字',
+  `job_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_job_details表job_name的外键',
+  `job_group` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'qrtz_job_details表job_group的外键',
+  `description` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '相关介绍',
+  `next_fire_time` bigint(13) NULL DEFAULT NULL COMMENT '上一次触发时间（毫秒）',
+  `prev_fire_time` bigint(13) NULL DEFAULT NULL COMMENT '下一次触发时间（默认为-1表示不触发）',
+  `priority` int(11) NULL DEFAULT NULL COMMENT '优先级',
+  `trigger_state` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '触发器状态',
+  `trigger_type` varchar(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '触发器的类型',
+  `start_time` bigint(13) NOT NULL COMMENT '开始时间',
+  `end_time` bigint(13) NULL DEFAULT NULL COMMENT '结束时间',
+  `calendar_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '日程表名称',
+  `misfire_instr` smallint(2) NULL DEFAULT NULL COMMENT '补偿执行的策略',
+  `job_data` blob NULL COMMENT '存放持久化job对象',
+  PRIMARY KEY (`sched_name`, `trigger_name`, `trigger_group`) USING BTREE,
+  INDEX `sched_name`(`sched_name`, `job_name`, `job_group`) USING BTREE,
+  CONSTRAINT `qrtz_triggers_ibfk_1` FOREIGN KEY (`sched_name`, `job_name`, `job_group`) REFERENCES `qrtz_job_details` (`sched_name`, `job_name`, `job_group`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '触发器详细信息表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of qrtz_triggers
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for sys_config
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_config`;
+CREATE TABLE `sys_config`  (
+  `config_id` int(5) NOT NULL AUTO_INCREMENT COMMENT '参数主键',
+  `config_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '参数名称',
+  `config_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '参数键名',
+  `config_value` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '参数键值',
+  `config_type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'N' COMMENT '系统内置（Y是 N否）',
+  `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
+  `create_time` datetime(0) NULL DEFAULT NULL COMMENT '创建时间',
+  `update_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
+  `update_time` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
+  `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (`config_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 100 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '参数配置表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of sys_config
+-- ----------------------------
+INSERT INTO `sys_config` VALUES (1, '主框架页-默认皮肤样式名称', 'sys.index.skinName', 'skin-blue', 'Y', 'admin', '2026-01-25 17:41:36', '', NULL, '蓝色 skin-blue、绿色 skin-green、紫色 skin-purple、红色 skin-red、黄色 skin-yellow');
+INSERT INTO `sys_config` VALUES (2, '用户管理-账号初始密码', 'sys.user.initPassword', '123456', 'Y', 'admin', '2026-01-25 17:41:36', '', NULL, '初始化密码 123456');
+INSERT INTO `sys_config` VALUES (3, '主框架页-侧边栏主题', 'sys.index.sideTheme', 'theme-dark', 'Y', 'admin', '2026-01-25 17:41:36', '', NULL, '深色主题theme-dark，浅色主题theme-light');
+INSERT INTO `sys_config` VALUES (4, '账号自助-验证码开关', 'sys.account.captchaEnabled', 'true', 'Y', 'admin', '2026-01-25 17:41:36', '', NULL, '是否开启验证码功能（true开启，false关闭）');
+INSERT INTO `sys_config` VALUES (5, '账号自助-是否开启用户注册功能', 'sys.account.registerUser', 'false', 'Y', 'admin', '2026-01-25 17:41:36', '', NULL, '是否开启注册用户功能（true开启，false关闭）');
+INSERT INTO `sys_config` VALUES (6, '用户登录-黑名单列表', 'sys.login.blackIPList', '', 'Y', 'admin', '2026-01-25 17:41:36', '', NULL, '设置登录IP黑名单限制，多个匹配项以;分隔，支持匹配（*通配、网段）');
+INSERT INTO `sys_config` VALUES (7, '用户管理-初始密码修改策略', 'sys.account.initPasswordModify', '1', 'Y', 'admin', '2026-01-25 17:41:36', '', NULL, '0：初始密码修改策略关闭，没有任何提示，1：提醒用户，如果未修改初始密码，则在登录时就会提醒修改密码对话框');
+INSERT INTO `sys_config` VALUES (8, '用户管理-账号密码更新周期', 'sys.account.passwordValidateDays', '0', 'Y', 'admin', '2026-01-25 17:41:36', '', NULL, '密码更新周期（填写数字，数据初始化值为0不限制，若修改必须为大于0小于365的正整数），如果超过这个周期登录系统时，则在登录时就会提醒修改密码对话框');
 
 -- ----------------------------
 -- Table structure for sys_dept
@@ -311,7 +558,7 @@ CREATE TABLE `sys_logininfor`  (
   PRIMARY KEY (`info_id`) USING BTREE,
   INDEX `idx_sys_logininfor_s`(`status`) USING BTREE,
   INDEX `idx_sys_logininfor_lt`(`login_time`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 114 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统访问记录' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 116 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统访问记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_logininfor
@@ -321,6 +568,8 @@ INSERT INTO `sys_logininfor` VALUES (109, 'admin', '0:0:0:0:0:0:0:1', '内网IP'
 INSERT INTO `sys_logininfor` VALUES (110, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '1', '用户名或密码错误', '2026-01-25 12:45:47');
 INSERT INTO `sys_logininfor` VALUES (111, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '1', '用户名或密码错误', '2026-01-25 12:48:55');
 INSERT INTO `sys_logininfor` VALUES (112, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '1', '用户名或密码错误', '2026-01-25 12:49:12');
+INSERT INTO `sys_logininfor` VALUES (114, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-25 17:16:36');
+INSERT INTO `sys_logininfor` VALUES (115, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-25 17:24:18');
 
 -- ----------------------------
 -- Table structure for sys_menu
@@ -466,13 +715,24 @@ CREATE TABLE `sys_oper_log`  (
   INDEX `idx_sys_oper_log_bt`(`business_type`) USING BTREE,
   INDEX `idx_sys_oper_log_s`(`status`) USING BTREE,
   INDEX `idx_sys_oper_log_ot`(`oper_time`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 953 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志记录' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 964 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_oper_log
 -- ----------------------------
 INSERT INTO `sys_oper_log` VALUES (951, '操作日志', 3, 'com.star.pivot.controller.SysOperLogController.clean()', 'DELETE', 1, 'admin', '星枢科技', '/api/sys/operlog/clean', '0:0:0:0:0:0:0:1', '', '', '{\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1769331741495}', 0, '', '2026-01-25 17:02:21', 3);
 INSERT INTO `sys_oper_log` VALUES (952, '操作日志', 0, 'com.star.pivot.controller.SysOperLogController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/operlog/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=1, rows=[OperLogVO(operId=951, title=操作日志, businessType=3, method=com.star.pivot.controller.SysOperLogController.clean(), requestMethod=DELETE, operatorType=1, operName=admin, deptName=星枢科技, operUrl=/api/sys/operlog/clean, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=, jsonResult={\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1769331741495}, status=0, errorMsg=, operTime=2026-01-25T17:02:21, costTime=3)], pageNum=1, pageSize=20, pageCount=1), timestamp=1769331741520)', 0, '', '2026-01-25 17:02:22', 5);
+INSERT INTO `sys_oper_log` VALUES (953, '用户管理', 0, 'com.star.pivot.controller.SysUserController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/user/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"nickName\":null,\"sex\":null,\"status\":\"0\",\"phonenumber\":null,\"email\":null,\"roleId\":null,\"deptId\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=14, rows=[UserVO(userId=112, deptId=100, deptName=星枢科技, userName=lisi, nickName=李四, userType=00, email=lisi@163.com, phonenumber=18855555555, sex=1, avatar=null, status=0, loginIp=, loginDate=null, createTime=2026-01-24T21:56:29, remark=, roleIds=[2], roleNames=[普通角色], postIds=[4], postNames=[普通员工], isLocked=false), UserVO(userId=103, deptId=101, deptName=深圳总公司, userName=test_all_user, nickName=全部权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=, roleIds=[101], roleNames=[全部权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=104, deptId=101, deptName=深圳总公司, userName=test_custom_user, nickName=自定权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=[102], roleNames=[自定权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=105, deptId=101, deptName=深圳总公司, userName=test_dept_user, nickName=本部门权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=106, deptId=101, deptName=深圳总公司, userName=test_dept_child_user, nickName=本部门及以下权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=107, deptId=101, deptName=深圳总公司, userName=test_self_user, nickName=仅本人权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, rema...', 0, '', '2026-01-25 17:06:24', 1171);
+INSERT INTO `sys_oper_log` VALUES (954, '操作日志', 0, 'com.star.pivot.controller.SysOperLogController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/operlog/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=3, rows=[OperLogVO(operId=953, title=用户管理, businessType=0, method=com.star.pivot.controller.SysUserController.pageList(), requestMethod=POST, operatorType=1, operName=admin, deptName=星枢科技, operUrl=/api/sys/user/pageList, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"nickName\":null,\"sex\":null,\"status\":\"0\",\"phonenumber\":null,\"email\":null,\"roleId\":null,\"deptId\":null}], jsonResult=Result(code=200, message=操作成功, data=PageResponse(total=14, rows=[UserVO(userId=112, deptId=100, deptName=星枢科技, userName=lisi, nickName=李四, userType=00, email=lisi@163.com, phonenumber=18855555555, sex=1, avatar=null, status=0, loginIp=, loginDate=null, createTime=2026-01-24T21:56:29, remark=, roleIds=[2], roleNames=[普通角色], postIds=[4], postNames=[普通员工], isLocked=false), UserVO(userId=103, deptId=101, deptName=深圳总公司, userName=test_all_user, nickName=全部权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=, roleIds=[101], roleNames=[全部权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=104, deptId=101, deptName=深圳总公司, userName=test_custom_user, nickName=自定权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=[102], roleNames=[自定权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=105, deptId=101, deptName=深圳总公司, userName=test_dept_user, nickName=本部门权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=106, deptId=101, deptName=深圳总公司, userName=te...', 0, '', '2026-01-25 17:06:29', 20);
+INSERT INTO `sys_oper_log` VALUES (955, '登录日志', 0, 'com.star.pivot.controller.SysLogininforController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/logininfor/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"ipaddr\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=5, rows=[LogininforVO(infoId=112, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 143, os=Windows 10/11, status=1, msg=用户名或密码错误, loginTime=2026-01-25T12:49:12), LogininforVO(infoId=111, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 143, os=Windows 10/11, status=1, msg=用户名或密码错误, loginTime=2026-01-25T12:48:55), LogininforVO(infoId=110, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 143, os=Windows 10/11, status=1, msg=用户名或密码错误, loginTime=2026-01-25T12:45:47), LogininforVO(infoId=109, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 143, os=Windows 10/11, status=1, msg=用户名或密码错误, loginTime=2026-01-25T12:43:41), LogininforVO(infoId=108, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 143, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-01-25T12:27:57)], pageNum=1, pageSize=20, pageCount=1), timestamp=1769331989976)', 0, '', '2026-01-25 17:06:30', 15);
+INSERT INTO `sys_oper_log` VALUES (956, '用户管理', 0, 'com.star.pivot.controller.SysUserController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/user/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"nickName\":null,\"sex\":null,\"status\":\"0\",\"phonenumber\":null,\"email\":null,\"roleId\":null,\"deptId\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=14, rows=[UserVO(userId=112, deptId=100, deptName=星枢科技, userName=lisi, nickName=李四, userType=00, email=lisi@163.com, phonenumber=18855555555, sex=1, avatar=null, status=0, loginIp=, loginDate=null, createTime=2026-01-24T21:56:29, remark=, roleIds=[2], roleNames=[普通角色], postIds=[4], postNames=[普通员工], isLocked=false), UserVO(userId=103, deptId=101, deptName=深圳总公司, userName=test_all_user, nickName=全部权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=, roleIds=[101], roleNames=[全部权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=104, deptId=101, deptName=深圳总公司, userName=test_custom_user, nickName=自定权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=[102], roleNames=[自定权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=105, deptId=101, deptName=深圳总公司, userName=test_dept_user, nickName=本部门权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=106, deptId=101, deptName=深圳总公司, userName=test_dept_child_user, nickName=本部门及以下权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=107, deptId=101, deptName=深圳总公司, userName=test_self_user, nickName=仅本人权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, rema...', 0, '', '2026-01-25 17:12:17', 1082);
+INSERT INTO `sys_oper_log` VALUES (957, '用户管理', 0, 'com.star.pivot.controller.SysUserController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/user/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"nickName\":null,\"sex\":null,\"status\":\"0\",\"phonenumber\":null,\"email\":null,\"roleId\":null,\"deptId\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=14, rows=[UserVO(userId=112, deptId=100, deptName=星枢科技, userName=lisi, nickName=李四, userType=00, email=lisi@163.com, phonenumber=18855555555, sex=1, avatar=null, status=0, loginIp=, loginDate=null, createTime=2026-01-24T21:56:29, remark=, roleIds=[2], roleNames=[普通角色], postIds=[4], postNames=[普通员工], isLocked=false), UserVO(userId=103, deptId=101, deptName=深圳总公司, userName=test_all_user, nickName=全部权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=, roleIds=[101], roleNames=[全部权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=104, deptId=101, deptName=深圳总公司, userName=test_custom_user, nickName=自定权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=[102], roleNames=[自定权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=105, deptId=101, deptName=深圳总公司, userName=test_dept_user, nickName=本部门权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=106, deptId=101, deptName=深圳总公司, userName=test_dept_child_user, nickName=本部门及以下权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=107, deptId=101, deptName=深圳总公司, userName=test_self_user, nickName=仅本人权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, rema...', 0, '', '2026-01-25 17:12:18', 41);
+INSERT INTO `sys_oper_log` VALUES (958, '用户管理', 0, 'com.star.pivot.controller.SysUserController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/user/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"nickName\":null,\"sex\":null,\"status\":\"0\",\"phonenumber\":null,\"email\":null,\"roleId\":null,\"deptId\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=14, rows=[UserVO(userId=112, deptId=100, deptName=星枢科技, userName=lisi, nickName=李四, userType=00, email=lisi@163.com, phonenumber=18855555555, sex=1, avatar=null, status=0, loginIp=, loginDate=null, createTime=2026-01-24T21:56:29, remark=, roleIds=[2], roleNames=[普通角色], postIds=[4], postNames=[普通员工], isLocked=false), UserVO(userId=103, deptId=101, deptName=深圳总公司, userName=test_all_user, nickName=全部权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=, roleIds=[101], roleNames=[全部权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=104, deptId=101, deptName=深圳总公司, userName=test_custom_user, nickName=自定权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=[102], roleNames=[自定权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=105, deptId=101, deptName=深圳总公司, userName=test_dept_user, nickName=本部门权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=106, deptId=101, deptName=深圳总公司, userName=test_dept_child_user, nickName=本部门及以下权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=107, deptId=101, deptName=深圳总公司, userName=test_self_user, nickName=仅本人权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, rema...', 0, '', '2026-01-25 17:12:20', 30);
+INSERT INTO `sys_oper_log` VALUES (959, '用户管理', 0, 'com.star.pivot.controller.SysUserController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/user/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"nickName\":null,\"sex\":null,\"status\":\"0\",\"phonenumber\":null,\"email\":null,\"roleId\":null,\"deptId\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=14, rows=[UserVO(userId=112, deptId=100, deptName=星枢科技, userName=lisi, nickName=李四, userType=00, email=lisi@163.com, phonenumber=18855555555, sex=1, avatar=null, status=0, loginIp=, loginDate=null, createTime=2026-01-24T21:56:29, remark=, roleIds=[2], roleNames=[普通角色], postIds=[4], postNames=[普通员工], isLocked=false), UserVO(userId=103, deptId=101, deptName=深圳总公司, userName=test_all_user, nickName=全部权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=, roleIds=[101], roleNames=[全部权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=104, deptId=101, deptName=深圳总公司, userName=test_custom_user, nickName=自定权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=[102], roleNames=[自定权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=105, deptId=101, deptName=深圳总公司, userName=test_dept_user, nickName=本部门权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=106, deptId=101, deptName=深圳总公司, userName=test_dept_child_user, nickName=本部门及以下权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=107, deptId=101, deptName=深圳总公司, userName=test_self_user, nickName=仅本人权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, rema...', 0, '', '2026-01-25 17:12:21', 25);
+INSERT INTO `sys_oper_log` VALUES (960, '用户管理', 0, 'com.star.pivot.controller.SysUserController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/user/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"nickName\":null,\"sex\":null,\"status\":\"0\",\"phonenumber\":null,\"email\":null,\"roleId\":null,\"deptId\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=14, rows=[UserVO(userId=112, deptId=100, deptName=星枢科技, userName=lisi, nickName=李四, userType=00, email=lisi@163.com, phonenumber=18855555555, sex=1, avatar=null, status=0, loginIp=, loginDate=null, createTime=2026-01-24T21:56:29, remark=, roleIds=[2], roleNames=[普通角色], postIds=[4], postNames=[普通员工], isLocked=false), UserVO(userId=103, deptId=101, deptName=深圳总公司, userName=test_all_user, nickName=全部权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=, roleIds=[101], roleNames=[全部权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=104, deptId=101, deptName=深圳总公司, userName=test_custom_user, nickName=自定权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=[102], roleNames=[自定权限测试角色], postIds=null, postNames=null, isLocked=false), UserVO(userId=105, deptId=101, deptName=深圳总公司, userName=test_dept_user, nickName=本部门权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=106, deptId=101, deptName=深圳总公司, userName=test_dept_child_user, nickName=本部门及以下权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, remark=null, roleIds=null, roleNames=null, postIds=null, postNames=null, isLocked=false), UserVO(userId=107, deptId=101, deptName=深圳总公司, userName=test_self_user, nickName=仅本人权限用户, userType=00, email=, phonenumber=, sex=0, avatar=, status=0, loginIp=, loginDate=null, createTime=2026-01-24T00:26:42, rema...', 0, '', '2026-01-25 17:12:23', 28);
+INSERT INTO `sys_oper_log` VALUES (961, '用户登出', 0, 'com.star.pivot.controller.AuthController.logout()', 'POST', 1, 'admin', '星枢科技', '/api/auth/logout', '0:0:0:0:0:0:0:1', '', '[\"Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiYWRtaW4iLCJzdWIiOiJhZG1pbiIsImlhdCI6MTc2OTMxNjY1NSwiZXhwIjoxNzY5NDAzMDU1fQ.og8LOFABgogN6iLxlhAWd-Y4MBNrtt4IUtNGckGw0yw\"]', '{\"code\":200,\"message\":\"登出成功\",\"data\":null,\"timestamp\":1769332585277}', 0, '', '2026-01-25 17:16:25', 5);
+INSERT INTO `sys_oper_log` VALUES (962, '用户登录', 0, 'com.star.pivot.controller.AuthController.login()', 'POST', 0, '未知', '', '/api/auth/login', '0:0:0:0:0:0:0:1', '', '[{\"username\":\"admin\",\"password\":\"******\",\"captchaProof\":\"oqMl3CfQvxR1FczRJCyo8uYj5nel4_MEXuvOU1cSIGs\"}]', '{\"code\":200,\"message\":\"登录成功\",\"data\":{\"token\":\"eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiYWRtaW4iLCJzdWIiOiJhZG1pbiIsImlhdCI6MTc2OTMzMjU5NiwiZXhwIjoxNzY5NDE4OTk2fQ.GEunGHtd4wZF2ShRXktSu8-jeF-N4M5c1HG06tcRUxQ\",\"username\":\"admin\",\"nickname\":\"超级管理员\",\"refreshToken\":\"2c606b154858481b97e90df95cfe5053\"},\"timestamp\":1769332596570}', 0, '', '2026-01-25 17:16:37', 993);
+INSERT INTO `sys_oper_log` VALUES (963, '用户登录', 0, 'com.star.pivot.controller.AuthController.login()', 'POST', 0, '未知', '', '/api/auth/login', '0:0:0:0:0:0:0:1', '', '[{\"username\":\"admin\",\"password\":\"******\",\"captchaProof\":\"UB2sdJbxp5_9qSTPT0N2CIuv1uZrhNGJL9AiC_7uYpw\"}]', '{\"code\":200,\"message\":\"登录成功\",\"data\":{\"token\":\"eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoiYWRtaW4iLCJzdWIiOiJhZG1pbiIsImlhdCI6MTc2OTMzMzA1OCwiZXhwIjoxNzY5NDE5NDU4fQ.8XdI6rgV4w0-Ea0R5yYapz2h5bc-37yhbTTcMWEhyYQ\",\"username\":\"admin\",\"nickname\":\"超级管理员\",\"refreshToken\":\"086dccf6e1544efc83462f0931aa9581\"},\"timestamp\":1769333058577}', 0, '', '2026-01-25 17:24:19', 1845);
 
 -- ----------------------------
 -- Table structure for sys_post
