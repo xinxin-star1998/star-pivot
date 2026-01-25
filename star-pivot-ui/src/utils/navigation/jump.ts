@@ -37,7 +37,13 @@ export const handleMenuJump = (item: AppRouteRecord, jumpToFirst: boolean = fals
 
   // 如果不需要跳转到第一个子菜单，或者没有子菜单，直接跳转当前路径
   if (!jumpToFirst || !item.children?.length) {
-    return router.push(item.path)
+    // 优先使用路由名称跳转，避免相对路径问题
+    if (item.name) {
+      return router.push({ name: item.name })
+    }
+    // 如果没有名称，使用路径跳转，确保路径是绝对路径
+    const path = item.path?.startsWith('/') ? item.path : `/${item.path}`
+    return router.push(path)
   }
 
   // 递归查找第一个可见的叶子节点菜单
@@ -57,6 +63,22 @@ export const handleMenuJump = (item: AppRouteRecord, jumpToFirst: boolean = fals
     return openExternalLink(firstChild.meta.link)
   }
 
-  // 跳转到子菜单路径
-  router.push(firstChild.path)
+  // 跳转到子菜单
+  // 优先使用路由名称跳转，避免相对路径问题
+  if (firstChild.name) {
+    return router.push({ name: firstChild.name })
+  }
+  // 如果没有名称，需要构建完整路径
+  // 如果子路由路径是相对路径，需要拼接父路由路径
+  if (firstChild.path?.startsWith('/')) {
+    // 绝对路径，直接使用
+    return router.push(firstChild.path)
+  } else {
+    // 相对路径，需要拼接父路由路径
+    const parentPath = item.path || ''
+    const fullPath = parentPath.endsWith('/')
+      ? `${parentPath}${firstChild.path}`
+      : `${parentPath}/${firstChild.path}`
+    return router.push(fullPath)
+  }
 }

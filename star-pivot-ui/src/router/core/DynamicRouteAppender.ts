@@ -57,7 +57,9 @@ export class DynamicRouteAppender {
    */
   static appendDashboardConsoleRoute(menuList: AppRouteRecord[]): void {
     // 检查是否已存在工作台路由（通过路径或名称）
+    // 注意：需要检查所有可能的位置，包括平级路由和嵌套路由
     const existsConsole = menuList.some((route: AppRouteRecord) => {
+      // 检查平级路由
       if (route.name === 'Console' || route.path === '/dashboard/console') {
         return true
       }
@@ -69,13 +71,15 @@ export class DynamicRouteAppender {
     })
 
     if (existsConsole) {
+      if (import.meta.env.DEV) {
+        console.log('[DynamicRouteAppender] 工作台路由已存在，跳过追加')
+      }
       return
     }
 
     // 查找是否已存在仪表盘父级目录
-    let dashboardParent = menuList.find(
-      (route: AppRouteRecord) => route.path === '/dashboard' && route.menuType === 'M'
-    )
+    // 注意：不限制 menuType，因为可能数据库中已经存在但类型不同
+    let dashboardParent = menuList.find((route: AppRouteRecord) => route.path === '/dashboard')
 
     if (!dashboardParent) {
       // 创建仪表盘父级目录
@@ -96,6 +100,31 @@ export class DynamicRouteAppender {
       menuList.unshift(dashboardParent)
       if (import.meta.env.DEV) {
         console.log('[DynamicRouteAppender] 已创建仪表盘父级目录')
+      }
+    } else {
+      // 如果已存在 dashboard 路由，确保它的配置正确
+      // 确保 menuType 是 'M'（目录类型），这样才能承载子路由
+      if (dashboardParent.menuType !== 'M') {
+        if (import.meta.env.DEV) {
+          console.warn(
+            `[DynamicRouteAppender] 检测到 /dashboard 路由的 menuType 不是 'M'，将更新为 'M' 以支持子路由`
+          )
+        }
+        dashboardParent.menuType = 'M'
+      }
+      // 确保有 Layout 组件，这样才能正确渲染子路由
+      if (!dashboardParent.component || dashboardParent.component === '') {
+        dashboardParent.component = '/index/index'
+        if (import.meta.env.DEV) {
+          console.log('[DynamicRouteAppender] 已为仪表盘父级目录设置 Layout 组件')
+        }
+      }
+      // 确保有 name，这样路由注册时才能正确识别
+      if (!dashboardParent.name) {
+        dashboardParent.name = 'Dashboard'
+        if (import.meta.env.DEV) {
+          console.log('[DynamicRouteAppender] 已为仪表盘父级目录设置路由名称')
+        }
       }
     }
 
@@ -128,6 +157,10 @@ export class DynamicRouteAppender {
       dashboardParent.children.push(consoleRoute)
       if (import.meta.env.DEV) {
         console.log('[DynamicRouteAppender] 已动态追加首页（工作台）路由到仪表盘目录下')
+      }
+    } else {
+      if (import.meta.env.DEV) {
+        console.log('[DynamicRouteAppender] 工作台子路由已存在于仪表盘目录下，跳过追加')
       }
     }
   }
