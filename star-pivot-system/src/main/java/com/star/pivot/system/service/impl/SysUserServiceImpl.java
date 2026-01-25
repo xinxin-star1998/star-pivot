@@ -23,6 +23,7 @@ import com.star.pivot.system.service.UserPermissionCacheService;
 import com.star.pivot.system.utils.DataScopeService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -58,6 +59,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private AccountLockService accountLockService;
     @Autowired
     private DataScopeService dataScopeService;
+
+    /** 自身代理，用于 importData/importUsers 等场景经代理调用 @Transactional 方法，避免自调用导致事务不生效 */
+    @Lazy
+    @Autowired
+    private SysUserService self;
+
     /**
      * 用户分页查询
      *
@@ -353,8 +360,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 // 从 Excel 行数据构建 UserDTO
                 UserDTO userDTO = buildUserDTOFromRow(row, rowIndex);
 
-                // 复用已有新增用户逻辑（含用户名唯一性校验、密码加密等）
-                boolean success = this.addUser(userDTO);
+                // 复用已有新增用户逻辑（经 self 代理调用，确保 @Transactional 生效）
+                boolean success = self.addUser(userDTO);
                 if (success) {
                     successCount++;
                 }
@@ -720,11 +727,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 // 检查是否覆盖已存在数据
                 boolean overwrite = options != null && Boolean.TRUE.equals(options.get("overwrite"));
                 if (overwrite) {
-                    // 如果用户名已存在，则更新用户
-                    SysUser existingUser = this.getUserByUsername(userDTO.getUserName());
+                    // 如果用户名已存在，则更新用户（经 self 代理调用，确保 @Transactional 生效）
+                    SysUser existingUser = self.getUserByUsername(userDTO.getUserName());
                     if (existingUser != null) {
                         userDTO.setUserId(existingUser.getUserId());
-                        boolean success = this.updateUser(userDTO);
+                        boolean success = self.updateUser(userDTO);
                         if (success) {
                             result.setSuccessCount(result.getSuccessCount() + 1);
                         } else {
@@ -732,8 +739,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                             result.addError("第 " + rowIndex + " 行更新失败");
                         }
                     } else {
-                        // 不存在则新增
-                        boolean success = this.addUser(userDTO);
+                        // 不存在则新增（经 self 代理调用，确保 @Transactional 生效）
+                        boolean success = self.addUser(userDTO);
                         if (success) {
                             result.setSuccessCount(result.getSuccessCount() + 1);
                         } else {
@@ -742,8 +749,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                         }
                     }
                 } else {
-                    // 不覆盖，直接新增
-                    boolean success = this.addUser(userDTO);
+                    // 不覆盖，直接新增（经 self 代理调用，确保 @Transactional 生效）
+                    boolean success = self.addUser(userDTO);
                     if (success) {
                         result.setSuccessCount(result.getSuccessCount() + 1);
                     } else {

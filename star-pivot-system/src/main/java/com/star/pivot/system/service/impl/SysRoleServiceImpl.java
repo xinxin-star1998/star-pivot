@@ -306,17 +306,5 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             roleMenuMapper.insert(roleMenu);
         }
     }
-
-    /**
-     * 插入角色部门关联
-     */
-    private void insertRoleDepts(Long roleId, List<Long> deptIds) {
-        for (Long deptId : deptIds) {
-            RoleDept roleDept = new RoleDept();
-            roleDept.setRoleId(roleId);
-            roleDept.setDeptId(deptId);
-            roleDeptMapper.insert(roleDept);
-        }
-    }
 }
 

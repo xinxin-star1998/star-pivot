@@ -32,7 +32,7 @@ public class SysLogininforController {
      * @param logininforReqBo 查询参数
      * @return 分页结果
      */
-    @Log(title = "登录日志", businessType = 0)
+    @Log(title = "登录日志")
     @PreAuthorize("hasAuthority('system:logininfor:query')")
     @PostMapping("/pageList")
     public Result<PageResponse<LogininforVO>> pageList(@RequestBody LogininforReqBo logininforReqBo) {
@@ -46,7 +46,7 @@ public class SysLogininforController {
      * @param infoId 日志ID
      * @return 登录日志详情
      */
-    @Log(title = "登录日志", businessType = 0)
+    @Log(title = "登录日志")
     @PreAuthorize("hasAuthority('system:logininfor:query')")
     @GetMapping("/{infoId}")
     public Result<LogininforVO> getLogininforById(@PathVariable("infoId") Long infoId) {
