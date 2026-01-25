@@ -136,8 +136,11 @@
         sysdate()
         )
     </insert>
-    <update id="createTable">
-        ${sql}
+    <!-- 动态执行 DDL（如表创建），使用 ${sql} 直接替换；部分 IDE 校验器不识别 ${} 会报错，可忽略或关闭对应 SQL 校验 -->
+    <update id="createTable" parameterType="String">
+        <trim suffixOverrides="">
+            ${sql}
+        </trim>
     </update>
     <update id="updateGenTable" parameterType="com.star.pivot.generator.domain.entity.GenTable">
         update gen_table

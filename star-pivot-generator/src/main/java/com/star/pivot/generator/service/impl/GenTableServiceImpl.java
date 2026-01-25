@@ -229,7 +229,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         {
             throw new ServiceException("同步数据失败，原表结构不存在");
         }
-        List<String> dbTableColumnNames = dbTableColumns.stream().map(GenTableColumn::getColumnName).collect(Collectors.toList());
+        List<String> dbTableColumnNames = dbTableColumns.stream().map(GenTableColumn::getColumnName).toList();
 
         dbTableColumns.forEach(column -> {
             GenUtils.initColumnField(column, table);
@@ -404,7 +404,6 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
      * 修改业务
      *
      * @param genTable 业务信息
-     * @return 结果
      */
     @Override
     @Transactional

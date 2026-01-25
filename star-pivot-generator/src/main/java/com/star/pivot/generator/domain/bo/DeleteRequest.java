@@ -8,7 +8,7 @@ import java.util.List;
  * 删除请求对象（支持单删和批量删除）
  * 
  * @author xinxin
- * @date 2026-01-25
+ * @since 2026-01-25
  */
 @Data
 public class DeleteRequest implements Serializable {

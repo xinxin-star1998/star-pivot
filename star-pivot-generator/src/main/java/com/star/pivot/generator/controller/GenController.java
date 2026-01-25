@@ -112,7 +112,7 @@ public class GenController {
         }
         List<GenTable> tables = genTableService.selectGenTableAll();
         List<GenTableColumn> list = genTableColumnService.selectGenTableColumnListByTableId(tableId);
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<>();
         map.put("info", table);
         map.put("rows", list);
         map.put("tables", tables);
@@ -136,8 +136,7 @@ public class GenController {
             List<SQLStatement> sqlStatements = SQLUtils.parseStatements(sql, DbType.mysql);
             List<String> tableNames = new ArrayList<>();
             for (SQLStatement sqlStatement : sqlStatements) {
-                if (sqlStatement instanceof MySqlCreateTableStatement) {
-                    MySqlCreateTableStatement createTableStatement = (MySqlCreateTableStatement) sqlStatement;
+                if (sqlStatement instanceof MySqlCreateTableStatement createTableStatement) {
                     // 提取表名（去掉反引号）
                     String tableName = createTableStatement.getTableName().replaceAll("`", "");
                     // 如果表已经存在，则跳过建表，仅做导入
@@ -194,7 +193,7 @@ public class GenController {
      */
     @PreAuthorize("hasAuthority('tool:gen:preview')")
     @GetMapping("/preview/{tableId}")
-    public Result<Map<String, String>> preview(@PathVariable("tableId") Long tableId) throws IOException
+    public Result<Map<String, String>> preview(@PathVariable("tableId") Long tableId)
     {
         Map<String, String> dataMap = genTableService.previewCode(tableId);
         return Result.success(dataMap);
