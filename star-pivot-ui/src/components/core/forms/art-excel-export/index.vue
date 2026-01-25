@@ -21,7 +21,6 @@
 <script setup lang="ts">
   import * as XLSX from 'xlsx'
   import FileSaver from 'file-saver'
-  import { ref, computed, nextTick } from 'vue'
   import { Loading } from '@element-plus/icons-vue'
   import type { ButtonType } from 'element-plus'
   import { useThrottleFn } from '@vueuse/core'
@@ -216,9 +215,10 @@
     const sampleSize = Math.min(data.length, 100) // 只取前100行计算列宽
     const columns = Object.keys(data[0])
 
+    const cols = (Object.values(props.columns ?? {}) as ColumnConfig[])
     return columns.map((column) => {
       // 使用配置的列宽度
-      const configWidth = Object.values(props.columns).find((col) => col.title === column)?.width
+      const configWidth = cols.find((col) => col.title === column)?.width
 
       if (configWidth) {
         return { wch: configWidth }

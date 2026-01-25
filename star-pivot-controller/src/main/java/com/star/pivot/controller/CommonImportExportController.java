@@ -9,6 +9,7 @@ import com.star.pivot.system.service.ImportExportService;
 import com.star.pivot.system.service.ImportExportServiceFactory;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -35,12 +36,16 @@ public class CommonImportExportController {
 
     /**
      * 通用导入接口
+     * <p>
+     * 权限要求：需要拥有对应业务模块的导入权限，如 `system:user:import`、`system:dept:import` 等
+     * </p>
      *
      * @param businessType 业务类型标识（如：user、dept、role 等）
      * @param requestBody  请求体，包含 rowList（数据列表）和 options（导入选项）
      * @return 导入结果
      */
     @Log(title = "数据导入", businessType = 1)
+    @PreAuthorize("hasAuthority('system:' + #businessType + ':import')")
     @PostMapping("/import/{businessType}")
     public Result<ImportExportService.ImportExportResult> importData(
             @PathVariable("businessType") String businessType,
@@ -75,13 +80,19 @@ public class CommonImportExportController {
 
     /**
      * 通用导出接口
+     * <p>
      * 直接写入 HttpServletResponse 流，不加统一 Result 包装，故排除 ResponseBodyAdvice
+     * </p>
+     * <p>
+     * 权限要求：需要拥有对应业务模块的导出权限，如 `system:user:export`、`system:dept:export` 等
+     * </p>
      *
      * @param businessType 业务类型标识
      * @param queryParams  查询参数
      * @param response     HTTP 响应
      */
     @Log(title = "数据导出", businessType = 0)
+    @PreAuthorize("hasAuthority('system:' + #businessType + ':export')")
     @NoResponseWrapper
     @PostMapping("/export/{businessType}")
     public void exportData(
@@ -103,12 +114,18 @@ public class CommonImportExportController {
 
     /**
      * 下载导入模板
+     * <p>
      * 直接写入 HttpServletResponse 流，不加统一 Result 包装，故排除 ResponseBodyAdvice
+     * </p>
+     * <p>
+     * 权限要求：需要拥有对应业务模块的导入权限（下载模板是为了导入），如 `system:user:import`、`system:dept:import` 等
+     * </p>
      *
      * @param businessType 业务类型标识
      * @param response     HTTP 响应
      */
     @Log(title = "下载导入模板", businessType = 0)
+    @PreAuthorize("hasAuthority('system:' + #businessType + ':import')")
     @NoResponseWrapper
     @GetMapping("/template/{businessType}")
     public void downloadTemplate(

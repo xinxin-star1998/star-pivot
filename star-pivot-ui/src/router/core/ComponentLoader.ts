@@ -7,7 +7,6 @@
  * @author Art Design Pro Team
  */
 
-import { h } from 'vue'
 
 export class ComponentLoader {
   private modules: Record<string, () => Promise<any>>

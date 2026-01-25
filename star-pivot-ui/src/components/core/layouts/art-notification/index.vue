@@ -103,7 +103,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, watch, type Ref, type ComputedRef } from 'vue'
   import { useI18n } from 'vue-i18n'
 
   // 导入头像图片

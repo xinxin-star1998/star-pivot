@@ -1,4 +1,4 @@
-import request from '@/utils/http'
+import request, { type BlobFullResponse } from '@/utils/http'
 import { downloadBlob, getFilenameFromContentDisposition } from '@/utils/common/file'
 import { ElMessage } from 'element-plus'
 
@@ -6,6 +6,12 @@ import { ElMessage } from 'element-plus'
  * 通用导入导出 API
  * 提供统一的导入导出接口，支持不同业务模块的导入导出功能
  */
+
+/** 从 headers 中按大小写不敏感获取 Content-Disposition */
+function getContentDisposition(headers: Record<string, string>): string | null {
+  const key = Object.keys(headers).find((k) => k.toLowerCase() === 'content-disposition')
+  return key ? headers[key] : null
+}
 
 /**
  * 导入数据
@@ -35,7 +41,7 @@ export function fetchImportData(
  * 导出数据并自动下载
  * @param businessType 业务类型标识
  * @param queryParams 查询参数
- * @param filename 可选的文件名（如果不提供，将从响应头获取）
+ * @param filename 可选的文件名（如果不提供，将从响应头 Content-Disposition 解析）
  */
 export async function fetchExportData(
   businessType: string,
@@ -43,18 +49,16 @@ export async function fetchExportData(
   filename?: string
 ) {
   try {
-    const response = await request.post<Blob>({
+    const response = await request.post<BlobFullResponse>({
       url: `/api/common/import-export/export/${businessType}`,
       data: queryParams || {},
-      responseType: 'blob'
+      responseType: 'blob',
+      returnFullResponse: true
     })
 
-    // 从响应头获取文件名
-    const contentDisposition = (response as any).headers?.['content-disposition']
+    const contentDisposition = getContentDisposition(response.headers)
     const finalFilename = filename || getFilenameFromContentDisposition(contentDisposition)
-
-    // 下载文件
-    downloadBlob(response as Blob, finalFilename)
+    downloadBlob(response.data, finalFilename)
     ElMessage.success('导出成功')
   } catch (error) {
     ElMessage.error('导出失败：' + (error as Error).message)
@@ -65,21 +69,19 @@ export async function fetchExportData(
 /**
  * 下载导入模板并自动下载
  * @param businessType 业务类型标识
- * @param filename 可选的文件名（如果不提供，将从响应头获取）
+ * @param filename 可选的文件名（如果不提供，将从响应头 Content-Disposition 解析）
  */
 export async function fetchDownloadTemplate(businessType: string, filename?: string) {
   try {
-    const response = await request.get<Blob>({
+    const response = await request.get<BlobFullResponse>({
       url: `/api/common/import-export/template/${businessType}`,
-      responseType: 'blob'
+      responseType: 'blob',
+      returnFullResponse: true
     })
 
-    // 从响应头获取文件名
-    const contentDisposition = (response as any).headers?.['content-disposition']
+    const contentDisposition = getContentDisposition(response.headers)
     const finalFilename = filename || getFilenameFromContentDisposition(contentDisposition)
-
-    // 下载文件
-    downloadBlob(response as Blob, finalFilename)
+    downloadBlob(response.data, finalFilename)
     ElMessage.success('模板下载成功')
   } catch (error) {
     ElMessage.error('模板下载失败：' + (error as Error).message)

@@ -15,7 +15,6 @@
  * @author Art Design Pro Team
  */
 
-import { defineAsyncComponent } from 'vue'
 
 /**
  * 全局组件配置列表

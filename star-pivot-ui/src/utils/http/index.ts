@@ -91,6 +91,12 @@ async function tryRefreshToken(): Promise<string | null> {
   }
 }
 
+/** blob 请求时返回的完整响应（含 headers，用于解析 Content-Disposition 等） */
+export interface BlobFullResponse {
+  data: Blob
+  headers: Record<string, string>
+}
+
 /** 扩展 AxiosRequestConfig */
 interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   url: string
@@ -98,6 +104,8 @@ interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   data?: any
   showErrorMessage?: boolean
   showSuccessMessage?: boolean
+  /** blob 请求时是否返回 { data, headers }，便于解析 Content-Disposition 等响应头 */
+  returnFullResponse?: boolean
 }
 
 const { VITE_API_URL, VITE_WITH_CREDENTIALS } = import.meta.env
@@ -371,8 +379,20 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
   try {
     const res = await axiosInstance.request<BaseResponse<T> | Blob>(config)
 
-    // 如果是 blob 响应类型，直接返回 blob 对象
+    // 如果是 blob 响应类型
     if (config.responseType === 'blob' || res.data instanceof Blob) {
+      if (config.returnFullResponse) {
+        const headers: Record<string, string> = {}
+        const h = res.headers as Record<string, unknown>
+        if (h && typeof h === 'object') {
+          for (const k of Object.keys(h)) {
+            const v = h[k]
+            if (typeof v === 'string') headers[k] = v
+            else if (Array.isArray(v) && v.length) headers[k] = String(v[0])
+          }
+        }
+        return { data: res.data as Blob, headers } as T
+      }
       return res.data as T
     }
 

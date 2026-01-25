@@ -117,7 +117,6 @@
   import { fetchLogin, fetchCaptcha, fetchVerifyCaptcha } from '@/api/auth'
   import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
   import { useCommon } from '@/hooks'
-  import { onMounted, computed, ref, reactive, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
 
   defineOptions({ name: 'Login' })

@@ -12,7 +12,6 @@
 
 <script setup lang="ts">
   import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
-  import { ref, computed, onMounted } from 'vue'
 
   interface Props {
     modelValue: Record<string, any>

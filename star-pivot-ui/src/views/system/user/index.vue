@@ -71,6 +71,15 @@
                   >新增用户</ElButton
                 >
                 <ElButton
+                  type="danger"
+                  :disabled="selectedRows.length === 0"
+                  @click="handleBatchDelete"
+                  v-ripple
+                  v-auth="'system:user:delete'"
+                >
+                  批量删除
+                </ElButton>
+                <ElButton
                   type="primary"
                   plain
                   v-ripple
@@ -488,6 +497,44 @@
     } catch (error) {
       if (error !== 'cancel') {
         console.error('删除用户失败:', error)
+        ElMessage.error('注销失败')
+      }
+    }
+  }
+
+  /**
+   * 批量删除用户
+   */
+  const handleBatchDelete = async (): Promise<void> => {
+    if (selectedRows.value.length === 0) {
+      ElMessage.warning('请选择要删除的用户')
+      return
+    }
+    try {
+      const userNames = selectedRows.value.map((row) => row.userName || '未知用户').join('、')
+      await ElMessageBox.confirm(
+        `确定要注销以下 ${selectedRows.value.length} 个用户吗？\n${userNames}`,
+        '批量注销用户',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'error'
+        }
+      )
+      const userIds = selectedRows.value
+        .map((row) => row.userId)
+        .filter((id): id is number => id !== undefined && id !== null)
+      if (userIds.length === 0) {
+        ElMessage.warning('所选用户中没有有效的用户ID')
+        return
+      }
+      await fetchDeleteUser(userIds)
+      selectedRows.value = []
+      refreshData()
+      ElMessage.success('注销成功')
+    } catch (error) {
+      if (error !== 'cancel') {
+        console.error('批量删除用户失败:', error)
         ElMessage.error('注销失败')
       }
     }

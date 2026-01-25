@@ -36,7 +36,6 @@
  * @author Art Design Pro Team
  */
 import type { Router, RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
-import { nextTick } from 'vue'
 import NProgress from 'nprogress'
 import { useSettingStore } from '@/store/modules/setting'
 import { useUserStore } from '@/store/modules/user'

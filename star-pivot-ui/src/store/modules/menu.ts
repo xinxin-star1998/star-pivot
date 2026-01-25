@@ -29,7 +29,6 @@
  * @author Art Design Pro Team
  */
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
 import { AppRouteRecord } from '@/types/router'
 import { getFirstMenuPath } from '@/utils'
 import { HOME_PAGE_PATH } from '@/router'

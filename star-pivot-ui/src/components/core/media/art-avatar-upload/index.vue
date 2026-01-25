@@ -34,7 +34,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue'
   import { fetchUploadAvatar, fetchDeleteAvatar, fetchGetAvatarPresignedUrl } from '@/api/user/user'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
 

@@ -9,13 +9,15 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:post:add'">新增岗位</ElButton>
+            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:post:add'">
+              新增岗位
+            </ElButton>
             <ElButton
               type="danger"
               :disabled="selectedRows.length === 0"
               @click="handleBatchDelete"
               v-ripple
-              v-auth="'system:post:remove'"
+              v-auth="'system:post:delete'"
             >
               批量删除
             </ElButton>
@@ -134,7 +136,7 @@
           width: 100,
           formatter: (row) => {
             return h(ElSwitch, {
-              modelValue: row.status === 0 || row.status === '0',
+              modelValue: Number(row.status) === 0 || String(row.status) === '0',
               activeValue: true,
               inactiveValue: false,
               onChange: (value: string | number | boolean) => {
@@ -174,7 +176,7 @@
             }
 
             // 删除岗位按钮权限：system:post:remove
-            if (hasAuth('system:post:remove')) {
+            if (hasAuth('system:post:delete')) {
               actions.push(
                 h(ArtButtonTable, {
                   type: 'delete',

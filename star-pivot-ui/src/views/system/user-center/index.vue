@@ -356,7 +356,7 @@
    * 获取用户详情
    */
   const getUserDetail = async () => {
-    let currentUserId: number | undefined = userInfo.value?.userId
+    let currentUserId: number | undefined = userInfo.value?.user?.userId
 
     // 如果用户信息中没有 userId，尝试重新获取用户信息
     if (!currentUserId) {

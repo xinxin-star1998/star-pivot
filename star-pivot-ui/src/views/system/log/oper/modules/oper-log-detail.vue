@@ -48,7 +48,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
   import { ElTag, ElText, ElDescriptions, ElDescriptionsItem } from 'element-plus'
   import type { OperLogListItem } from '@/types/api/operlog'
 

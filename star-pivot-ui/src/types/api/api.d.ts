@@ -83,7 +83,7 @@ declare namespace Api {
 
     /** 用户信息 */
     interface UserInfo {
-      user: {
+      user?: {
         userId: number
         username: string
         nickName: string
@@ -94,7 +94,7 @@ declare namespace Api {
         status: string
         createTime: string
       }
-      roles: Array<{
+      roles?: Array<{
         roleId: number
         roleName: string
         roleKey: string
@@ -102,7 +102,7 @@ declare namespace Api {
         status: string
         createTime: string
       }>
-      permissions: Array<{
+      permissions?: Array<{
         menuId: number
         menuName: string
         parentId: number
@@ -120,6 +120,10 @@ declare namespace Api {
         createTime: string
         children?: Array<any>
       }>
+      /** 前端扩展：头像 URL 更新后覆盖 user.avatar，便于顶部栏立即展示 */
+      avatar?: string
+      /** 前端扩展：头像更新时间戳 */
+      avatarUpdatedAt?: number
     }
     /** 验证码响应 */
     interface CaptchaResponse {

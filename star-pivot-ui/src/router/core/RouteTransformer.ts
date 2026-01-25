@@ -70,7 +70,7 @@ export class RouteTransformer {
         // 检查是否是菜单类型（C），菜单类型不应该使用 Layout
         if (route.menuType === 'C') {
           console.warn(
-            `[RouteTransformer] 检测到菜单类型（C）错误使用了 Layout 组件: ${route.path || route.name}`,
+            `[RouteTransformer] 检测到菜单类型（C）错误使用了 Layout 组件: ${String(route.path ?? route.name ?? '')}`,
             '菜单类型不应该使用 Layout，必须使用具体的组件路径，将忽略该 component 设置。'
           )
           // 不设置 component，让路由为空
@@ -83,12 +83,12 @@ export class RouteTransformer {
             )
           }
           // 标记这是 Layout 组件
-          converted.meta.isLayout = true
+          if (converted.meta) converted.meta.isLayout = true
           this.handleNormalRoute(converted, component as string, depth)
         } else {
           // 目录类型但没有子菜单，不应该使用 Layout
           console.warn(
-            `[RouteTransformer] 检测到目录类型但没有子菜单的路由使用了 Layout 组件: ${route.path || route.name}`,
+            `[RouteTransformer] 检测到目录类型但没有子菜单的路由使用了 Layout 组件: ${String(route.path ?? route.name ?? '')}`,
             '目录类型如果没有子菜单，不应该使用 Layout，将忽略该 component 设置。'
           )
           this.handleNormalRoute(converted, undefined, depth)

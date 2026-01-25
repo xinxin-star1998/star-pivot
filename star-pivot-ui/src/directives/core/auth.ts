@@ -32,8 +32,8 @@
  * @author Art Design Pro Team
  */
 
+import type { App, Directive, DirectiveBinding } from 'vue'
 import { router } from '@/router'
-import { App, Directive, DirectiveBinding } from 'vue'
 
 interface AuthBinding extends DirectiveBinding {
   value: string

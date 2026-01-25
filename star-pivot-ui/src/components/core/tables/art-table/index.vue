@@ -97,7 +97,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, nextTick, watchEffect } from 'vue'
   import type { ElTable, TableProps } from 'element-plus'
   import { storeToRefs } from 'pinia'
   import { ColumnOption } from '@/types'

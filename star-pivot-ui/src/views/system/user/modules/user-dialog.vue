@@ -122,7 +122,7 @@
   // 角色列表数据
   const roleList = ref<RoleOption[]>([])
   // 岗位列表数据
-  const postList = ref<Api.post.PostBo[]>([])
+  const postList = ref<Api.Post.PostBo[]>([])
   // 部门树数据
   const deptTreeData = ref<SysDept[]>([])
   // 部门树配置

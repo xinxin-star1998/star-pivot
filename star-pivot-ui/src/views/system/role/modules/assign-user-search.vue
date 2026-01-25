@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
 
   interface Props {
     modelValue: Record<string, any>

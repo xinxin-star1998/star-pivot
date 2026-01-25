@@ -48,7 +48,7 @@
   interface Props {
     visible: boolean
     type: string
-    postData?: Partial<Api.post.PostListItem>
+    postData?: Partial<Api.Post.PostListItem>
   }
 
   interface Emits {

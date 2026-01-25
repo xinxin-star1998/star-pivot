@@ -8,6 +8,12 @@ declare module 'vue-img-cutter'
 
 declare module 'file-saver'
 
+declare module '@wangeditor/editor-for-vue' {
+  import type { DefineComponent } from 'vue'
+  export const Editor: DefineComponent<unknown, unknown, unknown>
+  export const Toolbar: DefineComponent<unknown, unknown, unknown>
+}
+
 declare module 'qrcode.vue' {
   export type Level = 'L' | 'M' | 'Q' | 'H'
   export type RenderAs = 'canvas' | 'svg'
@@ -38,4 +44,10 @@ declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
     $t: (key: string) => string
   }
+}
+
+// 确保 Vue 类型可以从 'vue' 模块正确导入
+// 这些类型在 Vue 3.5+ 中应该可以从 'vue' 导入，但 vue-tsc 可能需要额外的类型声明
+declare module 'vue' {
+  export type { App, Directive, DirectiveBinding, DefineComponent, ComponentPublicInstance } from '@vue/runtime-core'
 }
