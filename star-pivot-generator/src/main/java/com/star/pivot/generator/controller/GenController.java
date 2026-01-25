@@ -8,6 +8,7 @@ import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.common.sql.SqlUtil;
 import com.star.pivot.generator.config.GenConfig;
+import com.star.pivot.generator.domain.bo.DeleteRequest;
 import com.star.pivot.generator.domain.bo.GenTableVO;
 import com.star.pivot.generator.domain.dto.GenTableQueryDTO;
 import com.star.pivot.generator.domain.entity.GenTable;
@@ -173,12 +174,18 @@ public class GenController {
         return Result.success("修改成功");
     }
     /**
-     * 删除代码生成
+     * 删除代码生成（支持单删和批量删除）
+     * 
+     * @param deleteRequest 删除请求，包含 ids 数组，格式：{ "ids": [12, 13, 14] }
      */
     @PreAuthorize("hasAuthority('tool:gen:delete')")
-    @DeleteMapping("/{tableIds}")
-    public Result<?> remove(@PathVariable Long[] tableIds)
+    @DeleteMapping("/delete")
+    public Result<?> remove(@RequestBody DeleteRequest deleteRequest)
     {
+        List<Long> tableIds = deleteRequest.getTableIds();
+        if (tableIds == null || tableIds.isEmpty()) {
+            return Result.error("删除ID不能为空");
+        }
         genTableService.deleteGenTableByIds(tableIds);
         return Result.success();
     }

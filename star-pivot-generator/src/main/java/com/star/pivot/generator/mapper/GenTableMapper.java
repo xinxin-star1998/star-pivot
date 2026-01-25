@@ -70,10 +70,10 @@ public interface GenTableMapper extends BaseMapper<GenTable> {
     /**
      * 批量删除业务
      *
-     * @param ids 需要删除的数据ID
+     * @param tableIds 需要删除的数据
      * @return 结果
      */
-    public int deleteGenTableByIds(Long[] ids);
+    public int deleteGenTableByIds(List<Long> tableIds);
     /**
      * 查询表名称业务信息
      *

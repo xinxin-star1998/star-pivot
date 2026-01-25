@@ -45,10 +45,10 @@ public interface GenTableColumnMapper extends BaseMapper<GenTableColumn> {
     /**
      * 批量删除业务字段
      *
-     * @param ids 需要删除的数据ID
+     * @param tableIds 需要删除的数据ID
      * @return 结果
      */
-    public int deleteGenTableColumnByIds(Long[] ids);
+    public int deleteGenTableColumnByIds(List<Long> tableIds);
 
     void deleteGenTableColumns(List<GenTableColumn> delColumns);
 }

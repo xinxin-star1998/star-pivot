@@ -85,7 +85,7 @@ public interface GenTableService extends IService<GenTable> {
      *
      * @param tableIds 需要删除的表数据ID
      */
-    public void deleteGenTableByIds(Long[] tableIds);
+    public void deleteGenTableByIds(List<Long> tableIds);
 
     /**
      * 预览代码

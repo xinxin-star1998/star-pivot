@@ -36,7 +36,7 @@
               :disabled="selectedRows.length === 0"
               @click="handleDeleteTable"
               v-ripple
-              v-auth="'tool:gen:remove'"
+              v-auth="'tool:gen:delete'"
             >
               <ArtSvgIcon icon="ri:delete-bin-line" class="mr-1" />
               删除
