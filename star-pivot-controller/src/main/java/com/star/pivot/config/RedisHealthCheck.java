@@ -3,6 +3,7 @@ package com.star.pivot.config;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +39,9 @@ public class RedisHealthCheck implements CommandLineRunner {
             if (testValue.equals(result)) {
                 log.info("==========================================");
                 log.info("Redis 连接检查：✅ 成功");
-                log.info("Redis 地址：{}", redisTemplate.getConnectionFactory().getConnection().getClientName());
+                // 获取 Redis 连接信息（主机和端口）
+                String redisInfo = getRedisConnectionInfo(redisTemplate.getConnectionFactory());
+                log.info("Redis 地址：{}", redisInfo);
                 log.info("==========================================");
             } else {
                 log.warn("==========================================");
@@ -67,6 +70,33 @@ public class RedisHealthCheck implements CommandLineRunner {
         }
     }
     
+    /**
+     * 获取 Redis 连接信息（主机和端口）
+     * 
+     * @param connectionFactory Redis 连接工厂
+     * @return 连接信息字符串，格式：host:port
+     */
+    private String getRedisConnectionInfo(RedisConnectionFactory connectionFactory) {
+        try {
+            // 尝试从 LettuceConnectionFactory 获取（Spring Boot 2.x+ 默认）
+            if (connectionFactory instanceof org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory) {
+                org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory lettuceFactory = 
+                    (org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory) connectionFactory;
+                return lettuceFactory.getHostName() + ":" + lettuceFactory.getPort();
+            }
+            // 尝试从 JedisConnectionFactory 获取（如果使用 Jedis）
+            if (connectionFactory instanceof org.springframework.data.redis.connection.jedis.JedisConnectionFactory) {
+                org.springframework.data.redis.connection.jedis.JedisConnectionFactory jedisFactory = 
+                    (org.springframework.data.redis.connection.jedis.JedisConnectionFactory) connectionFactory;
+                return jedisFactory.getHostName() + ":" + jedisFactory.getPort();
+            }
+            // 如果无法识别类型，返回通用信息
+            return "已连接（连接工厂类型：" + connectionFactory.getClass().getSimpleName() + "）";
+        } catch (Exception e) {
+            return "已连接（无法获取详细信息：" + e.getMessage() + "）";
+        }
+    }
+
     /**
      * 清除旧格式的缓存数据
      * 
