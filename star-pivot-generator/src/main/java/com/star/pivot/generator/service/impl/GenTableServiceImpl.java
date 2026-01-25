@@ -97,11 +97,10 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
      * 删除业务对象
      *
      * @param tableIds 需要删除的数据ID
-     * @return 结果
      */
     @Override
     @Transactional
-    public void deleteGenTableByIds(Long[] tableIds)
+    public void deleteGenTableByIds(List<Long> tableIds)
     {
         genTableMapper.deleteGenTableByIds(tableIds);
         genTableColumnMapper.deleteGenTableColumnByIds(tableIds);
@@ -150,9 +149,12 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
     public byte[] downloadCode(String tableName)
     {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ZipOutputStream zip = new ZipOutputStream(outputStream);
-        generatorCode(tableName, zip);
-        IOUtils.closeQuietly(zip);
+        try (ZipOutputStream zip = new ZipOutputStream(outputStream)) {
+            generatorCode(tableName, zip);
+        } catch (IOException e) {
+            log.error("生成代码压缩包失败，表名：" + tableName, e);
+            throw new ServiceException("生成代码失败：" + e.getMessage());
+        }
         return outputStream.toByteArray();
     }
 
@@ -227,7 +229,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         {
             throw new ServiceException("同步数据失败，原表结构不存在");
         }
-        List<String> dbTableColumnNames = dbTableColumns.stream().map(GenTableColumn::getColumnName).collect(Collectors.toList());
+        List<String> dbTableColumnNames = dbTableColumns.stream().map(GenTableColumn::getColumnName).toList();
 
         dbTableColumns.forEach(column -> {
             GenUtils.initColumnField(column, table);
@@ -273,12 +275,14 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
     public byte[] downloadCode(String[] tableNames)
     {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ZipOutputStream zip = new ZipOutputStream(outputStream);
-        for (String tableName : tableNames)
-        {
-            generatorCode(tableName, zip);
+        try (ZipOutputStream zip = new ZipOutputStream(outputStream)) {
+            for (String tableName : tableNames) {
+                generatorCode(tableName, zip);
+            }
+        } catch (IOException e) {
+            log.error("批量生成代码压缩包失败", e);
+            throw new ServiceException("批量生成代码失败");
         }
-        IOUtils.closeQuietly(zip);
         return outputStream.toByteArray();
     }
 
@@ -306,21 +310,14 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         List<String> templates = VelocityUtils.getTemplateList(table.getTplCategory(), table.getTplWebType());
         for (String template : templates)
         {
-            // 渲染模板
-            StringWriter sw = new StringWriter();
-            Template tpl = Velocity.getTemplate(template, Constants.UTF8);
-            tpl.merge(context, sw);
-            try
-            {
-                // 添加到zip
+            try (StringWriter sw = new StringWriter()) {
+                Template tpl = Velocity.getTemplate(template, Constants.UTF8);
+                tpl.merge(context, sw);
                 zip.putNextEntry(new ZipEntry(VelocityUtils.getFileName(template, table)));
-                IOUtils.write(sw.toString(), zip, Constants.UTF8);
-                IOUtils.closeQuietly(sw);
+                IOUtils.write(sw.toString(), zip, CharsetKit.CHARSET_UTF_8);
                 zip.flush();
                 zip.closeEntry();
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 log.error("渲染模板失败，表名：" + table.getTableName(), e);
             }
         }
@@ -407,7 +404,6 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
      * 修改业务
      *
      * @param genTable 业务信息
-     * @return 结果
      */
     @Override
     @Transactional

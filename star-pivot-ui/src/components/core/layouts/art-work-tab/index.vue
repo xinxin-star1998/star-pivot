@@ -84,7 +84,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, ref, watch, nextTick, onUnmounted } from 'vue'
   import { LocationQueryRaw, useRoute, useRouter } from 'vue-router'
   import { useI18n } from 'vue-i18n'
   import { storeToRefs } from 'pinia'

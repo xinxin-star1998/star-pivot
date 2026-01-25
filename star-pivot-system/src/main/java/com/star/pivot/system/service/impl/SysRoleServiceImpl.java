@@ -1,32 +1,32 @@
   package com.star.pivot.system.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.star.pivot.common.domain.Constants;
-import com.star.pivot.common.domain.PageResponse;
-import com.star.pivot.common.exception.BusinessException;
-import com.star.pivot.system.domain.dto.RoleDTO;
-import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
-import com.star.pivot.system.domain.dto.RoleQueryDTO;
-import com.star.pivot.system.domain.entity.RoleDept;
-import com.star.pivot.system.domain.entity.RoleMenu;
-import com.star.pivot.system.domain.entity.SysRole;
-import com.star.pivot.system.domain.entity.UserRole;
-import com.star.pivot.system.mapper.*;
-import com.star.pivot.system.service.SysRoleService;
-import com.star.pivot.system.service.UserPermissionCacheService;
-import com.star.pivot.security.utils.SecurityContextUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+  import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+  import com.baomidou.mybatisplus.core.metadata.IPage;
+  import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+  import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+  import com.star.pivot.common.domain.Constants;
+  import com.star.pivot.common.domain.PageResponse;
+  import com.star.pivot.common.exception.BusinessException;
+  import com.star.pivot.security.utils.SecurityContextUtils;
+  import com.star.pivot.system.domain.dto.RoleDTO;
+  import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
+  import com.star.pivot.system.domain.dto.RoleQueryDTO;
+  import com.star.pivot.system.domain.dto.UserRoleDTO;
+  import com.star.pivot.system.domain.entity.RoleMenu;
+  import com.star.pivot.system.domain.entity.SysRole;
+  import com.star.pivot.system.domain.entity.UserRole;
+  import com.star.pivot.system.mapper.*;
+  import com.star.pivot.system.service.SysRoleService;
+  import com.star.pivot.system.service.UserPermissionCacheService;
+  import org.springframework.beans.BeanUtils;
+  import org.springframework.beans.factory.annotation.Autowired;
+  import org.springframework.stereotype.Service;
+  import org.springframework.transaction.annotation.Transactional;
+  import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
+  import java.time.LocalDateTime;
+  import java.util.Collections;
+  import java.util.List;
 
 /**
  * 角色信息表(SysRole)表服务实现类
@@ -96,12 +96,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             // 分配菜单权限
             insertRoleMenus(role.getRoleId(), roleDTO.getMenuIds());
         }
-
-        if (success && roleDTO.getDeptIds() != null && !roleDTO.getDeptIds().isEmpty()) {
-            // 分配部门权限
-            insertRoleDepts(role.getRoleId(), roleDTO.getDeptIds());
-        }
-
         return success;
     }
 
@@ -148,27 +142,17 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                     insertRoleMenus(roleDTO.getRoleId(), roleDTO.getMenuIds());
                 }
             }
-
-            // 更新部门权限
-            if (roleDTO.getDeptIds() != null) {
-                // 删除旧的部门关联
-                LambdaQueryWrapper<RoleDept> deptWrapper = new LambdaQueryWrapper<>();
-                deptWrapper.eq(RoleDept::getRoleId, roleDTO.getRoleId());
-                roleDeptMapper.delete(deptWrapper);
-
-                // 添加新的部门关联
-                if (!roleDTO.getDeptIds().isEmpty()) {
-                    insertRoleDepts(roleDTO.getRoleId(), roleDTO.getDeptIds());
-                }
-            }
         }
-
         return success;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteRoleByIds(Long[] roleIds) {
+    public boolean deleteRoleByIds(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return false;
+        }
+        
         for (Long roleId : roleIds) {
             SysRole role = this.getById(roleId);
             if (role != null && !"2".equals(role.getDelFlag())) {
@@ -176,7 +160,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 if (Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey())) {
                     throw new BusinessException("不能删除超级管理员角色");
                 }
-
                 // 检查是否有用户使用该角色
                 LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
                 wrapper.eq(UserRole::getRoleId, roleId);
@@ -269,36 +252,45 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         }
         return menuIds;
     }
+
+    @Override
+    public boolean assignUser(UserRoleDTO userRoleDTO) {
+        for (Long userId : userRoleDTO.getUserIds()) {
+            UserRole userRole = new UserRole();
+            userRole.setRoleId(userRoleDTO.getRoleId());
+            userRole.setUserId(userId);
+            userRoleMapper.insert(userRole);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean cancelUser(UserRole userRole) {
+        return userRoleMapper.deleteByRoleIdAndUserId(userRole.getRoleId(), userRole.getUserId());
+    }
+
     /**
-     * 执行角色权限分配（菜单+部门）
+     * 执行角色  分配部门
      * &#064;Transactional：事务控制，保证操作原子性
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean assignPermission(RolePermissionAssignDTO rolePermissionAssignDTO) {
         // 1. 基础参数校验
         Long roleId = rolePermissionAssignDTO.getRoleId();
-        List<Long> menuIds = rolePermissionAssignDTO.getMenuIds() == null ? Collections.emptyList() : rolePermissionAssignDTO.getMenuIds();
         List<Long> deptIds = rolePermissionAssignDTO.getDeptIds() == null ? Collections.emptyList() : rolePermissionAssignDTO.getDeptIds();
         //2.查询角色是否存在
         SysRole role = sysRoleMapper.selectById(roleId);
-        if (role == null || "2".equals(role.getDelFlag())) {
+        if (role == null || Constants.DelFlag.DELETE.equals(role.getDelFlag())) {
             throw new BusinessException("角色不存在");
         }
-        // 3.处理旧菜蛋权限，添加新菜单权限
-        roleMenuMapper.deleteByRoleId(roleId);
-        if(!menuIds.isEmpty()){
-            roleMenuMapper.batchSave(roleId, menuIds);
-        }
-        // 4.处理旧部门权限，添加新部门权限
+        // 3.处理旧部门权限，添加新部门权限
         roleDeptMapper.deleteByRoleId(roleId);
         if(!deptIds.isEmpty()){
             roleDeptMapper.batchSave(roleId, deptIds);
         }
-        
-        // 5.清除所有用户权限缓存（角色权限变更可能影响多个用户）
+        // 4.清除所有用户权限缓存（角色权限变更可能影响多个用户）
         // 注意：这里清除所有用户缓存是为了简化实现，实际可以只清除拥有该角色的用户缓存
         userPermissionCacheService.clearAllUserPermissionCache();
-        
         return true;
     }
 
@@ -311,18 +303,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             roleMenu.setRoleId(roleId);
             roleMenu.setMenuId(menuId);
             roleMenuMapper.insert(roleMenu);
-        }
-    }
-
-    /**
-     * 插入角色部门关联
-     */
-    private void insertRoleDepts(Long roleId, List<Long> deptIds) {
-        for (Long deptId : deptIds) {
-            RoleDept roleDept = new RoleDept();
-            roleDept.setRoleId(roleId);
-            roleDept.setDeptId(deptId);
-            roleDeptMapper.insert(roleDept);
         }
     }
 }

@@ -105,7 +105,8 @@
   import { ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue'
   import { useWindowSize } from '@vueuse/core'
   import { useI18n } from 'vue-i18n'
-  import type { Component } from 'vue'
+  // Component 类型从全局类型中获取（由 auto-imports.d.ts 提供）
+  type Component = ComponentPublicInstance
   import {
     ElCascader,
     ElCheckbox,

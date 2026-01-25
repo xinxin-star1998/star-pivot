@@ -53,7 +53,7 @@
   </div>
 </template>
 <script setup lang="ts">
-  import type { CSSProperties } from 'vue'
+  type StyleObject = Record<string, string | number>
   import { useRoute } from 'vue-router'
   import { useAutoLayoutHeight } from '@/hooks/core/useLayoutHeight'
   import { useSettingStore } from '@/store/modules/setting'
@@ -100,7 +100,7 @@
   })
 
   const containerStyle = computed(
-    (): CSSProperties =>
+    (): StyleObject =>
       isFullPage.value
         ? {
             position: 'fixed',
@@ -117,7 +117,7 @@
   )
 
   const contentStyle = computed(
-    (): CSSProperties => ({
+    (): StyleObject => ({
       minHeight: containerMinHeight.value
     })
   )

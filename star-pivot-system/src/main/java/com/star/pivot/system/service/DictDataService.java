@@ -58,11 +58,11 @@ public interface DictDataService extends IService<DictData> {
     boolean updateDictData(DictDataDTO dictDataDTO);
 
     /**
-     * 删除字典数据
+     * 删除字典数据（支持单删和批量删除）
      *
-     * @param dictCodes 字典编码数组
+     * @param dictCodes 字典编码列表
      * @return 是否成功
      */
-    boolean deleteDictDataByIds(Long[] dictCodes);
+    boolean deleteDictDataByIds(List<Long> dictCodes);
 }
 

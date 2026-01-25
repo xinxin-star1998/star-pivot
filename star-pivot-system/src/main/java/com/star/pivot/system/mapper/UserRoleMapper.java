@@ -24,5 +24,7 @@ public interface UserRoleMapper extends BaseMapper<UserRole> {
      * @return 影响行数
      */
     int insertBatchUserRoles(@Param("list") List<UserRole> list);
+
+    boolean deleteByRoleIdAndUserId(Long roleId, Long userId);
 }
 

@@ -15,7 +15,7 @@ interface ApiResult<T = any> {
 export function fetchGetGenTableList(params: Api.Generator.GenTableSearchParams) {
   return request.post<Api.Generator.GenTableList>({
     url: '/api/tool/gen/list',
-    params
+    data: params
   })
 }
 // 获取数据库列表
@@ -75,10 +75,9 @@ export function fetchEditSave(genTable: GenTableEditPayload) {
  * @param tableIds 表ID数组
  */
 export function fetchDeleteTable(tableIds: number[]) {
-  // 将数组转换为逗号分隔的字符串，用于URL路径参数
-  const idsStr = tableIds.join(',')
   return request.del<ApiResult<void>>({
-    url: `/api/tool/gen/${idsStr}`,
+    url: '/api/tool/gen/delete',
+    data: { ids: tableIds },
     showSuccessMessage: true
   })
 }
@@ -119,5 +118,3 @@ export function fetchGenCode(tableName: string) {
     url: `/api/tool/gen/genCode/${tableName}`
   })
 }
-
-

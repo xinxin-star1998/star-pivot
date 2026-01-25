@@ -36,10 +36,13 @@ type AuthItem = NonNullable<AppRouteRecord['meta']['authList']>[number]
 export const useAuth = () => {
   const route = useRoute()
 
-  // 后端路由 meta 配置的权限列表（例如：[{ authMark: 'add' }]）
-  const backendAuthList: AuthItem[] = Array.isArray(route.meta.authList)
-    ? (route.meta.authList as AuthItem[])
-    : []
+  /**
+   * 每次调用时都从当前路由 meta 中读取最新的权限列表，
+   * 确保路由切换后权限判断结果自动刷新。
+   */
+  const getBackendAuthList = (): AuthItem[] => {
+    return Array.isArray(route.meta.authList) ? (route.meta.authList as AuthItem[]) : []
+  }
 
   /**
    * 检查是否拥有某权限标识
@@ -47,6 +50,7 @@ export const useAuth = () => {
    * @returns 是否有权限
    */
   const hasAuth = (auth: string): boolean => {
+    const backendAuthList = getBackendAuthList()
     return backendAuthList.some((item) => item?.authMark === auth)
   }
 

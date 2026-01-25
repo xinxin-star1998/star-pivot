@@ -4,7 +4,6 @@
     placement="bottom-start"
     :width="600"
     popper-class="icon-picker-popover"
-    :teleported="false"
   >
     <template #reference>
       <div ref="referenceRef" @focusin="handleFocus" @click="handleClick">
@@ -12,6 +11,22 @@
       </div>
     </template>
     <div class="icon-picker">
+      <!-- 头部：当前选中图标预览 + 使用提示 -->
+      <div class="icon-picker-header">
+        <div class="icon-preview" v-if="props.modelValue">
+          <span class="icon-preview-avatar">
+            <Icon :icon="props.modelValue" />
+          </span>
+          <div class="icon-preview-info">
+            <div class="icon-preview-label">当前已选图标</div>
+            <div class="icon-preview-name">{{ props.modelValue }}</div>
+          </div>
+        </div>
+        <div class="icon-tip">
+          可直接输入图标名称搜索（如 <span class="icon-tip-keyword">user</span>、
+          <span class="icon-tip-keyword">home</span>），也可从下方分类中快速选择常用图标。
+        </div>
+      </div>
       <ElInput
         v-model="iconSearchText"
         placeholder="搜索图标（支持在线搜索，如：user、home、settings）..."
@@ -35,8 +50,8 @@
       </div>
       <!-- 分类显示图标 - 水平块状 -->
       <div v-if="!iconSearchText || iconSearchText.trim().length < 2" class="icon-categories">
-        <!-- 分类标签栏 - 水平显示 -->
-        <div class="category-tabs">
+        <!-- 分类标签栏 - 单行横向滚动 -->
+        <div class="category-tabs" ref="categoryTabsRef" @wheel.prevent="handleCategoryWheel">
           <div
             v-for="category in iconCategories"
             :key="category.name"
@@ -44,7 +59,18 @@
             :class="{ active: currentCategory === category.name }"
             @click="switchCategory(category.name)"
           >
-            {{ category.name }}
+            <span class="category-tab-main">
+              <span class="category-tab-dot"></span>
+              <span class="category-tab-name">{{ category.name }}</span>
+            </span>
+            <span class="category-tab-count">{{ category.icons.length }}</span>
+          </div>
+        </div>
+        <!-- 当前分类标题 -->
+        <div class="category-title-row">
+          <div class="category-title-left">
+            <span class="category-title-text">{{ currentCategory }}</span>
+            <span class="category-title-sub">常用场景图标 · 快速点选即可应用</span>
           </div>
         </div>
         <!-- 当前分类的图标列表 -->
@@ -53,7 +79,7 @@
             v-for="iconItem in currentCategoryIcons"
             :key="iconItem"
             class="icon-item-horizontal"
-            :class="{ active: (modelValue || '') === iconItem }"
+            :class="{ active: (props.modelValue || '') === iconItem }"
             @click="selectIcon(iconItem)"
           >
             <Icon :icon="iconItem" style="font-size: 20px" />
@@ -67,7 +93,7 @@
           v-for="iconItem in filteredIcons"
           :key="iconItem"
           class="icon-item-horizontal"
-          :class="{ active: (modelValue || '') === iconItem }"
+          :class="{ active: (props.modelValue || '') === iconItem }"
           @click="selectIcon(iconItem)"
         >
           <Icon :icon="iconItem" style="font-size: 20px" />
@@ -82,6 +108,7 @@
   import { ElIcon, ElPopover, ElInput } from 'element-plus'
   import { Search, Loading } from '@element-plus/icons-vue'
   import { Icon } from '@iconify/vue'
+  import { onClickOutside } from '@vueuse/core'
 
   interface Props {
     modelValue: string | undefined
@@ -91,7 +118,8 @@
     (e: 'update:modelValue', value: string): void
   }
 
-  defineProps<Props>()
+  // 使用 props 以便在模板中展示当前已选图标
+  const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
 
   const visible = ref(false)
@@ -100,6 +128,7 @@
   const onlineSearchResults = ref<string[]>([])
   const referenceRef = ref<HTMLElement>()
   const currentCategory = ref('常用')
+  const categoryTabsRef = ref<HTMLElement>()
 
   // 处理输入框聚焦
   const handleFocus = () => {
@@ -118,55 +147,33 @@
     }, 10)
   }
 
-  // 监听点击外部关闭
-  const handleClickOutside = (event: MouseEvent) => {
-    if (!visible.value) return
-
-    try {
-      const target = event.target as HTMLElement
-      if (!target) return
-
-      const popoverEl = document.querySelector('.icon-picker-popover')
-      const referenceEl = referenceRef.value
-
-      // 检查元素是否仍在 DOM 中
-      const isPopoverValid = popoverEl && document.body.contains(popoverEl)
-      const isReferenceValid = referenceEl && document.body.contains(referenceEl)
-
-      // 如果点击的不是 Popover 内部和 reference 区域，则关闭
-      if (
-        isPopoverValid &&
-        !popoverEl.contains(target) &&
-        isReferenceValid &&
-        !referenceEl.contains(target)
-      ) {
-        // 延迟关闭，避免与打开事件冲突
-        setTimeout(() => {
-          if (visible.value) {
-            visible.value = false
-          }
-        }, 10)
-      }
-    } catch (error) {
-      // 忽略 DOM 访问错误，可能发生在组件更新过程中
-      console.warn('Icon picker click outside handler error:', error)
+  // 使用 @vueuse/core 提供的 onClickOutside 简化点击外部关闭逻辑，避免手动管理事件监听
+  onClickOutside(
+    referenceRef,
+    () => {
+      if (!visible.value) return
+      // 延迟关闭，避免与打开事件冲突
+      setTimeout(() => {
+        visible.value = false
+      }, 10)
+    },
+    {
+      // 仅在弹层可见时才处理点击外部
+      ignore: () => !visible.value
     }
+  )
+
+  /**
+   * 分类区域滚轮事件处理
+   * 使用鼠标滚轮的垂直滚动，驱动分类标签横向滚动，便于快速浏览所有分类
+   */
+  const handleCategoryWheel = (event: WheelEvent) => {
+    const el = categoryTabsRef.value
+    if (!el) return
+    el.scrollLeft += event.deltaY
   }
 
-  // 监听 visible 变化，添加/移除点击外部监听
-  watch(visible, (newVal) => {
-    if (newVal) {
-      // 延迟添加监听，避免立即触发
-      setTimeout(() => {
-        document.addEventListener('click', handleClickOutside, true)
-      }, 100)
-    } else {
-      document.removeEventListener('click', handleClickOutside, true)
-    }
-  })
-
   onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside, true)
     // 清理搜索定时器
     if (searchTimer) {
       clearTimeout(searchTimer)
@@ -444,8 +451,80 @@
 
 <style scoped lang="scss">
   .icon-picker {
-    max-height: 500px;
+    max-height: 420px;
     overflow-y: auto;
+    padding: 12px 14px 14px;
+    background: linear-gradient(180deg, #f9fbff 0%, #ffffff 40%);
+    border-radius: 10px;
+  }
+
+  .icon-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .icon-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(64, 158, 255, 0.06);
+    border: 1px solid rgba(64, 158, 255, 0.15);
+  }
+
+  .icon-preview-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #409eff;
+    box-shadow: 0 1px 4px rgba(64, 158, 255, 0.2);
+
+    :deep(svg) {
+      font-size: 18px;
+    }
+  }
+
+  .icon-preview-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .icon-preview-label {
+    font-size: 11px;
+    color: #909399;
+  }
+
+  .icon-preview-name {
+    font-size: 12px;
+    color: #303133;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .icon-tip {
+    flex: 1;
+    text-align: right;
+    font-size: 11px;
+    color: #909399;
+  }
+
+  .icon-tip-keyword {
+    padding: 0 4px;
+    border-radius: 4px;
+    background: rgba(64, 158, 255, 0.08);
+    color: #409eff;
+    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
   }
 
   .icon-loading,
@@ -466,19 +545,26 @@
 
   .category-tabs {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
     border-bottom: 1px solid #ebeef5;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
   }
 
   .category-tab {
-    padding: 6px 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 10px 6px 12px;
     font-size: 13px;
     color: #606266;
     background: #f5f7fa;
     border: 1px solid #e4e7ed;
-    border-radius: 4px;
+    border-radius: 999px;
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
@@ -495,6 +581,69 @@
       background: #ecf5ff;
       font-weight: 600;
     }
+  }
+
+  .category-tab-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .category-tab-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #c0c4cc;
+  }
+
+  .category-tab-name {
+    font-size: 12px;
+  }
+
+  .category-tab-count {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.04);
+    font-size: 11px;
+    color: #909399;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .category-tab.active .category-tab-dot {
+    background: #409eff;
+  }
+
+  .category-tab.active .category-tab-count {
+    background: rgba(64, 158, 255, 0.12);
+    color: #409eff;
+  }
+
+  .category-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 4px 0 4px;
+  }
+
+  .category-title-left {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .category-title-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #303133;
+  }
+
+  .category-title-sub {
+    font-size: 11px;
+    color: #a0a3aa;
   }
 
   .icon-list-horizontal {

@@ -69,3 +69,32 @@ gen:
   tablePrefix: sys_
   # 是否允许生成文件覆盖到本地（自定义路径），默认不允许
   allowOverwrite: false
+
+# 登录限流与防暴力破解配置
+login:
+  # 限流配置
+  rate-limit:
+    # 是否启用限流
+    enabled: true
+    # IP维度限流配置
+    ip:
+      # 每分钟允许的最大登录次数
+      max-attempts: 10
+      # 时间窗口（分钟）
+      window-minutes: 1
+    # IP+用户名维度限流配置
+    ip-username:
+      # 每分钟允许的最大登录次数
+      max-attempts: 5
+      # 时间窗口（分钟）
+      window-minutes: 1
+  # 账户锁定配置
+  account-lock:
+    # 是否启用账户锁定
+    enabled: true
+    # 连续失败N次后锁定账户
+    max-failures: 5
+    # 账户锁定时长（分钟）
+    lock-duration-minutes: 5
+    # 失败次数记录的过期时间（分钟），应大于锁定时长
+    failure-record-expire-minutes: 10

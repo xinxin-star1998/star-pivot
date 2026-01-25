@@ -15,15 +15,19 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="handleBatchGenerateCode(selectedRows)" v-ripple>
+            <ElButton
+              @click="handleBatchGenerateCode(selectedRows)"
+              v-ripple
+              v-auth="'tool:gen:create'"
+            >
               <ArtSvgIcon icon="ri:download-line" class="mr-1" />
               生成
             </ElButton>
-            <ElButton @click="handleCreateTable" v-ripple>
+            <ElButton @click="handleCreateTable" v-ripple v-auth="'tool:gen:add'">
               <ArtSvgIcon icon="ri:add-line" class="mr-1" />
               创建表
             </ElButton>
-            <ElButton @click="handleImportTable" v-ripple>
+            <ElButton @click="handleImportTable" v-ripple v-auth="'tool:gen:import'">
               <ArtSvgIcon icon="ri:file-upload-line" class="mr-1" />
               导入表
             </ElButton>
@@ -32,6 +36,7 @@
               :disabled="selectedRows.length === 0"
               @click="handleDeleteTable"
               v-ripple
+              v-auth="'tool:gen:delete'"
             >
               <ArtSvgIcon icon="ri:delete-bin-line" class="mr-1" />
               删除
@@ -69,6 +74,7 @@
 <script setup lang="ts">
   import { useRouter } from 'vue-router'
   import { useTable } from '@/hooks/core/useTable'
+  import { useAuth } from '@/hooks/core/useAuth'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
@@ -90,6 +96,9 @@
   import { DialogType } from '@/types'
 
   defineOptions({ name: 'Generator' })
+
+  // 权限检查
+  const { hasAuth } = useAuth()
   const router = useRouter()
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
@@ -233,45 +242,62 @@
           formatter: (row: GenTableListItem) => {
             const actions: any[] = []
 
-            // 预览按钮
-            actions.push(
-              h(ArtButtonTable, {
-                type: 'view',
-                onClick: () => handlePreview(row.tableId as number)
-              })
-            )
+            // 预览按钮权限：tool:gen:preview
+            if (hasAuth('tool:gen:preview')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'view',
+                  onClick: () => handlePreview(row.tableId as number)
+                })
+              )
+            }
 
-            // 编辑按钮
-            actions.push(
-              h(ArtButtonTable, {
-                type: 'edit',
-                onClick: () => handleEdit(row.tableId as number)
-              })
-            )
+            // 编辑按钮权限：tool:gen:edit
+            if (hasAuth('tool:gen:edit')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'edit',
+                  onClick: () => handleEdit(row.tableId as number)
+                })
+              )
+            }
 
-            // 删除按钮
-            actions.push(
-              h(ArtButtonTable, {
-                type: 'delete',
-                onClick: () => handleDelete(row.tableId as number)
-              })
-            )
+            // 删除按钮权限：tool:gen:remove
+            if (hasAuth('tool:gen:delete')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'delete',
+                  onClick: () => handleDelete(row.tableId as number)
+                })
+              )
+            }
 
-            // 同步按钮
-            actions.push(
-              h(ArtButtonTable, {
-                type: 'sync',
-                onClick: () =>
-                  handleSync(row.tableName as string, row.tableComment || row.tableName)
-              })
-            )
-            // 生成代码按钮
-            actions.push(
-              h(ArtButtonTable, {
-                type: 'generate',
-                onClick: () => handleGenerateCode(row)
-              })
-            )
+            // 同步按钮权限：tool:gen:sync
+            if (hasAuth('tool:gen:sync')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'sync',
+                  onClick: () =>
+                    handleSync(row.tableName as string, row.tableComment || row.tableName)
+                })
+              )
+            }
+
+            // 生成代码按钮权限：tool:gen:code
+            if (hasAuth('tool:gen:create')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'generate',
+                  onClick: () => handleGenerateCode(row)
+                })
+              )
+            }
+
+            if (actions.length === 0) {
+              // 无任何操作权限时返回空占位
+              return h('span', { style: 'color: #999' }, '')
+            }
+
             return h('div', { class: 'flex items-center justify-center' }, actions)
           }
         }

@@ -5,7 +5,9 @@ import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.system.domain.dto.RoleDTO;
 import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
 import com.star.pivot.system.domain.dto.RoleQueryDTO;
+import com.star.pivot.system.domain.dto.UserRoleDTO;
 import com.star.pivot.system.domain.entity.SysRole;
+import com.star.pivot.system.domain.entity.UserRole;
 
 import java.util.List;
 
@@ -25,7 +27,13 @@ public interface SysRoleService extends IService<SysRole> {
 
     boolean updateRole(RoleDTO roleDTO);
 
-    boolean deleteRoleByIds(Long[] roleIds);
+    /**
+     * 删除角色（支持单删和批量删除）
+     *
+     * @param roleIds 角色ID列表
+     * @return 是否成功
+     */
+    boolean deleteRoleByIds(List<Long> roleIds);
 
     boolean changeRoleStatus(Long roleId, String status);
 
@@ -34,5 +42,9 @@ public interface SysRoleService extends IService<SysRole> {
     boolean assignPermission(RolePermissionAssignDTO rolePermissionAssignDTO);
 
     List<Long> getMenuIdsByRoleId(Long roleId);
+
+    boolean assignUser(UserRoleDTO userRoleDTO);
+
+    boolean cancelUser(UserRole userRole);
 }
 

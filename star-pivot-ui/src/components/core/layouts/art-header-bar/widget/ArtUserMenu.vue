@@ -29,9 +29,9 @@
           />
           <div class="w-[calc(100%-60px)] h-full">
             <span class="block text-sm font-medium text-g-800 truncate">{{
-              userInfo.user?.username ?? userInfo.userName
+              userInfo.user?.username
             }}</span>
-            <span class="block mt-0.5 text-xs text-g-500 truncate">{{ userInfo.user?.email ?? userInfo.email }}</span>
+            <span class="block mt-0.5 text-xs text-g-500 truncate">{{ userInfo.user?.email }}</span>
           </div>
         </div>
         <ul class="py-4 mt-3 border-t border-g-300/80">

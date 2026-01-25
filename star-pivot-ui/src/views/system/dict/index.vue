@@ -19,7 +19,7 @@
         @refresh="handleRefresh"
       >
         <template #left>
-          <ElButton @click="handleAdd" v-ripple> 新增字典类型 </ElButton>
+          <ElButton @click="handleAdd" v-ripple v-auth="'system:type:add'">新增字典类型</ElButton>
         </template>
       </ArtTableHeader>
 
@@ -59,9 +59,13 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { useRouter } from 'vue-router'
+  import { useAuth } from '@/hooks/core/useAuth'
   const router = useRouter()
 
   defineOptions({ name: 'DictType' })
+
+  // 权限控制
+  const { hasAuth } = useAuth()
 
   // 状态管理
   const loading = ref(false)
@@ -120,9 +124,13 @@
   }
   // 新增：字典类型点击事件处理函数
   const handleDictTypeClick = (row: SysDictType) => {
-    // 跳转到字典数据列表页，并传递字典类型参数
-    // router.push({ path: '/system/dict/dict-data', query: { dictType: row.dictType } })
-    router.push({ path: '/system/data', query: { dictType: row.dictType } })
+    // 跳转到字典数据明细页，使用动态路由参数
+    router.push({
+      name: 'DictData',
+      params: {
+        dictType: row.dictType
+      }
+    })
   }
   // 表格列配置
   const { columnChecks, columns } = useTableColumns(() => [
@@ -191,17 +199,34 @@
       width: 180,
       align: 'right',
       formatter: (row: SysDictType) => {
-        const buttonStyle = { style: 'text-align: right' }
-        return h('div', buttonStyle, [
-          h(ArtButtonTable, {
-            type: 'edit',
-            onClick: () => handleEdit(row)
-          }),
-          h(ArtButtonTable, {
-            type: 'delete',
-            onClick: () => handleDelete(row)
-          })
-        ])
+        const actions: any[] = []
+
+        // 编辑字典类型按钮权限：system:type:edit
+        if (hasAuth('system:type:edit')) {
+          actions.push(
+            h(ArtButtonTable, {
+              type: 'edit',
+              onClick: () => handleEdit(row)
+            })
+          )
+        }
+
+        // 删除字典类型按钮权限：system:type:delete
+        if (hasAuth('system:type:delete')) {
+          actions.push(
+            h(ArtButtonTable, {
+              type: 'delete',
+              onClick: () => handleDelete(row)
+            })
+          )
+        }
+
+        if (actions.length === 0) {
+          // 无任何操作权限时返回空占位
+          return h('span', { style: 'color: #999' }, '')
+        }
+
+        return h('div', { style: 'text-align: right' }, actions)
       }
     }
   ])

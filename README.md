@@ -249,7 +249,13 @@ star-pivot-ui/
 - `GET/POST/PUT/DELETE /api/system/dict/data/**` - 字典数据管理
 
 ### 路由信息
-- `GET /api/router/getRouters` - 获取用户路由菜单
+- `GET /api/router/userMenuTree` - 获取当前用户的菜单树（根据用户权限）
+- `GET /api/router/dynamic-routes` - 获取当前用户的动态路由列表（根据用户权限）
+
+### 通用导入导出
+- `POST /api/common/import-export/import/{businessType}` - 导入数据（需要 `system:{businessType}:import` 权限，如 `system:user:import`）
+- `POST /api/common/import-export/export/{businessType}` - 导出数据（需要 `system:{businessType}:export` 权限，如 `system:user:export`）
+- `GET /api/common/import-export/template/{businessType}` - 下载导入模板（需要 `system:{businessType}:import` 权限）
 
 ### 文件上传
 - `POST /api/avatar/upload` - 上传头像

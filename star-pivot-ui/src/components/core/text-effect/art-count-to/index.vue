@@ -9,7 +9,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, watch, nextTick, onUnmounted, shallowRef } from 'vue'
   import { useTransition, TransitionPresets } from '@vueuse/core'
 
   // 类型定义

@@ -1,72 +1,37 @@
 <!-- 登录日志页面 -->
 <template>
   <div class="logininfor-page art-full-height">
-    <ElCard class="art-table-card" shadow="never">
-      <!-- 搜索栏 -->
-      <div class="search-container">
-        <ElForm :model="searchForm" :inline="true" class="search-form">
-          <ElFormItem label="用户账号">
-            <ElInput
-              v-model="searchForm.userName"
-              placeholder="请输入用户账号"
-              clearable
-              style="width: 200px"
-              @keyup.enter="handleSearch"
-            />
-          </ElFormItem>
-          <ElFormItem label="登录IP">
-            <ElInput
-              v-model="searchForm.ipaddr"
-              placeholder="请输入登录IP"
-              clearable
-              style="width: 200px"
-              @keyup.enter="handleSearch"
-            />
-          </ElFormItem>
-          <ElFormItem label="登录状态">
-            <ElSelect
-              v-model="searchForm.status"
-              placeholder="请选择登录状态"
-              clearable
-              style="width: 150px"
-            >
-              <ElOption label="成功" value="0" />
-              <ElOption label="失败" value="1" />
-            </ElSelect>
-          </ElFormItem>
-          <ElFormItem label="登录时间">
-            <ElDatePicker
-              v-model="dateRange"
-              type="datetimerange"
-              range-separator="至"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
-              format="YYYY-MM-DD HH:mm:ss"
-              value-format="YYYY-MM-DD HH:mm:ss"
-              style="width: 400px"
-            />
-          </ElFormItem>
-          <ElFormItem>
-            <ElButton type="primary" @click="handleSearch" v-ripple>搜索</ElButton>
-            <ElButton @click="resetSearchParams" v-ripple>重置</ElButton>
-          </ElFormItem>
-        </ElForm>
+    <!-- 搜索栏 -->
+    <ElCollapseTransition>
+      <div v-show="showSearchBar">
+        <LogininforSearch v-model="searchForm" @search="handleSearch" @reset="handleReset" />
       </div>
+    </ElCollapseTransition>
 
+    <ElCard
+      class="art-table-card"
+      shadow="never"
+      :style="{ 'margin-top': showSearchBar ? '12px' : '0' }"
+    >
       <!-- 表格头部 -->
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
+      <ArtTableHeader
+        v-model:columns="columnChecks"
+        v-model:showSearchBar="showSearchBar"
+        :loading="loading"
+        @refresh="handleRefresh"
+      >
         <template #left>
           <ElSpace wrap>
             <ElButton
               type="danger"
-              :disabled="selectedRows.length === 0"
+              :disabled="!hasSelectedRows"
               @click="handleBatchDelete"
               v-ripple
-              v-auth="'system:logininfor:delete'"
+              v-auth="AUTH_DELETE"
             >
               批量删除
             </ElButton>
-            <ElButton type="danger" @click="handleClean" v-ripple v-auth="'system:logininfor:delete'">
+            <ElButton type="danger" @click="handleClean" v-ripple v-auth="AUTH_DELETE">
               清空日志
             </ElButton>
           </ElSpace>
@@ -82,8 +47,7 @@
         @selection-change="handleSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
-      >
-      </ArtTable>
+      />
 
       <!-- 详情对话框 -->
       <LogininforDetail v-model:visible="detailDialogVisible" :logininfor="currentLogininfor" />
@@ -93,39 +57,65 @@
 
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetLogininforList, fetchDeleteLogininfor, fetchCleanLogininfor } from '@/api/log/logininfor'
-  import { ElMessageBox, ElMessage, ElTag, ElButton } from 'element-plus'
+  import {
+    fetchGetLogininforList,
+    fetchDeleteLogininfor,
+    fetchCleanLogininfor
+  } from '@/api/log/logininfor'
+  import { ElMessageBox, ElMessage, ElTag, ElButton, ElCollapseTransition } from 'element-plus'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
   import type { LogininforListItem, LogininforSearchParams } from '@/types/api/logininfor'
   import LogininforDetail from './modules/logininfor-detail.vue'
+  import LogininforSearch from './modules/logininfor-search.vue'
 
   defineOptions({ name: 'Logininfor' })
 
+  // ==================== 常量定义 ====================
+  /** 权限标识 */
+  const AUTH_DELETE = 'system:logininfor:delete'
+
+  /** 登录状态值 */
+  const LOGIN_STATUS = {
+    SUCCESS: '0',
+    FAILED: '1'
+  } as const
+
+  /** 默认分页大小 */
+  const DEFAULT_PAGE_SIZE = 20
+
+  // ==================== 组合式函数 ====================
   const { hasAuth } = useAuth()
 
-  // 搜索表单
-  const searchForm = ref<LogininforSearchParams>({
+  // ==================== 响应式数据 ====================
+  /** 搜索栏显示状态 */
+  const showSearchBar = ref(true)
+
+  /** 搜索表单（包含 dateRange 用于搜索组件） */
+  const searchForm = ref<LogininforSearchParams & { dateRange?: [string, string] | null }>({
     userName: undefined,
     ipaddr: undefined,
     status: undefined,
     startTime: undefined,
     endTime: undefined,
-    pageNum: 1,
-    pageSize: 20
+    dateRange: null
   })
 
-  // 日期范围
-  const dateRange = ref<[string, string] | null>(null)
-
-  // 选中行
+  /** 选中的行数据 */
   const selectedRows = ref<LogininforListItem[]>([])
 
-  // 详情对话框
+  /** 详情对话框显示状态 */
   const detailDialogVisible = ref(false)
+
+  /** 当前查看的登录日志 */
   const currentLogininfor = ref<LogininforListItem | null>(null)
 
+  // ==================== 计算属性 ====================
+  /** 是否有选中的行 */
+  const hasSelectedRows = computed(() => selectedRows.value.length > 0)
+
+  // ==================== 表格配置 ====================
   const {
     columns,
     columnChecks,
@@ -133,161 +123,174 @@
     loading,
     pagination,
     getData,
-    resetSearchParams: resetTableSearchParams,
     handleSizeChange,
     handleCurrentChange,
     refreshData
   } = useTable({
-    // 核心配置
     core: {
       apiFn: fetchGetLogininforList,
       apiParams: {
-        pageNum: 1,
-        pageSize: 20
+        pageSize: DEFAULT_PAGE_SIZE
       },
-      immediate: true, // 确保页面加载时自动获取数据
-      columnsFactory: () => [
-        { type: 'selection' }, // 勾选列
-        { type: 'index', width: 60, label: '序号' }, // 序号
-        {
-          prop: 'loginTime',
-          label: '登录时间',
-          width: 180,
-          sortable: true
-        },
-        {
-          prop: 'userName',
-          label: '用户账号',
-          width: 120
-        },
-        {
-          prop: 'ipaddr',
-          label: '登录IP',
-          width: 140
-        },
-        {
-          prop: 'loginLocation',
-          label: '登录地点',
-          width: 150
-        },
-        {
-          prop: 'browser',
-          label: '浏览器',
-          width: 180,
-          showOverflowTooltip: true
-        },
-        {
-          prop: 'os',
-          label: '操作系统',
-          width: 150,
-          showOverflowTooltip: true
-        },
-        {
-          prop: 'status',
-          label: '登录状态',
-          width: 100,
-          formatter: (row: LogininforListItem) => {
-            return h(
-              ElTag,
-              {
-                type: row.status === '0' ? 'success' : 'danger',
-                size: 'small'
-              },
-              () => (row.status === '0' ? '成功' : '失败')
-            )
-          }
-        },
-        {
-          prop: 'msg',
-          label: '提示消息',
-          minWidth: 200,
-          showOverflowTooltip: true
-        },
-        {
-          prop: 'operation',
-          label: '操作',
-          width: 120,
-          fixed: 'right',
-          formatter: (row: LogininforListItem) => {
-            return h('div', { class: 'flex gap-2' }, [
-              h(
-                ElButton,
-                {
-                  type: 'primary',
-                  link: true,
-                  size: 'small',
-                  onClick: () => showDetail(row)
-                },
-                () => '详情'
-              ),
-              hasAuth('system:logininfor:delete') &&
-                h(
-                  ElButton,
-                  {
-                    type: 'danger',
-                    link: true,
-                    size: 'small',
-                    onClick: () => handleDelete(row)
-                  },
-                  () => '删除'
-                )
-            ])
-          }
-        }
-      ]
+      immediate: true,
+      columnsFactory: () => createTableColumns()
     }
   })
 
   /**
-   * 搜索
+   * 创建表格列配置
    */
-  const handleSearch = () => {
-    if (dateRange.value && dateRange.value.length === 2) {
-      searchForm.value.startTime = dateRange.value[0]
-      searchForm.value.endTime = dateRange.value[1]
-    } else {
-      searchForm.value.startTime = undefined
-      searchForm.value.endTime = undefined
+  function createTableColumns() {
+    return [
+      { type: 'selection' as const },
+      { type: 'index' as const, width: 60, label: '序号' },
+      {
+        prop: 'loginTime',
+        label: '登录时间',
+        width: 180,
+        sortable: true
+      },
+      {
+        prop: 'userName',
+        label: '用户账号',
+        width: 120
+      },
+      {
+        prop: 'ipaddr',
+        label: '登录IP',
+        width: 140
+      },
+      {
+        prop: 'loginLocation',
+        label: '登录地点',
+        width: 150
+      },
+      {
+        prop: 'browser',
+        label: '浏览器',
+        width: 180,
+        showOverflowTooltip: true
+      },
+      {
+        prop: 'os',
+        label: '操作系统',
+        width: 150,
+        showOverflowTooltip: true
+      },
+      {
+        prop: 'status',
+        label: '登录状态',
+        width: 100,
+        formatter: (row: LogininforListItem) => {
+          const isSuccess = row.status === LOGIN_STATUS.SUCCESS
+          return h(
+            ElTag,
+            {
+              type: isSuccess ? 'success' : 'danger',
+              size: 'small'
+            },
+            () => (isSuccess ? '成功' : '失败')
+          )
+        }
+      },
+      {
+        prop: 'msg',
+        label: '提示消息',
+        minWidth: 200,
+        showOverflowTooltip: true
+      },
+      {
+        prop: 'operation',
+        label: '操作',
+        width: 120,
+        fixed: 'right' as const,
+        formatter: (row: LogininforListItem) => {
+          return h('div', { class: 'flex gap-2' }, [
+            h(
+              ElButton,
+              {
+                type: 'primary',
+                link: true,
+                size: 'small',
+                onClick: () => handleShowDetail(row)
+              },
+              () => '详情'
+            ),
+            hasAuth(AUTH_DELETE) &&
+              h(
+                ElButton,
+                {
+                  type: 'danger',
+                  link: true,
+                  size: 'small',
+                  onClick: () => handleDelete(row)
+                },
+                () => '删除'
+              )
+          ])
+        }
+      }
+    ]
+  }
+
+  // ==================== 搜索相关方法 ====================
+  /**
+   * 处理搜索
+   * @param params 搜索参数（已由搜索组件处理日期范围转换）
+   */
+  const handleSearch = (params?: LogininforSearchParams) => {
+    // 如果传入了参数，使用传入的参数（搜索组件已处理日期范围）
+    if (params) {
+      Object.assign(searchForm.value, params)
     }
-    searchForm.value.pageNum = 1
+    // 执行搜索，会自动重置到第一页
     getData(searchForm.value)
   }
 
   /**
-   * 重置搜索参数
+   * 处理重置
    */
-  const resetSearchParams = () => {
+  const handleReset = () => {
+    // 重置搜索表单
     searchForm.value = {
       userName: undefined,
       ipaddr: undefined,
       status: undefined,
       startTime: undefined,
       endTime: undefined,
-      pageNum: 1,
-      pageSize: 20
+      dateRange: null
     }
-    dateRange.value = null
-    resetTableSearchParams()
+    // 直接使用重置后的搜索表单重新获取数据（getData 内部会重置到第一页）
     getData(searchForm.value)
   }
 
+  // ==================== 详情相关方法 ====================
   /**
    * 显示详情
    */
-  const showDetail = (row: LogininforListItem) => {
+  const handleShowDetail = (row: LogininforListItem) => {
     currentLogininfor.value = row
     detailDialogVisible.value = true
   }
 
+  // ==================== 删除相关方法 ====================
   /**
-   * 删除
+   * 删除单条日志
    */
   const handleDelete = async (row: LogininforListItem) => {
+    if (!row.infoId) {
+      ElMessage.warning('日志ID不存在')
+      return
+    }
+
     try {
       await ElMessageBox.confirm('确定要删除这条登录日志吗？', '提示', {
-        type: 'warning'
+        type: 'warning',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
       })
-      await fetchDeleteLogininfor([row.infoId!])
+
+      await fetchDeleteLogininfor([row.infoId])
       ElMessage.success('删除成功')
       refreshData()
     } catch (error: any) {
@@ -301,21 +304,31 @@
    * 批量删除
    */
   const handleBatchDelete = async () => {
-    if (selectedRows.value.length === 0) {
+    if (!hasSelectedRows.value) {
       ElMessage.warning('请选择要删除的日志')
       return
     }
+
+    const infoIds = selectedRows.value
+      .map((row: LogininforListItem) => row.infoId)
+      .filter((id: number | undefined): id is number => Boolean(id))
+
+    if (infoIds.length === 0) {
+      ElMessage.warning('所选日志中没有有效的ID')
+      return
+    }
+
     try {
-      await ElMessageBox.confirm(
-        `确定要删除选中的 ${selectedRows.value.length} 条登录日志吗？`,
-        '提示',
-        {
-          type: 'warning'
-        }
-      )
-      const infoIds = selectedRows.value.map((row: LogininforListItem) => row.infoId!).filter(Boolean)
+      await ElMessageBox.confirm(`确定要删除选中的 ${infoIds.length} 条登录日志吗？`, '提示', {
+        type: 'warning',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      })
+
       await fetchDeleteLogininfor(infoIds)
       ElMessage.success('删除成功')
+      // 清空选中项
+      selectedRows.value = []
       refreshData()
     } catch (error: any) {
       if (error !== 'cancel') {
@@ -325,7 +338,7 @@
   }
 
   /**
-   * 清空日志
+   * 清空所有日志
    */
   const handleClean = async () => {
     try {
@@ -334,6 +347,7 @@
         confirmButtonText: '确定清空',
         cancelButtonText: '取消'
       })
+
       await fetchCleanLogininfor()
       ElMessage.success('清空成功')
       refreshData()
@@ -344,27 +358,24 @@
     }
   }
 
+  // ==================== 表格事件处理 ====================
   /**
-   * 选中行变化
+   * 处理选中行变化
    */
   const handleSelectionChange = (selection: LogininforListItem[]) => {
     selectedRows.value = selection
+  }
+
+  /**
+   * 处理刷新
+   */
+  const handleRefresh = () => {
+    refreshData()
   }
 </script>
 
 <style scoped lang="scss">
   .logininfor-page {
     padding: 20px;
-  }
-
-  .search-container {
-    margin-bottom: 20px;
-    padding: 20px;
-    background: #f5f7fa;
-    border-radius: 4px;
-  }
-
-  .search-form {
-    margin: 0;
   }
 </style>

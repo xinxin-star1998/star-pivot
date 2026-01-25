@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { CSSProperties } from 'vue'
+  type StyleObject = Record<string, string | number>
 
   defineOptions({ name: 'ArtMenuRight' })
 
@@ -147,7 +147,7 @@
 
   // 计算菜单样式
   const menuStyle = computed(
-    (): CSSProperties => ({
+    (): StyleObject => ({
       position: 'fixed' as const,
       left: `${position.value.x}px`,
       top: `${position.value.y}px`,
@@ -158,14 +158,14 @@
 
   // 计算菜单列表样式
   const menuListStyle = computed(
-    (): CSSProperties => ({
+    (): StyleObject => ({
       padding: `${props.menuPadding}px`
     })
   )
 
   // 计算菜单项样式
   const menuItemStyle = computed(
-    (): CSSProperties => ({
+    (): StyleObject => ({
       height: `${props.itemHeight}px`,
       padding: `0 ${props.itemPaddingX}px`,
       borderRadius: '4px'
@@ -174,7 +174,7 @@
 
   // 计算子菜单列表样式
   const submenuListStyle = computed(
-    (): CSSProperties => ({
+    (): StyleObject => ({
       minWidth: `${props.submenuWidth}px`,
       padding: `${props.menuPadding}px 0`,
       borderRadius: `${props.borderRadius}px`

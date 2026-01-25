@@ -47,12 +47,12 @@ public interface SysDeptService extends IService<SysDept> {
     boolean updateDept(DeptDTO deptDTO);
 
     /**
-     * 删除部门
+     * 删除部门（支持单删和批量删除）
      *
-     * @param deptId 部门ID
+     * @param deptIds 部门ID列表
      * @return 是否成功
      */
-    boolean deleteDept(Long deptId);
+    boolean deleteDeptByIds(List<Long> deptIds);
 
     /**
      * 检查部门名称是否唯一

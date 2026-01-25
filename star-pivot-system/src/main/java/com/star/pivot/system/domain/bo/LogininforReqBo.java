@@ -1,5 +1,6 @@
 package com.star.pivot.system.domain.bo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.star.pivot.common.domain.PageReqBo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,10 +34,12 @@ public class LogininforReqBo extends PageReqBo {
     /**
      * 开始时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime startTime;
 
     /**
      * 结束时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime endTime;
 }

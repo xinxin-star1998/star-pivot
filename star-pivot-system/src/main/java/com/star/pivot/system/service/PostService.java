@@ -51,12 +51,12 @@ public interface PostService extends IService<SysPost> {
     boolean updatePost(PostDTO postDTO);
 
     /**
-     * 删除岗位
+     * 删除岗位（支持单删和批量删除）
      *
-     * @param postIds 岗位ID数组
+     * @param postIds 岗位ID列表
      * @return 是否成功
      */
-    boolean deletePostByIds(Long[] postIds);
+    boolean deletePostByIds(List<Long> postIds);
 
     /**
      * 检查岗位编码是否唯一

@@ -9,12 +9,15 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>新增岗位</ElButton>
+            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:post:add'">
+              新增岗位
+            </ElButton>
             <ElButton
               type="danger"
               :disabled="selectedRows.length === 0"
               @click="handleBatchDelete"
               v-ripple
+              v-auth="'system:post:delete'"
             >
               批量删除
             </ElButton>
@@ -48,6 +51,7 @@
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
+  import { useAuth } from '@/hooks/core/useAuth'
   import { fetchGetPostList, fetchDeletePost, fetchUpdatePost } from '@/api/post/post'
   import PostSearch from './modules/post-search.vue'
   import PostDialog from './modules/post-dialog.vue'
@@ -57,6 +61,9 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
 
   defineOptions({ name: 'Post' })
+
+  // 权限检查
+  const { hasAuth } = useAuth()
 
   type PostListItem = Api.Post.PostListItem
 
@@ -129,7 +136,7 @@
           width: 100,
           formatter: (row) => {
             return h(ElSwitch, {
-              modelValue: row.status === 0 || row.status === '0',
+              modelValue: Number(row.status) === 0 || String(row.status) === '0',
               activeValue: true,
               inactiveValue: false,
               onChange: (value: string | number | boolean) => {
@@ -155,17 +162,36 @@
           label: '操作',
           width: 120,
           fixed: 'right', // 固定列
-          formatter: (row) =>
-            h('div', [
-              h(ArtButtonTable, {
-                type: 'edit',
-                onClick: () => showDialog('edit', row)
-              }),
-              h(ArtButtonTable, {
-                type: 'delete',
-                onClick: () => deletePost(row)
-              })
-            ])
+          formatter: (row) => {
+            const actions: any[] = []
+
+            // 编辑岗位按钮权限：system:post:edit
+            if (hasAuth('system:post:edit')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'edit',
+                  onClick: () => showDialog('edit', row)
+                })
+              )
+            }
+
+            // 删除岗位按钮权限：system:post:remove
+            if (hasAuth('system:post:delete')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'delete',
+                  onClick: () => deletePost(row)
+                })
+              )
+            }
+
+            if (actions.length === 0) {
+              // 无任何操作权限时返回空占位
+              return h('span', { style: 'color: #999' }, '')
+            }
+
+            return h('div', actions)
+          }
         }
       ]
     }
@@ -176,7 +202,6 @@
    * @param params 参数
    */
   const handleSearch = (params: Record<string, any>) => {
-    console.log(params)
     // 搜索参数赋值
     Object.assign(searchParams, params)
     getData()
@@ -186,7 +211,6 @@
    * 显示岗位弹窗
    */
   const showDialog = (type: DialogType, row?: PostListItem): void => {
-    console.log('打开弹窗:', { type, row })
     dialogType.value = type
     currentPostData.value = row || {}
     nextTick(() => {
@@ -198,7 +222,6 @@
    * 删除岗位
    */
   const deletePost = (row: PostListItem): void => {
-    console.log('删除岗位:', row)
     ElMessageBox.confirm(`确定要删除岗位"${row.postName}"吗？`, '删除岗位', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -259,7 +282,6 @@
    */
   const handleSelectionChange = (selection: PostListItem[]): void => {
     selectedRows.value = selection
-    console.log('选中行数据:', selectedRows.value)
   }
 
   /**

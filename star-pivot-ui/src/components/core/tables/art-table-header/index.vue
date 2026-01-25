@@ -123,7 +123,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, onMounted, onUnmounted } from 'vue'
   import { storeToRefs } from 'pinia'
   import { TableSizeEnum } from '@/enums/formEnum'
   import { useTableStore } from '@/store/modules/table'

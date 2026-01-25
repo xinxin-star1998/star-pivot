@@ -1,18 +1,19 @@
 package com.star.pivot.controller;
 
+import com.star.pivot.common.domain.Constants;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.common.exception.ServiceException;
 import com.star.pivot.common.utils.OssUtil;
 import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.system.domain.entity.SysRole;
+import com.star.pivot.system.service.SysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,6 +31,23 @@ public class AvatarController {
 
     @Autowired
     private OssUtil ossUtil;
+    
+    @Autowired
+    private SysUserService sysUserService;
+
+    /**
+     * 判断指定用户是否为管理员角色
+     *
+     * @param userId 用户ID
+     * @return 如果用户拥有 admin 角色返回 true，否则返回 false
+     */
+    private boolean isAdminUser(Long userId) {
+        List<SysRole> roles = sysUserService.getRolesByUserId(userId);
+        if (roles == null || roles.isEmpty()) {
+            return false;
+        }
+        return roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
+    }
 
     /**
      * 检查当前用户是否有权限操作指定用户ID的资源
@@ -44,28 +62,32 @@ public class AvatarController {
             return false;
         }
 
-        // 如果目标用户ID与当前用户ID一致，允许操作
+        // 解析目标用户ID
+        final Long targetId;
         try {
-            Long targetId = Long.parseLong(targetUserId);
-            if (currentUserId.equals(targetId)) {
-                return true;
-            }
+            targetId = Long.parseLong(targetUserId);
         } catch (NumberFormatException e) {
             // userId 格式错误，不允许操作
             return false;
         }
 
-        // 检查当前用户是否具备 system:user:edit 权限（管理员权限）
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getAuthorities() != null) {
-            for (GrantedAuthority authority : authentication.getAuthorities()) {
-                if ("system:user:edit".equals(authority.getAuthority())) {
-                    return true;
-                }
-            }
+        // 如果目标用户ID与当前用户ID一致，允许操作
+        if (currentUserId.equals(targetId)) {
+            return true;
         }
 
-        return false;
+        // 非管理员用户：只能操作自己的头像，不能操作任何其他用户
+        if (!isAdminUser(currentUserId)) {
+            return false;
+        }
+
+        // 管理员用户：不允许操作系统预置的超级管理员账号（除非是本人，上面已返回）
+        if (Constants.ADMIN_USER_ID.equals(targetId)) {
+            return false;
+        }
+
+        // 管理员可以操作其它非超级管理员用户的头像
+        return true;
     }
 
     /**

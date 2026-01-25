@@ -128,7 +128,11 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteDictTypeByIds(Long[] dictIds) {
+    public boolean deleteDictTypeByIds(List<Long> dictIds) {
+        if (dictIds == null || dictIds.isEmpty()) {
+            return false;
+        }
+        
         for (Long dictId : dictIds) {
             DictType dictType = this.getById(dictId);
             if (dictType != null) {

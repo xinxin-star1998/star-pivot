@@ -86,7 +86,7 @@ export class TableCache<T> {
 
   // 内部日志工具
   private log(message: string, ...args: any[]) {
-    if (this.enableLog) {
+    if (this.enableLog && import.meta.env.DEV) {
       console.log(`[TableCache] ${message}`, ...args)
     }
   }

@@ -19,7 +19,6 @@
 
 <script setup lang="ts">
   import '@wangeditor/editor/dist/css/style.css'
-  import { onBeforeUnmount, onMounted, shallowRef, computed } from 'vue'
   import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
   import { useUserStore } from '@/store/modules/user'
   import EmojiText from '@/utils/ui/emojo'
@@ -134,7 +133,7 @@
 
     // 监听全屏事件
     editor.on('fullScreen', () => {
-      console.log('编辑器进入全屏模式')
+      // 编辑器进入全屏模式
     })
 
     // 确保在编辑器创建后应用自定义图标

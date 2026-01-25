@@ -77,11 +77,13 @@ declare namespace Api {
       token: string
       username: string
       nickname: string
+      /** 刷新令牌，用于在访问令牌过期后无感刷新 */
+      refreshToken?: string
     }
 
     /** 用户信息 */
     interface UserInfo {
-      user: {
+      user?: {
         userId: number
         username: string
         nickName: string
@@ -92,7 +94,7 @@ declare namespace Api {
         status: string
         createTime: string
       }
-      roles: Array<{
+      roles?: Array<{
         roleId: number
         roleName: string
         roleKey: string
@@ -100,7 +102,7 @@ declare namespace Api {
         status: string
         createTime: string
       }>
-      permissions: Array<{
+      permissions?: Array<{
         menuId: number
         menuName: string
         parentId: number
@@ -118,6 +120,10 @@ declare namespace Api {
         createTime: string
         children?: Array<any>
       }>
+      /** 前端扩展：头像 URL 更新后覆盖 user.avatar，便于顶部栏立即展示 */
+      avatar?: string
+      /** 前端扩展：头像更新时间戳 */
+      avatarUpdatedAt?: number
     }
     /** 验证码响应 */
     interface CaptchaResponse {
@@ -161,6 +167,8 @@ declare namespace Api {
       updateTime?: string
       delFlag?: number
       remark?: string
+      /** 账户是否被锁定（true=已锁定，false=未锁定） */
+      isLocked?: boolean
     }
     interface UserBo {
       userId: number

@@ -117,7 +117,6 @@
   import { fetchLogin, fetchCaptcha, fetchVerifyCaptcha } from '@/api/auth'
   import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
   import { useCommon } from '@/hooks'
-  import { onMounted, computed, ref, reactive, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
 
   defineOptions({ name: 'Login' })
@@ -163,6 +162,11 @@
   const handleSubmit = async () => {
     if (!formRef.value) return
 
+    // 防止重复提交：如果正在加载中，直接返回
+    if (loading.value) {
+      return
+    }
+
     try {
       // 表单验证
       const valid = await formRef.value.validate()
@@ -176,6 +180,7 @@
         return
       }
 
+      // 立即设置 loading 状态，防止重复点击
       loading.value = true
 
       const verifyRes = await fetchVerifyCaptcha({
@@ -196,7 +201,7 @@
         rememberPassword: formData.rememberPassword
       })
 
-      const { token, username: returnedUsername, nickname } = response
+      const { token, refreshToken, username: returnedUsername, nickname } = response
 
       // 验证token
       if (!token) {
@@ -211,8 +216,8 @@
         return
       }
 
-      // 存储 token 和登录状态
-      userStore.setToken(token)
+      // 存储 token、refreshToken 和登录状态
+      userStore.setToken(token, refreshToken)
       userStore.setLoginStatus(true)
 
       // 设置用户信息
@@ -248,8 +253,15 @@
     } catch (error) {
       // 处理 HttpError
       if (error instanceof HttpError) {
+        // 处理验证码错误
         if (error.code === 401 && error.message.includes('验证码')) {
           captchaError.value = error.message
+          refreshCaptcha()
+        }
+        // 处理账户锁定错误（423）
+        else if (error.code === 423) {
+          // 账户锁定错误，HTTP拦截器已经显示了错误消息，这里不需要额外处理
+          // 但可以刷新验证码，让用户重新尝试
           refreshCaptcha()
         }
       } else {

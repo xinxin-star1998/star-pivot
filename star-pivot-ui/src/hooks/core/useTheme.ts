@@ -37,7 +37,6 @@ import AppConfig from '@/config'
 import { SystemThemeTypes } from '@/types/store'
 import { getDarkColor, getLightColor, setElementThemeColor } from '@/utils/ui'
 import { usePreferredDark } from '@vueuse/core'
-import { watch } from 'vue'
 
 export function useTheme() {
   const settingStore = useSettingStore()

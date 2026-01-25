@@ -1,5 +1,4 @@
 import App from './App.vue'
-import { createApp } from 'vue'
 import { initStore } from './store'                 // Store
 import { initRouter } from './router'               // Router
 import language from './locales'                    // 国际化

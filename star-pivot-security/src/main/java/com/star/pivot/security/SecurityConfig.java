@@ -139,6 +139,8 @@ public class SecurityConfig {
         paths.addAll(List.of(
                 "/auth/login",
                 "/api/auth/login",
+                "/auth/refresh",
+                "/api/auth/refresh",
                 "/auth/captcha",
                 "/api/auth/captcha",
                 "/auth/captcha/verify",

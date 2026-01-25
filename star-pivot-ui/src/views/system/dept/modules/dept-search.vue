@@ -64,13 +64,11 @@
 
   // 事件
   function handleReset() {
-    console.log('重置表单')
     emit('reset')
   }
 
   async function handleSearch() {
     await searchBarRef.value.validate()
     emit('search', formData.value)
-    console.log('表单数据', formData.value)
   }
 </script>

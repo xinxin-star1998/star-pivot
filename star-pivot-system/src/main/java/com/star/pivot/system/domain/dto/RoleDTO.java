@@ -69,9 +69,9 @@ public class RoleDTO {
      */
     private List<Long> menuIds;
 
-    /**
-     * 部门ID列表
-     */
-    private List<Long> deptIds;
+//    /**
+//     * 部门ID列表
+//     */
+//    private List<Long> deptIds;
 }
 
