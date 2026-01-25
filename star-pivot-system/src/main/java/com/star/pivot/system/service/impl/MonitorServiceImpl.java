@@ -19,11 +19,11 @@ import com.star.pivot.security.RefreshTokenManager;
 import com.star.pivot.security.RefreshTokenManager.RefreshTokenValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.*;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.connection.DataType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import oshi.SystemInfo;
@@ -478,10 +478,8 @@ public class MonitorServiceImpl implements MonitorService {
         try {
             // 先测试 Redis 连接是否正常
             try {
-                String pingResult = redisTemplate.execute((RedisCallback<String>) connection -> {
-                    return connection.ping();
-                });
-                if (pingResult == null || !"PONG".equals(pingResult)) {
+                String pingResult = redisTemplate.execute((RedisCallback<String>) RedisConnectionCommands::ping);
+                if (!"PONG".equals(pingResult)) {
                     log.error("Redis 连接测试失败：PING 命令返回异常结果: {}", pingResult);
                     RedisMonitorVO vo = new RedisMonitorVO();
                     vo.setAvailable(false);
@@ -504,7 +502,10 @@ public class MonitorServiceImpl implements MonitorService {
                 infoStr = redisTemplate.execute((RedisCallback<String>) connection -> {
                     // 使用 Properties 方式获取，但手动构建字符串避免编码问题
                     try {
-                        Properties props = connection.info();
+                        // 注入 RedisTemplate 或直接获取 RedisConnection
+                        RedisServerCommands serverCommands = connection.serverCommands();
+                        // 获取全量信息（替代原 info()）
+                        Properties props = serverCommands.info();
                         if (props != null && !props.isEmpty()) {
                             // 手动构建字符串，避免 toString() 的编码问题和 Unicode 编码错误
                             StringBuilder sb = new StringBuilder();
@@ -594,7 +595,14 @@ public class MonitorServiceImpl implements MonitorService {
             // 键值统计 - 使用 DBSIZE 命令获取准确的键总数
             RedisMonitorVO.KeyInfo keyInfo = new RedisMonitorVO.KeyInfo();
             try {
-                Long dbSize = redisTemplate.execute((RedisCallback<Long>) connection -> connection.dbSize());
+//                Long dbSize = redisTemplate.execute((RedisCallback<Long>) DefaultedRedisConnection::dbSize);
+//                keyInfo.setTotalKeys(dbSize != null ? dbSize : 0L);
+                Long dbSize = redisTemplate.execute((RedisCallback<Long>) connection -> {
+                    RedisServerCommands serverCommands = connection.serverCommands();
+                    return serverCommands.dbSize();
+                    // 执行原生Redis命令 "DBSIZE"
+//                    return Long.valueOf(connection.execute("DBSIZE").toString());
+                });
                 keyInfo.setTotalKeys(dbSize != null ? dbSize : 0L);
             } catch (Exception e) {
                 log.warn("获取 Redis 键总数失败，尝试解析 db0 字段: {}", e.getMessage());

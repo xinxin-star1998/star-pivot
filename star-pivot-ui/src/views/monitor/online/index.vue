@@ -128,8 +128,8 @@
     { prop: 'browser', label: '浏览器', width: 120 },
     { prop: 'os', label: '操作系统', width: 120 },
     { prop: 'loginTime', label: '登录时间', width: 180 },
-    { prop: 'lastAccessTime', label: '最后访问时间', width: 180 },
-    { prop: 'operation', label: '操作', width: 120, fixed: 'right', slot: 'operation' }
+    { prop: 'lastAccessTime', label: '最后访问时间', width: 180 }
+    // { prop: 'operation', label: '操作', width: 120, fixed: 'right', slot: 'operation' }
   ])
 
   const columnChecks = ref(columns.value.map((col) => col.prop || col.type))

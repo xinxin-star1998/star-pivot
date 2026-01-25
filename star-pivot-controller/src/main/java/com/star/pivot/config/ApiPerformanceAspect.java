@@ -7,7 +7,9 @@ import com.star.pivot.system.mapper.SysMonitorApiPerformanceMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -172,7 +174,7 @@ public class ApiPerformanceAspect {
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTime = System.currentTimeMillis();
         boolean success = false;
-        Object result = null;
+        Object result;
 
         try {
             // 获取请求信息
@@ -195,9 +197,6 @@ public class ApiPerformanceAspect {
             success = true;
             return result;
 
-        } catch (Exception e) {
-            success = false;
-            throw e;
         } finally {
             // 异步记录性能指标（不阻塞主流程）
             try {
@@ -387,6 +386,7 @@ public class ApiPerformanceAspect {
     /**
      * API性能统计信息
      */
+    @Getter
     public static class ApiPerformanceStats {
         private final long totalRequests;
         private final long slowApiRequests;
@@ -407,19 +407,15 @@ public class ApiPerformanceAspect {
             this.slowApiRate = slowApiRate;
         }
 
-        public long getTotalRequests() { return totalRequests; }
-        public long getSlowApiRequests() { return slowApiRequests; }
-        public long getSampledRequests() { return sampledRequests; }
-        public long getQueueSize() { return queueSize; }
-        public long getSlowApiThreshold() { return slowApiThreshold; }
-        public double getSampleRate() { return sampleRate; }
-        public double getSlowApiRate() { return slowApiRate; }
     }
 
     /**
      * API性能记录内部类（用于队列传输）
      */
+    @Setter
+    @Getter
     private static class ApiPerformanceRecord {
+        // Getters and Setters
         private String apiPath;
         private String apiMethod;
         private LocalDate statDate;
@@ -427,18 +423,5 @@ public class ApiPerformanceAspect {
         private long responseTime;
         private boolean success;
 
-        // Getters and Setters
-        public String getApiPath() { return apiPath; }
-        public void setApiPath(String apiPath) { this.apiPath = apiPath; }
-        public String getApiMethod() { return apiMethod; }
-        public void setApiMethod(String apiMethod) { this.apiMethod = apiMethod; }
-        public LocalDate getStatDate() { return statDate; }
-        public void setStatDate(LocalDate statDate) { this.statDate = statDate; }
-        public Integer getStatHour() { return statHour; }
-        public void setStatHour(Integer statHour) { this.statHour = statHour; }
-        public long getResponseTime() { return responseTime; }
-        public void setResponseTime(long responseTime) { this.responseTime = responseTime; }
-        public boolean isSuccess() { return success; }
-        public void setSuccess(boolean success) { this.success = success; }
     }
 }

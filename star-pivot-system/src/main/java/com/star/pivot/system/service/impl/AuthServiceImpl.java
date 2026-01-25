@@ -92,8 +92,7 @@ public class AuthServiceImpl implements AuthService {
             // 认证过程中 CustomerUserDetailService.loadUserByUsername() 已经查询了用户信息
             // 并封装在 LoginUser 对象中，这里直接从 Authentication 中获取即可
             SysUser user = null;
-            if (authentication != null && authentication.getPrincipal() instanceof LoginUser) {
-                LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+            if (authentication != null && authentication.getPrincipal() instanceof LoginUser loginUser) {
                 user = loginUser.getUser();
             }
             
@@ -156,9 +155,6 @@ public class AuthServiceImpl implements AuthService {
         } catch (ServiceException e) {
             // ServiceException已经在上面处理了，这里不需要重复记录
             // 但如果是账户锁定或限流异常，不需要再记录失败次数（已经在对应服务中处理）
-            if (e.getCode() != 423 && e.getCode() != 429) {
-                // 其他业务异常（如验证码错误）已在上面记录失败次数
-            }
             throw e;
         } catch (Exception e) {
             log.error("登录异常: {}", e.getMessage(), e);
