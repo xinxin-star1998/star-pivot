@@ -58,7 +58,9 @@
 
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
+  import { useAuth } from '@/hooks/core/useAuth'
   import { fetchDeleteRole, fetchGetRoleList } from '@/api/role/role'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtButtonMore, {
     type ButtonMoreItem
   } from '@/components/core/forms/art-button-more/index.vue'
@@ -69,6 +71,8 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { useRouter } from 'vue-router'
+
+  const { hasAuth } = useAuth()
 
   defineOptions({ name: 'Role' })
 
@@ -119,7 +123,7 @@
         {
           type: 'index',
           label: '序号',
-          width: 100,
+          width: 70,
           index: (index: number) => {
             return (pagination.current - 1) * pagination.size + index + 1
           }
@@ -127,12 +131,12 @@
         {
           prop: 'roleName',
           label: '角色名称',
-          minWidth: 120
+          minWidth: 100
         },
         {
           prop: 'roleKey',
           label: '角色编码',
-          minWidth: 120
+          minWidth: 100
         },
         {
           prop: 'remark',
@@ -161,30 +165,42 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 200,
+          width: 180,
           fixed: 'right',
           formatter: (row) => {
-            const menuList: ButtonMoreItem[] = [
+            // admin 角色编码不显示任何操作按钮
+            if (row.roleKey === 'admin') {
+              return h('span', { style: 'color: #999' }, '')
+            }
+
+            const actions: any[] = []
+
+            // 编辑、删除放外面，直接显示
+            if (hasAuth('system:role:edit')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'edit',
+                  onClick: () => showDialog('edit', row)
+                })
+              )
+            }
+            if (hasAuth('system:role:delete')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'delete',
+                  onClick: () => deleteRole(row)
+                })
+              )
+            }
+
+            // 数据权限、分配用户放入更多下拉
+            const moreList: ButtonMoreItem[] = [
               {
                 key: 'assignDataScope',
                 label: '数据权限',
                 icon: 'ri:shield-keyhole-line',
                 color: 'var(--el-color-primary)',
                 auth: 'system:role:assignDataScope'
-              },
-              {
-                key: 'edit',
-                label: '编辑角色',
-                icon: 'ri:pencil-line',
-                color: 'var(--el-color-info)',
-                auth: 'system:role:edit'
-              },
-              {
-                key: 'delete',
-                label: '删除角色',
-                icon: 'ri:delete-bin-5-line',
-                color: 'var(--el-color-danger)',
-                auth: 'system:role:delete'
               },
               {
                 key: 'assignUser',
@@ -194,26 +210,23 @@
                 auth: 'system:role:allocatedList'
               }
             ]
+            if (moreList.some((item) => !item.auth || hasAuth(item.auth!))) {
+              actions.push(
+                h(ArtButtonMore, {
+                  list: moreList,
+                  onClick: (item: ButtonMoreItem) => {
+                    if (item.key === 'assignDataScope') showAssignDataScopeDialog(row)
+                    else if (item.key === 'assignUser') assignUser(row)
+                  }
+                })
+              )
+            }
 
-            return h(ArtButtonMore, {
-              list: menuList,
-              onClick: (item: ButtonMoreItem) => {
-                switch (item.key) {
-                  case 'assignDataScope':
-                    showAssignDataScopeDialog(row)
-                    break
-                  case 'edit':
-                    showDialog('edit', row)
-                    break
-                  case 'delete':
-                    deleteRole(row)
-                    break
-                  case 'assignUser':
-                    assignUser(row)
-                    break
-                }
-              }
-            })
+            if (actions.length === 0) {
+              return h('span', { style: 'color: #999' }, '')
+            }
+
+            return h('div', { class: 'flex items-center gap-0' }, actions)
           }
         }
       ]
