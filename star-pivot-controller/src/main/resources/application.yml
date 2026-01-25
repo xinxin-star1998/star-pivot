@@ -20,6 +20,19 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
+  # Druid 监控配置
+  datasource:
+    druid:
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        login-username: admin
+        login-password: admin123
+        reset-enable: false
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
 
 # 服务器配置
 server:
@@ -98,3 +111,32 @@ login:
     lock-duration-minutes: 5
     # 失败次数记录的过期时间（分钟），应大于锁定时长
     failure-record-expire-minutes: 10
+
+# StarPivot 统一配置（可选，用于集中管理 JWT/Cache/Monitor）
+# 若未配置，StarPivotProperties 使用代码内默认值
+star-pivot:
+  jwt:
+    expiration: ${JWT_EXPIRATION:86400000}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+  cache:
+    menu-tree-ttl: 3600
+    dict-data-ttl: 3600
+    user-permissions-ttl: 1800
+  monitor:
+    api-performance-enabled: true
+    slow-api-threshold-ms: 1000
+    sample-rate: 0.1
+
+# Spring Boot Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        # 暴露健康、信息、指标；生产环境可按需增加 prometheus
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+      # 启用 Kubernetes 就绪/存活探针（如需 K8s 部署可开启）
+      probes:
+        enabled: false

@@ -32,6 +32,15 @@ public interface SysUserService extends IService<SysUser>, ImportExportService {
 
     List<SysRole> getRolesByUserId(Long userId);
 
+    /**
+     * 使用关联查询优化，一次性获取用户及其角色信息
+     * 替代多次查询，提升性能
+     * 
+     * @param userId 用户ID
+     * @return 用户信息（包含角色列表）
+     */
+    SysUser getUserWithRoles(Long userId);
+
     List<SysMenu> getMenuByUserId(Long userId);
 
     boolean addUser(UserDTO userDTO);

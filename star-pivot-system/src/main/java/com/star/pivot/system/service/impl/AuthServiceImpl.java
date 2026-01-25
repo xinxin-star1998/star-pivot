@@ -102,8 +102,14 @@ public class AuthServiceImpl implements AuthService {
             claims.put("userId", user.getUserId());
             String token = jwtUtil.generateToken(request.getUsername(), claims);
 
-            // 5. 生成刷新令牌（Refresh Token），用于后续无感刷新
-            String refreshToken = refreshTokenManager.generateAndStoreRefreshToken(user.getUserId());
+            // 5. 生成刷新令牌（Refresh Token），并存储完整的登录信息到 Redis
+            String refreshToken = refreshTokenManager.generateAndStoreRefreshToken(
+                user.getUserId(),
+                ipaddr,
+                browser,
+                os,
+                loginLocation
+            );
 
             // 6. 返回登录响应
             LoginResponse response = new LoginResponse();

@@ -37,6 +37,9 @@ let unauthorizedTimer: ReturnType<typeof setTimeout> | null = null
 let isRefreshing = false // 是否正在刷新令牌
 let refreshSubscribers: Array<(token: string) => void> = [] // 等待刷新完成的请求队列
 
+/** 请求去重：存储正在进行的请求，避免重复请求 */
+const pendingRequests = new Map<string, Promise<any>>()
+
 /**
  * 订阅刷新完成事件
  * @param cb 刷新完成后的回调函数
@@ -364,7 +367,25 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-/** 请求函数 */
+/**
+ * 生成请求唯一标识（用于请求去重）
+ * @param config 请求配置
+ * @returns 请求唯一key
+ */
+function generateRequestKey(config: ExtendedAxiosRequestConfig): string {
+  const method = (config.method || 'GET').toUpperCase()
+  const url = config.url || ''
+  // 将params和data序列化为字符串（忽略顺序）
+  const paramsStr = config.params
+    ? JSON.stringify(config.params, Object.keys(config.params).sort())
+    : ''
+  const dataStr = config.data
+    ? JSON.stringify(config.data, Object.keys(config.data as object).sort())
+    : ''
+  return `${method}_${url}_${paramsStr}_${dataStr}`
+}
+
+/** 请求函数（带请求去重） */
 async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> {
   // POST | PUT 参数自动填充
   if (
@@ -376,45 +397,62 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
     config.params = undefined
   }
 
-  try {
-    const res = await axiosInstance.request<BaseResponse<T> | Blob>(config)
-
-    // 如果是 blob 响应类型
-    if (config.responseType === 'blob' || res.data instanceof Blob) {
-      if (config.returnFullResponse) {
-        const headers: Record<string, string> = {}
-        const h = res.headers as Record<string, unknown>
-        if (h && typeof h === 'object') {
-          for (const k of Object.keys(h)) {
-            const v = h[k]
-            if (typeof v === 'string') headers[k] = v
-            else if (Array.isArray(v) && v.length) headers[k] = String(v[0])
-          }
-        }
-        return { data: res.data as Blob, headers } as T
-      }
-      return res.data as T
-    }
-
-    // JSON 响应类型，进行常规处理
-    const jsonData = res.data as BaseResponse<T>
-
-    // 显示成功消息
-    if (config.showSuccessMessage) {
-      const successMsg = jsonData.msg || jsonData.message
-      if (successMsg) {
-        showSuccess(successMsg)
-      }
-    }
-
-    return jsonData.data as T
-  } catch (error) {
-    if (error instanceof HttpError && error.code !== ApiStatus.unauthorized) {
-      const showMsg = config.showErrorMessage !== false
-      showError(error, showMsg)
-    }
-    return Promise.reject(error)
+  // 请求去重：如果存在相同的pending请求，直接返回该Promise
+  const requestKey = generateRequestKey(config)
+  if (pendingRequests.has(requestKey)) {
+    return pendingRequests.get(requestKey) as Promise<T>
   }
+
+  // 创建新的请求Promise
+  const requestPromise = (async (): Promise<T> => {
+    try {
+      const res = await axiosInstance.request<BaseResponse<T> | Blob>(config)
+
+      // 如果是 blob 响应类型
+      if (config.responseType === 'blob' || res.data instanceof Blob) {
+        if (config.returnFullResponse) {
+          const headers: Record<string, string> = {}
+          const h = res.headers as Record<string, unknown>
+          if (h && typeof h === 'object') {
+            for (const k of Object.keys(h)) {
+              const v = h[k]
+              if (typeof v === 'string') headers[k] = v
+              else if (Array.isArray(v) && v.length) headers[k] = String(v[0])
+            }
+          }
+          return { data: res.data as Blob, headers } as T
+        }
+        return res.data as T
+      }
+
+      // JSON 响应类型，进行常规处理
+      const jsonData = res.data as BaseResponse<T>
+
+      // 显示成功消息
+      if (config.showSuccessMessage) {
+        const successMsg = jsonData.msg || jsonData.message
+        if (successMsg) {
+          showSuccess(successMsg)
+        }
+      }
+
+      return jsonData.data as T
+    } catch (error) {
+      if (error instanceof HttpError && error.code !== ApiStatus.unauthorized) {
+        const showMsg = config.showErrorMessage !== false
+        showError(error, showMsg)
+      }
+      return Promise.reject(error)
+    } finally {
+      // 请求完成（成功或失败）后，从pendingRequests中移除
+      pendingRequests.delete(requestKey)
+    }
+  })()
+
+  // 将请求Promise存储到Map中
+  pendingRequests.set(requestKey, requestPromise)
+
+  return requestPromise
 }
 
 /** API方法集合 */

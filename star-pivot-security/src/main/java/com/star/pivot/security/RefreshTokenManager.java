@@ -52,12 +52,26 @@ public class RefreshTokenManager {
     private long refreshTokenExpiration;
 
     /**
-     * 生成刷新令牌并存储
+     * 生成刷新令牌并存储（不带登录信息，兼容旧代码）
      *
      * @param userId 用户 ID
      * @return 刷新令牌原文（返回给前端）
      */
     public String generateAndStoreRefreshToken(Long userId) {
+        return generateAndStoreRefreshToken(userId, null, null, null, null);
+    }
+
+    /**
+     * 生成刷新令牌并存储（带完整登录信息）
+     *
+     * @param userId       用户 ID
+     * @param ipaddr       登录 IP 地址
+     * @param browser      浏览器信息
+     * @param os           操作系统信息
+     * @param loginLocation 登录地点
+     * @return 刷新令牌原文（返回给前端）
+     */
+    public String generateAndStoreRefreshToken(Long userId, String ipaddr, String browser, String os, String loginLocation) {
         if (userId == null) {
             throw new IllegalArgumentException("生成刷新令牌时 userId 不能为空");
         }
@@ -70,14 +84,20 @@ public class RefreshTokenManager {
         String key = buildKey(userId);
 
         try {
-            // 记录生成时间，方便排查问题
+            Date now = new Date();
+            // 记录完整的登录信息
             RefreshTokenValue value = new RefreshTokenValue();
             value.setTokenHash(tokenHash);
-            value.setIssuedAt(new Date());
+            value.setIssuedAt(now);
+            value.setIpaddr(ipaddr);
+            value.setBrowser(browser);
+            value.setOs(os);
+            value.setLoginLocation(loginLocation);
+            value.setLastAccessTime(now);
 
             redisTemplate.opsForValue().set(key, value, refreshTokenExpiration, TimeUnit.MILLISECONDS);
 
-            log.debug("已为用户 {} 生成刷新令牌，key={}", userId, key);
+            log.debug("已为用户 {} 生成刷新令牌并存储登录信息，key={}, ip={}", userId, key, ipaddr);
         } catch (Exception e) {
             log.error("生成刷新令牌失败，userId={}", userId, e);
             throw new RuntimeException("生成刷新令牌失败", e);
@@ -85,6 +105,34 @@ public class RefreshTokenManager {
 
         // 仅将原始刷新令牌返回给调用方
         return rawToken;
+    }
+
+    /**
+     * 更新最后访问时间
+     *
+     * @param userId 用户 ID
+     */
+    public void updateLastAccessTime(Long userId) {
+        if (userId == null) {
+            return;
+        }
+        String key = buildKey(userId);
+        try {
+            Object stored = redisTemplate.opsForValue().get(key);
+            if (stored instanceof RefreshTokenValue) {
+                RefreshTokenValue value = (RefreshTokenValue) stored;
+                value.setLastAccessTime(new Date());
+                // 获取剩余过期时间，保持原有的过期时间
+                Long expire = redisTemplate.getExpire(key, TimeUnit.MILLISECONDS);
+                if (expire != null && expire > 0) {
+                    redisTemplate.opsForValue().set(key, value, expire, TimeUnit.MILLISECONDS);
+                } else {
+                    redisTemplate.opsForValue().set(key, value, refreshTokenExpiration, TimeUnit.MILLISECONDS);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("更新最后访问时间失败，userId={}", userId, e);
+        }
     }
 
     /**
@@ -153,6 +201,24 @@ public class RefreshTokenManager {
     }
 
     /**
+     * 获取刷新令牌的完整信息（包括登录信息）
+     *
+     * @param userId 用户 ID
+     * @return RefreshTokenValue，如果不存在或已过期则返回 null
+     */
+    public RefreshTokenValue getRefreshTokenValue(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        String key = buildKey(userId);
+        Object stored = redisTemplate.opsForValue().get(key);
+        if (stored instanceof RefreshTokenValue) {
+            return (RefreshTokenValue) stored;
+        }
+        return null;
+    }
+
+    /**
      * 构建 Redis key
      */
     private String buildKey(Long userId) {
@@ -162,22 +228,54 @@ public class RefreshTokenManager {
     /**
      * 刷新令牌在 Redis 中的存储结构
      *
-     * <p>为了减少 Redis 中的字段数量，这里仅存储：
+     * <p>存储内容：
      * <ul>
      *   <li>tokenHash：原始刷新令牌的哈希值</li>
-     *   <li>issuedAt：签发时间</li>
+     *   <li>issuedAt：签发时间（登录时间）</li>
+     *   <li>ipaddr：登录 IP 地址</li>
+     *   <li>browser：浏览器信息</li>
+     *   <li>os：操作系统信息</li>
+     *   <li>loginLocation：登录地点</li>
+     *   <li>lastAccessTime：最后访问时间</li>
      * </ul>
      */
     public static class RefreshTokenValue implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
         /**
          * 刷新令牌原文的哈希值
          */
         private String tokenHash;
 
         /**
-         * 刷新令牌签发时间
+         * 刷新令牌签发时间（登录时间）
          */
         private Date issuedAt;
+
+        /**
+         * 登录 IP 地址
+         */
+        private String ipaddr;
+
+        /**
+         * 浏览器信息
+         */
+        private String browser;
+
+        /**
+         * 操作系统信息
+         */
+        private String os;
+
+        /**
+         * 登录地点
+         */
+        private String loginLocation;
+
+        /**
+         * 最后访问时间
+         */
+        private Date lastAccessTime;
 
         public String getTokenHash() {
             return tokenHash;
@@ -193,6 +291,46 @@ public class RefreshTokenManager {
 
         public void setIssuedAt(Date issuedAt) {
             this.issuedAt = issuedAt;
+        }
+
+        public String getIpaddr() {
+            return ipaddr;
+        }
+
+        public void setIpaddr(String ipaddr) {
+            this.ipaddr = ipaddr;
+        }
+
+        public String getBrowser() {
+            return browser;
+        }
+
+        public void setBrowser(String browser) {
+            this.browser = browser;
+        }
+
+        public String getOs() {
+            return os;
+        }
+
+        public void setOs(String os) {
+            this.os = os;
+        }
+
+        public String getLoginLocation() {
+            return loginLocation;
+        }
+
+        public void setLoginLocation(String loginLocation) {
+            this.loginLocation = loginLocation;
+        }
+
+        public Date getLastAccessTime() {
+            return lastAccessTime;
+        }
+
+        public void setLastAccessTime(Date lastAccessTime) {
+            this.lastAccessTime = lastAccessTime;
         }
     }
 }

@@ -13,14 +13,21 @@
     </ElRow>
 
     <ElRow :gutter="20">
-      <ElCol :sm="24" :md="24" :lg="12">
-        <NewUser />
+      <ElCol :sm="24" :md="12" :lg="8">
+        <HealthStatus />
       </ElCol>
-      <ElCol :sm="24" :md="12" :lg="6">
-        <Dynamic />
-      </ElCol>
-      <ElCol :sm="24" :md="12" :lg="6">
-        <TodoList />
+      <ElCol :sm="24" :md="12" :lg="16">
+        <ElRow :gutter="20">
+          <ElCol :sm="24" :md="24" :lg="12">
+            <NewUser />
+          </ElCol>
+          <ElCol :sm="24" :md="12" :lg="6">
+            <Dynamic />
+          </ElCol>
+          <ElCol :sm="24" :md="12" :lg="6">
+            <TodoList />
+          </ElCol>
+        </ElRow>
       </ElCol>
     </ElRow>
 
@@ -32,6 +39,7 @@
   import CardList from './modules/card-list.vue'
   import ActiveUser from './modules/active-user.vue'
   import SalesOverview from './modules/sales-overview.vue'
+  import HealthStatus from './modules/health-status.vue'
   import NewUser from './modules/new-user.vue'
   import Dynamic from './modules/dynamic-stats.vue'
   import TodoList from './modules/todo-list.vue'

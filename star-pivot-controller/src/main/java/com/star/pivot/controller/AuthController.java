@@ -15,6 +15,9 @@ import com.star.pivot.system.service.AuthService;
 import com.star.pivot.system.service.CaptchaService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.SysMenuService;
+import com.star.pivot.system.service.SysDeptService;
+import com.star.pivot.system.service.OnlineUserService;
+import com.star.pivot.system.domain.bo.OnlineUserVO;
 import com.star.pivot.security.JwtBlackListManager;
 import com.star.pivot.security.JwtUtil;
 import com.star.pivot.security.RefreshTokenManager;
@@ -26,6 +29,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,10 +46,12 @@ public class AuthController {
     private final AuthService authService;
     private final SysUserService sysUserService;
     private final SysMenuService sysMenuService;
+    private final SysDeptService sysDeptService;
     private final JwtBlackListManager jwtBlackListManager;
     private final JwtUtil jwtUtil;
     private final CaptchaService captchaService;
     private final RefreshTokenManager refreshTokenManager;
+    private final OnlineUserService onlineUserService;
 
     /**
      * 用户登录接口
@@ -98,7 +104,8 @@ public class AuthController {
             return Result.error(401, "刷新令牌无效或已过期，请重新登录");
         }
 
-        // 刷新成功：先吊销旧的刷新令牌，再生成新的访问令牌和刷新令牌
+        // 刷新成功：先获取旧的登录信息（如果有），然后吊销旧的刷新令牌
+        RefreshTokenManager.RefreshTokenValue oldTokenValue = refreshTokenManager.getRefreshTokenValue(userId);
         refreshTokenManager.revokeRefreshToken(userId);
 
         Map<String, Object> claims = new HashMap<>();
@@ -106,7 +113,21 @@ public class AuthController {
         claims.put("userId", userId);
         String newAccessToken = jwtUtil.generateToken(username, claims);
 
-        String newRefreshToken = refreshTokenManager.generateAndStoreRefreshToken(userId);
+        // 生成新的刷新令牌，保留原有的登录信息（IP、浏览器、操作系统等），但更新登录时间和最后访问时间
+        String newRefreshToken;
+        if (oldTokenValue != null) {
+            // 保留原有的登录信息，仅更新时间
+            newRefreshToken = refreshTokenManager.generateAndStoreRefreshToken(
+                userId,
+                oldTokenValue.getIpaddr(),
+                oldTokenValue.getBrowser(),
+                oldTokenValue.getOs(),
+                oldTokenValue.getLoginLocation()
+            );
+        } else {
+            // 如果没有旧的登录信息，使用默认值（兼容旧数据）
+            newRefreshToken = refreshTokenManager.generateAndStoreRefreshToken(userId);
+        }
 
         LoginResponse response = new LoginResponse();
         response.setToken(newAccessToken);
@@ -185,7 +206,10 @@ public class AuthController {
                 }
 
                 // 同步吊销该用户的刷新令牌，避免登出后仍可刷新
+                // 在吊销前，先获取在线用户信息并保存历史记录
                 if (userId != null) {
+                    // 获取在线用户信息并保存历史记录
+                    saveOnlineUserHistory(userId, "0"); // 0表示正常登出
                     refreshTokenManager.revokeRefreshToken(userId);
                 }
             } else {
@@ -252,8 +276,10 @@ public class AuthController {
                     .body(Result.error(404, "用户不存在"));
         }
 
-        // 查询用户的角色和权限
-        List<SysRole> roles = sysUserService.getRolesByUserId(user.getUserId());
+        // ✅ 使用关联查询优化，一次性获取用户及其角色信息，减少数据库查询次数
+        SysUser userWithRoles = sysUserService.getUserWithRoles(user.getUserId());
+        List<SysRole> roles = userWithRoles.getRoles() != null ? 
+            userWithRoles.getRoles() : new ArrayList<>();
         
         List<SysMenu> permissions;
         // 检查用户是否拥有admin角色或dataScope=1的角色，如果有则查询所有菜单树
@@ -269,12 +295,81 @@ public class AuthController {
             permissions = sysUserService.getMenuByUserId(user.getUserId());
         }
 
-        // 组装返回数据
+        // 组装返回数据（使用 userWithRoles 以包含完整的用户信息）
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("user", user);
+        userInfo.put("user", userWithRoles);
         userInfo.put("roles", roles);
         userInfo.put("permissions", permissions);
 
         return ResponseEntity.ok(Result.success(userInfo));
+    }
+
+    /**
+     * 保存在线用户历史记录
+     * <p>
+     * 说明：从 Redis 中获取在线用户信息，然后保存到数据库作为历史记录。
+     * </p>
+     *
+     * @param userId     用户ID
+     * @param logoutType 下线类型（0正常登出 1强制下线 2过期下线）
+     */
+    private void saveOnlineUserHistory(Long userId, String logoutType) {
+        try {
+            // 从 RefreshTokenManager 获取在线用户信息
+            RefreshTokenManager.RefreshTokenValue tokenValue = refreshTokenManager.getRefreshTokenValue(userId);
+            if (tokenValue == null) {
+                log.debug("用户 {} 的刷新令牌不存在，跳过保存历史记录", userId);
+                return;
+            }
+
+            // 从数据库获取用户信息
+            SysUser user = sysUserService.getById(userId);
+            if (user == null) {
+                log.warn("用户 {} 不存在，跳过保存历史记录", userId);
+                return;
+            }
+
+            // 构建 OnlineUserVO
+            OnlineUserVO onlineUser = new OnlineUserVO();
+            onlineUser.setSessionId("jwt:refresh:user:" + userId);
+            onlineUser.setUserId(userId);
+            onlineUser.setUserName(user.getUserName());
+            onlineUser.setNickName(user.getNickName());
+            onlineUser.setIpaddr(tokenValue.getIpaddr());
+            onlineUser.setBrowser(tokenValue.getBrowser());
+            onlineUser.setOs(tokenValue.getOs());
+            onlineUser.setLoginLocation(tokenValue.getLoginLocation());
+
+            // 转换时间
+            if (tokenValue.getIssuedAt() != null) {
+                onlineUser.setLoginTime(java.time.LocalDateTime.ofInstant(
+                    tokenValue.getIssuedAt().toInstant(),
+                    java.time.ZoneId.systemDefault()
+                ));
+            }
+            if (tokenValue.getLastAccessTime() != null) {
+                onlineUser.setLastAccessTime(java.time.LocalDateTime.ofInstant(
+                    tokenValue.getLastAccessTime().toInstant(),
+                    java.time.ZoneId.systemDefault()
+                ));
+            }
+
+            // 获取部门名称
+            if (user.getDeptId() != null && sysDeptService != null) {
+                try {
+                    com.star.pivot.system.domain.entity.SysDept dept = sysDeptService.getById(user.getDeptId());
+                    if (dept != null) {
+                        onlineUser.setDeptName(dept.getDeptName());
+                    }
+                } catch (Exception e) {
+                    log.debug("获取部门信息失败，deptId: {}", user.getDeptId());
+                }
+            }
+
+            // 保存历史记录
+            onlineUserService.saveOnlineUserHistory(onlineUser, logoutType);
+        } catch (Exception e) {
+            log.warn("保存在线用户历史记录失败，userId: {}", userId, e);
+        }
     }
 }

@@ -195,6 +195,18 @@
                 <artifactId>fastjson2</artifactId>
                 <version>${fastjson.version}</version>
             </dependency>
+            <!-- Spring Boot Actuator（用于系统指标监控） -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-actuator</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <!-- OSHI（操作系统和硬件信息） -->
+            <dependency>
+                <groupId>com.github.oshi</groupId>
+                <artifactId>oshi-core</artifactId>
+                <version>${oshi.version}</version>
+            </dependency>
             <!-- io常用工具类 -->
 <!--            <dependency>-->
 <!--                <groupId>commons-io</groupId>-->

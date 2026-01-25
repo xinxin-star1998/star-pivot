@@ -85,17 +85,23 @@ public class RedisConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer))
                 .disableCachingNullValues(); // 不缓存 null 值
 
-        // 为不同的缓存名称配置不同的过期时间
+        // 为不同的缓存名称配置不同的过期时间（添加随机时间防止缓存雪崩）
+        // 注意：这里的随机时间在配置类初始化时生成，不同缓存名称会有不同的随机偏移
+        // 虽然不能做到每个缓存项都有不同的过期时间，但不同缓存类型之间的时间差可以缓解缓存雪崩
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+        java.util.Random random = new java.util.Random();
         
-        // 用户权限缓存：30 分钟过期
-        cacheConfigurations.put("userPermissions", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+        // 用户权限缓存：30 分钟 + 随机0-10分钟
+        cacheConfigurations.put("userPermissions", 
+                defaultConfig.entryTtl(Duration.ofMinutes(30).plusMinutes(random.nextInt(10))));
         
-        // 菜单树缓存：1 小时过期（使用默认配置）
-        cacheConfigurations.put("menuTree", defaultConfig);
+        // 菜单树缓存：1 小时 + 随机0-30分钟
+        cacheConfigurations.put("menuTree", 
+                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
         
-        // 字典数据缓存：1 小时过期（使用默认配置）
-        cacheConfigurations.put("dictData", defaultConfig);
+        // 字典数据缓存：1 小时 + 随机0-30分钟
+        cacheConfigurations.put("dictData", 
+                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
 
         // 创建 RedisCacheManager
         return RedisCacheManager.builder(connectionFactory)

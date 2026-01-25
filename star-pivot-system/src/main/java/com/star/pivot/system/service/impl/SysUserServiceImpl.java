@@ -25,6 +25,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
@@ -72,6 +74,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      * @return 分页结果
      */
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<UserVO> pageList(UserReqBo userReqBo) {
         Page<SysUser> page = new Page<>(userReqBo.getPageNum(), userReqBo.getPageSize());
         // 1. 获取当前用户数据权限
@@ -99,22 +102,32 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SysUser getUserByUsername(String username) {
         return sysUserMapper.selectOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getUserName, username));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SysRole> getRolesByUserId(Long userId) {
         return sysUserMapper.getRolesByUserId(userId);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public SysUser getUserWithRoles(Long userId) {
+        // 使用 LEFT JOIN 一次性查询用户及其角色信息，避免 N+1 查询问题
+        return sysUserMapper.selectUserWithRoles(userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<SysMenu> getMenuByUserId(Long userId) {
         return sysUserMapper.getMenuByUserId(userId);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public boolean addUser(UserDTO userDTO) {
         // 检查用户名是否已存在
         if (getUserByUsername(userDTO.getUserName()) != null) {
@@ -153,6 +166,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserVO selectByUserId(Long userId) {
         UserVO vo;
         //查询用户信息
@@ -164,7 +178,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     * 修改用户信息
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public boolean updateUser(UserDTO userDTO) {
         SysUser user = this.getById(userDTO.getUserId());
         if (user == null || "2".equals(user.getDelFlag())) {
@@ -251,7 +265,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public boolean deleteUserByIds(List<Long> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return false;
@@ -347,7 +361,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      * @return 成功导入的用户数量
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public int importUsers(List<Map<String, Object>> rowList) {
         if (rowList == null || rowList.isEmpty()) {
             throw new BusinessException("导入数据不能为空");
@@ -654,6 +668,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     
     /**
      * 转换为VO（单用户查询使用）
+     * 优化：使用批量查询避免N+1查询问题
      */
     private UserVO convertToVO(SysUser user) {
         UserVO vo = new UserVO();
@@ -674,7 +689,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             vo.setRoleNames(roles.stream().map(SysRole::getRoleName).collect(Collectors.toList()));
         }
 
-        // 查询岗位信息
+        // 查询岗位信息（优化：使用批量查询避免N+1问题）
         LambdaQueryWrapper<UserPost> postWrapper = new LambdaQueryWrapper<>();
         postWrapper.eq(UserPost::getUserId, user.getUserId());
         List<UserPost> userPosts = userPostMapper.selectList(postWrapper);
@@ -682,13 +697,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             List<Long> postIds = userPosts.stream().map(UserPost::getPostId).collect(Collectors.toList());
             vo.setPostIds(postIds);
 
-            List<String> postNames = new ArrayList<>();
-            for (Long postId : postIds) {
-                SysPost post = postMapper.selectById(postId);
-                if (post != null) {
-                    postNames.add(post.getPostName());
-                }
-            }
+            // 批量查询岗位信息，避免循环查询
+            List<SysPost> postList = postMapper.selectList(new LambdaQueryWrapper<SysPost>().in(SysPost::getPostId, postIds));
+            Map<Long, String> postNameMap = postList.stream()
+                    .collect(Collectors.toMap(SysPost::getPostId, SysPost::getPostName, (k1, k2) -> k1));
+            
+            // 按postIds顺序构建postNames列表
+            List<String> postNames = postIds.stream()
+                    .map(postNameMap::get)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
             vo.setPostNames(postNames);
         }
 

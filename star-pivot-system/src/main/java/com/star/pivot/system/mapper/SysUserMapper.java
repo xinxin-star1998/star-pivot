@@ -25,6 +25,14 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 
     List<SysRole> getRolesByUserId(@Param("userId") Long userId);
 
+    /**
+     * 使用 LEFT JOIN 一次性查询用户及其角色信息（关联查询优化）
+     * 
+     * @param userId 用户ID
+     * @return 用户信息（包含角色列表）
+     */
+    SysUser selectUserWithRoles(@Param("userId") Long userId);
+
     List<SysMenu> getMenuByUserId(@Param("userId") Long userId);
 
     IPage<SysUser> getUserListByRoleId(Page<SysUser> page, @Param("param") Map<String, Object> param);
