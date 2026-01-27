@@ -215,7 +215,7 @@
     const sampleSize = Math.min(data.length, 100) // 只取前100行计算列宽
     const columns = Object.keys(data[0])
 
-    const cols = (Object.values(props.columns ?? {}) as ColumnConfig[])
+    const cols = Object.values(props.columns ?? {}) as ColumnConfig[]
     return columns.map((column) => {
       // 使用配置的列宽度
       const configWidth = cols.find((col) => col.title === column)?.width

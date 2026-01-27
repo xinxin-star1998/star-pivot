@@ -4,8 +4,16 @@
     <ElCard class="art-table-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <span>Druid 数据库监控</span>
+          <span>Druid 数据库监控（自定义页面）</span>
           <div>
+            <ElButton
+              type="info"
+              :icon="Link"
+              @click="openBuiltInPage"
+              style="margin-right: 10px"
+            >
+              打开内置页面
+            </ElButton>
             <ElSwitch
               v-model="includeSlowSql"
               active-text="包含慢SQL"
@@ -149,7 +157,9 @@
               </ElTableColumn>
               <ElTableColumn prop="errorCount" label="错误次数" width="100">
                 <template #default="{ row }">
-                  <ElTag v-if="(row.errorCount || 0) > 0" type="danger">{{ row?.errorCount }}</ElTag>
+                  <ElTag v-if="(row.errorCount || 0) > 0" type="danger">{{
+                    row?.errorCount
+                  }}</ElTag>
                   <span v-else>0</span>
                 </template>
               </ElTableColumn>
@@ -162,9 +172,10 @@
 </template>
 
 <script setup lang="ts">
-  import { Refresh } from '@element-plus/icons-vue'
+  import { Refresh, Link } from '@element-plus/icons-vue'
   import { fetchGetDruidMonitorInfo } from '@/api/monitor/druid'
   import type { DruidMonitorInfo } from '@/types/api/monitor'
+  import { router } from '@/router'
 
   defineOptions({ name: 'DruidMonitor' })
 
@@ -247,6 +258,11 @@
     getData()
   }
 
+  // 打开 Druid 内置监控页面
+  const openBuiltInPage = () => {
+    router.push('/monitor/druid-iframe')
+  }
+
   // 自动刷新（每10秒）
   const startAutoRefresh = () => {
     if (refreshTimer) {
@@ -282,8 +298,8 @@
 
   .card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
   }
 
   .text-success {
@@ -303,10 +319,10 @@
   }
 
   .sql-text {
-    font-family: monospace;
-    font-size: 12px;
     max-width: 300px;
     overflow: hidden;
+    font-family: monospace;
+    font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }

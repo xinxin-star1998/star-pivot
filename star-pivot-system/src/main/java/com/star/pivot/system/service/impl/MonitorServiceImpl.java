@@ -9,7 +9,6 @@ import com.star.pivot.system.domain.bo.RedisMonitorVO;
 import com.star.pivot.system.domain.bo.ServerInfoVO;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.mapper.SysMonitorApiPerformanceMapper;
-import com.star.pivot.system.mapper.SysMonitorHistoryMapper;
 import com.star.pivot.system.service.MonitorService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.SysDeptService;
@@ -83,9 +82,6 @@ public class MonitorServiceImpl implements MonitorService {
 
     @Autowired(required = false)
     private OnlineUserService onlineUserService;
-
-    @Autowired(required = false)
-    private SysMonitorHistoryMapper monitorHistoryMapper;
 
     @Autowired(required = false)
     private SysMonitorApiPerformanceMapper apiPerformanceMapper;
@@ -1038,63 +1034,6 @@ public class MonitorServiceImpl implements MonitorService {
         }
     }
 
-    @Override
-    public List<Map<String, Object>> getHistoryData(String metricType, LocalDateTime startTime, LocalDateTime endTime) {
-        try {
-            List<com.star.pivot.system.domain.entity.SysMonitorHistory> historyList = 
-                    monitorHistoryMapper.selectByMetricTypeAndTimeRange(metricType, startTime, endTime);
-            
-            return historyList.stream().map(history -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("time", history.getCollectTime());
-                map.put("value", history.getMetricValue());
-                map.put("unit", history.getMetricUnit());
-                return map;
-            }).collect(java.util.stream.Collectors.toList());
-        } catch (Exception e) {
-            log.error("查询历史监控数据失败", e);
-            return new ArrayList<>();
-        }
-    }
-
-    @Override
-    public List<Map<String, Object>> getMultiMetricHistoryData(List<String> metricTypes, LocalDateTime startTime, LocalDateTime endTime) {
-        try {
-            List<com.star.pivot.system.domain.entity.SysMonitorHistory> historyList = 
-                    monitorHistoryMapper.selectByMetricTypesAndTimeRange(metricTypes, startTime, endTime);
-            
-            // 按指标类型分组
-            Map<String, List<Map<String, Object>>> groupedData = new HashMap<>();
-            for (com.star.pivot.system.domain.entity.SysMonitorHistory history : historyList) {
-                String type = history.getMetricType();
-                groupedData.computeIfAbsent(type, k -> new ArrayList<>()).add(createHistoryMap(history));
-            }
-            
-            // 转换为列表格式
-            List<Map<String, Object>> result = new ArrayList<>();
-            for (Map.Entry<String, List<Map<String, Object>>> entry : groupedData.entrySet()) {
-                Map<String, Object> metricData = new HashMap<>();
-                metricData.put("metricType", entry.getKey());
-                metricData.put("data", entry.getValue());
-                result.add(metricData);
-            }
-            
-            return result;
-        } catch (Exception e) {
-            log.error("查询多指标历史数据失败", e);
-            return new ArrayList<>();
-        }
-    }
-
-    @Override
-    public Map<String, Object> getMetricStatistics(String metricType, LocalDateTime startTime, LocalDateTime endTime) {
-        try {
-            return monitorHistoryMapper.selectStatisticsByMetricType(metricType, startTime, endTime);
-        } catch (Exception e) {
-            log.error("查询指标统计信息失败", e);
-            return new HashMap<>();
-        }
-    }
 
     @Override
     public Map<String, Object> getHealthCheck() {
@@ -1178,16 +1117,6 @@ public class MonitorServiceImpl implements MonitorService {
         return health;
     }
 
-    /**
-     * 创建历史数据Map
-     */
-    private Map<String, Object> createHistoryMap(com.star.pivot.system.domain.entity.SysMonitorHistory history) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("time", history.getCollectTime());
-        map.put("value", history.getMetricValue());
-        map.put("unit", history.getMetricUnit());
-        return map;
-    }
 
     /**
      * 检查数据库健康状态

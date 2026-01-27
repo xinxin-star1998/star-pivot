@@ -1,4 +1,3 @@
-
 interface UpgradeLog {
   version: string // 版本号
   title: string // 更新标题

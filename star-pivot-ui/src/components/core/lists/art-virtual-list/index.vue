@@ -1,12 +1,7 @@
 <!-- 虚拟滚动列表组件 -->
 <!-- 用于渲染大量数据，只渲染可见区域，提升性能 -->
 <template>
-  <div
-    ref="containerRef"
-    class="art-virtual-list"
-    :style="containerStyle"
-    @scroll="handleScroll"
-  >
+  <div ref="containerRef" class="art-virtual-list" :style="containerStyle" @scroll="handleScroll">
     <div :style="{ height: virtualResult.totalHeight + 'px', position: 'relative' }">
       <div :style="{ transform: `translateY(${virtualResult.offsetY}px)` }">
         <div

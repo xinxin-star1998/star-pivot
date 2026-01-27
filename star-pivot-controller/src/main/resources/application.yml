@@ -61,6 +61,10 @@ jwt:
 cors:
   # 具体允许的域名在各环境配置文件中设置
 
+# Spring Security 配置
+# 路径放行已通过代码方式实现（DruidPermitAllPathProvider）
+# 如需追加其他放行路径，可参考文档：doc/star-pivot-security-使用说明.md
+
 # 日志公共配置
 logging:
   level:

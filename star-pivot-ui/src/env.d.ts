@@ -49,5 +49,11 @@ declare module '@vue/runtime-core' {
 // 确保 Vue 类型可以从 'vue' 模块正确导入
 // 这些类型在 Vue 3.5+ 中应该可以从 'vue' 导入，但 vue-tsc 可能需要额外的类型声明
 declare module 'vue' {
-  export type { App, Directive, DirectiveBinding, DefineComponent, ComponentPublicInstance } from '@vue/runtime-core'
+  export type {
+    App,
+    Directive,
+    DirectiveBinding,
+    DefineComponent,
+    ComponentPublicInstance
+  } from 'vue'
 }

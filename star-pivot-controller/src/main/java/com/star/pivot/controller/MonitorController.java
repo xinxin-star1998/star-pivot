@@ -7,12 +7,9 @@ import com.star.pivot.system.domain.bo.OnlineUserVO;
 import com.star.pivot.system.domain.bo.RedisCacheVO;
 import com.star.pivot.system.domain.bo.RedisMonitorVO;
 import com.star.pivot.system.domain.bo.ServerInfoVO;
-import com.star.pivot.system.domain.entity.SysMonitorAlertRecord;
-import com.star.pivot.system.domain.entity.SysMonitorAlertRule;
 import com.star.pivot.system.domain.entity.SysMonitorSlowSql;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.system.domain.bo.ApiPerformanceReqBo;
-import com.star.pivot.system.service.MonitorAlertService;
 import com.star.pivot.system.service.MonitorService;
 import com.star.pivot.system.service.SlowSqlService;
 import com.star.pivot.system.service.impl.MonitorServiceImpl;
@@ -22,7 +19,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -37,18 +33,15 @@ import java.util.Map;
 public class MonitorController {
 
     private final MonitorService monitorService;
-    private final MonitorAlertService monitorAlertService;
     private final SlowSqlService slowSqlService;
     private final SysMonitorApiPerformanceMapper apiPerformanceMapper;
     private final com.star.pivot.config.ApiPerformanceAspect apiPerformanceAspect;
 
     public MonitorController(MonitorService monitorService, 
-                            MonitorAlertService monitorAlertService,
                             SlowSqlService slowSqlService,
                             SysMonitorApiPerformanceMapper apiPerformanceMapper,
                             com.star.pivot.config.ApiPerformanceAspect apiPerformanceAspect) {
         this.monitorService = monitorService;
-        this.monitorAlertService = monitorAlertService;
         this.slowSqlService = slowSqlService;
         this.apiPerformanceMapper = apiPerformanceMapper;
         this.apiPerformanceAspect = apiPerformanceAspect;
@@ -146,63 +139,6 @@ public class MonitorController {
         return success ? Result.success("强制下线成功") : Result.error("强制下线失败");
     }
 
-    /**
-     * 查询历史监控数据（用于趋势图表）
-     *
-     * @param metricType 指标类型
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 历史数据列表
-     */
-    @Log(title = "监控历史数据")
-    @PreAuthorize("hasAuthority('monitor:history:query')")
-    @GetMapping("/history")
-    public Result<List<Map<String, Object>>> getHistoryData(
-            @RequestParam String metricType,
-            @RequestParam LocalDateTime startTime,
-            @RequestParam LocalDateTime endTime) {
-        List<Map<String, Object>> data = monitorService.getHistoryData(metricType, startTime, endTime);
-        return Result.success(data);
-    }
-
-    /**
-     * 查询多个指标的历史数据（用于多指标对比）
-     *
-     * @param metricTypes 指标类型列表（逗号分隔）
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 历史数据列表
-     */
-    @Log(title = "监控多指标对比")
-    @PreAuthorize("hasAuthority('monitor:history:query')")
-    @GetMapping("/history/multi")
-    public Result<List<Map<String, Object>>> getMultiMetricHistoryData(
-            @RequestParam String metricTypes,
-            @RequestParam LocalDateTime startTime,
-            @RequestParam LocalDateTime endTime) {
-        List<String> types = List.of(metricTypes.split(","));
-        List<Map<String, Object>> data = monitorService.getMultiMetricHistoryData(types, startTime, endTime);
-        return Result.success(data);
-    }
-
-    /**
-     * 查询指标统计信息
-     *
-     * @param metricType 指标类型
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 统计信息
-     */
-    @Log(title = "监控指标统计")
-    @PreAuthorize("hasAuthority('monitor:history:query')")
-    @GetMapping("/history/statistics")
-    public Result<Map<String, Object>> getMetricStatistics(
-            @RequestParam String metricType,
-            @RequestParam LocalDateTime startTime,
-            @RequestParam LocalDateTime endTime) {
-        Map<String, Object> statistics = monitorService.getMetricStatistics(metricType, startTime, endTime);
-        return Result.success(statistics);
-    }
 
     /**
      * 获取系统健康检查报告
@@ -217,96 +153,6 @@ public class MonitorController {
         return Result.success(healthReport);
     }
 
-    /**
-     * 获取告警规则列表
-     *
-     * @return 告警规则列表
-     */
-    @Log(title = "告警规则")
-    @PreAuthorize("hasAuthority('monitor:alert:query')")
-    @GetMapping("/alert/rules")
-    public Result<List<SysMonitorAlertRule>> getAlertRuleList() {
-        List<SysMonitorAlertRule> rules = monitorAlertService.getAlertRuleList();
-        return Result.success(rules);
-    }
-
-    /**
-     * 创建告警规则
-     *
-     * @param rule 告警规则
-     * @return 操作结果
-     */
-    @Log(title = "告警规则", businessType = 1)
-    @PreAuthorize("hasAuthority('monitor:alert:add')")
-    @PostMapping("/alert/rules")
-    public Result<?> createAlertRule(@RequestBody SysMonitorAlertRule rule) {
-        boolean success = monitorAlertService.createAlertRule(rule);
-        return success ? Result.success("创建告警规则成功") : Result.error("创建告警规则失败");
-    }
-
-    /**
-     * 更新告警规则
-     *
-     * @param rule 告警规则
-     * @return 操作结果
-     */
-    @Log(title = "告警规则", businessType = 2)
-    @PreAuthorize("hasAuthority('monitor:alert:edit')")
-    @PutMapping("/alert/rules")
-    public Result<?> updateAlertRule(@RequestBody SysMonitorAlertRule rule) {
-        boolean success = monitorAlertService.updateAlertRule(rule);
-        return success ? Result.success("更新告警规则成功") : Result.error("更新告警规则失败");
-    }
-
-    /**
-     * 删除告警规则
-     *
-     * @param ruleId 规则ID
-     * @return 操作结果
-     */
-    @Log(title = "告警规则", businessType = 3)
-    @PreAuthorize("hasAuthority('monitor:alert:delete')")
-    @DeleteMapping("/alert/rules/{ruleId}")
-    public Result<?> deleteAlertRule(@PathVariable Long ruleId) {
-        boolean success = monitorAlertService.deleteAlertRule(ruleId);
-        return success ? Result.success("删除告警规则成功") : Result.error("删除告警规则失败");
-    }
-
-    /**
-     * 获取告警记录列表
-     *
-     * @param status 告警状态（可选）
-     * @param limit 查询数量限制（可选）
-     * @return 告警记录列表
-     */
-    @Log(title = "告警记录")
-    @PreAuthorize("hasAuthority('monitor:alert:query')")
-    @GetMapping("/alert/records")
-    public Result<List<SysMonitorAlertRecord>> getAlertRecordList(
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) Integer limit) {
-        List<SysMonitorAlertRecord> records = monitorAlertService.getAlertRecordList(status, limit);
-        return Result.success(records);
-    }
-
-    /**
-     * 处理告警记录
-     *
-     * @param recordId 记录ID
-     * @param handleBy 处理人
-     * @param handleRemark 处理备注
-     * @return 操作结果
-     */
-    @Log(title = "告警记录", businessType = 2)
-    @PreAuthorize("hasAuthority('monitor:alert:handle')")
-    @PutMapping("/alert/records/{recordId}/handle")
-    public Result<?> handleAlert(
-            @PathVariable Long recordId,
-            @RequestParam String handleBy,
-            @RequestParam(required = false) String handleRemark) {
-        boolean success = monitorAlertService.handleAlert(recordId, handleBy, handleRemark);
-        return success ? Result.success("处理告警成功") : Result.error("处理告警失败");
-    }
 
     /**
      * 获取慢SQL列表

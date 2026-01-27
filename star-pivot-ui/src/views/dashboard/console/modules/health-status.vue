@@ -4,13 +4,7 @@
     <template #header>
       <div class="card-header">
         <span>系统健康状态</span>
-        <ElButton
-          text
-          :icon="Refresh"
-          @click="refreshHealth"
-          :loading="loading"
-          size="small"
-        >
+        <ElButton text :icon="Refresh" @click="refreshHealth" :loading="loading" size="small">
           刷新
         </ElButton>
       </div>
@@ -86,42 +80,61 @@
   const loading = ref(false)
   const healthReport = ref<HealthCheckReport | null>(null)
 
+  // 健康组件项类型
+  type HealthComponent = {
+    name: string
+    desc: string
+    status: 'healthy' | 'unhealthy'
+  }
+
   // 健康组件列表
-  const healthComponents = computed(() => {
+  const healthComponents = computed((): HealthComponent[] => {
     if (!healthReport.value) return []
-    const components = []
+    const components: HealthComponent[] = []
     if (healthReport.value.database) {
+      const status: 'healthy' | 'unhealthy' = healthReport.value.database.healthy
+        ? 'healthy'
+        : 'unhealthy'
       components.push({
         name: '数据库',
         desc: healthReport.value.database.healthy
           ? `连接池: ${healthReport.value.database.activeCount}/${healthReport.value.database.maxActive}`
           : '连接异常',
-        status: healthReport.value.database.healthy ? 'healthy' : 'unhealthy'
+        status
       })
     }
     if (healthReport.value.redis) {
+      const status: 'healthy' | 'unhealthy' = healthReport.value.redis.healthy
+        ? 'healthy'
+        : 'unhealthy'
       components.push({
         name: 'Redis',
         desc: healthReport.value.redis.healthy ? '连接正常' : '连接异常',
-        status: healthReport.value.redis.healthy ? 'healthy' : 'unhealthy'
+        status
       })
     }
     if (healthReport.value.disk) {
+      const status: 'healthy' | 'unhealthy' = healthReport.value.disk.healthy
+        ? 'healthy'
+        : 'unhealthy'
       components.push({
         name: '磁盘',
         desc: healthReport.value.disk.healthy
           ? `使用率: ${healthReport.value.disk.usage?.toFixed(1)}%`
           : '空间不足',
-        status: healthReport.value.disk.healthy ? 'healthy' : 'unhealthy'
+        status
       })
     }
     if (healthReport.value.jvm) {
+      const status: 'healthy' | 'unhealthy' = healthReport.value.jvm.healthy
+        ? 'healthy'
+        : 'unhealthy'
       components.push({
         name: 'JVM',
         desc: healthReport.value.jvm.healthy
           ? `内存使用: ${healthReport.value.jvm.usage?.toFixed(1)}%`
           : '内存告警',
-        status: healthReport.value.jvm.healthy ? 'healthy' : 'unhealthy'
+        status
       })
     }
     return components
@@ -196,8 +209,8 @@
 
   .card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
   }
 
   .health-content {
@@ -206,8 +219,8 @@
 
   .overall-status {
     display: flex;
-    align-items: center;
     gap: 16px;
+    align-items: center;
     padding: 10px 0;
 
     .status-icon {
@@ -230,9 +243,9 @@
       flex: 1;
 
       .status-title {
+        margin-bottom: 4px;
         font-size: 18px;
         font-weight: bold;
-        margin-bottom: 4px;
       }
 
       .status-time {
@@ -245,11 +258,11 @@
   .components-status {
     .component-item {
       display: flex;
-      align-items: center;
       gap: 12px;
+      align-items: center;
       padding: 12px;
-      border-radius: 6px;
       cursor: pointer;
+      border-radius: 6px;
       transition: background-color 0.3s;
 
       &:hover {
@@ -272,9 +285,9 @@
         flex: 1;
 
         .component-name {
+          margin-bottom: 4px;
           font-size: 14px;
           font-weight: 500;
-          margin-bottom: 4px;
         }
 
         .component-desc {
@@ -290,12 +303,12 @@
   }
 
   .duration-info {
-    margin-top: 12px;
     padding-top: 12px;
-    border-top: 1px solid var(--el-border-color-lighter);
+    margin-top: 12px;
     font-size: 12px;
     color: var(--el-text-color-secondary);
     text-align: center;
+    border-top: 1px solid var(--el-border-color-lighter);
   }
 
   .empty-state {

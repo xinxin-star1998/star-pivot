@@ -106,13 +106,13 @@
 <style scoped lang="scss">
   .param-display {
     max-height: 200px;
-    overflow-y: auto;
     padding: 10px;
-    background: #f5f7fa;
-    border-radius: 4px;
+    overflow-y: auto;
     font-size: 12px;
     line-height: 1.5;
-    white-space: pre-wrap;
     word-break: break-all;
+    white-space: pre-wrap;
+    background: #f5f7fa;
+    border-radius: 4px;
   }
 </style>

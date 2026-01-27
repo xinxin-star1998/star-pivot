@@ -215,7 +215,7 @@
   /**
    * 处理添加用户确认
    */
-  const handleAddUserConfirm = async (userIds: number[]) => {
+  const handleAddUserConfirm = async () => {
     // 刷新列表
     refreshData()
   }

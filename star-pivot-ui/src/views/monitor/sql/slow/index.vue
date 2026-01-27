@@ -9,9 +9,7 @@
             <ElButton type="primary" :icon="Refresh" @click="handleExtract" :loading="extracting">
               从Druid提取
             </ElButton>
-            <ElButton :icon="Refresh" @click="getSlowSqlList" :loading="loading">
-              刷新
-            </ElButton>
+            <ElButton :icon="Refresh" @click="getSlowSqlList" :loading="loading"> 刷新 </ElButton>
           </div>
         </div>
       </template>
@@ -55,10 +53,11 @@
         </ElTableColumn>
         <ElTableColumn label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <ElButton link type="primary" @click="handleViewDetail(row)">
-              查看详情
-            </ElButton>
-            <ElDropdown @command="(cmd) => handleStatusChange(row, cmd)" v-auth="'monitor:sql:edit'">
+            <ElButton link type="primary" @click="handleViewDetail(row)"> 查看详情 </ElButton>
+            <ElDropdown
+              @command="(cmd) => handleStatusChange(row, cmd)"
+              v-auth="'monitor:sql:edit'"
+            >
               <ElButton link type="primary">
                 状态 <ElIcon><ArrowDown /></ElIcon>
               </ElButton>
@@ -80,8 +79,12 @@
       <ElDescriptions :column="2" border v-if="currentSql">
         <ElDescriptionsItem label="SQL ID">{{ currentSql.sqlId }}</ElDescriptionsItem>
         <ElDescriptionsItem label="执行次数">{{ currentSql.executeCount }}</ElDescriptionsItem>
-        <ElDescriptionsItem label="平均执行时间">{{ formatNumber(currentSql.executeTimeAvg) }} ms</ElDescriptionsItem>
-        <ElDescriptionsItem label="最大执行时间">{{ currentSql.executeTimeMax }} ms</ElDescriptionsItem>
+        <ElDescriptionsItem label="平均执行时间"
+          >{{ formatNumber(currentSql.executeTimeAvg) }} ms</ElDescriptionsItem
+        >
+        <ElDescriptionsItem label="最大执行时间"
+          >{{ currentSql.executeTimeMax }} ms</ElDescriptionsItem
+        >
         <ElDescriptionsItem label="慢SQL次数">
           <ElTag type="warning">{{ currentSql.slowCount }}</ElTag>
         </ElDescriptionsItem>
@@ -102,12 +105,7 @@
           />
         </ElDescriptionsItem>
         <ElDescriptionsItem label="优化建议" :span="2">
-          <ElInput
-            v-model="currentSql.optimizationSuggestion"
-            type="textarea"
-            :rows="4"
-            readonly
-          />
+          <ElInput v-model="currentSql.optimizationSuggestion" type="textarea" :rows="4" readonly />
         </ElDescriptionsItem>
       </ElDescriptions>
     </ElDialog>
@@ -116,7 +114,11 @@
 
 <script setup lang="ts">
   import { Refresh, ArrowDown } from '@element-plus/icons-vue'
-  import { fetchGetSlowSqlList, fetchExtractSlowSqlList, fetchUpdateSlowSqlStatus } from '@/api/monitor/sql'
+  import {
+    fetchGetSlowSqlList,
+    fetchExtractSlowSqlList,
+    fetchUpdateSlowSqlStatus
+  } from '@/api/monitor/sql'
   import type { SlowSql } from '@/types/api/monitor'
   import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -190,7 +192,7 @@
       } finally {
         extracting.value = false
       }
-    } catch (error) {
+    } catch {
       // 用户取消
     }
   }
@@ -226,15 +228,15 @@
 
   .card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
   }
 
   .sql-text {
-    font-family: monospace;
-    font-size: 12px;
     max-width: 300px;
     overflow: hidden;
+    font-family: monospace;
+    font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }

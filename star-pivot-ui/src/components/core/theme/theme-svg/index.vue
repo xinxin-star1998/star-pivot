@@ -7,7 +7,6 @@
 </template>
 
 <script setup lang="ts">
-
   interface Props {
     size?: string | number
     themeColor?: string

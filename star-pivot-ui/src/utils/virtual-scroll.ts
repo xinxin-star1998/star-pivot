@@ -52,13 +52,7 @@ export function calculateVirtualScroll(
   scrollTop: number,
   options: VirtualScrollOptions
 ): VirtualScrollResult {
-  const {
-    containerHeight,
-    itemHeight,
-    itemHeightFn,
-    bufferSize = 5,
-    total
-  } = options
+  const { containerHeight, itemHeight, itemHeightFn, bufferSize = 5, total } = options
 
   if (total === 0) {
     return {

@@ -593,8 +593,8 @@
 
   .card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
   }
 
   .query-form {
@@ -605,9 +605,9 @@
     text-align: center;
 
     .stat-label {
-      color: var(--el-text-color-secondary);
-      font-size: 14px;
       margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--el-text-color-secondary);
     }
 
     .stat-value {

@@ -8,6 +8,7 @@
  * - 追加首页（工作台）路由（数据库不存菜单）
  * - 追加个人中心路由（数据库不存菜单）
  * - 追加字典数据明细路由（数据库不存菜单）
+ * - 追加 Druid 监控 iframe 路由（数据库不存菜单）
  * - 支持扩展其他前端动态路由
  *
  * ## 使用场景
@@ -43,6 +44,9 @@ export class DynamicRouteAppender {
 
     // 追加分配用户路由
     this.appendAssignUserRoute(menuList)
+
+    // 追加 Druid 监控 iframe 路由
+    this.appendDruidIframeRoute(menuList)
 
     // 可以在这里继续追加其他前端动态路由
 
@@ -276,6 +280,59 @@ export class DynamicRouteAppender {
       menuList.push(assignUserRoute)
       if (import.meta.env.DEV) {
         console.log('[DynamicRouteAppender] 已动态追加分配用户路由')
+      }
+    }
+  }
+
+  /**
+   * 追加「Druid 监控」iframe 路由（数据库不存菜单）
+   * 将 Druid 原生监控页面通过 iframe 方式集成到动态路由中
+   * <p>
+   * 注意：项目中存在两种 Druid 监控页面：
+   * 1. 自定义页面：/monitor/druid（Vue 组件，通过 API 展示监控数据）
+   * 2. 内置页面：/monitor/druid-iframe（Druid 原生页面，通过 iframe 嵌入）
+   * <p>
+   * 此方法添加的是内置页面路由，提供完整的 Druid 原生监控功能
+   * @param menuList 菜单列表
+   */
+  static appendDruidIframeRoute(menuList: AppRouteRecord[]): void {
+    const existsDruidIframe = menuList.some(
+      (route: AppRouteRecord) =>
+        route.name === 'DruidIframe' || route.path === '/monitor/druid-iframe'
+    )
+
+    if (!existsDruidIframe) {
+      // 使用相对路径，让 Vite 代理处理
+      // 这样前端和后端就是同源（都是 localhost:3000），可以满足 SAMEORIGIN 的要求
+      // 开发环境：通过 Vite 代理转发到后端
+      // 生产环境：如果前后端部署在同一域名下，也是同源
+      const druidUrl = '/api/druid/index.html'
+
+      const druidIframeRoute: AppRouteRecord = {
+        path: '/monitor/druid-iframe',
+        name: 'DruidIframe',
+        meta: {
+          title: 'Druid 监控（内置页面）',
+          icon: 'ri:database-2-line',
+          // 设置为 iframe 类型，通过 link 指定外部链接
+          isIframe: true,
+          // Druid 监控页面地址（使用相对路径，通过 Vite 代理，确保同源）
+          link: druidUrl,
+          // 不在菜单树中显示，可通过编程式导航访问
+          // 如果需要显示，可以设置为 false，但建议通过自定义页面入口访问
+          isHide: true,
+          // 指定父级菜单路径，用于面包屑、高亮等
+          parentPath: '/monitor',
+          keepAlive: true
+        },
+        menuType: 'C',
+        status: '0',
+        orderNum: 1002
+      }
+
+      menuList.push(druidIframeRoute)
+      if (import.meta.env.DEV) {
+        console.log('[DynamicRouteAppender] 已动态追加 Druid 监控内置页面 iframe 路由，URL:', druidUrl)
       }
     }
   }

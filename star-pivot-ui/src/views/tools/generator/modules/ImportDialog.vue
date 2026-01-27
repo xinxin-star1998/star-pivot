@@ -250,14 +250,14 @@
 
   .dialog-footer {
     display: flex;
-    justify-content: flex-end;
     gap: 12px;
+    justify-content: flex-end;
   }
 
   .empty-text {
     margin-top: 16px;
-    text-align: center;
-    color: #999;
     font-size: 14px;
+    color: #999;
+    text-align: center;
   }
 </style>

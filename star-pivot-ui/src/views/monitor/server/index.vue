@@ -421,23 +421,23 @@
 
 <style scoped lang="scss">
   .server-monitor-page {
-    padding: 20px;
     height: 100%;
+    padding: 20px;
     overflow-y: auto;
   }
 
   .server-monitor-card {
     .el-card__body {
-      overflow-y: auto;
       max-height: calc(100vh - 180px);
       padding: 16px;
+      overflow-y: auto;
     }
   }
 
   .card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     height: 15px;
   }
 
@@ -455,8 +455,8 @@
     margin-bottom: 8px;
 
     .info-label {
-      color: var(--el-text-color-secondary);
       font-size: 13px;
+      color: var(--el-text-color-secondary);
     }
 
     .info-value {
@@ -479,21 +479,21 @@
 
   .health-item {
     padding: 10px;
-    border-radius: 6px;
-    background-color: var(--el-bg-color-page);
     margin-bottom: 8px;
+    background-color: var(--el-bg-color-page);
+    border-radius: 6px;
 
     .health-label {
+      margin-bottom: 6px;
       font-size: 13px;
       font-weight: 500;
-      margin-bottom: 6px;
       color: var(--el-text-color-primary);
     }
 
     .health-status {
       display: flex;
-      align-items: center;
       gap: 6px;
+      align-items: center;
       margin-bottom: 6px;
       font-size: 13px;
       font-weight: 500;
@@ -508,22 +508,22 @@
     }
 
     .health-detail {
+      margin-top: 4px;
       font-size: 12px;
       color: var(--el-text-color-secondary);
-      margin-top: 4px;
     }
 
     .health-error {
+      margin-top: 4px;
       font-size: 12px;
       color: var(--el-color-danger);
-      margin-top: 4px;
     }
   }
 
   .health-footer {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     font-size: 12px;
     color: var(--el-text-color-secondary);
 

@@ -9,7 +9,6 @@ import com.star.pivot.system.domain.bo.RedisMonitorVO;
 import com.star.pivot.system.domain.bo.ServerInfoVO;
 import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -68,35 +67,6 @@ public interface MonitorService {
      */
     boolean forceLogout(String sessionId);
 
-    /**
-     * 查询历史监控数据（用于趋势图表）
-     *
-     * @param metricType 指标类型
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 历史数据列表
-     */
-    List<Map<String, Object>> getHistoryData(String metricType, LocalDateTime startTime, LocalDateTime endTime);
-
-    /**
-     * 查询多个指标的历史数据（用于多指标对比）
-     *
-     * @param metricTypes 指标类型列表
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 历史数据列表
-     */
-    List<Map<String, Object>> getMultiMetricHistoryData(List<String> metricTypes, LocalDateTime startTime, LocalDateTime endTime);
-
-    /**
-     * 查询指标统计信息（平均值、最大值、最小值）
-     *
-     * @param metricType 指标类型
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 统计信息
-     */
-    Map<String, Object> getMetricStatistics(String metricType, LocalDateTime startTime, LocalDateTime endTime);
 
     /**
      * 获取系统健康检查报告

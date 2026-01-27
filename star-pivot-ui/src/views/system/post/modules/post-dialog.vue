@@ -198,7 +198,7 @@
 <style scoped lang="scss">
   .dialog-footer {
     display: flex;
-    justify-content: flex-end;
     gap: 10px;
+    justify-content: flex-end;
   }
 </style>

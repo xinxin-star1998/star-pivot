@@ -426,24 +426,24 @@
     .permission-controls {
       display: flex;
       gap: 20px;
-      margin-bottom: 12px;
       padding-bottom: 12px;
-      border-bottom: 1px solid var(--el-border-color-lighter);
+      margin-bottom: 12px;
       color: var(--el-text-color-primary);
+      border-bottom: 1px solid var(--el-border-color-lighter);
       transition: color 0.3s ease;
     }
 
     .permission-tree-container {
-      border: 1px solid var(--el-border-color-lighter);
-      border-radius: 4px;
-      padding: 12px;
+      height: auto;
       min-height: 100px;
       max-height: 600px;
+      padding: 12px;
       overflow: auto;
+      border: 1px solid var(--el-border-color-lighter);
+      border-radius: 4px;
       transition:
         height 0.3s ease,
         background-color 0.3s ease;
-      height: auto;
 
       &.light-bg {
         background: #fff;

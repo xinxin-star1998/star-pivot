@@ -36,7 +36,7 @@
         <!-- MySQL 驱动版本 -->
         <mysql.version>9.1.0</mysql.version>
         <!-- Druid 数据库连接池版本 -->
-        <druid.version>1.2.27</druid.version>
+        <druid.version>1.2.20</druid.version>
         <!-- JWT 版本 -->
         <jjwt.version>0.12.3</jjwt.version>
 
@@ -107,10 +107,16 @@
                 <version>10.1.33</version>
             </dependency>
             <!-- 阿里数据库连接池 -->
+<!--            <dependency>-->
+<!--                <groupId>com.alibaba</groupId>-->
+<!--                <artifactId>druid-spring-boot-starter</artifactId>-->
+<!--                <version>${druid.version}</version>-->
+<!--            </dependency>-->
+            <!-- Spring Boot 3.x 专属 Druid 启动器 -->
             <dependency>
                 <groupId>com.alibaba</groupId>
-                <artifactId>druid-spring-boot-starter</artifactId>
-                <version>${druid.version}</version>
+                <artifactId>druid-spring-boot-3-starter</artifactId>
+                <version>${druid.version}</version> <!-- 稳定版，适配 Spring Boot 3.x，可升级最新版 -->
             </dependency>
             <!-- velocity代码生成使用模板 -->
             <dependency>

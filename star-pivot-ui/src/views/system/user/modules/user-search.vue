@@ -11,8 +11,6 @@
 </template>
 
 <script setup lang="ts">
-  import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
-
   interface Props {
     modelValue: Record<string, any>
   }

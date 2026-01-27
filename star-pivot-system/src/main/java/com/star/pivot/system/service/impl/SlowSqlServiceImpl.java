@@ -55,11 +55,16 @@ public class SlowSqlServiceImpl implements SlowSqlService {
                         Long errorCount = getLongValue(sql, "ErrorCount");
                         Long lastExecuteTime = getLongValue(sql, "LastExecuteTime");
 
+                        // 如果关键字段为null，跳过该记录
+                        if (executeMillisTotal == null || executeCount == null) {
+                            continue;
+                        }
+
                         // 计算平均执行时间
                         double executeTimeAvg = executeCount > 0 ? (double) executeMillisTotal / executeCount : 0;
 
-                        // 判断是否为慢SQL
-                        if (executeTimeAvg >= slowSqlThreshold || slowCount > 0) {
+                        // 判断是否为慢SQL（需要处理slowCount可能为null的情况）
+                        if (executeTimeAvg >= slowSqlThreshold || (slowCount != null && slowCount > 0)) {
                             SysMonitorSlowSql slowSql = new SysMonitorSlowSql();
                             slowSql.setSqlId(sqlId);
                             slowSql.setSqlText(sqlText != null ? truncateString(sqlText, 5000) : "");

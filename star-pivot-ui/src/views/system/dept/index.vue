@@ -9,7 +9,9 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:dept:add'">新增部门</ElButton>
+            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:dept:add'"
+              >新增部门</ElButton
+            >
             <ElButton @click="toggleExpand" v-ripple>
               {{ isExpanded ? '收起' : '展开' }}
             </ElButton>

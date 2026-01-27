@@ -634,48 +634,48 @@
   }
 
   .left-panel {
-    width: 280px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    width: 280px;
+    overflow: hidden;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
   }
 
   .right-panel {
+    display: flex;
     flex: 1;
+    flex-direction: column;
+    overflow: hidden;
     background-color: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
   }
 
   .department-tree-card {
-    height: 100%;
     display: flex;
     flex-direction: column;
+    height: 100%;
     border: none;
     box-shadow: none;
   }
 
   .card-header {
+    padding: 12px 16px;
     font-size: 16px;
     font-weight: 600;
     color: #303133;
-    padding: 12px 16px;
     border-bottom: 1px solid #ebeef5;
   }
 
   .department-tree-header {
-    padding: 0 16px 12px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     flex-direction: column;
     gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px 12px;
   }
 
   .dept-search-box {
@@ -715,8 +715,8 @@
   }
 
   .art-table-card {
-    flex: 1;
     display: flex;
+    flex: 1;
     flex-direction: column;
     border: none;
     box-shadow: none;

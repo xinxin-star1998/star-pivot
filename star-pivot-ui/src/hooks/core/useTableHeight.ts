@@ -15,7 +15,6 @@
  * @author Art Design Pro Team
  */
 
-
 /**
  * 表格高度计算器配置接口
  */
