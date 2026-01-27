@@ -15,10 +15,10 @@ import java.util.List;
 
 /**
  * Swagger（SpringDoc OpenAPI）配置类
- * 
+ *
  * <p>配置说明：
  * <ul>
- *   <li>API 文档访问地址：http://localhost:8080/api/swagger-ui/index.html</li>
+ *   <li>API 文档访问地址：<a href="http://localhost:8080/api/swagger-ui/index.html">...</a></li>
  *   <li>OpenAPI JSON 地址：http://localhost:8080/api/v3/api-docs</li>
  *   <li>支持 JWT Bearer Token 认证，可在 Swagger UI 中直接输入 Token 进行接口测试</li>
  * </ul>

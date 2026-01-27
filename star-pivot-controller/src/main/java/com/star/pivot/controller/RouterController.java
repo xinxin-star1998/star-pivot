@@ -8,8 +8,6 @@ import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
