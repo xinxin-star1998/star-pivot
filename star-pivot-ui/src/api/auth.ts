@@ -6,9 +6,16 @@ import request from '@/utils/http'
  * @returns 登录响应
  */
 export function fetchLogin(data: Api.Auth.LoginParams) {
+  // 仅将后端需要的字段发送给服务端，记住密码标记仅在前端本地使用
+  const { username, password, captchaProof } = data
+
   return request.post<Api.Auth.LoginResponse>({
     url: '/api/auth/login',
-    data
+    data: {
+      username,
+      password,
+      captchaProof
+    }
     // showSuccessMessage: true // 显示成功消息
     // showErrorMessage: false // 不显示错误消息
   })
