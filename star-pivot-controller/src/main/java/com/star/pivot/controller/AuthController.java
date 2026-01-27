@@ -8,6 +8,8 @@ import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
 import com.star.pivot.system.domain.bo.CaptchaVerifyResponse;
 import com.star.pivot.system.domain.bo.LoginRequest;
 import com.star.pivot.system.domain.bo.LoginResponse;
+import com.star.pivot.system.domain.bo.RegisterRequest;
+import com.star.pivot.system.domain.bo.RegisterResponse;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
@@ -79,6 +81,24 @@ public class AuthController {
     public Result<LoginResponse> login(@RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
         return Result.success("登录成功", response);
+    }
+
+    /**
+     * 用户注册接口
+     *
+     * @param request 注册请求参数，包含用户名和密码
+     * @return 注册结果，包含基础用户信息
+     */
+    @Log(title = "用户注册", businessType = 1)
+    @Operation(summary = "用户注册", description = "通过用户名和密码注册新用户")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "注册成功", content = @Content(schema = @Schema(implementation = RegisterResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误或用户名已存在")
+    })
+    @PostMapping("/register")
+    public Result<RegisterResponse> register(@RequestBody RegisterRequest request) {
+        RegisterResponse response = authService.register(request);
+        return Result.success(Constants.REGISTER_SUCCESS, response);
     }
 
     /**

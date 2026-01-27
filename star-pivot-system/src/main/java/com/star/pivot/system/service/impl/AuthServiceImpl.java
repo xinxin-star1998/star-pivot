@@ -1,9 +1,13 @@
 package com.star.pivot.system.service.impl;
 
+import com.star.pivot.common.domain.Constants;
 import com.star.pivot.common.exception.ServiceException;
 import com.star.pivot.common.utils.LogUtils;
+import com.star.pivot.common.utils.SecurityUtils;
 import com.star.pivot.system.domain.bo.LoginRequest;
 import com.star.pivot.system.domain.bo.LoginResponse;
+import com.star.pivot.system.domain.bo.RegisterRequest;
+import com.star.pivot.system.domain.bo.RegisterResponse;
 import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.AccountLockService;
@@ -165,7 +169,56 @@ public class AuthServiceImpl implements AuthService {
             throw new ServiceException("登录失败", 500);
         }
     }
-    
+
+    /**
+     * 用户注册
+     *
+     * 说明：
+     * - 前端已完成账号、密码长度等基础校验，这里主要做幂等与安全校验
+     * - 注册成功后仅返回基础用户信息，不自动登录
+     */
+    @Override
+    public RegisterResponse register(RegisterRequest request) {
+        String username = request.getUsername();
+        String password = request.getPassword();
+
+        // 基础参数校验
+        if (username == null || username.trim().isEmpty()) {
+            throw new ServiceException("用户名不能为空", 400);
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new ServiceException("密码不能为空", 400);
+        }
+
+        // 检查用户名是否已存在
+        SysUser exists = userService.getUserByUsername(username.trim());
+        if (exists != null) {
+            throw new ServiceException("用户名已存在", 400);
+        }
+
+        // 构建用户实体
+        SysUser user = new SysUser();
+        user.setUserName(username.trim());
+        user.setNickName(username.trim());
+        user.setUserType("00");
+        user.setStatus(Constants.Status.NORMAL);
+        user.setPassword(SecurityUtils.encryptPassword(password));
+        user.setDelFlag(Constants.DelFlag.NORMAL);
+        user.setCreateBy(username.trim());
+        user.setCreateTime(java.time.LocalDateTime.now());
+
+        boolean success = userService.save(user);
+        if (!success || user.getUserId() == null) {
+            throw new ServiceException("注册失败，请稍后重试", 500);
+        }
+
+        RegisterResponse response = new RegisterResponse();
+        response.setUserId(user.getUserId());
+        response.setUsername(user.getUserName());
+        response.setNickName(user.getNickName());
+        return response;
+    }
+
     /**
      * 获取当前请求
      */

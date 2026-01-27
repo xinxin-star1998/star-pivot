@@ -22,6 +22,23 @@ export function fetchLogin(data: Api.Auth.LoginParams) {
 }
 
 /**
+ * 用户注册
+ * @param data 注册参数
+ * @returns 注册响应结果
+ */
+export function fetchRegister(data: Api.Auth.RegisterParams) {
+  const { username, password } = data
+
+  return request.post<Api.Auth.RegisterResponse>({
+    url: '/api/auth/register',
+    data: {
+      username,
+      password
+    }
+  })
+}
+
+/**
  * 获取用户信息
  * @returns 用户信息
  */

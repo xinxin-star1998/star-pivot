@@ -20,7 +20,8 @@ public class GlobalPermitAllPathProvider implements PermitAllPathProvider {
                 "/swagger-ui/**",  // 放行 Swagger UI 页面
                 "/v3/api-docs/**",  // 放行 OpenAPI JSON 文档
                 "/swagger-resources/**",  // 放行 Swagger 资源文件
-                "/webjars/**"  // 放行 Swagger UI 所需的静态资源
+                "/webjars/**",  // 放行 Swagger UI 所需的静态资源
+                "/auth/register"
         );
     }
 }
