@@ -23,6 +23,17 @@ public class ResponseWrapperAdvice implements ResponseBodyAdvice<Object> {
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
+        // 统一跳过 SpringDoc / Actuator 等框架自身的 Controller，避免破坏其返回结构
+        // 说明：SpringDoc 的 OpenAPI 文档接口如果被包装成 Result，会导致类型转换异常（例如期望 byte[] 却拿到 Result）
+        Class<?> containingClass = returnType.getContainingClass();
+        if (containingClass != null) {
+            String packageName = containingClass.getPackageName();
+            if (packageName.startsWith("org.springdoc")
+                    || packageName.startsWith("org.springframework.boot.actuate")) {
+                return false;
+            }
+        }
+
         // 如果返回类型已经是Result，不需要再次包装
         if (Result.class.isAssignableFrom(returnType.getParameterType())) {
             return false;

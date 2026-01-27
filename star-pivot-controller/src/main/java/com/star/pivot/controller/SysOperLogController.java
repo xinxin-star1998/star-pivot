@@ -7,6 +7,13 @@ import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.OperLogReqBo;
 import com.star.pivot.system.domain.bo.OperLogVO;
 import com.star.pivot.system.service.SysOperLogService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/sys/operlog")
+@Tag(name = "操作日志管理", description = "操作日志的查询、删除等接口")
 public class SysOperLogController {
 
     private final SysOperLogService sysOperLogService;
@@ -47,9 +55,14 @@ public class SysOperLogController {
      * @return 操作日志详情
      */
     @Log(title = "操作日志")
+    @Operation(summary = "获取操作日志详情", description = "根据日志ID获取操作日志的详细信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = OperLogVO.class))),
+            @ApiResponse(responseCode = "404", description = "操作日志不存在")
+    })
     @PreAuthorize("hasAuthority('system:operlog:query')")
     @GetMapping("/{operId}")
-    public Result<OperLogVO> getOperLogById(@PathVariable("operId") Long operId) {
+    public Result<OperLogVO> getOperLogById(@Parameter(description = "日志ID") @PathVariable("operId") Long operId) {
         com.star.pivot.system.domain.entity.SysOperLog operLog = sysOperLogService.getById(operId);
         if (operLog == null) {
             return Result.error("操作日志不存在");
@@ -65,6 +78,11 @@ public class SysOperLogController {
      * @return 操作结果
      */
     @Log(title = "操作日志", businessType = 3)
+    @Operation(summary = "删除操作日志", description = "删除操作日志（支持批量删除）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "删除成功"),
+            @ApiResponse(responseCode = "400", description = "删除ID为空")
+    })
     @PreAuthorize("hasAuthority('system:operlog:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
@@ -82,6 +100,10 @@ public class SysOperLogController {
      * @return 操作结果
      */
     @Log(title = "操作日志", businessType = 3)
+    @Operation(summary = "清空操作日志", description = "清空所有操作日志")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "清空成功")
+    })
     @PreAuthorize("hasAuthority('system:operlog:delete')")
     @DeleteMapping("/clean")
     public Result<?> clean() {

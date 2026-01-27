@@ -7,6 +7,12 @@ import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +35,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/router")
 @RequiredArgsConstructor
+@Tag(name = "路由管理", description = "动态路由、用户菜单树等接口")
 public class RouterController {
 
     private final SysMenuService sysMenuService;
@@ -43,6 +50,12 @@ public class RouterController {
      * @param authentication Spring Security 认证对象
      * @return 当前用户有权限的菜单树，未认证或用户不存在时返回 401/404
      */
+    @Operation(summary = "获取用户菜单树", description = "获取当前登录用户有权限的菜单树")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功"),
+            @ApiResponse(responseCode = "401", description = "用户未认证"),
+            @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/userMenuTree")
     public ResponseEntity<Result<List<SysMenu>>> getUserMenuTree(Authentication authentication) {
@@ -67,6 +80,10 @@ public class RouterController {
      * @param authentication Spring Security 认证对象
      * @return 动态路由列表，无法解析用户时返回空列表
      */
+    @Operation(summary = "获取动态路由", description = "根据当前用户权限获取动态路由列表，用于前端路由配置")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功")
+    })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/dynamic-routes")
     public List<RouterVo> getDynamicRoutes(Authentication authentication) {

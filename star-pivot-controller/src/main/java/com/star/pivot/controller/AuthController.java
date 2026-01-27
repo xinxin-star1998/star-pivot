@@ -21,6 +21,13 @@ import com.star.pivot.system.domain.bo.OnlineUserVO;
 import com.star.pivot.security.JwtBlackListManager;
 import com.star.pivot.security.JwtUtil;
 import com.star.pivot.security.RefreshTokenManager;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -41,6 +48,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "认证管理", description = "用户登录、登出、令牌刷新、验证码等认证相关接口")
 public class AuthController {
 
     private final AuthService authService;
@@ -60,6 +68,13 @@ public class AuthController {
      * @return 登录响应结果，包含用户信息和认证令牌
      */
     @Log(title = "用户登录", businessType = 0)
+    @Operation(summary = "用户登录", description = "通过用户名和密码进行登录，返回访问令牌和刷新令牌")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "登录成功", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "401", description = "用户名或密码错误"),
+            @ApiResponse(responseCode = "423", description = "账户已被锁定")
+    })
     @PostMapping("/login")
     public Result<LoginResponse> login(@RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
@@ -76,6 +91,12 @@ public class AuthController {
      *   <li>刷新成功后会颁发新的 Access Token，并轮换新的刷新令牌（一次性使用）</li>
      * </ul>
      */
+    @Operation(summary = "刷新访问令牌", description = "使用刷新令牌获取新的访问令牌，刷新令牌会轮换（一次性使用）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "刷新成功", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "401", description = "刷新令牌无效或已过期")
+    })
     @PostMapping("/refresh")
     public Result<LoginResponse> refreshToken(@RequestBody Map<String, String> body) {
         if (body == null) {
@@ -152,8 +173,13 @@ public class AuthController {
      * @return 登出结果响应
      */
     @Log(title = "用户登出", businessType = 0)
+    @Operation(summary = "用户登出", description = "登出当前用户，将访问令牌加入黑名单，并吊销刷新令牌")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "登出成功")
+    })
     @PostMapping("/logout")
-    public Result<Void> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public Result<Void> logout(@Parameter(description = "Authorization请求头，格式：Bearer {token}", required = false) 
+                                @RequestHeader(value = "Authorization", required = false) String authHeader) {
         // 如果没有提供Authorization头，直接返回成功（幂等性设计）
         if (authHeader == null || authHeader.trim().isEmpty()) {
             SecurityContextHolder.clearContext();
@@ -233,8 +259,14 @@ public class AuthController {
      * @param scene 业务场景，可选，默认 login
      * @return 包含 captchaToken 和 Base64 图片
      */
+    @Operation(summary = "获取验证码", description = "生成图形验证码，返回验证码Token和Base64编码的图片")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "获取成功", content = @Content(schema = @Schema(implementation = CaptchaIssueResponse.class))),
+            @ApiResponse(responseCode = "500", description = "生成验证码失败")
+    })
     @GetMapping("/captcha")
-    public Result<CaptchaIssueResponse> getCaptcha(@RequestParam(value = "scene", required = false) String scene) {
+    public Result<CaptchaIssueResponse> getCaptcha(@Parameter(description = "业务场景，可选，默认login") 
+                                                     @RequestParam(value = "scene", required = false) String scene) {
         try {
             CaptchaIssueResponse response = captchaService.generateCaptcha(scene != null ? scene : "login");
             return Result.success(response);
@@ -247,6 +279,11 @@ public class AuthController {
     /**
      * 校验验证码，一次性，返回 proof
      */
+    @Operation(summary = "校验验证码", description = "校验用户输入的验证码，验证通过后返回proof凭证（一次性使用）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "校验成功", content = @Content(schema = @Schema(implementation = CaptchaVerifyResponse.class))),
+            @ApiResponse(responseCode = "400", description = "验证码错误或已过期")
+    })
     @PostMapping("/captcha/verify")
     public Result<CaptchaVerifyResponse> verifyCaptcha(@RequestBody CaptchaVerifyRequest request) {
         CaptchaVerifyResponse response = captchaService.verifyCaptcha(request);
@@ -259,6 +296,12 @@ public class AuthController {
      * @param authentication Spring Security认证对象
      * @return 当前用户信息，包含用户基本信息、角色列表和权限菜单
      */
+    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息，包括用户基本信息、角色列表和权限菜单树")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "获取成功"),
+            @ApiResponse(responseCode = "401", description = "用户未认证"),
+            @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
     @GetMapping("/userinfo")
     public ResponseEntity<Result<Map<String, Object>>> getCurrentUser(Authentication authentication) {
         // 从Authentication中获取当前用户信息

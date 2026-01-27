@@ -66,6 +66,8 @@
         <aliyun-oss.version>3.17.1</aliyun-oss.version>
         <commons-io.version>2.16.1</commons-io.version>
         <easyexcel.version>3.3.2</easyexcel.version>
+        <!-- SpringDoc OpenAPI 版本（用于 Swagger 文档） -->
+        <springdoc.version>2.3.0</springdoc.version>
     </properties>
 
     <dependencyManagement>
@@ -241,6 +243,12 @@
                 <groupId>nl.basjes.parse.useragent</groupId>
                 <artifactId>yauaa</artifactId>
                 <version>${yauaa.version}</version>
+            </dependency>
+            <!-- SpringDoc OpenAPI（Swagger 文档） -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

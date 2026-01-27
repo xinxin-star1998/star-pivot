@@ -7,6 +7,13 @@ import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.LogininforReqBo;
 import com.star.pivot.system.domain.bo.LogininforVO;
 import com.star.pivot.system.service.SysLogininforService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/sys/logininfor")
+@Tag(name = "登录日志管理", description = "登录日志的查询、删除等接口")
 public class SysLogininforController {
 
     private final SysLogininforService sysLogininforService;
@@ -33,6 +41,10 @@ public class SysLogininforController {
      * @return 分页结果
      */
     @Log(title = "登录日志")
+    @Operation(summary = "分页查询登录日志", description = "根据条件分页查询登录日志列表")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = PageResponse.class)))
+    })
     @PreAuthorize("hasAuthority('system:logininfor:query')")
     @PostMapping("/pageList")
     public Result<PageResponse<LogininforVO>> pageList(@RequestBody LogininforReqBo logininforReqBo) {
@@ -47,9 +59,14 @@ public class SysLogininforController {
      * @return 登录日志详情
      */
     @Log(title = "登录日志")
+    @Operation(summary = "获取登录日志详情", description = "根据日志ID获取登录日志的详细信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = LogininforVO.class))),
+            @ApiResponse(responseCode = "404", description = "登录日志不存在")
+    })
     @PreAuthorize("hasAuthority('system:logininfor:query')")
     @GetMapping("/{infoId}")
-    public Result<LogininforVO> getLogininforById(@PathVariable("infoId") Long infoId) {
+    public Result<LogininforVO> getLogininforById(@Parameter(description = "日志ID") @PathVariable("infoId") Long infoId) {
         com.star.pivot.system.domain.entity.SysLogininfor logininfor = sysLogininforService.getById(infoId);
         if (logininfor == null) {
             return Result.error("登录日志不存在");
@@ -65,6 +82,11 @@ public class SysLogininforController {
      * @return 操作结果
      */
     @Log(title = "登录日志", businessType = 3)
+    @Operation(summary = "删除登录日志", description = "删除登录日志（支持批量删除）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "删除成功"),
+            @ApiResponse(responseCode = "400", description = "删除ID为空")
+    })
     @PreAuthorize("hasAuthority('system:logininfor:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
@@ -82,6 +104,10 @@ public class SysLogininforController {
      * @return 操作结果
      */
     @Log(title = "登录日志", businessType = 3)
+    @Operation(summary = "清空登录日志", description = "清空所有登录日志")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "清空成功")
+    })
     @PreAuthorize("hasAuthority('system:logininfor:delete')")
     @DeleteMapping("/clean")
     public Result<?> clean() {
