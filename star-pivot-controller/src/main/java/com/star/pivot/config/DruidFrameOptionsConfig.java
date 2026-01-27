@@ -67,9 +67,10 @@ public class DruidFrameOptionsConfig {
                             }
                             
                             if (isDruidPath) {
-                                // 为 Druid 路径设置 SAMEORIGIN，允许在相同源的 iframe 中加载
+                                // 对于 Druid 路径，完全移除 X-Frame-Options，允许在 iframe 中加载
+                                // 注意：不设置 X-Frame-Options 等同于允许在 iframe 中加载
                                 // 由于前端通过 Vite 代理访问，浏览器认为它们是同源的
-                                response.setHeader("X-Frame-Options", "SAMEORIGIN");
+                                // 这里不设置响应头，让过滤器来处理
                             } else {
                                 // 其他路径保持 DENY，不允许在 iframe 中加载（安全考虑）
                                 response.setHeader("X-Frame-Options", "DENY");
@@ -86,6 +87,7 @@ public class DruidFrameOptionsConfig {
                                                 FilterChain filterChain) throws ServletException, IOException {
                     String requestPath = request.getRequestURI();
                     String contextPath = request.getContextPath();
+                    String referer = request.getHeader("Referer");
                     
                     // 构建完整路径
                     String fullPath = (contextPath != null && !contextPath.isEmpty()) 
@@ -93,14 +95,21 @@ public class DruidFrameOptionsConfig {
                         : requestPath;
                     
                     // 检查是否为 Druid 监控路径（更宽松的匹配，确保能匹配所有情况）
+                    // 1. 检查请求路径
                     boolean isDruidPath = false;
                     if (requestPath != null) {
                         String lowerPath = requestPath.toLowerCase();
                         isDruidPath = lowerPath.contains("druid");
                     }
+                    // 2. 检查完整路径
                     if (!isDruidPath && fullPath != null) {
                         String lowerFullPath = fullPath.toLowerCase();
                         isDruidPath = lowerFullPath.contains("druid");
+                    }
+                    // 3. 检查 Referer 头（处理重定向情况）
+                    if (!isDruidPath && referer != null) {
+                        String lowerReferer = referer.toLowerCase();
+                        isDruidPath = lowerReferer.contains("druid");
                     }
                     
                     // 如果是 Druid 路径，包装响应以确保响应头正确设置
@@ -108,9 +117,10 @@ public class DruidFrameOptionsConfig {
                         HttpServletResponse wrappedResponse = new jakarta.servlet.http.HttpServletResponseWrapper(response) {
                             @Override
                             public void setHeader(String name, String value) {
-                                // 如果设置 X-Frame-Options，强制设置为 SAMEORIGIN
+                                // 如果设置 X-Frame-Options，完全移除它（允许在 iframe 中加载）
                                 if ("X-Frame-Options".equalsIgnoreCase(name)) {
-                                    super.setHeader("X-Frame-Options", "SAMEORIGIN");
+                                    // 不设置 X-Frame-Options，允许在 iframe 中加载
+                                    return;
                                 } else {
                                     super.setHeader(name, value);
                                 }
@@ -118,22 +128,27 @@ public class DruidFrameOptionsConfig {
                             
                             @Override
                             public void addHeader(String name, String value) {
-                                // 如果添加 X-Frame-Options，强制设置为 SAMEORIGIN
+                                // 如果添加 X-Frame-Options，完全移除它（允许在 iframe 中加载）
                                 if ("X-Frame-Options".equalsIgnoreCase(name)) {
-                                    super.setHeader("X-Frame-Options", "SAMEORIGIN");
+                                    // 不添加 X-Frame-Options，允许在 iframe 中加载
+                                    return;
                                 } else {
                                     super.addHeader(name, value);
                                 }
+                            }
+                            
+                            @Override
+                            public boolean containsHeader(String name) {
+                                // 如果查询 X-Frame-Options，返回 false（表示不存在）
+                                if ("X-Frame-Options".equalsIgnoreCase(name)) {
+                                    return false;
+                                }
+                                return super.containsHeader(name);
                             }
                         };
                         
                         // 继续过滤器链，使用包装后的响应
                         filterChain.doFilter(request, wrappedResponse);
-                        
-                        // 确保响应头已设置
-                        if (!wrappedResponse.containsHeader("X-Frame-Options")) {
-                            wrappedResponse.setHeader("X-Frame-Options", "SAMEORIGIN");
-                        }
                     } else {
                         // 非 Druid 路径，正常处理
                         filterChain.doFilter(request, response);
