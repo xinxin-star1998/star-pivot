@@ -1,11 +1,17 @@
 package com.star.pivot.config;
 
 import com.star.pivot.security.HttpSecurityCustomizer;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.HeaderWriter;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
 
 /**
  * Druid 监控页面 Frame Options 配置
@@ -71,6 +77,69 @@ public class DruidFrameOptionsConfig {
                         }
                     })
             );
+            
+            // 添加过滤器，确保在所有响应（包括重定向）中设置正确的 X-Frame-Options
+            // 使用 HttpServletResponseWrapper 包装响应，拦截所有响应头设置
+            http.addFilterBefore(new OncePerRequestFilter() {
+                @Override
+                protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
+                                                FilterChain filterChain) throws ServletException, IOException {
+                    String requestPath = request.getRequestURI();
+                    String contextPath = request.getContextPath();
+                    
+                    // 构建完整路径
+                    String fullPath = (contextPath != null && !contextPath.isEmpty()) 
+                        ? contextPath + requestPath 
+                        : requestPath;
+                    
+                    // 检查是否为 Druid 监控路径（更宽松的匹配，确保能匹配所有情况）
+                    boolean isDruidPath = false;
+                    if (requestPath != null) {
+                        String lowerPath = requestPath.toLowerCase();
+                        isDruidPath = lowerPath.contains("druid");
+                    }
+                    if (!isDruidPath && fullPath != null) {
+                        String lowerFullPath = fullPath.toLowerCase();
+                        isDruidPath = lowerFullPath.contains("druid");
+                    }
+                    
+                    // 如果是 Druid 路径，包装响应以确保响应头正确设置
+                    if (isDruidPath) {
+                        HttpServletResponse wrappedResponse = new jakarta.servlet.http.HttpServletResponseWrapper(response) {
+                            @Override
+                            public void setHeader(String name, String value) {
+                                // 如果设置 X-Frame-Options，强制设置为 SAMEORIGIN
+                                if ("X-Frame-Options".equalsIgnoreCase(name)) {
+                                    super.setHeader("X-Frame-Options", "SAMEORIGIN");
+                                } else {
+                                    super.setHeader(name, value);
+                                }
+                            }
+                            
+                            @Override
+                            public void addHeader(String name, String value) {
+                                // 如果添加 X-Frame-Options，强制设置为 SAMEORIGIN
+                                if ("X-Frame-Options".equalsIgnoreCase(name)) {
+                                    super.setHeader("X-Frame-Options", "SAMEORIGIN");
+                                } else {
+                                    super.addHeader(name, value);
+                                }
+                            }
+                        };
+                        
+                        // 继续过滤器链，使用包装后的响应
+                        filterChain.doFilter(request, wrappedResponse);
+                        
+                        // 确保响应头已设置
+                        if (!wrappedResponse.containsHeader("X-Frame-Options")) {
+                            wrappedResponse.setHeader("X-Frame-Options", "SAMEORIGIN");
+                        }
+                    } else {
+                        // 非 Druid 路径，正常处理
+                        filterChain.doFilter(request, response);
+                    }
+                }
+            }, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
         };
     }
 }
