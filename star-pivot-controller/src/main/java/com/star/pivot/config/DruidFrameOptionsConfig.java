@@ -34,10 +34,33 @@ public class DruidFrameOptionsConfig {
                         @Override
                         public void writeHeaders(HttpServletRequest request, HttpServletResponse response) {
                             String requestPath = request.getRequestURI();
+                            String contextPath = request.getContextPath();
+                            
+                            // 构建完整路径（包含 context-path）
+                            // context-path 为 /api，所以完整路径是 /api/druid/*
+                            String fullPath = (contextPath != null && !contextPath.isEmpty()) 
+                                ? contextPath + requestPath 
+                                : requestPath;
+                            
                             // 检查是否为 Druid 监控路径
-                            // 注意：context-path 为 /api，所以实际请求路径是 /api/druid/*
-                            // 但 Spring Security 在处理时，context-path 可能已被处理，所以检查 /druid/
-                            if (requestPath != null && requestPath.contains("/druid/")) {
+                            // 需要检查多种情况：
+                            // 1. requestPath 包含 /druid（Spring Security 内部路径，可能不包含 context-path）
+                            // 2. fullPath 包含 /api/druid（完整路径）
+                            // 3. 处理重定向情况（Druid 可能会重定向到其他路径）
+                            boolean isDruidPath = false;
+                            if (requestPath != null) {
+                                // 检查 requestPath 是否包含 druid
+                                isDruidPath = requestPath.contains("/druid") 
+                                    || requestPath.startsWith("/druid")
+                                    || requestPath.equals("/druid");
+                            }
+                            if (!isDruidPath && fullPath != null) {
+                                // 检查完整路径是否包含 druid
+                                isDruidPath = fullPath.contains("/druid") 
+                                    || fullPath.contains("/api/druid");
+                            }
+                            
+                            if (isDruidPath) {
                                 // 为 Druid 路径设置 SAMEORIGIN，允许在相同源的 iframe 中加载
                                 // 由于前端通过 Vite 代理访问，浏览器认为它们是同源的
                                 response.setHeader("X-Frame-Options", "SAMEORIGIN");

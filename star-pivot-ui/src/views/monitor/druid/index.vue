@@ -6,12 +6,7 @@
         <div class="card-header">
           <span>Druid 数据库监控（自定义页面）</span>
           <div>
-            <ElButton
-              type="info"
-              :icon="Link"
-              @click="openBuiltInPage"
-              style="margin-right: 10px"
-            >
+            <ElButton type="info" :icon="Link" @click="openBuiltInPage" style="margin-right: 10px">
               打开内置页面
             </ElButton>
             <ElSwitch

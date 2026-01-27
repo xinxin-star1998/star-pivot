@@ -332,7 +332,10 @@ export class DynamicRouteAppender {
 
       menuList.push(druidIframeRoute)
       if (import.meta.env.DEV) {
-        console.log('[DynamicRouteAppender] 已动态追加 Druid 监控内置页面 iframe 路由，URL:', druidUrl)
+        console.log(
+          '[DynamicRouteAppender] 已动态追加 Druid 监控内置页面 iframe 路由, URL:',
+          druidUrl
+        )
       }
     }
   }
