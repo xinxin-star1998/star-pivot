@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="ts">
-
   interface Props {
     modelValue: Record<string, any>
   }

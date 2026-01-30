@@ -1,9 +1,13 @@
 package com.star.pivot.system.service.impl;
 
+import com.star.pivot.common.domain.Constants;
 import com.star.pivot.common.exception.ServiceException;
 import com.star.pivot.common.utils.LogUtils;
+import com.star.pivot.common.utils.SecurityUtils;
 import com.star.pivot.system.domain.bo.LoginRequest;
 import com.star.pivot.system.domain.bo.LoginResponse;
+import com.star.pivot.system.domain.bo.RegisterRequest;
+import com.star.pivot.system.domain.bo.RegisterResponse;
 import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.AccountLockService;
@@ -12,6 +16,7 @@ import com.star.pivot.system.service.CaptchaService;
 import com.star.pivot.system.service.LoginRateLimitService;
 import com.star.pivot.system.service.SysLogininforService;
 import com.star.pivot.system.service.SysUserService;
+import com.star.pivot.system.utils.LoginUser;
 import com.star.pivot.security.JwtUtil;
 import com.star.pivot.security.RefreshTokenManager;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -84,40 +90,57 @@ public class AuthServiceImpl implements AuthService {
             // 5. 使用 AuthenticationManager 进行认证
             UsernamePasswordAuthenticationToken authenticationToken = 
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
-            authenticationManager.authenticate(authenticationToken);
+            Authentication authentication = authenticationManager.authenticate(authenticationToken);
             
-            // 3. 认证成功后查询用户信息（认证通过后用户一定存在）
-            SysUser user = userService.getUserByUsername(request.getUsername());
-            if (user == null) {
-                log.error("用户不存在: {}", request.getUsername());
-                logininfor.setStatus("1");
-                logininfor.setMsg("用户不存在");
-                sysLogininforService.saveLogininfor(logininfor);
-                throw new ServiceException("用户不存在", 404);
+            // 6. 从认证结果中获取用户信息（避免重复查询数据库）
+            // 认证过程中 CustomerUserDetailService.loadUserByUsername() 已经查询了用户信息
+            // 并封装在 LoginUser 对象中，这里直接从 Authentication 中获取即可
+            SysUser user = null;
+            if (authentication != null && authentication.getPrincipal() instanceof LoginUser loginUser) {
+                user = loginUser.getUser();
             }
             
-            // 4. 生成访问令牌（Access Token）
+            // 如果无法从认证对象中获取用户信息，则降级查询数据库（理论上不应该发生）
+            if (user == null) {
+                log.warn("无法从认证对象中获取用户信息，降级查询数据库: {}", request.getUsername());
+                user = userService.getUserByUsername(request.getUsername());
+                if (user == null) {
+                    log.error("用户不存在: {}", request.getUsername());
+                    logininfor.setStatus("1");
+                    logininfor.setMsg("用户不存在");
+                    sysLogininforService.saveLogininfor(logininfor);
+                    throw new ServiceException("用户不存在", 404);
+                }
+            }
+            
+            // 7. 生成访问令牌（Access Token）
             Map<String, Object> claims = new HashMap<>();
             claims.put("username", request.getUsername());
             claims.put("userId", user.getUserId());
             String token = jwtUtil.generateToken(request.getUsername(), claims);
 
-            // 5. 生成刷新令牌（Refresh Token），用于后续无感刷新
-            String refreshToken = refreshTokenManager.generateAndStoreRefreshToken(user.getUserId());
+            // 8. 生成刷新令牌（Refresh Token），并存储完整的登录信息到 Redis
+            String refreshToken = refreshTokenManager.generateAndStoreRefreshToken(
+                user.getUserId(),
+                ipaddr,
+                browser,
+                os,
+                loginLocation
+            );
 
-            // 6. 返回登录响应
+            // 9. 返回登录响应
             LoginResponse response = new LoginResponse();
             response.setToken(token);
             response.setRefreshToken(refreshToken);
             response.setUsername(request.getUsername());
             response.setNickname(user.getNickName());
 
-            // 7. 登录成功，清除失败记录和限流计数
+            // 10. 登录成功，清除失败记录和限流计数
             accountLockService.clearLoginFailures(request.getUsername());
             rateLimitService.clearIpRateLimit(ipaddr);
             rateLimitService.clearIpUsernameRateLimit(ipaddr, request.getUsername());
             
-            // 8. 记录登录成功日志
+            // 11. 记录登录成功日志
             logininfor.setStatus("0");
             logininfor.setMsg("登录成功");
             sysLogininforService.saveLogininfor(logininfor);
@@ -136,9 +159,6 @@ public class AuthServiceImpl implements AuthService {
         } catch (ServiceException e) {
             // ServiceException已经在上面处理了，这里不需要重复记录
             // 但如果是账户锁定或限流异常，不需要再记录失败次数（已经在对应服务中处理）
-            if (e.getCode() != 423 && e.getCode() != 429) {
-                // 其他业务异常（如验证码错误）已在上面记录失败次数
-            }
             throw e;
         } catch (Exception e) {
             log.error("登录异常: {}", e.getMessage(), e);
@@ -149,7 +169,56 @@ public class AuthServiceImpl implements AuthService {
             throw new ServiceException("登录失败", 500);
         }
     }
-    
+
+    /**
+     * 用户注册
+     *
+     * 说明：
+     * - 前端已完成账号、密码长度等基础校验，这里主要做幂等与安全校验
+     * - 注册成功后仅返回基础用户信息，不自动登录
+     */
+    @Override
+    public RegisterResponse register(RegisterRequest request) {
+        String username = request.getUsername();
+        String password = request.getPassword();
+
+        // 基础参数校验
+        if (username == null || username.trim().isEmpty()) {
+            throw new ServiceException("用户名不能为空", 400);
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new ServiceException("密码不能为空", 400);
+        }
+
+        // 检查用户名是否已存在
+        SysUser exists = userService.getUserByUsername(username.trim());
+        if (exists != null) {
+            throw new ServiceException("用户名已存在", 400);
+        }
+
+        // 构建用户实体
+        SysUser user = new SysUser();
+        user.setUserName(username.trim());
+        user.setNickName(username.trim());
+        user.setUserType("00");
+        user.setStatus(Constants.Status.NORMAL);
+        user.setPassword(SecurityUtils.encryptPassword(password));
+        user.setDelFlag(Constants.DelFlag.NORMAL);
+        user.setCreateBy(username.trim());
+        user.setCreateTime(java.time.LocalDateTime.now());
+
+        boolean success = userService.save(user);
+        if (!success || user.getUserId() == null) {
+            throw new ServiceException("注册失败，请稍后重试", 500);
+        }
+
+        RegisterResponse response = new RegisterResponse();
+        response.setUserId(user.getUserId());
+        response.setUsername(user.getUserName());
+        response.setNickName(user.getNickName());
+        return response;
+    }
+
     /**
      * 获取当前请求
      */

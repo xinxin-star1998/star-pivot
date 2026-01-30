@@ -289,10 +289,10 @@
     }
   }
 
-  // 从会话存储读取保存的登录信息（仅账号信息，不再保存密码）
+  // 从本地存储读取保存的登录信息（仅账号信息，不再保存密码）
   const loadSavedLoginInfo = () => {
     try {
-      const savedInfo = sessionStorage.getItem('login-info')
+      const savedInfo = localStorage.getItem('login-info')
       if (savedInfo) {
         const parsedInfo = JSON.parse(savedInfo)
         if (parsedInfo.username) {
@@ -307,7 +307,7 @@
     }
   }
 
-  // 保存登录信息到会话存储（仅账号和勾选状态，不保存密码）
+  // 保存登录信息到本地存储（仅账号和勾选状态，不保存密码）
   const saveLoginInfo = () => {
     try {
       if (formData.rememberPassword) {
@@ -315,10 +315,10 @@
           username: formData.username,
           rememberPassword: formData.rememberPassword
         }
-        sessionStorage.setItem('login-info', JSON.stringify(loginInfo))
+        localStorage.setItem('login-info', JSON.stringify(loginInfo))
       } else {
-        // 如果用户取消记住密码，清除会话存储中的登录信息
-        sessionStorage.removeItem('login-info')
+        // 如果用户取消记住密码，清除本地存储中的登录信息
+        localStorage.removeItem('login-info')
       }
     } catch (error) {
       console.error('Failed to save login info:', error)

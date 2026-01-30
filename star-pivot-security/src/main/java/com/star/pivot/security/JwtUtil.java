@@ -1,26 +1,32 @@
 package com.star.pivot.security;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SecurityException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 
 /**
- * JWT 工具类
+ * JWT 工具类（支持密钥轮换）
+ *
+ * <p>说明：
+ * <ul>
+ *   <li>生成Token时使用当前密钥</li>
+ *   <li>验证Token时支持密钥轮换（优先使用当前密钥，失败则尝试上一个密钥）</li>
+ *   <li>如需启用密钥轮换，请配置 jwt.previous-secret</li>
+ * </ul>
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtUtil {
+
+    private final JwtKeyManager jwtKeyManager;
 
     @Value("${jwt.secret}")
     private String secret;
@@ -41,18 +47,11 @@ public class JwtUtil {
     private Long refreshExpiration;
 
     /**
-     * 生成密钥
+     * 生成密钥（使用当前密钥）
      */
     private SecretKey getSigningKey() {
-        if (secret == null || secret.trim().isEmpty()) {
-            throw new IllegalArgumentException("JWT密钥不能为空");
-        }
-        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
-        // HMAC SHA密钥需要至少256位（32字节）
-        if (keyBytes.length < 32) {
-            throw new IllegalArgumentException("JWT密钥长度不足，至少需要32字节（256位）");
-        }
-        return Keys.hmacShaKeyFor(keyBytes);
+        // 使用JwtKeyManager获取当前密钥（支持密钥轮换）
+        return jwtKeyManager.getCurrentSigningKey();
     }
 
     /**
@@ -72,14 +71,11 @@ public class JwtUtil {
     }
 
     /**
-     * 从 Token 中获取 Claims
+     * 从 Token 中获取 Claims（支持密钥轮换）
      */
     public Claims getClaimsFromToken(String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        // 使用JwtKeyManager解析Token（支持密钥轮换）
+        return jwtKeyManager.getClaimsFromToken(token);
     }
 
     /**
@@ -116,42 +112,22 @@ public class JwtUtil {
     }
 
     /**
-     * 验证 Token 是否有效
+     * 验证 Token 是否有效（支持密钥轮换）
      */
     public boolean validateToken(String token) {
-        try {
-            Claims claims = getClaimsFromToken(token);
-            return !claims.getExpiration().before(new Date());
-        } catch (ExpiredJwtException e) {
-            log.debug("Token已过期：{}", e.getMessage());
-            return false;
-        } catch (MalformedJwtException e) {
-            log.warn("Token格式错误：{}", e.getMessage());
-            return false;
-        } catch (SecurityException e) {
-            log.warn("Token签名验证失败：{}", e.getMessage());
-            return false;
-        } catch (IllegalArgumentException e) {
-            log.warn("Token为空或格式不正确：{}", e.getMessage());
-            return false;
-        } catch (Exception e) {
-            log.error("Token验证异常：", e);
-            return false;
-        }
+        // 使用JwtKeyManager验证Token（支持密钥轮换）
+        return jwtKeyManager.validateToken(token);
     }
 
     /**
-     * 判断 Token 是否过期
+     * 判断 Token 是否过期（支持密钥轮换）
      */
     public boolean isTokenExpired(String token) {
         try {
             Claims claims = getClaimsFromToken(token);
             return claims.getExpiration().before(new Date());
-        } catch (ExpiredJwtException e) {
-            log.debug("Token已过期：{}", e.getMessage());
-            return true;
         } catch (Exception e) {
-            log.warn("判断Token是否过期时发生异常：{}", e.getMessage());
+            log.debug("判断Token是否过期时发生异常：{}", e.getMessage());
             return true;
         }
     }

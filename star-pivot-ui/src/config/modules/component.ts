@@ -15,7 +15,6 @@
  * @author Art Design Pro Team
  */
 
-
 /**
  * 全局组件配置列表
  */

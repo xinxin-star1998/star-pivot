@@ -75,27 +75,21 @@ public class DataScopeService {
             return createNoDataScope();
         }
 
+        // 统一在方法开始处查询用户信息，避免在多个分支中重复查询
+        SysUser user = userMapper.selectById(userId);
+        Long userDeptId = user != null ? user.getDeptId() : null;
+
         // 检查超级管理员（合并角色查询，避免重复）
         List<SysRole> roleList = roleMapper.selectRolesByUserId(userId);
         if (isSuperAdmin(userId, roleList)) {
             log.debug("数据权限：超级管理员 userId={}，返回全部数据", userId);
-            // 获取用户部门信息（用于返回完整DataScope）
-            SysUser user = userMapper.selectById(userId);
-            Long userDeptId = user != null ? user.getDeptId() : null;
             return new DataScope(SQL_ALL, Collections.emptyList(), userId, userDeptId);
         }
 
         if (CollectionUtils.isEmpty(roleList)) {
             log.debug("数据权限：用户 userId={} 无角色，返回无数据", userId);
-            // 获取用户部门信息（用于返回完整DataScope）
-            SysUser user = userMapper.selectById(userId);
-            Long userDeptId = user != null ? user.getDeptId() : null;
             return new DataScope(SQL_NONE, Collections.emptyList(), userId, userDeptId);
         }
-
-        // 获取用户部门信息
-        SysUser user = userMapper.selectById(userId);
-        Long userDeptId = user != null ? user.getDeptId() : null;
 
         // 计算最终数据权限（取最高优先级）
         ScopeResult result = calculateDataScope(roleList, userDeptId);

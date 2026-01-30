@@ -1,5 +1,8 @@
 package com.star.pivot.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.star.pivot.common.domain.Constants;
 import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
@@ -9,6 +12,13 @@ import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.domain.entity.UserRole;
 import com.star.pivot.system.service.SysRoleService;
 import com.star.pivot.system.service.SysUserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +28,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/sys/role")
+@Tag(name = "角色管理", description = "角色的增删改查、权限分配、用户分配等接口")
 public class SysRoleController {
     @Autowired
     private SysRoleService sysRoleService;
@@ -29,6 +40,10 @@ public class SysRoleController {
      * @param roleQueryDTO 角色查询参数对象
      * @return 分页的角色列表结果
      */
+    @Operation(summary = "分页查询角色", description = "根据条件分页查询角色列表")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = PageResponse.class)))
+    })
     @PreAuthorize("hasAuthority('system:role:query')")
     @PostMapping("/list")
     public Result<PageResponse<SysRole>> list(@RequestBody RoleQueryDTO roleQueryDTO){
@@ -40,9 +55,15 @@ public class SysRoleController {
      * 
      * @return 所有角色列表，用于下拉选择
      */
+    @Operation(summary = "查询角色下拉列表", description = "获取所有角色列表，用于下拉选择框")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功")
+    })
     @PreAuthorize("hasAuthority('system:role:query')")
     @GetMapping("/select")
     public Result<List<SysRole>> select(){
+        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysRole::getDelFlag, Constants.DelFlag.NORMAL);
         return Result.success(sysRoleService.list());
     }
     /**
@@ -51,9 +72,14 @@ public class SysRoleController {
      * @param roleId 角色ID
      * @return 指定ID的角色信息
      */
+    @Operation(summary = "获取角色详情", description = "根据角色ID获取角色的详细信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = SysRole.class))),
+            @ApiResponse(responseCode = "404", description = "角色不存在")
+    })
     @PreAuthorize("hasAuthority('system:role:query')")
     @GetMapping("/{roleId}")
-    public Result<SysRole> getInfo(@PathVariable("roleId") Long roleId) {
+    public Result<SysRole> getInfo(@Parameter(description = "角色ID") @PathVariable("roleId") Long roleId) {
         SysRole roleVO = sysRoleService.selectRoleById(roleId);
         return Result.success(roleVO);
     }
@@ -64,6 +90,11 @@ public class SysRoleController {
      * @param roleDTO 角色数据传输对象
      * @return 操作结果，成功或失败的响应
      */
+    @Operation(summary = "新增角色", description = "创建新角色，需要提供角色名称、角色键值、权限等信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "新增成功"),
+            @ApiResponse(responseCode = "400", description = "参数错误或角色键值已存在")
+    })
     @PreAuthorize("hasAuthority('system:role:add')")
     @PostMapping("/addRole")
     public Result<?> add(@Valid @RequestBody RoleDTO roleDTO) {
@@ -77,6 +108,11 @@ public class SysRoleController {
      * @param roleDTO 角色数据传输对象
      * @return 操作结果，成功或失败的响应
      */
+    @Operation(summary = "修改角色", description = "更新角色信息，包括角色名称、权限等")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "修改成功"),
+            @ApiResponse(responseCode = "404", description = "角色不存在")
+    })
     @PreAuthorize("hasAuthority('system:role:edit')")
     @PutMapping("updateRole")
     public Result<?> edit(@Valid @RequestBody RoleDTO roleDTO) {
@@ -90,6 +126,11 @@ public class SysRoleController {
      * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果，成功或失败的响应
      */
+    @Operation(summary = "删除角色", description = "删除角色（支持批量删除）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "删除成功"),
+            @ApiResponse(responseCode = "400", description = "删除ID为空")
+    })
     @PreAuthorize("hasAuthority('system:role:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
@@ -107,6 +148,11 @@ public class SysRoleController {
      * @param roleDTO 角色数据传输对象，包含角色ID和状态
      * @return 操作结果，成功或失败的响应
      */
+    @Operation(summary = "修改角色状态", description = "启用或禁用角色")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "修改成功"),
+            @ApiResponse(responseCode = "404", description = "角色不存在")
+    })
     @PreAuthorize("hasAuthority('system:role:edit')")
     @PutMapping("/changeStatus")
     public Result<?> changeStatus(@RequestBody RoleDTO roleDTO) {
@@ -116,6 +162,11 @@ public class SysRoleController {
     /**
      * 分配角色权限接口 部门权限
      */
+    @Operation(summary = "分配角色数据权限", description = "为角色分配数据权限（部门权限范围）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "分配成功"),
+            @ApiResponse(responseCode = "404", description = "角色不存在")
+    })
     @PreAuthorize("hasAuthority('system:role:assignDataScope')")
     @PostMapping("/assignPermission")
     public Result<?> assignPermission(@RequestBody RolePermissionAssignDTO rolePermissionAssignDTO) {
@@ -128,9 +179,13 @@ public class SysRoleController {
      * @param roleId 角色ID
      * @return 该角色关联的部门ID列表
      */
+    @Operation(summary = "获取角色的部门ID列表", description = "根据角色ID获取该角色关联的部门ID列表")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功")
+    })
     @PreAuthorize("hasAuthority('system:role:query')")
     @GetMapping("/{roleId}/deptIds")
-    public Result<List<Long>> getDeptIds(@PathVariable("roleId") Long roleId) {
+    public Result<List<Long>> getDeptIds(@Parameter(description = "角色ID") @PathVariable("roleId") Long roleId) {
         List<Long> deptIds = sysRoleService.selectDeptIdsByRoleId(roleId);
         return Result.success(deptIds);
     }
@@ -140,9 +195,13 @@ public class SysRoleController {
      * @param roleId 角色ID
      * @return 指定角色拥有的菜单列表
      */
+    @Operation(summary = "获取角色的菜单ID列表", description = "根据角色ID获取该角色拥有的菜单ID列表")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功")
+    })
     @PreAuthorize("hasAuthority('system:role:query')")
     @GetMapping("/getMenuIdsByRoleId/{roleId}")
-    public Result<List<Long>> getMenuIdsByRoleId(@PathVariable("roleId") Long roleId){
+    public Result<List<Long>> getMenuIdsByRoleId(@Parameter(description = "角色ID") @PathVariable("roleId") Long roleId){
         List<Long> menuIds = sysRoleService.getMenuIdsByRoleId(roleId);
         return Result.success("查询成功", menuIds);
     }
@@ -151,6 +210,10 @@ public class SysRoleController {
      * @param assignUserReqBo 用户请求参数对象
      * @return 指定角色拥有的用户列表
      */
+    @Operation(summary = "查询已分配用户", description = "根据角色ID分页查询已分配该角色的用户列表")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = PageResponse.class)))
+    })
     @PreAuthorize("hasAuthority('system:role:allocatedList')")
     @PostMapping("/allocatedList")
     public Result<PageResponse<SysUser>> getUserListByRoleId(@RequestBody AssignUserReqBo assignUserReqBo){
@@ -163,6 +226,10 @@ public class SysRoleController {
      * @param assignUserReqBo 用户请求参数对象
      * @return 指定角色拥有的用户列表
      */
+    @Operation(summary = "查询未分配用户", description = "根据角色ID分页查询未分配该角色的用户列表")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = PageResponse.class)))
+    })
     @PreAuthorize("hasAuthority('system:role:unallocatedList')")
     @PostMapping("/unallocatedList")
     public Result<PageResponse<SysUser>> getUserListNotInByRoleId(@RequestBody AssignUserReqBo assignUserReqBo){
@@ -173,6 +240,10 @@ public class SysRoleController {
      * 添加userId 和 roleId  到sys_user_role
      *
      */
+    @Operation(summary = "分配用户", description = "为角色分配用户，建立用户与角色的关联关系")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "分配成功")
+    })
     @PreAuthorize("hasAuthority('system:role:assignUser')")
     @PostMapping("/assignUser")
     public Result<?> assignUser(@RequestBody UserRoleDTO userRoleDTO) {
@@ -182,6 +253,10 @@ public class SysRoleController {
     /*
      * 根据角色id 用户id 取消授权的用户
      */
+    @Operation(summary = "取消用户授权", description = "取消用户与角色的关联关系")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "取消成功")
+    })
     @PreAuthorize("hasAuthority('system:role:cancelUser')")
     @DeleteMapping("/cancelUser")
     public Result<?> cancelUser(@RequestBody UserRole userRole) {

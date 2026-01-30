@@ -28,11 +28,14 @@
         </div>
       </div>
       <ElInput
+        ref="searchInputRef"
         v-model="iconSearchText"
         placeholder="搜索图标（支持在线搜索，如：user、home、settings）..."
         clearable
         style="margin-bottom: 12px"
         @input="handleIconSearch"
+        @clear="handleSearchClear"
+        @keyup.enter="handleSearchEnter"
       >
         <template #prefix>
           <ElIcon><Search /></ElIcon>
@@ -42,12 +45,7 @@
         <ElIcon class="is-loading"><Loading /></ElIcon>
         <span style="margin-left: 8px">搜索中...</span>
       </div>
-      <div
-        v-if="!isSearchingIcons && filteredIcons.length === 0 && iconSearchText"
-        class="icon-empty"
-      >
-        未找到相关图标
-      </div>
+      <div v-if="showEmptyState" class="icon-empty">未找到相关图标</div>
       <!-- 分类显示图标 - 水平块状 -->
       <div v-if="!iconSearchText || iconSearchText.trim().length < 2" class="icon-categories">
         <!-- 分类标签栏 - 单行横向滚动 -->
@@ -123,10 +121,8 @@
   const emit = defineEmits<Emits>()
 
   const visible = ref(false)
-  const iconSearchText = ref('')
-  const isSearchingIcons = ref(false)
-  const onlineSearchResults = ref<string[]>([])
   const referenceRef = ref<HTMLElement>()
+  const searchInputRef = ref<InstanceType<typeof ElInput>>()
   const currentCategory = ref('常用')
   const categoryTabsRef = ref<HTMLElement>()
 
@@ -173,11 +169,17 @@
     el.scrollLeft += event.deltaY
   }
 
-  onUnmounted(() => {
-    // 清理搜索定时器
-    if (searchTimer) {
-      clearTimeout(searchTimer)
-      searchTimer = null
+  /**
+   * 监听弹窗显示状态，打开时自动聚焦搜索输入框
+   */
+  watch(visible, (newVal) => {
+    if (newVal) {
+      // 弹窗打开后，延迟聚焦输入框，确保 DOM 已渲染
+      nextTick(() => {
+        setTimeout(() => {
+          searchInputRef.value?.focus()
+        }, 100)
+      })
     }
   })
 
@@ -307,92 +309,219 @@
     }
   ]
 
-  // 所有常用图标（用于搜索）
+  // 所有常用图标（用于本地搜索）
   const commonIcons = iconCategories.flatMap((category) => category.icons)
 
-  // 图标API配置 - 支持多个图标库
-  const iconApis = [
-    {
-      name: 'Iconify 全库',
-      url: (keyword: string, limit: number) =>
-        `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}`
-    },
-    {
-      name: 'Remix Icon',
-      url: (keyword: string, limit: number) =>
-        `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=ri`
-    },
-    {
-      name: 'Material Design',
-      url: (keyword: string, limit: number) =>
-        `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=mdi`
-    },
-    {
-      name: 'Heroicons',
-      url: (keyword: string, limit: number) =>
-        `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=heroicons`
-    },
-    {
-      name: 'Ant Design',
-      url: (keyword: string, limit: number) =>
-        `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=ant-design`
-    },
-    {
-      name: 'Feather',
-      url: (keyword: string, limit: number) =>
-        `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=feather`
-    },
-    {
-      name: 'Font Awesome',
-      url: (keyword: string, limit: number) =>
-        `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=fa,fa6`
-    },
-    {
-      name: 'Bootstrap',
-      url: (keyword: string, limit: number) =>
-        `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=bx`
+  /**
+   * 图标搜索功能 composable
+   * 负责管理搜索状态、本地搜索和在线搜索逻辑
+   */
+  const useIconSearch = () => {
+    // 搜索相关状态
+    const iconSearchText = ref('')
+    const isSearchingIcons = ref(false)
+    const localSearchResults = ref<string[]>([])
+    const onlineSearchResults = ref<string[]>([])
+    const searchError = ref<string | null>(null)
+
+    // 图标API配置 - 支持多个图标库
+    const iconApis = [
+      {
+        name: 'Iconify 全库',
+        url: (keyword: string, limit: number) =>
+          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}`
+      },
+      {
+        name: 'Remix Icon',
+        url: (keyword: string, limit: number) =>
+          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=ri`
+      },
+      {
+        name: 'Material Design',
+        url: (keyword: string, limit: number) =>
+          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=mdi`
+      },
+      {
+        name: 'Heroicons',
+        url: (keyword: string, limit: number) =>
+          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=heroicons`
+      },
+      {
+        name: 'Ant Design',
+        url: (keyword: string, limit: number) =>
+          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=ant-design`
+      },
+      {
+        name: 'Feather',
+        url: (keyword: string, limit: number) =>
+          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=feather`
+      },
+      {
+        name: 'Font Awesome',
+        url: (keyword: string, limit: number) =>
+          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=fa,fa6`
+      },
+      {
+        name: 'Bootstrap',
+        url: (keyword: string, limit: number) =>
+          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=bx`
+      }
+    ]
+
+    /**
+     * 本地搜索图标
+     * 在常用图标列表中搜索匹配的图标
+     */
+    const searchLocalIcons = (keyword: string): string[] => {
+      if (!keyword || keyword.trim().length === 0) {
+        return []
+      }
+      const lowerKeyword = keyword.trim().toLowerCase()
+      return commonIcons.filter((icon) => icon.toLowerCase().includes(lowerKeyword))
     }
-  ]
 
-  // 从多个图标API在线搜索图标
-  const searchIconsOnline = async (keyword: string): Promise<void> => {
-    if (!keyword || keyword.trim().length < 2) {
-      onlineSearchResults.value = []
-      return
+    /**
+     * 在线搜索图标
+     * 从多个图标API并行搜索图标
+     */
+    const searchIconsOnline = async (keyword: string): Promise<void> => {
+      if (!keyword || keyword.trim().length < 2) {
+        onlineSearchResults.value = []
+        searchError.value = null
+        return
+      }
+
+      isSearchingIcons.value = true
+      searchError.value = null
+
+      try {
+        // 并行请求多个API端点
+        const searchPromises = iconApis.map(async (api) => {
+          try {
+            const response = await fetch(api.url(keyword, 30))
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`)
+            }
+            const data = await response.json()
+            return data.icons && Array.isArray(data.icons) ? data.icons : []
+          } catch (error) {
+            console.warn(`${api.name} API 搜索失败:`, error)
+            return []
+          }
+        })
+
+        // 等待所有请求完成
+        const results = await Promise.all(searchPromises)
+
+        // 合并所有结果并去重
+        const allIcons = results.flat()
+        const uniqueIcons = Array.from(new Set(allIcons))
+
+        // 限制最终结果数量，优先显示常用图标库
+        onlineSearchResults.value = uniqueIcons.slice(0, 150)
+      } catch (error) {
+        console.error('搜索图标失败:', error)
+        searchError.value = '在线搜索失败，请稍后重试'
+        onlineSearchResults.value = []
+      } finally {
+        isSearchingIcons.value = false
+      }
     }
 
-    isSearchingIcons.value = true
-    try {
-      // 并行请求多个API端点
-      const searchPromises = iconApis.map(async (api) => {
-        try {
-          const response = await fetch(api.url(keyword, 30))
-          const data = await response.json()
-          return data.icons && Array.isArray(data.icons) ? data.icons : []
-        } catch (error) {
-          console.warn(`${api.name} API 搜索失败:`, error)
-          return []
-        }
-      })
+    /**
+     * 执行搜索
+     * 先进行本地搜索，如果关键词长度>=2则同时进行在线搜索
+     */
+    const performSearch = async (keyword: string): Promise<void> => {
+      const trimmedKeyword = keyword.trim()
 
-      // 等待所有请求完成
-      const results = await Promise.all(searchPromises)
+      // 先进行本地搜索（无论关键词长度）
+      localSearchResults.value = searchLocalIcons(trimmedKeyword)
 
-      // 合并所有结果并去重
-      const allIcons = results.flat()
-      const uniqueIcons = Array.from(new Set(allIcons))
+      // 如果关键词长度>=2，进行在线搜索
+      if (trimmedKeyword.length >= 2) {
+        await searchIconsOnline(trimmedKeyword)
+      } else {
+        onlineSearchResults.value = []
+        isSearchingIcons.value = false
+      }
+    }
 
-      // 限制最终结果数量，优先显示常用图标库
-      onlineSearchResults.value = uniqueIcons.slice(0, 150)
-    } catch (error) {
-      console.error('搜索图标失败:', error)
+    /**
+     * 重置搜索状态
+     */
+    const resetSearch = (): void => {
+      iconSearchText.value = ''
+      localSearchResults.value = []
       onlineSearchResults.value = []
-    } finally {
       isSearchingIcons.value = false
+      searchError.value = null
+    }
+
+    /**
+     * 合并搜索结果
+     * 优先显示本地搜索结果，然后显示在线搜索结果，并去重
+     */
+    const mergedSearchResults = computed(() => {
+      const local = localSearchResults.value
+      const online = onlineSearchResults.value
+
+      // 如果只有本地结果，直接返回
+      if (online.length === 0) {
+        return local
+      }
+
+      // 合并结果并去重，本地结果优先
+      const allResults = [...local, ...online]
+      const uniqueResults = Array.from(new Set(allResults))
+      return uniqueResults
+    })
+
+    /**
+     * 是否有搜索结果
+     */
+    const hasSearchResults = computed(() => {
+      return mergedSearchResults.value.length > 0
+    })
+
+    /**
+     * 是否显示空状态
+     */
+    const showEmptyState = computed(() => {
+      const keyword = iconSearchText.value.trim()
+      return (
+        keyword.length > 0 &&
+        !isSearchingIcons.value &&
+        !hasSearchResults.value &&
+        !searchError.value
+      )
+    })
+
+    return {
+      iconSearchText,
+      isSearchingIcons,
+      localSearchResults,
+      onlineSearchResults,
+      searchError,
+      mergedSearchResults,
+      hasSearchResults,
+      showEmptyState,
+      performSearch,
+      resetSearch
     }
   }
 
-  // 防抖搜索
+  // 使用图标搜索功能
+  const {
+    iconSearchText,
+    isSearchingIcons,
+    mergedSearchResults,
+    showEmptyState,
+    performSearch,
+    resetSearch
+  } = useIconSearch()
+
+  // 防抖搜索处理
   let searchTimer: ReturnType<typeof setTimeout> | null = null
   const handleIconSearch = (): void => {
     if (searchTimer) {
@@ -400,30 +529,55 @@
     }
 
     searchTimer = setTimeout(() => {
-      const keyword = iconSearchText.value.trim()
-      if (keyword.length >= 2) {
-        searchIconsOnline(keyword)
-      } else {
-        onlineSearchResults.value = []
-      }
+      performSearch(iconSearchText.value)
     }, 500)
   }
 
-  // 过滤图标列表
-  const filteredIcons = computed(() => {
-    const keyword = iconSearchText.value.trim().toLowerCase()
-
-    // 如果有搜索关键词且长度>=2，使用在线搜索结果
-    if (keyword.length >= 2 && onlineSearchResults.value.length > 0) {
-      return onlineSearchResults.value
+  /**
+   * 处理搜索框清空
+   * 当用户点击清空按钮时，立即重置搜索状态
+   */
+  const handleSearchClear = (): void => {
+    if (searchTimer) {
+      clearTimeout(searchTimer)
+      searchTimer = null
     }
+    resetSearch()
+  }
 
-    // 如果有搜索关键词但长度<2，搜索本地常用图标
+  /**
+   * 处理回车键搜索
+   * 按回车键时立即执行搜索，跳过防抖延迟
+   */
+  const handleSearchEnter = (): void => {
+    if (searchTimer) {
+      clearTimeout(searchTimer)
+      searchTimer = null
+    }
+    const keyword = iconSearchText.value.trim()
     if (keyword.length > 0) {
-      return commonIcons.filter((icon) => icon.toLowerCase().includes(keyword))
+      performSearch(keyword)
+    } else {
+      resetSearch()
     }
+  }
 
+  // 过滤图标列表（用于模板显示）
+  const filteredIcons = computed(() => {
+    const keyword = iconSearchText.value.trim()
+    // 如果有搜索关键词，返回合并后的搜索结果
+    if (keyword.length > 0) {
+      return mergedSearchResults.value
+    }
     return []
+  })
+
+  // 清理搜索定时器
+  onUnmounted(() => {
+    if (searchTimer) {
+      clearTimeout(searchTimer)
+      searchTimer = null
+    }
   })
 
   // 切换分类
@@ -443,8 +597,7 @@
     // 延迟关闭，确保值已更新
     setTimeout(() => {
       visible.value = false
-      iconSearchText.value = ''
-      onlineSearchResults.value = []
+      resetSearch()
     }, 100)
   }
 </script>
@@ -452,40 +605,40 @@
 <style scoped lang="scss">
   .icon-picker {
     max-height: 420px;
-    overflow-y: auto;
     padding: 12px 14px 14px;
-    background: linear-gradient(180deg, #f9fbff 0%, #ffffff 40%);
+    overflow-y: auto;
+    background: linear-gradient(180deg, #f9fbff 0%, #fff 40%);
     border-radius: 10px;
   }
 
   .icon-picker-header {
     display: flex;
+    gap: 12px;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
     margin-bottom: 10px;
   }
 
   .icon-preview {
     display: flex;
-    align-items: center;
     gap: 8px;
+    align-items: center;
     padding: 6px 10px;
+    background: rgb(64 158 255 / 6%);
+    border: 1px solid rgb(64 158 255 / 15%);
     border-radius: 999px;
-    background: rgba(64, 158, 255, 0.06);
-    border: 1px solid rgba(64, 158, 255, 0.15);
   }
 
   .icon-preview-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #ffffff;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 28px;
+    height: 28px;
     color: #409eff;
-    box-shadow: 0 1px 4px rgba(64, 158, 255, 0.2);
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgb(64 158 255 / 20%);
 
     :deep(svg) {
       font-size: 18px;
@@ -504,27 +657,27 @@
   }
 
   .icon-preview-name {
-    font-size: 12px;
-    color: #303133;
     max-width: 180px;
     overflow: hidden;
+    font-size: 12px;
+    color: #303133;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .icon-tip {
     flex: 1;
-    text-align: right;
     font-size: 11px;
     color: #909399;
+    text-align: right;
   }
 
   .icon-tip-keyword {
     padding: 0 4px;
-    border-radius: 4px;
-    background: rgba(64, 158, 255, 0.08);
-    color: #409eff;
     font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+    color: #409eff;
+    background: rgb(64 158 255 / 8%);
+    border-radius: 4px;
   }
 
   .icon-loading,
@@ -533,8 +686,8 @@
     align-items: center;
     justify-content: center;
     padding: 40px 20px;
-    color: #909399;
     font-size: 14px;
+    color: #909399;
   }
 
   .icon-categories {
@@ -548,52 +701,51 @@
     flex-wrap: nowrap;
     gap: 8px;
     padding-bottom: 10px;
+    overflow: auto hidden;
     border-bottom: 1px solid #ebeef5;
-    overflow-x: auto;
-    overflow-y: hidden;
     scrollbar-width: thin;
   }
 
   .category-tab {
     display: inline-flex;
+    gap: 8px;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
     padding: 6px 10px 6px 12px;
     font-size: 13px;
     color: #606266;
+    white-space: nowrap;
+    cursor: pointer;
     background: #f5f7fa;
     border: 1px solid #e4e7ed;
     border-radius: 999px;
-    cursor: pointer;
     transition: all 0.2s;
-    white-space: nowrap;
 
     &:hover {
       color: #409eff;
-      border-color: #409eff;
       background: #ecf5ff;
+      border-color: #409eff;
     }
 
     &.active {
-      color: #409eff;
-      border-color: #409eff;
-      background: #ecf5ff;
       font-weight: 600;
+      color: #409eff;
+      background: #ecf5ff;
+      border-color: #409eff;
     }
   }
 
   .category-tab-main {
     display: inline-flex;
-    align-items: center;
     gap: 6px;
+    align-items: center;
   }
 
   .category-tab-dot {
     width: 6px;
     height: 6px;
-    border-radius: 50%;
     background: #c0c4cc;
+    border-radius: 50%;
   }
 
   .category-tab-name {
@@ -601,16 +753,16 @@
   }
 
   .category-tab-count {
-    min-width: 18px;
-    height: 18px;
-    padding: 0 6px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.04);
-    font-size: 11px;
-    color: #909399;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    font-size: 11px;
+    color: #909399;
+    background: rgb(0 0 0 / 4%);
+    border-radius: 999px;
   }
 
   .category-tab.active .category-tab-dot {
@@ -618,21 +770,21 @@
   }
 
   .category-tab.active .category-tab-count {
-    background: rgba(64, 158, 255, 0.12);
     color: #409eff;
+    background: rgb(64 158 255 / 12%);
   }
 
   .category-title-row {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    margin: 4px 0 4px;
+    margin: 4px 0;
   }
 
   .category-title-left {
     display: flex;
-    align-items: baseline;
     gap: 6px;
+    align-items: baseline;
   }
 
   .category-title-text {
@@ -650,48 +802,48 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    overflow-x: auto;
     padding-bottom: 4px;
+    overflow-x: auto;
   }
 
   .icon-item-horizontal {
     display: inline-flex;
     flex-direction: column;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
+    min-width: 80px;
     padding: 12px 16px;
+    cursor: pointer;
+    background: #fff;
     border: 1px solid #e4e7ed;
     border-radius: 4px;
-    cursor: pointer;
     transition: all 0.2s;
-    background: #fff;
-    min-width: 80px;
-    flex-shrink: 0;
 
     &:hover {
-      border-color: #409eff;
       background: #ecf5ff;
+      border-color: #409eff;
+      box-shadow: 0 2px 8px rgb(64 158 255 / 20%);
       transform: translateY(-2px);
-      box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
     }
 
     &.active {
-      border-color: #409eff;
-      background: #ecf5ff;
       color: #409eff;
-      box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+      background: #ecf5ff;
+      border-color: #409eff;
+      box-shadow: 0 2px 8px rgb(64 158 255 / 30%);
     }
 
     .icon-name {
+      max-width: 100%;
       margin-top: 6px;
+      overflow: hidden;
       font-size: 11px;
+      line-height: 1.2;
       color: #606266;
       text-align: center;
-      word-break: break-all;
-      line-height: 1.2;
-      max-width: 100%;
-      overflow: hidden;
       text-overflow: ellipsis;
+      word-break: break-all;
       white-space: nowrap;
     }
 

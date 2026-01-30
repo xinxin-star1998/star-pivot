@@ -51,7 +51,8 @@ export function scriptErrorHandler(
   error?: Error
 ): boolean {
   // 过滤 ResizeObserver 错误（这是一个常见的浏览器警告，不影响功能）
-  const errorMessage = typeof message === 'string' ? message : (message as ErrorEvent)?.message || ''
+  const errorMessage =
+    typeof message === 'string' ? message : (message as ErrorEvent)?.message || ''
   if (errorMessage.includes('ResizeObserver loop completed with undelivered notifications')) {
     // 静默处理 ResizeObserver 错误，不输出到控制台
     return true

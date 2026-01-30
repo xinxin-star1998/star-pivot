@@ -36,6 +36,14 @@ declare module 'qrcode.vue' {
   export default QrcodeVue
 }
 
+// Element Plus 图标按需导入模块声明
+// 某些情况下 @element-plus/icons-vue 的类型声明不会被 TS 正确识别，这里做一个兜底声明
+declare module '@element-plus/icons-vue'
+
+// dayjs 时间库模块声明
+// 项目已安装 dayjs，但可能缺少类型声明或 TS 未正确推断，这里做兜底声明
+declare module 'dayjs'
+
 // 全局变量声明
 declare const __APP_VERSION__: string // 版本号
 
@@ -49,5 +57,11 @@ declare module '@vue/runtime-core' {
 // 确保 Vue 类型可以从 'vue' 模块正确导入
 // 这些类型在 Vue 3.5+ 中应该可以从 'vue' 导入，但 vue-tsc 可能需要额外的类型声明
 declare module 'vue' {
-  export type { App, Directive, DirectiveBinding, DefineComponent, ComponentPublicInstance } from '@vue/runtime-core'
+  export type {
+    App,
+    Directive,
+    DirectiveBinding,
+    DefineComponent,
+    ComponentPublicInstance
+  } from 'vue'
 }

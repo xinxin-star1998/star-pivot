@@ -7,7 +7,6 @@
  * @author Art Design Pro Team
  */
 
-
 export class ComponentLoader {
   private modules: Record<string, () => Promise<any>>
 

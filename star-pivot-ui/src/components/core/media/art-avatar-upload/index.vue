@@ -124,7 +124,7 @@
       // 解析URL，提取路径部分
       const urlObj = new URL(url)
       let pathname = urlObj.pathname
-      
+
       // 移除开头的斜杠
       if (pathname.startsWith('/')) {
         pathname = pathname.slice(1)
@@ -134,15 +134,15 @@
       // 1. https://{bucket-name}.{endpoint}/{object-name} - 标准格式
       // 2. https://{custom-domain}/{object-name} - 自定义域名
       // 3. https://{custom-domain}/{bucket-name}/{object-name} - 自定义域名带存储桶
-      
+
       // MinIO 的 URL 格式通常是：
       // http://{endpoint}/{bucket-name}/{object-name}
-      
+
       // 检查是否是阿里云 OSS 标准格式（hostname 包含存储桶名称）
       // 例如：star-pivot.oss-cn-beijing.aliyuncs.com
       const hostname = urlObj.hostname
       const parts = pathname.split('/')
-      
+
       // 如果路径为空，说明可能是根路径，返回 null
       if (parts.length === 0 || (parts.length === 1 && parts[0] === '')) {
         return null
@@ -303,14 +303,14 @@
   .art-avatar-upload {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 16px;
+    align-items: center;
 
     .avatar-preview {
       position: relative;
-      border-radius: 50%;
       overflow: hidden;
       border: 2px dashed #d9d9d9;
+      border-radius: 50%;
       transition: all 0.3s ease;
 
       &.avatar-editable {
@@ -321,8 +321,8 @@
 
           // 悬浮时显示删除图标
           .avatar-delete-icon {
-            opacity: 1;
             visibility: visible;
+            opacity: 1;
           }
         }
       }
@@ -340,12 +340,12 @@
         justify-content: center;
         width: 100%;
         height: 100%;
-        background-color: #f5f5f5;
         color: #999;
+        background-color: #f5f5f5;
 
         i {
-          font-size: 24px;
           margin-bottom: 8px;
+          font-size: 24px;
         }
 
         span {
@@ -358,30 +358,30 @@
         position: absolute;
         top: 0;
         right: 0;
-        width: 24px;
-        height: 24px;
-        background-color: rgba(0, 0, 0, 0.6);
-        border-radius: 0 0 0 50%;
+        z-index: 10;
         display: flex;
         align-items: center;
         justify-content: center;
+        width: 24px;
+        height: 24px;
+        font-size: 16px;
+        color: #fff;
         cursor: pointer;
-        transition: all 0.3s ease;
-        z-index: 10;
+        visibility: hidden;
+        user-select: none;
+        background-color: rgb(0 0 0 / 60%);
+        border-radius: 0 0 0 50%;
         // 默认隐藏，悬浮时显示
         opacity: 0;
-        visibility: hidden;
-        color: #fff;
-        font-size: 16px;
-        user-select: none;
+        transition: all 0.3s ease;
 
         .art-svg-icon {
-          color: #fff;
           font-size: 16px;
+          color: #fff;
         }
 
         &:hover {
-          background-color: rgba(255, 77, 79, 0.8);
+          background-color: rgb(255 77 79 / 80%);
         }
       }
     }
@@ -391,9 +391,9 @@
     }
 
     .error-message {
-      color: #ff4d4f;
-      font-size: 12px;
       margin-top: 8px;
+      font-size: 12px;
+      color: #ff4d4f;
     }
   }
 </style>

@@ -136,6 +136,24 @@ declare namespace Api {
     interface CaptchaVerifyResponse {
       captchaProof: string
     }
+
+    /** 注册请求参数 */
+    interface RegisterParams {
+      /** 用户名 */
+      username: string
+      /** 密码 */
+      password: string
+    }
+
+    /** 注册响应结果 */
+    interface RegisterResponse {
+      /** 用户ID（可选，视后端实现而定） */
+      userId?: number
+      /** 用户名 */
+      username: string
+      /** 昵称（可选） */
+      nickName?: string
+    }
   }
 
   /** 系统管理类型 */

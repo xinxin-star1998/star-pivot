@@ -8,6 +8,8 @@ import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
 import com.star.pivot.system.domain.bo.CaptchaVerifyResponse;
 import com.star.pivot.system.domain.bo.LoginRequest;
 import com.star.pivot.system.domain.bo.LoginResponse;
+import com.star.pivot.system.domain.bo.RegisterRequest;
+import com.star.pivot.system.domain.bo.RegisterResponse;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
@@ -15,9 +17,19 @@ import com.star.pivot.system.service.AuthService;
 import com.star.pivot.system.service.CaptchaService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.SysMenuService;
+import com.star.pivot.system.service.SysDeptService;
+import com.star.pivot.system.service.OnlineUserService;
+import com.star.pivot.system.domain.bo.OnlineUserVO;
 import com.star.pivot.security.JwtBlackListManager;
 import com.star.pivot.security.JwtUtil;
 import com.star.pivot.security.RefreshTokenManager;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,6 +38,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,15 +50,18 @@ import java.util.Map;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "认证管理", description = "用户登录、登出、令牌刷新、验证码等认证相关接口")
 public class AuthController {
 
     private final AuthService authService;
     private final SysUserService sysUserService;
     private final SysMenuService sysMenuService;
+    private final SysDeptService sysDeptService;
     private final JwtBlackListManager jwtBlackListManager;
     private final JwtUtil jwtUtil;
     private final CaptchaService captchaService;
     private final RefreshTokenManager refreshTokenManager;
+    private final OnlineUserService onlineUserService;
 
     /**
      * 用户登录接口
@@ -54,10 +70,35 @@ public class AuthController {
      * @return 登录响应结果，包含用户信息和认证令牌
      */
     @Log(title = "用户登录", businessType = 0)
+    @Operation(summary = "用户登录", description = "通过用户名和密码进行登录，返回访问令牌和刷新令牌")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "登录成功", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "401", description = "用户名或密码错误"),
+            @ApiResponse(responseCode = "423", description = "账户已被锁定")
+    })
     @PostMapping("/login")
     public Result<LoginResponse> login(@RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
         return Result.success("登录成功", response);
+    }
+
+    /**
+     * 用户注册接口
+     *
+     * @param request 注册请求参数，包含用户名和密码
+     * @return 注册结果，包含基础用户信息
+     */
+    @Log(title = "用户注册", businessType = 1)
+    @Operation(summary = "用户注册", description = "通过用户名和密码注册新用户")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "注册成功", content = @Content(schema = @Schema(implementation = RegisterResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误或用户名已存在")
+    })
+    @PostMapping("/register")
+    public Result<RegisterResponse> register(@RequestBody RegisterRequest request) {
+        RegisterResponse response = authService.register(request);
+        return Result.success(Constants.REGISTER_SUCCESS, response);
     }
 
     /**
@@ -70,6 +111,12 @@ public class AuthController {
      *   <li>刷新成功后会颁发新的 Access Token，并轮换新的刷新令牌（一次性使用）</li>
      * </ul>
      */
+    @Operation(summary = "刷新访问令牌", description = "使用刷新令牌获取新的访问令牌，刷新令牌会轮换（一次性使用）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "刷新成功", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+            @ApiResponse(responseCode = "400", description = "请求参数错误"),
+            @ApiResponse(responseCode = "401", description = "刷新令牌无效或已过期")
+    })
     @PostMapping("/refresh")
     public Result<LoginResponse> refreshToken(@RequestBody Map<String, String> body) {
         if (body == null) {
@@ -98,7 +145,8 @@ public class AuthController {
             return Result.error(401, "刷新令牌无效或已过期，请重新登录");
         }
 
-        // 刷新成功：先吊销旧的刷新令牌，再生成新的访问令牌和刷新令牌
+        // 刷新成功：先获取旧的登录信息（如果有），然后吊销旧的刷新令牌
+        RefreshTokenManager.RefreshTokenValue oldTokenValue = refreshTokenManager.getRefreshTokenValue(userId);
         refreshTokenManager.revokeRefreshToken(userId);
 
         Map<String, Object> claims = new HashMap<>();
@@ -106,7 +154,21 @@ public class AuthController {
         claims.put("userId", userId);
         String newAccessToken = jwtUtil.generateToken(username, claims);
 
-        String newRefreshToken = refreshTokenManager.generateAndStoreRefreshToken(userId);
+        // 生成新的刷新令牌，保留原有的登录信息（IP、浏览器、操作系统等），但更新登录时间和最后访问时间
+        String newRefreshToken;
+        if (oldTokenValue != null) {
+            // 保留原有的登录信息，仅更新时间
+            newRefreshToken = refreshTokenManager.generateAndStoreRefreshToken(
+                userId,
+                oldTokenValue.getIpaddr(),
+                oldTokenValue.getBrowser(),
+                oldTokenValue.getOs(),
+                oldTokenValue.getLoginLocation()
+            );
+        } else {
+            // 如果没有旧的登录信息，使用默认值（兼容旧数据）
+            newRefreshToken = refreshTokenManager.generateAndStoreRefreshToken(userId);
+        }
 
         LoginResponse response = new LoginResponse();
         response.setToken(newAccessToken);
@@ -131,8 +193,13 @@ public class AuthController {
      * @return 登出结果响应
      */
     @Log(title = "用户登出", businessType = 0)
+    @Operation(summary = "用户登出", description = "登出当前用户，将访问令牌加入黑名单，并吊销刷新令牌")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "登出成功")
+    })
     @PostMapping("/logout")
-    public Result<Void> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public Result<Void> logout(@Parameter(description = "Authorization请求头，格式：Bearer {token}", required = false) 
+                                @RequestHeader(value = "Authorization", required = false) String authHeader) {
         // 如果没有提供Authorization头，直接返回成功（幂等性设计）
         if (authHeader == null || authHeader.trim().isEmpty()) {
             SecurityContextHolder.clearContext();
@@ -185,7 +252,10 @@ public class AuthController {
                 }
 
                 // 同步吊销该用户的刷新令牌，避免登出后仍可刷新
+                // 在吊销前，先获取在线用户信息并保存历史记录
                 if (userId != null) {
+                    // 获取在线用户信息并保存历史记录
+                    saveOnlineUserHistory(userId, "0"); // 0表示正常登出
                     refreshTokenManager.revokeRefreshToken(userId);
                 }
             } else {
@@ -209,8 +279,14 @@ public class AuthController {
      * @param scene 业务场景，可选，默认 login
      * @return 包含 captchaToken 和 Base64 图片
      */
+    @Operation(summary = "获取验证码", description = "生成图形验证码，返回验证码Token和Base64编码的图片")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "获取成功", content = @Content(schema = @Schema(implementation = CaptchaIssueResponse.class))),
+            @ApiResponse(responseCode = "500", description = "生成验证码失败")
+    })
     @GetMapping("/captcha")
-    public Result<CaptchaIssueResponse> getCaptcha(@RequestParam(value = "scene", required = false) String scene) {
+    public Result<CaptchaIssueResponse> getCaptcha(@Parameter(description = "业务场景，可选，默认login") 
+                                                     @RequestParam(value = "scene", required = false) String scene) {
         try {
             CaptchaIssueResponse response = captchaService.generateCaptcha(scene != null ? scene : "login");
             return Result.success(response);
@@ -223,6 +299,11 @@ public class AuthController {
     /**
      * 校验验证码，一次性，返回 proof
      */
+    @Operation(summary = "校验验证码", description = "校验用户输入的验证码，验证通过后返回proof凭证（一次性使用）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "校验成功", content = @Content(schema = @Schema(implementation = CaptchaVerifyResponse.class))),
+            @ApiResponse(responseCode = "400", description = "验证码错误或已过期")
+    })
     @PostMapping("/captcha/verify")
     public Result<CaptchaVerifyResponse> verifyCaptcha(@RequestBody CaptchaVerifyRequest request) {
         CaptchaVerifyResponse response = captchaService.verifyCaptcha(request);
@@ -235,6 +316,12 @@ public class AuthController {
      * @param authentication Spring Security认证对象
      * @return 当前用户信息，包含用户基本信息、角色列表和权限菜单
      */
+    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息，包括用户基本信息、角色列表和权限菜单树")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "获取成功"),
+            @ApiResponse(responseCode = "401", description = "用户未认证"),
+            @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
     @GetMapping("/userinfo")
     public ResponseEntity<Result<Map<String, Object>>> getCurrentUser(Authentication authentication) {
         // 从Authentication中获取当前用户信息
@@ -252,8 +339,10 @@ public class AuthController {
                     .body(Result.error(404, "用户不存在"));
         }
 
-        // 查询用户的角色和权限
-        List<SysRole> roles = sysUserService.getRolesByUserId(user.getUserId());
+        // ✅ 使用关联查询优化，一次性获取用户及其角色信息，减少数据库查询次数
+        SysUser userWithRoles = sysUserService.getUserWithRoles(user.getUserId());
+        List<SysRole> roles = userWithRoles.getRoles() != null ? 
+            userWithRoles.getRoles() : new ArrayList<>();
         
         List<SysMenu> permissions;
         // 检查用户是否拥有admin角色或dataScope=1的角色，如果有则查询所有菜单树
@@ -269,12 +358,81 @@ public class AuthController {
             permissions = sysUserService.getMenuByUserId(user.getUserId());
         }
 
-        // 组装返回数据
+        // 组装返回数据（使用 userWithRoles 以包含完整的用户信息）
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("user", user);
+        userInfo.put("user", userWithRoles);
         userInfo.put("roles", roles);
         userInfo.put("permissions", permissions);
 
         return ResponseEntity.ok(Result.success(userInfo));
+    }
+
+    /**
+     * 保存在线用户历史记录
+     * <p>
+     * 说明：从 Redis 中获取在线用户信息，然后保存到数据库作为历史记录。
+     * </p>
+     *
+     * @param userId     用户ID
+     * @param logoutType 下线类型（0正常登出 1强制下线 2过期下线）
+     */
+    private void saveOnlineUserHistory(Long userId, String logoutType) {
+        try {
+            // 从 RefreshTokenManager 获取在线用户信息
+            RefreshTokenManager.RefreshTokenValue tokenValue = refreshTokenManager.getRefreshTokenValue(userId);
+            if (tokenValue == null) {
+                log.debug("用户 {} 的刷新令牌不存在，跳过保存历史记录", userId);
+                return;
+            }
+
+            // 从数据库获取用户信息
+            SysUser user = sysUserService.getById(userId);
+            if (user == null) {
+                log.warn("用户 {} 不存在，跳过保存历史记录", userId);
+                return;
+            }
+
+            // 构建 OnlineUserVO
+            OnlineUserVO onlineUser = new OnlineUserVO();
+            onlineUser.setSessionId("jwt:refresh:user:" + userId);
+            onlineUser.setUserId(userId);
+            onlineUser.setUserName(user.getUserName());
+            onlineUser.setNickName(user.getNickName());
+            onlineUser.setIpaddr(tokenValue.getIpaddr());
+            onlineUser.setBrowser(tokenValue.getBrowser());
+            onlineUser.setOs(tokenValue.getOs());
+            onlineUser.setLoginLocation(tokenValue.getLoginLocation());
+
+            // 转换时间
+            if (tokenValue.getIssuedAt() != null) {
+                onlineUser.setLoginTime(java.time.LocalDateTime.ofInstant(
+                    tokenValue.getIssuedAt().toInstant(),
+                    java.time.ZoneId.systemDefault()
+                ));
+            }
+            if (tokenValue.getLastAccessTime() != null) {
+                onlineUser.setLastAccessTime(java.time.LocalDateTime.ofInstant(
+                    tokenValue.getLastAccessTime().toInstant(),
+                    java.time.ZoneId.systemDefault()
+                ));
+            }
+
+            // 获取部门名称
+            if (user.getDeptId() != null && sysDeptService != null) {
+                try {
+                    com.star.pivot.system.domain.entity.SysDept dept = sysDeptService.getById(user.getDeptId());
+                    if (dept != null) {
+                        onlineUser.setDeptName(dept.getDeptName());
+                    }
+                } catch (Exception e) {
+                    log.debug("获取部门信息失败，deptId: {}", user.getDeptId());
+                }
+            }
+
+            // 保存历史记录
+            onlineUserService.saveOnlineUserHistory(onlineUser, logoutType);
+        } catch (Exception e) {
+            log.warn("保存在线用户历史记录失败，userId: {}", userId, e);
+        }
     }
 }

@@ -1,5 +1,8 @@
 package com.star.pivot.generator.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.star.pivot.common.constants.GenConstants;
@@ -25,12 +28,14 @@ import java.util.Map;
  */
 @Setter
 @Getter
+@TableName("gen_table")
 public class GenTable implements Serializable
 {
     @Serial
     private static final long serialVersionUID = 1L;
 
     /** 编号 */
+    @TableId(value = "table_id",type = IdType.AUTO)
     private Long tableId;
 
     /** 表名称 */

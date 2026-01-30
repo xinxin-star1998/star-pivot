@@ -56,3 +56,10 @@ Icon?
 # Java
 *.bak
 *.tmp
+
+# Cursor
+.cursor/
+
+# Logs
+logs/
+log/

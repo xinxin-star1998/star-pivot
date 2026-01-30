@@ -13,18 +13,22 @@
     </ElRow>
 
     <ElRow :gutter="20">
-      <ElCol :sm="24" :md="24" :lg="12">
-        <NewUser />
-      </ElCol>
-      <ElCol :sm="24" :md="12" :lg="6">
-        <Dynamic />
-      </ElCol>
-      <ElCol :sm="24" :md="12" :lg="6">
-        <TodoList />
+      <ElCol :sm="24" :md="24" :lg="24">
+        <ElRow :gutter="20">
+          <ElCol :sm="24" :md="24" :lg="12">
+            <NewUser />
+          </ElCol>
+          <ElCol :sm="24" :md="12" :lg="6">
+            <Dynamic />
+          </ElCol>
+          <ElCol :sm="24" :md="12" :lg="6">
+            <TodoList />
+          </ElCol>
+        </ElRow>
       </ElCol>
     </ElRow>
 
-    <AboutProject />
+    <!-- <AboutProject /> -->
   </div>
 </template>
 
@@ -35,7 +39,7 @@
   import NewUser from './modules/new-user.vue'
   import Dynamic from './modules/dynamic-stats.vue'
   import TodoList from './modules/todo-list.vue'
-  import AboutProject from './modules/about-project.vue'
+  // import AboutProject from './modules/about-project.vue'
 
   defineOptions({ name: 'Console' })
 </script>

@@ -1,5 +1,7 @@
 package com.star.pivot.common.security;
 
+import java.io.Serializable;
+
 /**
  * 登录用户信息最小接口（避免模块间循环依赖）。
  *
@@ -12,7 +14,7 @@ package com.star.pivot.common.security;
  * @author stardust
  * @since 2026-01-21
  */
-public interface LoginUserInfo {
+public interface LoginUserInfo extends Serializable {
 
     /**
      * 获取当前用户ID。

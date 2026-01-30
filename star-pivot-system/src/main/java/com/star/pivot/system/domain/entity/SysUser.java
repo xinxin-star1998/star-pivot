@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 用户信息表(SysUser)表实体类
@@ -91,5 +92,11 @@ public class SysUser extends BaseEntity {
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime pwdUpdateDate;
+
+    /**
+     * 用户角色列表（用于关联查询优化，非数据库字段）
+     */
+    @TableField(exist = false)
+    private List<SysRole> roles;
 }
 

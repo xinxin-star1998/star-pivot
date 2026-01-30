@@ -9,7 +9,9 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:dept:add'">新增部门</ElButton>
+            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:dept:add'"
+              >新增部门</ElButton
+            >
             <ElButton @click="toggleExpand" v-ripple>
               {{ isExpanded ? '收起' : '展开' }}
             </ElButton>
@@ -259,7 +261,7 @@
         }
 
         // 删除部门按钮权限：system:dept:remove
-        if (hasAuth('system:dept:remove')) {
+        if (hasAuth('system:dept:delete')) {
           actions.push(
             h(ArtButtonTable, {
               type: 'delete',

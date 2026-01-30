@@ -7,6 +7,13 @@ import com.star.pivot.system.domain.bo.DictDataVO;
 import com.star.pivot.system.domain.dto.DictDataDTO;
 import com.star.pivot.system.domain.dto.DictDataQueryDTO;
 import com.star.pivot.system.service.DictDataService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +31,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/sys/dict/data")
 @RequiredArgsConstructor
+@Tag(name = "字典数据管理", description = "字典数据的增删改查等接口")
 public class DictDataController {
 
     private final DictDataService dictDataService;
@@ -31,6 +39,10 @@ public class DictDataController {
     /**
      * 分页查询字典数据列表
      */
+    @Operation(summary = "分页查询字典数据", description = "根据条件分页查询字典数据列表")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = PageResponse.class)))
+    })
     @PreAuthorize("hasAuthority('system:data:query')")
     @PostMapping("/list")
     public Result<PageResponse<DictDataVO>> list(@RequestBody DictDataQueryDTO queryDTO) {
@@ -41,9 +53,13 @@ public class DictDataController {
     /**
      * 根据字典类型查询字典数据
      */
+    @Operation(summary = "根据字典类型查询数据", description = "根据字典类型获取该类型下的所有字典数据")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功")
+    })
     @PreAuthorize("hasAuthority('system:data:query')")
     @GetMapping("/type/{dictType}")
-    public Result<List<DictDataVO>> getDataByType(@PathVariable String dictType) {
+    public Result<List<DictDataVO>> getDataByType(@Parameter(description = "字典类型") @PathVariable String dictType) {
         List<DictDataVO> list = dictDataService.selectDictDataByType(dictType);
         return Result.success(list);
     }
@@ -51,9 +67,14 @@ public class DictDataController {
     /**
      * 根据字典编码查询字典数据详情
      */
+    @Operation(summary = "获取字典数据详情", description = "根据字典编码获取字典数据的详细信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = DictDataVO.class))),
+            @ApiResponse(responseCode = "404", description = "字典数据不存在")
+    })
     @PreAuthorize("hasAuthority('system:data:query')")
     @GetMapping("/{dictCode}")
-    public Result<DictDataVO> getInfo(@PathVariable Long dictCode) {
+    public Result<DictDataVO> getInfo(@Parameter(description = "字典编码") @PathVariable Long dictCode) {
         DictDataVO dictDataVO = dictDataService.selectDictDataById(dictCode);
         return Result.success(dictDataVO);
     }
@@ -61,6 +82,11 @@ public class DictDataController {
     /**
      * 新增字典数据
      */
+    @Operation(summary = "新增字典数据", description = "创建新字典数据")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "新增成功"),
+            @ApiResponse(responseCode = "400", description = "参数错误")
+    })
     @PreAuthorize("hasAuthority('system:data:add')")
     @PostMapping
     public Result<?> add(@Valid @RequestBody DictDataDTO dictDataDTO) {
@@ -71,6 +97,11 @@ public class DictDataController {
     /**
      * 修改字典数据
      */
+    @Operation(summary = "修改字典数据", description = "更新字典数据信息")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "修改成功"),
+            @ApiResponse(responseCode = "404", description = "字典数据不存在")
+    })
     @PreAuthorize("hasAuthority('system:data:edit')")
     @PutMapping
     public Result<?> edit(@Valid @RequestBody DictDataDTO dictDataDTO) {
@@ -81,6 +112,11 @@ public class DictDataController {
     /**
      * 删除字典数据（支持单删和批量删除）
      */
+    @Operation(summary = "删除字典数据", description = "删除字典数据（支持批量删除）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "删除成功"),
+            @ApiResponse(responseCode = "400", description = "删除ID为空")
+    })
     @PreAuthorize("hasAuthority('system:data:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {

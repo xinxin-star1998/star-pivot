@@ -207,16 +207,16 @@
   }
 
   .art-import-bottom {
-    margin-top: 16px;
     display: flex;
     flex-direction: column;
     gap: 8px;
     align-items: center;
+    margin-top: 16px;
   }
 
   .art-import-desc {
     margin: 0;
-    color: #909399;
     font-size: 12px;
+    color: #909399;
   }
 </style>

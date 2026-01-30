@@ -28,10 +28,18 @@
             :src="avatarDisplayUrl"
           />
           <div class="w-[calc(100%-60px)] h-full">
-            <span class="block text-sm font-medium text-g-800 truncate">{{
-              userInfo.user?.username
-            }}</span>
-            <span class="block mt-0.5 text-xs text-g-500 truncate">{{ userInfo.user?.email }}</span>
+            <span class="block text-sm font-medium text-g-800 truncate">
+              {{
+                userInfo.user?.userName ||
+                userInfo.user?.nickName ||
+                (userInfo as any).username ||
+                (userInfo as any).nickname ||
+                ''
+              }}
+            </span>
+            <span class="block mt-0.5 text-xs text-g-500 truncate">
+              {{ userInfo.user?.email }}
+            </span>
           </div>
         </div>
         <ul class="py-4 mt-3 border-t border-g-300/80">

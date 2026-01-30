@@ -9,9 +9,9 @@
     @closed="handleClosed"
   >
     <div v-loading="loading" class="preview-content">
-      <ElTabs 
-        v-model="activePreviewFile" 
-        type="card" 
+      <ElTabs
+        v-model="activePreviewFile"
+        type="card"
         v-if="Object.keys(previewCodeMap).length > 0"
         ref="tabsRef"
         class="preview-tabs"
@@ -143,10 +143,10 @@
    */
   const getScrollContainer = (): HTMLElement | null => {
     if (!tabsRef.value) return null
-    
+
     const tabsHeader = tabsRef.value.$el?.querySelector('.el-tabs__header') as HTMLElement
     if (!tabsHeader) return null
-    
+
     // Element Plus Tabs 的可滚动容器可能是 .el-tabs__nav-scroll 或 .el-tabs__nav-wrap
     // 优先查找 .el-tabs__nav-scroll（Element Plus 2.x+）
     let scrollContainer = tabsHeader.querySelector('.el-tabs__nav-scroll') as HTMLElement
@@ -158,7 +158,7 @@
     if (!scrollContainer && tabsHeader.scrollWidth > tabsHeader.clientWidth) {
       scrollContainer = tabsHeader
     }
-    
+
     return scrollContainer
   }
 
@@ -169,28 +169,31 @@
   const handleTabsWheel = (event: WheelEvent): void => {
     const scrollContainer = getScrollContainer()
     if (!scrollContainer) return
-    
+
     // 检查是否需要滚动（内容宽度大于容器宽度）
     if (scrollContainer.scrollWidth <= scrollContainer.clientWidth) return
-    
+
     // 阻止默认滚动行为，避免页面滚动
     event.preventDefault()
     event.stopPropagation()
-    
+
     // 计算滚动距离，优先使用 deltaX（横向），否则使用 deltaY（纵向转横向）
     // deltaY > 0 表示向下滚动，应该向右滚动标签（scrollLeft 增加）
     const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
-    
+
     // 根据滚轮速度调整滚动步长，让滚动更平滑
     // 使用较小的步长以获得更精细的控制
     const scrollStep = Math.abs(delta) > 50 ? 80 : 40
     const scrollDirection = delta > 0 ? 1 : -1
-    
+
     // 计算目标滚动位置，确保不超出边界
     const currentScroll = scrollContainer.scrollLeft
     const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth
-    const targetScroll = Math.max(0, Math.min(currentScroll + scrollStep * scrollDirection, maxScroll))
-    
+    const targetScroll = Math.max(
+      0,
+      Math.min(currentScroll + scrollStep * scrollDirection, maxScroll)
+    )
+
     // 直接设置滚动位置
     scrollContainer.scrollLeft = targetScroll
   }
@@ -201,10 +204,10 @@
   const setupTabsWheelListener = (): void => {
     nextTick(() => {
       if (!tabsRef.value) return
-      
+
       const tabsHeader = tabsRef.value.$el?.querySelector('.el-tabs__header') as HTMLElement
       if (!tabsHeader) return
-      
+
       // 在 header 上监听滚轮事件，这是最可靠的方式
       tabsHeader.addEventListener('wheel', handleTabsWheel, { passive: false })
     })
@@ -215,7 +218,7 @@
    */
   const removeTabsWheelListener = (): void => {
     if (!tabsRef.value) return
-    
+
     const tabsHeader = tabsRef.value.$el?.querySelector('.el-tabs__header') as HTMLElement
     if (tabsHeader) {
       tabsHeader.removeEventListener('wheel', handleTabsWheel)
@@ -274,10 +277,10 @@
   }
 
   .preview-content {
-    min-height: 400px;
-    height: 70vh;
     display: flex;
     flex-direction: column;
+    height: 70vh;
+    min-height: 400px;
 
     :deep(.preview-tabs) {
       display: flex;
@@ -285,48 +288,47 @@
       height: 100%;
 
       .el-tabs__header {
+        position: relative;
         flex-shrink: 0;
         margin-bottom: 0;
         user-select: none;
-        position: relative;
-        
+
         .el-tabs__nav-wrap,
         .el-tabs__nav-scroll {
-          overflow-x: auto;
-          overflow-y: hidden;
+          overflow: auto hidden;
           scrollbar-width: thin;
-          scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+          scrollbar-color: rgb(155 155 155 / 50%) transparent;
           scroll-behavior: smooth;
-          
+
           &::-webkit-scrollbar {
             height: 6px;
           }
-          
+
           &::-webkit-scrollbar-track {
             background: transparent;
           }
-          
+
           &::-webkit-scrollbar-thumb {
-            background-color: rgba(155, 155, 155, 0.5);
+            background-color: rgb(155 155 155 / 50%);
             border-radius: 3px;
-            
+
             &:hover {
-              background-color: rgba(155, 155, 155, 0.7);
+              background-color: rgb(155 155 155 / 70%);
             }
           }
         }
       }
 
       .el-tabs__content {
-        flex: 1;
-        overflow: hidden;
         display: flex;
+        flex: 1;
         flex-direction: column;
+        overflow: hidden;
 
         .el-tab-pane {
-          height: 100%;
           display: flex;
           flex-direction: column;
+          height: 100%;
         }
       }
     }
@@ -338,24 +340,23 @@
     overflow: hidden;
 
     :deep(.el-scrollbar__wrap) {
-      overflow-x: auto;
-      overflow-y: auto;
+      overflow: auto;
     }
   }
 
   .code-block {
+    display: block;
+    min-width: 100%;
+    padding: 12px;
+    margin: 0;
+    overflow-x: auto;
     font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
     font-size: 13px;
     line-height: 1.5;
-    white-space: pre;
-    padding: 12px;
-    background-color: #1e1e1e;
     color: #dcdcdc;
+    white-space: pre;
+    background-color: #1e1e1e;
     border-radius: 4px;
-    margin: 0;
-    overflow-x: auto;
-    min-width: 100%;
-    display: block;
   }
 
   .empty-tip {
@@ -367,7 +368,7 @@
 
   .dialog-footer {
     display: flex;
-    justify-content: flex-end;
     gap: 12px;
+    justify-content: flex-end;
   }
 </style>

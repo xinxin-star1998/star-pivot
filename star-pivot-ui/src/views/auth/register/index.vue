@@ -88,6 +88,7 @@
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { fetchRegister } from '@/api/auth'
 
   defineOptions({ name: 'Register' })
 
@@ -196,31 +197,26 @@
    * 验证表单后提交注册请求
    */
   const register = async () => {
-    if (!formRef.value) return
+    if (!formRef.value || loading.value) return
 
     try {
+      // 先进行表单校验
       await formRef.value.validate()
       loading.value = true
 
-      // TODO: 替换为真实 API 调用
-      // const params = {
-      //   username: formData.username,
-      //   password: formData.password
-      // }
-      // const res = await AuthService.register(params)
-      // if (res.code === ApiStatus.success) {
-      //   ElMessage.success('注册成功')
-      //   toLogin()
-      // }
+      // 调用后端注册接口
+      const params: Api.Auth.RegisterParams = {
+        username: formData.username,
+        password: formData.password
+      }
+      await fetchRegister(params)
 
-      // 模拟注册请求
-      setTimeout(() => {
-        loading.value = false
-        ElMessage.success('注册成功')
-        toLogin()
-      }, REDIRECT_DELAY)
+      // 注册成功提示并跳转登录页
+      ElMessage.success('注册成功')
+      toLogin()
     } catch (error) {
-      console.error('表单验证失败:', error)
+      console.error('注册失败:', error)
+    } finally {
       loading.value = false
     }
   }
