@@ -1,26 +1,24 @@
-# Spring Boot 父配置文件
-# 通过 spring.profiles.active 控制激活哪个环境配置文件
-# 可选值: dev, test, prod
-# 也可以通过启动参数指定: --spring.profiles.active=dev
+# =============================================================================
+# StarPivot 主配置（公共部分）
+# =============================================================================
+# 激活环境：spring.profiles.active=dev|test|prod
+# 启动覆盖：--spring.profiles.active=dev 或环境变量 SPRING_PROFILES_ACTIVE
 
 spring:
   application:
-    name: permission-system
+    name: star-pivot
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev} # 默认激活开发环境，可通过环境变量或启动参数覆盖
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   servlet:
     multipart:
-      max-file-size: 10MB # 限制上传文件大小
+      max-file-size: 10MB
       max-request-size: 10MB
-  # 禁用数据库初始化依赖检测（修复MyBatis-Plus与Spring Boot 3.x兼容性问题）
   sql:
     init:
       mode: never
-  # Jackson 配置
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
-  # Druid 监控配置
   datasource:
     druid:
       stat-view-servlet:
@@ -34,13 +32,14 @@ spring:
         url-pattern: /*
         exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
 
-# 服务器配置
 server:
   port: 8080
   servlet:
     context-path: /api
 
-# MyBatis-Plus 公共配置
+# -----------------------------------------------------------------------------
+# MyBatis-Plus
+# -----------------------------------------------------------------------------
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
@@ -53,71 +52,61 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# JWT 公共配置
+# -----------------------------------------------------------------------------
+# JWT（敏感项在各环境配置）
+# -----------------------------------------------------------------------------
 jwt:
-  expiration: ${JWT_EXPIRATION:86400000} # 24小时，单位：毫秒
+  expiration: ${JWT_EXPIRATION:86400000}
 
-# CORS 公共配置
+# -----------------------------------------------------------------------------
+# CORS（各环境配置 allowed-origins）
+# -----------------------------------------------------------------------------
 cors:
-  # 具体允许的域名在各环境配置文件中设置
 
-# Spring Security 配置
-# 路径放行已通过代码方式实现（DruidPermitAllPathProvider）
-# 如需追加其他放行路径，可参考文档：doc/star-pivot-security-使用说明.md
-
-# 日志公共配置
+# -----------------------------------------------------------------------------
+# 日志
+# -----------------------------------------------------------------------------
 logging:
   level:
     root: info
 
-# 阿里云 OSS 公共配置
+# -----------------------------------------------------------------------------
+# 阿里云 OSS（各环境配置 endpoint/access-key 等）
+# -----------------------------------------------------------------------------
 oss:
-  bucket-name: star-pivot # 存储桶名称（需提前创建）
+  bucket-name: star-pivot
 
-# 代码生成配置
+# -----------------------------------------------------------------------------
+# 代码生成
+# -----------------------------------------------------------------------------
 gen:
-  # 作者
   author: xinxin
-  # 默认生成包路径 system 需改成自己的模块名称 如 system monitor tool
   packageName: com.star.pivot.system
-  # 自动去除表前缀，默认是false
   autoRemovePre: false
-  # 表前缀（生成类名不会包含表前缀，多个用逗号分隔）
   tablePrefix: sys_
-  # 是否允许生成文件覆盖到本地（自定义路径），默认不允许
   allowOverwrite: false
 
-# 登录限流与防暴力破解配置
+# -----------------------------------------------------------------------------
+# 登录限流与账户锁定
+# -----------------------------------------------------------------------------
 login:
-  # 限流配置
   rate-limit:
-    # 是否启用限流
     enabled: true
-    # IP维度限流配置
     ip:
-      # 每分钟允许的最大登录次数
       max-attempts: 10
-      # 时间窗口（分钟）
       window-minutes: 1
-    # IP+用户名维度限流配置
     ip-username:
-      # 每分钟允许的最大登录次数
       max-attempts: 5
-      # 时间窗口（分钟）
       window-minutes: 1
-  # 账户锁定配置
   account-lock:
-    # 是否启用账户锁定
     enabled: true
-    # 连续失败N次后锁定账户
     max-failures: 5
-    # 账户锁定时长（分钟）
     lock-duration-minutes: 5
-    # 失败次数记录的过期时间（分钟），应大于锁定时长
     failure-record-expire-minutes: 10
 
-# StarPivot 统一配置（可选，用于集中管理 JWT/Cache/Monitor）
-# 若未配置，StarPivotProperties 使用代码内默认值
+# -----------------------------------------------------------------------------
+# StarPivot 统一配置（JWT 刷新 / 缓存 / 监控）
+# -----------------------------------------------------------------------------
 star-pivot:
   jwt:
     expiration: ${JWT_EXPIRATION:86400000}
@@ -131,41 +120,33 @@ star-pivot:
     slow-api-threshold-ms: 1000
     sample-rate: 0.1
 
-# Spring Boot Actuator 配置
+# -----------------------------------------------------------------------------
+# Actuator
+# -----------------------------------------------------------------------------
 management:
   endpoints:
     web:
       exposure:
-        # 暴露健康、信息、指标；生产环境可按需增加 prometheus
         include: health,info,metrics
   endpoint:
     health:
       show-details: when-authorized
-      # 启用 Kubernetes 就绪/存活探针（如需 K8s 部署可开启）
       probes:
         enabled: false
 
-# SpringDoc OpenAPI（Swagger）配置
+# -----------------------------------------------------------------------------
+# SpringDoc OpenAPI（Swagger）
+# -----------------------------------------------------------------------------
 springdoc:
   api-docs:
-    # API 文档 JSON 路径
     path: /v3/api-docs
     enabled: true
   swagger-ui:
-    # Swagger UI 访问路径
     path: /swagger-ui.html
     enabled: true
-    # 显示操作 ID
     display-operation-id: true
-    # 显示请求持续时间
     display-request-duration: true
-    # 默认展开深度
     default-expand-depth: 1
-    # 启用过滤器
     filter: true
-    # 禁用默认的 Petstore 示例
     disable-swagger-default-url: true
-    # 指定 API 文档 URL（SpringDoc 会自动处理 context-path）
-#    url: /v3/api-docs
-  # 是否显示 Actuator 端点
   show-actuator: false
