@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.star.pivot.common.domain.Constants;
+import com.star.pivot.common.domain.AppConstants;
 import com.star.pivot.common.domain.DataScope;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.exception.BusinessException;
@@ -16,7 +16,7 @@ import com.star.pivot.system.domain.dto.AssignUserReqBo;
 import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.*;
 import com.star.pivot.system.mapper.*;
-import com.star.pivot.system.service.AccountLockService;
+import com.star.pivot.system.assembler.UserVOAssembler;
 import com.star.pivot.system.service.ImportExportService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.UserPermissionCacheService;
@@ -33,7 +33,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.LinkedHashMap;
-import java.util.stream.Collectors;
+import java.util.function.BiFunction;
 
 /**
  * 用户信息表(SysUser)表服务实现类
@@ -50,17 +50,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Autowired
     private UserPostMapper userPostMapper;
     @Autowired
-    private SysDeptMapper deptMapper;
-    @Autowired
-    private PostMapper postMapper;
-    @Autowired
-    private SysRoleMapper sysRoleMapper;
-    @Autowired
     private UserPermissionCacheService userPermissionCacheService;
     @Autowired
-    private AccountLockService accountLockService;
-    @Autowired
     private DataScopeService dataScopeService;
+    @Autowired
+    private UserVOAssembler userVOAssembler;
 
     /** 自身代理，用于 importData/importUsers 等场景经代理调用 @Transactional 方法，避免自调用导致事务不生效 */
     @Lazy
@@ -77,28 +71,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Transactional(readOnly = true)
     public PageResponse<UserVO> pageList(UserReqBo userReqBo) {
         Page<SysUser> page = new Page<>(userReqBo.getPageNum(), userReqBo.getPageSize());
-        // 1. 获取当前用户数据权限
-        DataScope dataScope = dataScopeService.getCurrentUserDataScope();
-        // 2. 构造查询参数（MyBatis参数传递）
-        Map<String, Object> param = new HashMap<>();
-        param.put("dataScope", dataScope);
-        param.put("deptIds", dataScope.getDeptIds());
-        param.put("userDeptId", dataScope.getUserDeptId()); // 使用DataScope中的userDeptId，避免重复查询
-        param.put("userId", dataScope.getUserId());
-        param.put("userReqBo",userReqBo);
-        //3.分页查询数据
+        Map<String, Object> param = buildDataScopeParam();
+        param.put("userReqBo", userReqBo);
         IPage<SysUser> pageList = sysUserMapper.selectPageList(page, param);
-        
-        List<SysUser> userList = pageList.getRecords();
-        List<UserVO> voList = convertToVOList(userList);
-        PageResponse<UserVO> pageResponse = new PageResponse<>();
-        // 转换为分页结果
-        pageResponse.setTotal(pageList.getTotal());
-        pageResponse.setRows(voList);
-        pageResponse.setPageNum(pageList.getCurrent());
-        pageResponse.setPageSize(pageList.getSize());
-        pageResponse.setPageCount(pageList.getPages());
-        return pageResponse;
+        List<UserVO> voList = userVOAssembler.convertToVOList(pageList.getRecords());
+        return toPageResponse(pageList, pageList.getCurrent(), pageList.getSize(), voList);
     }
 
     @Override
@@ -137,8 +114,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser sysUser = new SysUser();
         BeanUtils.copyProperties(userDTO, sysUser);
         sysUser.setUserType("00");
-        sysUser.setStatus(StringUtils.hasText(userDTO.getStatus()) ? userDTO.getStatus() : Constants.Status.NORMAL);
-        sysUser.setDelFlag(Constants.DelFlag.NORMAL);
+        sysUser.setStatus(StringUtils.hasText(userDTO.getStatus()) ? userDTO.getStatus() : AppConstants.Status.NORMAL);
+        sysUser.setDelFlag(AppConstants.DelFlag.NORMAL);
 
         // 密码加密  如前端传密码，则进行加密处理，没有传，则使用默认密码123456
         if (StringUtils.hasText(userDTO.getPassword())) {
@@ -168,11 +145,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     @Transactional(readOnly = true)
     public UserVO selectByUserId(Long userId) {
-        UserVO vo;
-        //查询用户信息
         SysUser user = this.getById(userId);
-        vo = convertToVO(user);
-        return vo;
+        return user == null ? null : userVOAssembler.convertToVO(user);
     }
     /*
     * 修改用户信息
@@ -181,7 +155,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public boolean updateUser(UserDTO userDTO) {
         SysUser user = this.getById(userDTO.getUserId());
-        if (user == null || "2".equals(user.getDelFlag())) {
+        if (user == null || AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
             throw new BusinessException("用户不存在");
         }
 
@@ -236,7 +210,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public boolean changeUserStatus(Long userId, String status) {
         SysUser user = this.getById(userId);
-        if (user == null || "2".equals(user.getDelFlag())) {
+        if (user == null || AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
             throw new BusinessException("用户不存在");
         }
 
@@ -251,7 +225,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public boolean resetUserPassword(Long userId, String password) {
         SysUser user = this.getById(userId);
-        if (user == null || "2".equals(user.getDelFlag())) {
+        if (user == null || AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
             throw new BusinessException("用户不存在");
         }
 
@@ -282,8 +256,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         
         // 更新用户状态
         userList.forEach(user -> {
-            if (!"2".equals(user.getDelFlag())) {
-                user.setDelFlag("2");
+            if (!AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
+                user.setDelFlag(AppConstants.DelFlag.DELETE);
                 user.setUpdateBy(currentUser);
                 user.setUpdateTime(now);
             }
@@ -299,52 +273,43 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      */
     @Override
     public PageResponse<SysUser> getUserListByRoleId(AssignUserReqBo assignUserReqBo) {
-        PageResponse<SysUser> pageResponse = new PageResponse<>();
-        // 分页查询
-        Page<SysUser> page = new Page<>(assignUserReqBo.getPageNum(), assignUserReqBo.getPageSize());
-        
-        // 获取当前用户数据权限
-        DataScope dataScope = dataScopeService.getCurrentUserDataScope();
-        Map<String, Object> param = new HashMap<>();
-        param.put("dataScope", dataScope);
-        param.put("deptIds", dataScope.getDeptIds());
-        param.put("userDeptId", dataScope.getUserDeptId());
-        param.put("userId", dataScope.getUserId());
-        param.put("assignUserReqBo", assignUserReqBo);
-        
-        IPage<SysUser> pageList = sysUserMapper.getUserListByRoleId(page, param);
-        // 转换为分页结果
-        pageResponse.setTotal(pageList.getTotal());
-        pageResponse.setRows(pageList.getRecords());
-        pageResponse.setPageNum(assignUserReqBo.getPageNum().longValue());
-        pageResponse.setPageSize(assignUserReqBo.getPageSize().longValue());
-        pageResponse.setPageCount(pageList.getPages());
-        return pageResponse;
+        return queryPageWithDataScope(assignUserReqBo, sysUserMapper::getUserListByRoleId);
     }
 
     @Override
     public PageResponse<SysUser> unallocatedList(AssignUserReqBo assignUserReqBo) {
-        PageResponse<SysUser> pageResponse = new PageResponse<>();
-        // 分页查询
-        Page<SysUser> page = new Page<>(assignUserReqBo.getPageNum(), assignUserReqBo.getPageSize());
-        
-        // 获取当前用户数据权限
+        return queryPageWithDataScope(assignUserReqBo, sysUserMapper::unallocatedList);
+    }
+
+    /** 根据当前用户数据权限构建查询参数（dataScope、deptIds、userDeptId、userId） */
+    private Map<String, Object> buildDataScopeParam() {
         DataScope dataScope = dataScopeService.getCurrentUserDataScope();
         Map<String, Object> param = new HashMap<>();
         param.put("dataScope", dataScope);
         param.put("deptIds", dataScope.getDeptIds());
         param.put("userDeptId", dataScope.getUserDeptId());
         param.put("userId", dataScope.getUserId());
-        param.put("assignUserReqBo", assignUserReqBo);
-        
-        IPage<SysUser> pageList = sysUserMapper.unallocatedList(page, param);
-        // 转换为分页结果
-        pageResponse.setTotal(pageList.getTotal());
-        pageResponse.setRows(pageList.getRecords());
-        pageResponse.setPageNum(assignUserReqBo.getPageNum().longValue());
-        pageResponse.setPageSize(assignUserReqBo.getPageSize().longValue());
-        pageResponse.setPageCount(pageList.getPages());
-        return pageResponse;
+        return param;
+    }
+
+    /** 数据权限分页：构建 param + 分页查询 + 封装 PageResponse，供 getUserListByRoleId、unallocatedList 复用 */
+    private PageResponse<SysUser> queryPageWithDataScope(AssignUserReqBo bo,
+                                                         BiFunction<Page<SysUser>, Map<String, Object>, IPage<SysUser>> query) {
+        Map<String, Object> param = buildDataScopeParam();
+        param.put("assignUserReqBo", bo);
+        Page<SysUser> page = new Page<>(bo.getPageNum(), bo.getPageSize());
+        IPage<SysUser> result = query.apply(page, param);
+        return toPageResponse(result, bo.getPageNum().longValue(), bo.getPageSize().longValue(), result.getRecords());
+    }
+
+    private <T> PageResponse<T> toPageResponse(IPage<?> ipage, long pageNum, long pageSize, List<T> rows) {
+        PageResponse<T> resp = new PageResponse<>();
+        resp.setTotal(ipage.getTotal());
+        resp.setRows(rows);
+        resp.setPageNum(ipage.getCurrent());
+        resp.setPageSize(ipage.getSize());
+        resp.setPageCount(ipage.getPages());
+        return resp;
     }
 
     /**
@@ -448,11 +413,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
         // 状态（0正常 1停用），默认为正常
         String statusText = getStringCell(row, "状态");
-        String statusCode = Constants.Status.NORMAL;
+        String statusCode = AppConstants.Status.NORMAL;
         if (StringUtils.hasText(statusText)) {
             statusText = statusText.trim();
             if ("停用".equals(statusText) || "禁用".equals(statusText)) {
-                statusCode = Constants.Status.DISABLE;
+                statusCode = AppConstants.Status.DISABLE;
             }
         }
         userDTO.setStatus(statusCode);
@@ -526,200 +491,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
         userPostMapper.insertBatchUserPosts(userPosts);
     }
-    /**
-     * 批量转换为VO，解决N+1查询问题
-     */
-    private List<UserVO> convertToVOList(List<SysUser> userList) {
-        if (userList == null || userList.isEmpty()) {
-            return new ArrayList<>();
-        }
-        
-        // 1. 收集所有用户ID
-        List<Long> userIds = userList.stream()
-                .map(SysUser::getUserId)
-                .collect(Collectors.toList());
-        
-        // 2. 收集所有部门ID
-        List<Long> deptIds = userList.stream()
-                .map(SysUser::getDeptId)
-                .filter(Objects::nonNull)
-                .distinct()
-                .collect(Collectors.toList());
-        
-        // 3. 批量查询部门信息
-        Map<Long, String> deptNameMap = new HashMap<>();
-        if (!deptIds.isEmpty()) {
-            List<SysDept> deptList = deptMapper.selectList(new LambdaQueryWrapper<SysDept>().in(SysDept::getDeptId, deptIds));
-            for (SysDept dept : deptList) {
-                deptNameMap.put(dept.getDeptId(), dept.getDeptName());
-            }
-        }
-        
-        // 4. 批量查询角色信息
-        Map<Long, List<SysRole>> userRolesMap = new HashMap<>();
-        LambdaQueryWrapper<UserRole> roleWrapper = new LambdaQueryWrapper<>();
-        roleWrapper.in(UserRole::getUserId, userIds);
-        List<UserRole> userRoles = userRoleMapper.selectList(roleWrapper);
-        
-        // 收集角色ID
-        List<Long> roleIds = userRoles.stream()
-                .map(UserRole::getRoleId)
-                .distinct()
-                .collect(Collectors.toList());
-        
-        // 批量查询角色详情
-        Map<Long, SysRole> roleMap = new HashMap<>();
-        if (!roleIds.isEmpty()) {
-            List<SysRole> roleList = sysRoleMapper.selectList(new LambdaQueryWrapper<SysRole>().in(SysRole::getRoleId, roleIds));
-            for (SysRole role : roleList) {
-                roleMap.put(role.getRoleId(), role);
-            }
-        }
-        
-        // 构建用户角色映射
-        for (UserRole userRole : userRoles) {
-            userRolesMap.computeIfAbsent(userRole.getUserId(), k -> new ArrayList<>())
-                    .add(roleMap.get(userRole.getRoleId()));
-        }
-        
-        // 5. 批量查询岗位信息
-        Map<Long, List<Long>> userPostIdsMap = new HashMap<>();
-        LambdaQueryWrapper<UserPost> postWrapper = new LambdaQueryWrapper<>();
-        postWrapper.in(UserPost::getUserId, userIds);
-        List<UserPost> userPosts = userPostMapper.selectList(postWrapper);
-        
-        // 收集岗位ID
-        List<Long> postIds = userPosts.stream()
-                .map(UserPost::getPostId)
-                .distinct()
-                .collect(Collectors.toList());
-        
-        // 批量查询岗位详情
-        Map<Long, String> postNameMap = new HashMap<>();
-        if (!postIds.isEmpty()) {
-            List<SysPost> postList = postMapper.selectList(new LambdaQueryWrapper<SysPost>().in(SysPost::getPostId, postIds));
-            for (SysPost post : postList) {
-                postNameMap.put(post.getPostId(), post.getPostName());
-            }
-        }
-        
-        // 构建用户岗位映射
-        for (UserPost userPost : userPosts) {
-            userPostIdsMap.computeIfAbsent(userPost.getUserId(), k -> new ArrayList<>())
-                    .add(userPost.getPostId());
-        }
-        
-        // 6. 转换为VO列表
-        List<UserVO> voList = new ArrayList<>();
-        for (SysUser user : userList) {
-            UserVO vo = convertToVO(user, deptNameMap, userRolesMap, userPostIdsMap, postNameMap);
-            voList.add(vo);
-        }
-        
-        // 7. 批量查询账户锁定状态
-        if (accountLockService != null) {
-            for (UserVO vo : voList) {
-                if (vo.getUserName() != null) {
-                    boolean isLocked = accountLockService.isAccountLocked(vo.getUserName());
-                    vo.setIsLocked(isLocked);
-                } else {
-                    vo.setIsLocked(false);
-                }
-            }
-        }
-        
-        return voList;
-    }
-    
-    /**
-     * 转换为VO（使用预加载的Map信息，避免N+1查询）
-     */
-    private UserVO convertToVO(SysUser user, Map<Long, String> deptNameMap, Map<Long, List<SysRole>> userRolesMap, 
-                            Map<Long, List<Long>> userPostIdsMap, Map<Long, String> postNameMap) {
-        UserVO vo = new UserVO();
-        BeanUtils.copyProperties(user, vo);
-
-        // 设置部门名称
-        if (user.getDeptId() != null) {
-            vo.setDeptName(deptNameMap.get(user.getDeptId()));
-        }
-
-        // 设置角色信息
-        List<SysRole> roles = userRolesMap.getOrDefault(user.getUserId(), new ArrayList<>());
-        if (!roles.isEmpty()) {
-            vo.setRoleIds(roles.stream().map(SysRole::getRoleId).collect(Collectors.toList()));
-            vo.setRoleNames(roles.stream().map(SysRole::getRoleName).collect(Collectors.toList()));
-        }
-
-        // 设置岗位信息
-        List<Long> postIds = userPostIdsMap.getOrDefault(user.getUserId(), new ArrayList<>());
-        if (!postIds.isEmpty()) {
-            vo.setPostIds(postIds);
-            
-            List<String> postNames = postIds.stream()
-                    .map(postNameMap::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-            vo.setPostNames(postNames);
-        }
-
-        return vo;
-    }
-    
-    /**
-     * 转换为VO（单用户查询使用）
-     * 优化：使用批量查询避免N+1查询问题
-     */
-    private UserVO convertToVO(SysUser user) {
-        UserVO vo = new UserVO();
-        BeanUtils.copyProperties(user, vo);
-
-        // 查询部门名称
-        if (user.getDeptId() != null) {
-            SysDept dept = deptMapper.selectById(user.getDeptId());
-            if (dept != null) {
-                vo.setDeptName(dept.getDeptName());
-            }
-        }
-
-        // 查询角色信息
-        List<SysRole> roles = sysRoleMapper.selectRoleListByUserId(user.getUserId());
-        if (roles != null && !roles.isEmpty()) {
-            vo.setRoleIds(roles.stream().map(SysRole::getRoleId).collect(Collectors.toList()));
-            vo.setRoleNames(roles.stream().map(SysRole::getRoleName).collect(Collectors.toList()));
-        }
-
-        // 查询岗位信息（优化：使用批量查询避免N+1问题）
-        LambdaQueryWrapper<UserPost> postWrapper = new LambdaQueryWrapper<>();
-        postWrapper.eq(UserPost::getUserId, user.getUserId());
-        List<UserPost> userPosts = userPostMapper.selectList(postWrapper);
-        if (userPosts != null && !userPosts.isEmpty()) {
-            List<Long> postIds = userPosts.stream().map(UserPost::getPostId).collect(Collectors.toList());
-            vo.setPostIds(postIds);
-
-            // 批量查询岗位信息，避免循环查询
-            List<SysPost> postList = postMapper.selectList(new LambdaQueryWrapper<SysPost>().in(SysPost::getPostId, postIds));
-            Map<Long, String> postNameMap = postList.stream()
-                    .collect(Collectors.toMap(SysPost::getPostId, SysPost::getPostName, (k1, k2) -> k1));
-            
-            // 按postIds顺序构建postNames列表
-            List<String> postNames = postIds.stream()
-                    .map(postNameMap::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-            vo.setPostNames(postNames);
-        }
-
-        // 查询账户锁定状态
-        if (accountLockService != null && user.getUserName() != null) {
-            boolean isLocked = accountLockService.isAccountLocked(user.getUserName());
-            vo.setIsLocked(isLocked);
-        } else {
-            vo.setIsLocked(false);
-        }
-
-        return vo;
-    }
 
     // ==================== ImportExportService 接口实现 ====================
 
@@ -737,45 +508,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         ImportExportService.ImportExportResult result = new ImportExportService.ImportExportResult();
         int rowIndex = 1; // 用于错误提示（从 1 开始，方便与 Excel 行号对应）
 
+        boolean overwrite = options != null && Boolean.TRUE.equals(options.get("overwrite"));
         for (Map<String, Object> row : rowList) {
             try {
-                // 从 Excel 行数据构建 UserDTO
                 UserDTO userDTO = buildUserDTOFromRow(row, rowIndex);
-
-                // 检查是否覆盖已存在数据
-                boolean overwrite = options != null && Boolean.TRUE.equals(options.get("overwrite"));
-                if (overwrite) {
-                    // 如果用户名已存在，则更新用户（经 self 代理调用，确保 @Transactional 生效）
-                    SysUser existingUser = self.getUserByUsername(userDTO.getUserName());
-                    if (existingUser != null) {
-                        userDTO.setUserId(existingUser.getUserId());
-                        boolean success = self.updateUser(userDTO);
-                        if (success) {
-                            result.setSuccessCount(result.getSuccessCount() + 1);
-                        } else {
-                            result.setFailCount(result.getFailCount() + 1);
-                            result.addError("第 " + rowIndex + " 行更新失败");
-                        }
-                    } else {
-                        // 不存在则新增（经 self 代理调用，确保 @Transactional 生效）
-                        boolean success = self.addUser(userDTO);
-                        if (success) {
-                            result.setSuccessCount(result.getSuccessCount() + 1);
-                        } else {
-                            result.setFailCount(result.getFailCount() + 1);
-                            result.addError("第 " + rowIndex + " 行新增失败");
-                        }
-                    }
-                } else {
-                    // 不覆盖，直接新增（经 self 代理调用，确保 @Transactional 生效）
-                    boolean success = self.addUser(userDTO);
-                    if (success) {
-                        result.setSuccessCount(result.getSuccessCount() + 1);
-                    } else {
-                        result.setFailCount(result.getFailCount() + 1);
-                        result.addError("第 " + rowIndex + " 行新增失败");
-                    }
-                }
+                saveOrUpdateFromImport(userDTO, overwrite, rowIndex, result);
             } catch (BusinessException e) {
                 // 业务异常记录错误信息
                 result.setFailCount(result.getFailCount() + 1);
@@ -792,45 +529,65 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         return result;
     }
 
-    @Override
-    public List<Map<String, Object>> exportData(Map<String, Object> queryParams) {
-        UserReqBo userReqBo = new UserReqBo();
-        if (queryParams != null) {
-            Object v;
-            if ((v = queryParams.get("userName")) != null) {
-                userReqBo.setUserName(v.toString());
+    /** 导入单行：overwrite 时存在则更新否则新增，否则仅新增；更新 result 计数 */
+    private void saveOrUpdateFromImport(UserDTO userDTO, boolean overwrite, int rowIndex,
+                                        ImportExportService.ImportExportResult result) {
+        boolean success;
+        if (overwrite) {
+            SysUser existing = self.getUserByUsername(userDTO.getUserName());
+            if (existing != null) {
+                userDTO.setUserId(existing.getUserId());
+                success = self.updateUser(userDTO);
+            } else {
+                success = self.addUser(userDTO);
             }
-            if ((v = queryParams.get("nickName")) != null) {
-                userReqBo.setNickName(v.toString());
-            }
-            if ((v = queryParams.get("sex")) != null) {
-                userReqBo.setSex(v.toString());
-            }
-            if ((v = queryParams.get("status")) != null) {
-                userReqBo.setStatus(v.toString());
-            }
-            if ((v = queryParams.get("phonenumber")) != null) {
-                userReqBo.setPhonenumber(v.toString());
-            }
-            if ((v = queryParams.get("email")) != null) {
-                userReqBo.setEmail(v.toString());
-            }
-            if ((v = queryParams.get("deptId")) != null) {
-                Long deptId = null;
-                if (v instanceof Number) {
-                    deptId = ((Number) v).longValue();
-                } else if (v instanceof String && StringUtils.hasText((String) v)) {
-                    try {
-                        deptId = Long.parseLong(((String) v).trim());
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-                if (deptId != null) {
-                    userReqBo.setDeptId(deptId);
+        } else {
+            success = self.addUser(userDTO);
+        }
+        if (success) {
+            result.setSuccessCount(result.getSuccessCount() + 1);
+        } else {
+            result.setFailCount(result.getFailCount() + 1);
+            result.addError("第 " + rowIndex + " 行" + (overwrite ? "更新" : "新增") + "失败");
+        }
+    }
+
+    /** 从导出/查询参数 Map 填充 UserReqBo，避免重复 if 判空与设值 */
+    private UserReqBo buildUserReqBoFromQueryParams(Map<String, Object> queryParams) {
+        UserReqBo bo = new UserReqBo();
+        if (queryParams == null) {
+            return bo;
+        }
+        setStringIfPresent(queryParams, "userName", bo::setUserName);
+        setStringIfPresent(queryParams, "nickName", bo::setNickName);
+        setStringIfPresent(queryParams, "sex", bo::setSex);
+        setStringIfPresent(queryParams, "status", bo::setStatus);
+        setStringIfPresent(queryParams, "phonenumber", bo::setPhonenumber);
+        setStringIfPresent(queryParams, "email", bo::setEmail);
+        Object v = queryParams.get("deptId");
+        if (v != null) {
+            if (v instanceof Number) {
+                bo.setDeptId(((Number) v).longValue());
+            } else if (v instanceof String && StringUtils.hasText((String) v)) {
+                try {
+                    bo.setDeptId(Long.parseLong(((String) v).trim()));
+                } catch (NumberFormatException ignored) {
                 }
             }
         }
+        return bo;
+    }
 
+    private static void setStringIfPresent(Map<String, Object> map, String key, java.util.function.Consumer<String> setter) {
+        Object v = map.get(key);
+        if (v != null) {
+            setter.accept(v.toString());
+        }
+    }
+
+    @Override
+    public List<Map<String, Object>> exportData(Map<String, Object> queryParams) {
+        UserReqBo userReqBo = buildUserReqBoFromQueryParams(queryParams);
         userReqBo.setPageNum(1);
         userReqBo.setPageSize(100_000);
         PageResponse<UserVO> pageResponse = this.pageList(userReqBo);
@@ -855,7 +612,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 }
             }
             row.put("性别", sexText);
-            row.put("状态", user.getStatus() != null && "0".equals(user.getStatus()) ? "正常" : "停用");
+            row.put("状态", AppConstants.Status.NORMAL.equals(user.getStatus()) ? "正常" : "停用");
             row.put("部门ID", user.getDeptId() != null ? user.getDeptId() : "");
             row.put("部门名称", user.getDeptName() != null ? user.getDeptName() : "");
             row.put("备注", user.getRemark() != null ? user.getRemark() : "");

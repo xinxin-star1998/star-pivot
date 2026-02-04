@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -296,7 +297,6 @@ public class ApiPerformanceAspect {
                 String apiPath = firstRecord.getApiPath();
                 String apiMethod = firstRecord.getApiMethod();
 
-                // 查询或创建性能记录
                 SysMonitorApiPerformance performance = apiPerformanceMapper.selectOne(
                         new LambdaQueryWrapper<SysMonitorApiPerformance>()
                                 .eq(SysMonitorApiPerformance::getApiPath, apiPath)
@@ -305,36 +305,25 @@ public class ApiPerformanceAspect {
                                 .eq(SysMonitorApiPerformance::getStatHour, statHour)
                 );
 
-                // 聚合统计数据
-                long requestCount = groupRecords.size();
-                long successCount = groupRecords.stream().mapToLong(r -> r.isSuccess() ? 1 : 0).sum();
-                long errorCount = requestCount - successCount;
-                long responseTimeTotal = groupRecords.stream().mapToLong(ApiPerformanceRecord::getResponseTime).sum();
-                long responseTimeMax = groupRecords.stream().mapToLong(ApiPerformanceRecord::getResponseTime).max().orElse(0);
-                long responseTimeMin = groupRecords.stream().mapToLong(ApiPerformanceRecord::getResponseTime).min().orElse(0);
+                // 统一计算本批次聚合字段
+                BatchAggregation agg = computeAggregation(groupRecords);
 
                 if (performance == null) {
-                    // 创建新记录
-                    performance = new SysMonitorApiPerformance();
-                    performance.setApiPath(apiPath);
-                    performance.setApiMethod(apiMethod);
-                    performance.setStatDate(statDate);
-                    performance.setStatHour(statHour);
-                    performance.setRequestCount(requestCount);
-                    performance.setSuccessCount(successCount);
-                    performance.setErrorCount(errorCount);
-                    performance.setResponseTimeTotal(responseTimeTotal);
-                    performance.setResponseTimeMax(responseTimeMax);
-                    performance.setResponseTimeMin(responseTimeMin);
-                    performance.setResponseTimeAvg(java.math.BigDecimal.valueOf(
-                            (double) responseTimeTotal / requestCount));
-                    apiPerformanceMapper.insert(performance);
+                    SysMonitorApiPerformance newRecord = new SysMonitorApiPerformance();
+                    newRecord.setApiPath(apiPath);
+                    newRecord.setApiMethod(apiMethod);
+                    newRecord.setStatDate(statDate);
+                    newRecord.setStatHour(statHour);
+                    applyAggregationToEntity(newRecord, agg.requestCount, agg.successCount, agg.errorCount,
+                            agg.responseTimeTotal, agg.responseTimeMax, agg.responseTimeMin, agg.getAvg());
+                    apiPerformanceMapper.insert(newRecord);
                 } else {
-                    // 更新现有记录
-                    long newRequestCount = performance.getRequestCount() + requestCount;
-                    long newSuccessCount = performance.getSuccessCount() + successCount;
-                    long newErrorCount = performance.getErrorCount() + errorCount;
-                    long newResponseTimeTotal = performance.getResponseTimeTotal() + responseTimeTotal;
+                    long newRequestCount = (performance.getRequestCount() != null ? performance.getRequestCount() : 0) + agg.requestCount;
+                    long newSuccessCount = (performance.getSuccessCount() != null ? performance.getSuccessCount() : 0) + agg.successCount;
+                    long newErrorCount = (performance.getErrorCount() != null ? performance.getErrorCount() : 0) + agg.errorCount;
+                    long newResponseTimeTotal = (performance.getResponseTimeTotal() != null ? performance.getResponseTimeTotal() : 0) + agg.responseTimeTotal;
+                    long newResponseTimeMax = Math.max(performance.getResponseTimeMax() != null ? performance.getResponseTimeMax() : 0, agg.responseTimeMax);
+                    long newResponseTimeMin = minWithExisting(performance.getResponseTimeMin(), agg.responseTimeMin);
 
                     LambdaUpdateWrapper<SysMonitorApiPerformance> updateWrapper = new LambdaUpdateWrapper<>();
                     updateWrapper.eq(SysMonitorApiPerformance::getId, performance.getId())
@@ -342,15 +331,11 @@ public class ApiPerformanceAspect {
                             .set(SysMonitorApiPerformance::getSuccessCount, newSuccessCount)
                             .set(SysMonitorApiPerformance::getErrorCount, newErrorCount)
                             .set(SysMonitorApiPerformance::getResponseTimeTotal, newResponseTimeTotal)
-                            .set(SysMonitorApiPerformance::getResponseTimeMax, 
-                                    Math.max(performance.getResponseTimeMax(), responseTimeMax))
-                            .set(SysMonitorApiPerformance::getResponseTimeMin,
-                                    performance.getResponseTimeMin() == 0 ? responseTimeMin :
-                                            Math.min(performance.getResponseTimeMin(), responseTimeMin))
+                            .set(SysMonitorApiPerformance::getResponseTimeMax, newResponseTimeMax)
+                            .set(SysMonitorApiPerformance::getResponseTimeMin, newResponseTimeMin)
                             .set(SysMonitorApiPerformance::getResponseTimeAvg,
-                                    java.math.BigDecimal.valueOf((double) newResponseTimeTotal / newRequestCount))
+                                    BigDecimal.valueOf((double) newResponseTimeTotal / newRequestCount))
                             .set(SysMonitorApiPerformance::getUpdateTime, LocalDateTime.now());
-
                     apiPerformanceMapper.update(null, updateWrapper);
                 }
             }
@@ -359,6 +344,42 @@ public class ApiPerformanceAspect {
         } catch (Exception e) {
             log.error("批量保存API性能记录失败", e);
         }
+    }
+
+    /**
+     * 从本批次记录中计算聚合字段（requestCount、successCount、responseTime 等），便于 insert/update 复用
+     */
+    private static BatchAggregation computeAggregation(List<ApiPerformanceRecord> groupRecords) {
+        long requestCount = groupRecords.size();
+        long successCount = groupRecords.stream().mapToLong(r -> r.isSuccess() ? 1 : 0).sum();
+        long errorCount = requestCount - successCount;
+        long responseTimeTotal = groupRecords.stream().mapToLong(ApiPerformanceRecord::getResponseTime).sum();
+        long responseTimeMax = groupRecords.stream().mapToLong(ApiPerformanceRecord::getResponseTime).max().orElse(0);
+        long responseTimeMin = groupRecords.stream().mapToLong(ApiPerformanceRecord::getResponseTime).min().orElse(0);
+        return new BatchAggregation(requestCount, successCount, errorCount,
+                responseTimeTotal, responseTimeMax, responseTimeMin);
+    }
+
+    /** 将聚合字段设置到实体（用于新增） */
+    private static void applyAggregationToEntity(SysMonitorApiPerformance entity,
+                                                 long requestCount, long successCount, long errorCount,
+                                                 long responseTimeTotal, long responseTimeMax, long responseTimeMin,
+                                                 BigDecimal responseTimeAvg) {
+        entity.setRequestCount(requestCount);
+        entity.setSuccessCount(successCount);
+        entity.setErrorCount(errorCount);
+        entity.setResponseTimeTotal(responseTimeTotal);
+        entity.setResponseTimeMax(responseTimeMax);
+        entity.setResponseTimeMin(responseTimeMin);
+        entity.setResponseTimeAvg(responseTimeAvg);
+    }
+
+    /** 与已有最小值合并：已有为 null 或 0 时取批次 min，否则取两者较小值 */
+    private static long minWithExisting(Long existing, long batchMin) {
+        if (existing == null || existing == 0) {
+            return batchMin;
+        }
+        return Math.min(existing, batchMin);
     }
 
     /**
@@ -407,6 +428,32 @@ public class ApiPerformanceAspect {
             this.slowApiRate = slowApiRate;
         }
 
+    }
+
+    /**
+     * 本批次聚合结果（requestCount、successCount、responseTime 等），供 insert/update 共用
+     */
+    private static class BatchAggregation {
+        final long requestCount;
+        final long successCount;
+        final long errorCount;
+        final long responseTimeTotal;
+        final long responseTimeMax;
+        final long responseTimeMin;
+
+        BatchAggregation(long requestCount, long successCount, long errorCount,
+                         long responseTimeTotal, long responseTimeMax, long responseTimeMin) {
+            this.requestCount = requestCount;
+            this.successCount = successCount;
+            this.errorCount = errorCount;
+            this.responseTimeTotal = responseTimeTotal;
+            this.responseTimeMax = responseTimeMax;
+            this.responseTimeMin = responseTimeMin;
+        }
+
+        BigDecimal getAvg() {
+            return requestCount == 0 ? BigDecimal.ZERO : BigDecimal.valueOf((double) responseTimeTotal / requestCount);
+        }
     }
 
     /**

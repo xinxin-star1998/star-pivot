@@ -80,7 +80,7 @@ oss:
 # 代码生成
 # -----------------------------------------------------------------------------
 gen:
-  author: xinxin
+  author: admin
   packageName: com.star.pivot.system
   autoRemovePre: false
   tablePrefix: sys_

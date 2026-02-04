@@ -5,8 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.star.pivot.common.security.LoginUserInfo;
 import com.star.pivot.system.domain.entity.SysUser;
-import com.star.pivot.system.utils.serializer.GrantedAuthorityDeserializer;
-import com.star.pivot.system.utils.serializer.GrantedAuthoritySerializer;
+import com.star.pivot.system.utils.serializer.GrantedAuthorityJsonSupport;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -50,8 +49,8 @@ public class LoginUser implements UserDetails, LoginUserInfo {
      * 
      * <p>自定义序列化器/反序列化器会处理类型信息，兼容新旧数据格式
      */
-    @JsonSerialize(using = GrantedAuthoritySerializer.class)
-    @JsonDeserialize(using = GrantedAuthorityDeserializer.class)
+    @JsonSerialize(using = GrantedAuthorityJsonSupport.Serializer.class)
+    @JsonDeserialize(using = GrantedAuthorityJsonSupport.Deserializer.class)
     private Collection<? extends GrantedAuthority> authorities;
 
     public LoginUser(SysUser user, Collection<? extends GrantedAuthority> authorities) {

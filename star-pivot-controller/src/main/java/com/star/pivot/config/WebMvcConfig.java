@@ -21,9 +21,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
      */
     @Override
     public void addFormatters(FormatterRegistry registry) {
-        registry.addConverter(new StringToLongArrayConverter());
-        registry.addConverter(new StringToLocalDateTimeConverter());
-        registry.addConverter(new StringToLocalDateConverter());
+        registry.addConverter(new Converters.StringToLongArrayConverter());
+        registry.addConverter(new Converters.StringToLocalDateTimeConverter());
+        registry.addConverter(new Converters.StringToLocalDateConverter());
     }
 
     /**

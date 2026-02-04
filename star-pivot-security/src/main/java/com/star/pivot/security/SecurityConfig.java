@@ -39,8 +39,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final JwtSecurityExceptionHandler jwtSecurityExceptionHandler;
     private final CorsProperties corsProperties;
     private final StarPivotSecurityProperties securityProperties;
     private final List<PermitAllPathProvider> permitAllPathProviders;
@@ -92,8 +91,8 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // 配置异常处理
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                        .accessDeniedHandler(jwtAccessDeniedHandler)
+                        .authenticationEntryPoint(jwtSecurityExceptionHandler)
+                        .accessDeniedHandler(jwtSecurityExceptionHandler)
                 )
                 // 配置请求授权
                 .authorizeHttpRequests(auth -> {

@@ -4,7 +4,7 @@
   import com.baomidou.mybatisplus.core.metadata.IPage;
   import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
   import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-  import com.star.pivot.common.domain.Constants;
+  import com.star.pivot.common.domain.AppConstants;
   import com.star.pivot.common.domain.PageResponse;
   import com.star.pivot.common.exception.BusinessException;
   import com.star.pivot.security.utils.SecurityContextUtils;
@@ -82,7 +82,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         SysRole role = new SysRole();
         BeanUtils.copyProperties(roleDTO, role);
         role.setStatus(StringUtils.hasText(roleDTO.getStatus()) ? roleDTO.getStatus() : "0");
-        role.setDelFlag(Constants.DelFlag.NORMAL);
+        role.setDelFlag(AppConstants.DelFlag.NORMAL);
         role.setMenuCheckStrictly(roleDTO.getMenuCheckStrictly() != null ? roleDTO.getMenuCheckStrictly() : 1);
         role.setDeptCheckStrictly(roleDTO.getDeptCheckStrictly() != null ? roleDTO.getDeptCheckStrictly() : 1);
 
@@ -117,7 +117,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         }
 
         // 不能修改超级管理员角色
-        if (Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()) && !Constants.ADMIN_ROLE_KEY.equals(roleDTO.getRoleKey())) {
+        if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()) && !AppConstants.ADMIN_ROLE_KEY.equals(roleDTO.getRoleKey())) {
             throw new BusinessException("不能修改超级管理员角色");
         }
 
@@ -157,7 +157,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             SysRole role = this.getById(roleId);
             if (role != null && !"2".equals(role.getDelFlag())) {
                 // 不能删除超级管理员角色
-                if (Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey())) {
+                if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey())) {
                     throw new BusinessException("不能删除超级管理员角色");
                 }
                 // 检查是否有用户使用该角色
@@ -168,7 +168,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                     throw new BusinessException("角色[" + role.getRoleName() + "]已被使用，不能删除");
                 }
 
-                role.setDelFlag(Constants.DelFlag.DELETE);
+                role.setDelFlag(AppConstants.DelFlag.DELETE);
                 String currentUser = SecurityContextUtils.getUsername();
                 role.setUpdateBy(currentUser);
                 role.setUpdateTime(LocalDateTime.now());
@@ -186,7 +186,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         }
 
         // 不能停用超级管理员角色
-        if (Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()) && "1".equals(status)) {
+        if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()) && "1".equals(status)) {
             throw new BusinessException("不能停用超级管理员角色");
         }
 
@@ -216,7 +216,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             throw new BusinessException("角色已禁用，请联系管理员");
         }
         List<Long> deptIds;
-        if(sysRole.getRoleKey().equals(Constants.ADMIN_ROLE_KEY)){
+        if(sysRole.getRoleKey().equals(AppConstants.ADMIN_ROLE_KEY)){
             deptIds = sysDeptMapper.selectAllDeptIds();
         }else{
             deptIds = roleDeptMapper.selectDeptIdsByRoleId(roleId);
@@ -242,7 +242,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             throw new BusinessException("角色已禁用，请联系管理员");
         }
         List<Long> menuIds;
-        if (Constants.ADMIN_ROLE_KEY.equals(sysRole.getRoleKey())) {
+        if (AppConstants.ADMIN_ROLE_KEY.equals(sysRole.getRoleKey())) {
             menuIds = sysMenuMapper.selectMenuIds(null);
         } else {
             menuIds = roleMenuMapper.selectMenuIdsByRoleId(roleId);
@@ -280,7 +280,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         List<Long> deptIds = rolePermissionAssignDTO.getDeptIds() == null ? Collections.emptyList() : rolePermissionAssignDTO.getDeptIds();
         //2.查询角色是否存在
         SysRole role = sysRoleMapper.selectById(roleId);
-        if (role == null || Constants.DelFlag.DELETE.equals(role.getDelFlag())) {
+        if (role == null || AppConstants.DelFlag.DELETE.equals(role.getDelFlag())) {
             throw new BusinessException("角色不存在");
         }
         // 3.处理旧部门权限，添加新部门权限

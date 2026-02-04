@@ -1,6 +1,6 @@
 package com.star.pivot.system.service.impl;
 
-import com.star.pivot.common.domain.Constants;
+import com.star.pivot.common.domain.AppConstants;
 import com.star.pivot.common.exception.ServiceException;
 import com.star.pivot.common.utils.LogUtils;
 import com.star.pivot.common.utils.SecurityUtils;
@@ -79,10 +79,7 @@ public class AuthServiceImpl implements AuthService {
             
             // 4. 验证验证码 proof（一次性）
             if (!captchaService.validateAndConsumeCaptchaProof(request.getCaptchaProof(), "login")) {
-                logininfor.setStatus("1");
-                logininfor.setMsg("验证码错误或已失效");
-                sysLogininforService.saveLogininfor(logininfor);
-                // 验证码错误也记录失败次数
+                recordLoginFailure(logininfor, "验证码错误或已失效");
                 accountLockService.recordLoginFailure(request.getUsername());
                 throw new ServiceException("验证码错误或已失效", 401);
             }
@@ -104,11 +101,9 @@ public class AuthServiceImpl implements AuthService {
             if (user == null) {
                 log.warn("无法从认证对象中获取用户信息，降级查询数据库: {}", request.getUsername());
                 user = userService.getUserByUsername(request.getUsername());
-                if (user == null) {
-                    log.error("用户不存在: {}", request.getUsername());
-                    logininfor.setStatus("1");
-                    logininfor.setMsg("用户不存在");
-                    sysLogininforService.saveLogininfor(logininfor);
+if (user == null) {
+                log.error("用户不存在: {}", request.getUsername());
+                    recordLoginFailure(logininfor, "用户不存在");
                     throw new ServiceException("用户不存在", 404);
                 }
             }
@@ -141,20 +136,13 @@ public class AuthServiceImpl implements AuthService {
             rateLimitService.clearIpUsernameRateLimit(ipaddr, request.getUsername());
             
             // 11. 记录登录成功日志
-            logininfor.setStatus("0");
-            logininfor.setMsg("登录成功");
-            sysLogininforService.saveLogininfor(logininfor);
-
+            recordLoginSuccess(logininfor);
             log.info("用户登录成功: {}", request.getUsername());
             return response;
         } catch (AuthenticationException e) {
             log.error("认证失败: {}", e.getMessage());
-            // 记录登录失败
             accountLockService.recordLoginFailure(request.getUsername());
-            // 记录登录失败日志
-            logininfor.setStatus("1");
-            logininfor.setMsg("用户名或密码错误");
-            sysLogininforService.saveLogininfor(logininfor);
+            recordLoginFailure(logininfor, "用户名或密码错误");
             throw new ServiceException("用户名或密码错误", 401);
         } catch (ServiceException e) {
             // ServiceException已经在上面处理了，这里不需要重复记录
@@ -162,10 +150,7 @@ public class AuthServiceImpl implements AuthService {
             throw e;
         } catch (Exception e) {
             log.error("登录异常: {}", e.getMessage(), e);
-            // 记录其他异常
-            logininfor.setStatus("1");
-            logininfor.setMsg("登录异常: " + (e.getMessage() != null ? LogUtils.truncateString(e.getMessage(), 255) : "未知错误"));
-            sysLogininforService.saveLogininfor(logininfor);
+            recordLoginFailure(logininfor, "登录异常: " + (e.getMessage() != null ? LogUtils.truncateString(e.getMessage(), 255) : "未知错误"));
             throw new ServiceException("登录失败", 500);
         }
     }
@@ -201,9 +186,9 @@ public class AuthServiceImpl implements AuthService {
         user.setUserName(username.trim());
         user.setNickName(username.trim());
         user.setUserType("00");
-        user.setStatus(Constants.Status.NORMAL);
+        user.setStatus(AppConstants.Status.NORMAL);
         user.setPassword(SecurityUtils.encryptPassword(password));
-        user.setDelFlag(Constants.DelFlag.NORMAL);
+        user.setDelFlag(AppConstants.DelFlag.NORMAL);
         user.setCreateBy(username.trim());
         user.setCreateTime(java.time.LocalDateTime.now());
 
@@ -217,6 +202,20 @@ public class AuthServiceImpl implements AuthService {
         response.setUsername(user.getUserName());
         response.setNickName(user.getNickName());
         return response;
+    }
+
+    /** 记录登录成功日志（状态 0） */
+    private void recordLoginSuccess(SysLogininfor logininfor) {
+        logininfor.setStatus("0");
+        logininfor.setMsg("登录成功");
+        sysLogininforService.saveLogininfor(logininfor);
+    }
+
+    /** 记录登录失败日志（状态 1，消息由调用方传入） */
+    private void recordLoginFailure(SysLogininfor logininfor, String message) {
+        logininfor.setStatus("1");
+        logininfor.setMsg(message);
+        sysLogininforService.saveLogininfor(logininfor);
     }
 
     /**

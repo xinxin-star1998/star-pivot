@@ -1,12 +1,13 @@
 package com.star.pivot.common.domain;
 
 /**
- * 通用常量
+ * 应用层通用常量（业务码、数据权限、菜单类型、状态等）
+ * <p>与 {@code com.star.pivot.common.constants.Constants}（通用技术常量）区分，避免命名混淆。
  *
  * @author stardust
  * @since 2024-01-01
  */
-public class Constants {
+public class AppConstants {
 
     /**
      * 成功标记
@@ -273,4 +274,3 @@ public class Constants {
      */
     public static final String DEFAULT_PASSWORD = "123456";
 }
-

@@ -2,7 +2,7 @@ package com.star.pivot.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.star.pivot.common.domain.Constants;
+import com.star.pivot.common.domain.AppConstants;
 import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
@@ -63,7 +63,7 @@ public class SysRoleController {
     @GetMapping("/select")
     public Result<List<SysRole>> select(){
         LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysRole::getDelFlag, Constants.DelFlag.NORMAL);
+        wrapper.eq(SysRole::getDelFlag, AppConstants.DelFlag.NORMAL);
         return Result.success(sysRoleService.list());
     }
     /**

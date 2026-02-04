@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -32,13 +33,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<Result<Void>> handleBusinessException(BusinessException e) {
-        // 业务异常通常是可预期的，使用 warn 级别记录日志，避免干扰系统级错误告警
         log.warn("业务异常：{}", e.getMessage(), e);
-        Integer code = e.getCode();
-        if (code == null) {
-            code = 500;
-        }
-        return ResponseEntity.status(toHttpStatus(code)).body(Result.error(code, e.getMessage()));
+        int code = e.getCode() != null ? e.getCode() : 500;
+        return businessError(code, e.getMessage());
     }
 
     /**
@@ -46,25 +43,10 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ServiceException.class)
     public ResponseEntity<Result<Void>> handleServiceException(ServiceException e) {
-        // ServiceException 一般封装的是内部服务错误，这里只在日志中记录详细信息，对外返回通用提示，避免暴露内部实现或敏感信息
         log.error("服务异常：{}", e.getMessage(), e);
-        Integer code = e.getCode();
-        if (code == null) {
-            code = 500;
-        }
-        
-        // 对于特定的业务异常（如账户锁定423、限流429等），返回原始错误消息，便于用户了解具体情况
-        String message;
-        if (code == 423 || code == 429) {
-            // 账户锁定和限流异常，返回原始消息
-            message = e.getMessage();
-        } else {
-            // 其他服务异常，返回通用提示
-            message = "服务暂时不可用，请稍后重试或联系管理员";
-        }
-        
-        return ResponseEntity.status(toHttpStatus(code))
-                .body(Result.error(code, message));
+        int code = (e.getCode() == null || e.getCode() <= 0) ? 500 : e.getCode();
+        String message = (code == 423 || code == 429) ? e.getMessage() : "服务暂时不可用，请稍后重试或联系管理员";
+        return businessError(code, message);
     }
 
     /**
@@ -79,30 +61,19 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 参数校验异常处理
+     * 参数校验/绑定异常处理（@Valid 与表单绑定共用）
      */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Result<Void>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        // 参数校验异常只返回用户可理解的提示语，不直接透出底层异常信息
+    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
+    public ResponseEntity<Result<Void>> handleValidationException(Exception e) {
         log.warn("参数校验异常：{}", e.getMessage());
-        String message = e.getBindingResult().getFieldErrors().stream()
+        BindingResult br = e instanceof MethodArgumentNotValidException
+                ? ((MethodArgumentNotValidException) e).getBindingResult()
+                : (BindException) e;
+        String message = br.getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Result.error(400, "参数校验失败：" + message));
-    }
-
-    /**
-     * 参数绑定异常处理
-     */
-    @ExceptionHandler(BindException.class)
-    public ResponseEntity<Result<Void>> handleBindException(BindException e) {
-        log.warn("参数绑定异常：{}", e.getMessage());
-        String message = e.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getDefaultMessage)
-                .collect(Collectors.joining(", "));
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Result.error(400, "参数绑定失败：" + message));
     }
 
     /**
@@ -157,6 +128,14 @@ public class GlobalExceptionHandler {
         String message = "系统异常，请联系管理员";
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Result.error(500, message));
+    }
+
+    /**
+     * 统一构建业务异常响应：规范化 code，映射 HTTP 状态，返回 Result
+     */
+    private ResponseEntity<Result<Void>> businessError(int code, String message) {
+        int normalized = code <= 0 ? 500 : code;
+        return ResponseEntity.status(toHttpStatus(normalized)).body(Result.error(normalized, message));
     }
 
     private static HttpStatus toHttpStatus(int code) {

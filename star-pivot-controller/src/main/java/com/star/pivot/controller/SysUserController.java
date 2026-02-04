@@ -8,7 +8,6 @@ import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.ResetPasswordDTO;
 import com.star.pivot.system.domain.dto.UserDTO;
-import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.AccountLockService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.security.utils.SecurityContextUtils;
@@ -201,27 +200,8 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:unLock') and @ss.hasRole('admin')")
     @PostMapping("/unlock/{userId}")
     public Result<?> unlockUser(@Parameter(description = "用户ID") @PathVariable("userId") Long userId) {
-        // 1. 根据 userId 查询用户信息
-        SysUser user = sysUserService.getById(userId);
-        if (user == null) {
-            return Result.error("用户不存在");
-        }
-
-        String username = user.getUserName();
-        if (username == null || username.trim().isEmpty()) {
-            return Result.error("用户名不能为空");
-        }
-
-        // 2. 检查账户是否被锁定
-        boolean isLocked = accountLockService.isAccountLocked(username);
-        if (!isLocked) {
-            return Result.success("账户未被锁定，无需解锁");
-        }
-
-        // 3. 执行解锁操作
-        accountLockService.unlockAccount(username);
-
-        return Result.success("账户已成功解锁");
+        AccountLockService.UnlockResult r = accountLockService.unlockUserByUserId(userId);
+        return r.isSuccess() ? Result.success(r.getMessage()) : Result.error(r.getMessage());
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.star.pivot.controller;
 
 import com.star.pivot.common.annotation.Log;
-import com.star.pivot.common.domain.Constants;
+import com.star.pivot.common.domain.AppConstants;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
@@ -98,7 +98,7 @@ public class AuthController {
     @PostMapping("/register")
     public Result<RegisterResponse> register(@RequestBody RegisterRequest request) {
         RegisterResponse response = authService.register(request);
-        return Result.success(Constants.REGISTER_SUCCESS, response);
+        return Result.success(AppConstants.REGISTER_SUCCESS, response);
     }
 
     /**
@@ -346,9 +346,9 @@ public class AuthController {
         
         List<SysMenu> permissions;
         // 检查用户是否拥有admin角色或dataScope=1的角色，如果有则查询所有菜单树
-        boolean isAdmin = roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
+        boolean isAdmin = roles.stream().anyMatch(role -> AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
         // 检查是否有角色的dataScope为1（全部数据权限）
-        boolean hasAllDataScope = roles.stream().anyMatch(role -> Constants.DataScope.ALL.equals(role.getDataScope()));
+        boolean hasAllDataScope = roles.stream().anyMatch(role -> AppConstants.DataScope.ALL.equals(role.getDataScope()));
         
         if (isAdmin || hasAllDataScope) {
             // 如果用户角色包含admin或拥有全部数据权限，则查询所有菜单树

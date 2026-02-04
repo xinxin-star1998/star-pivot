@@ -3,7 +3,7 @@ package com.star.pivot.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.star.pivot.common.domain.Constants;
+import com.star.pivot.common.domain.AppConstants;
 import com.star.pivot.common.exception.BusinessException;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.RoleMenu;
@@ -52,7 +52,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     public List<SysMenu> menuTree() {
         // 查询所有权限
         LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SysMenu::getStatus, Constants.Status.NORMAL);
+        queryWrapper.eq(SysMenu::getStatus, AppConstants.Status.NORMAL);
         queryWrapper.orderByAsc(SysMenu::getOrderNum);
         List<SysMenu> allMenu = this.list(queryWrapper);
 
@@ -69,16 +69,16 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         
         List<SysMenu> allMenu;
         // 获取用户角色对应的菜单，roleKey == admin 时，查询全部菜单
-        boolean isAdmin = roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
+        boolean isAdmin = roles.stream().anyMatch(role -> AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
         // 检查是否有角色的dataScope为1（全部数据权限）
-        boolean hasAllDataScope = roles.stream().anyMatch(role -> Constants.DataScope.ALL.equals(role.getDataScope()));
+        boolean hasAllDataScope = roles.stream().anyMatch(role -> AppConstants.DataScope.ALL.equals(role.getDataScope()));
         log.debug("是否为admin用户，userId: {}, isAdmin: {}", userId, isAdmin);
         log.debug("是否有全部数据权限，userId: {}, hasAllDataScope: {}", userId, hasAllDataScope);
         
         if (isAdmin || hasAllDataScope) {
             // admin用户或拥有全部数据权限的用户查询所有可见且正常的菜单（用于构建树结构）
             LambdaQueryWrapper<SysMenu> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(SysMenu::getStatus, Constants.Status.NORMAL)
+            queryWrapper.eq(SysMenu::getStatus, AppConstants.Status.NORMAL)
                     .orderByAsc(SysMenu::getOrderNum);
             allMenu = this.list(queryWrapper);
             log.debug("用户查询到所有菜单，userId: {}, menuCount: {}", userId, allMenu != null ? allMenu.size() : 0);
@@ -116,8 +116,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         menu.setOrderNum(menuDTO.getOrderNum() != null ? menuDTO.getOrderNum() : 0);
         menu.setIsFrame(menuDTO.getIsFrame() != null ? menuDTO.getIsFrame() : 1);
         menu.setIsCache(menuDTO.getIsCache() != null ? menuDTO.getIsCache() : 0);
-        menu.setVisible(StringUtils.hasText(menuDTO.getVisible()) ? menuDTO.getVisible() : Constants.Visible.SHOW);
-        menu.setStatus(StringUtils.hasText(menuDTO.getStatus()) ? menuDTO.getStatus() : Constants.Status.NORMAL);
+        menu.setVisible(StringUtils.hasText(menuDTO.getVisible()) ? menuDTO.getVisible() : AppConstants.Visible.SHOW);
+        menu.setStatus(StringUtils.hasText(menuDTO.getStatus()) ? menuDTO.getStatus() : AppConstants.Status.NORMAL);
 
         String currentUser = SecurityContextUtils.getUsername();
         menu.setCreateBy(currentUser);
@@ -220,8 +220,8 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     public List<SysMenu> getParent() {
         // 查询目录和菜单类型（排除按钮类型）
         List<String> menuTypes = Arrays.asList(
-                Constants.MenuType.CATALOG,
-                Constants.MenuType.MENU
+                AppConstants.MenuType.CATALOG,
+                AppConstants.MenuType.MENU
         );
         QueryWrapper<SysMenu> query = new QueryWrapper<>();
         query.lambda().in(SysMenu::getMenuType, menuTypes).orderByAsc(SysMenu::getOrderNum);
@@ -324,7 +324,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 .filter(menu -> menu != null 
                         && menu.getParentId() != null 
                         && menu.getParentId().equals(parentId)
-                        && !Constants.MenuType.BUTTON.equals(menu.getMenuType())) // 过滤掉按钮类型
+                        && !AppConstants.MenuType.BUTTON.equals(menu.getMenuType())) // 过滤掉按钮类型
                 .toList();
 
         // 递归构建子树
@@ -376,7 +376,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 continue;
             }
             // 只处理按钮类型
-            if (!Constants.MenuType.BUTTON.equals(menu.getMenuType())) {
+            if (!AppConstants.MenuType.BUTTON.equals(menu.getMenuType())) {
                 continue;
             }
             Long parentId = menu.getParentId();
@@ -408,7 +408,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 continue;
             }
             // 只合并到非按钮菜单（目录/菜单）
-            if (Constants.MenuType.BUTTON.equals(menu.getMenuType())) {
+            if (AppConstants.MenuType.BUTTON.equals(menu.getMenuType())) {
                 continue;
             }
             Long menuId = menu.getMenuId();

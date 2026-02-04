@@ -1,13 +1,14 @@
 package com.star.pivot.system.service;
 
 import com.star.pivot.common.exception.ServiceException;
+import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.utils.RedisCache;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
@@ -21,10 +22,15 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AccountLockService {
 
     private final RedisCache redisCache;
+    private final SysUserService sysUserService;
+
+    public AccountLockService(RedisCache redisCache, @Lazy SysUserService sysUserService) {
+        this.redisCache = redisCache;
+        this.sysUserService = sysUserService;
+    }
 
     /**
      * 账户锁定是否启用
@@ -133,6 +139,29 @@ public class AccountLockService {
         String failureKey = getFailureCountKey(username);
         redisCache.deleteObject(failureKey);
         log.debug("已清除账户 {} 的登录失败记录", username);
+    }
+
+    /**
+     * 按用户ID解锁账户（管理员操作）
+     * 内部完成：按 userId 查用户 → 判空 → 判用户名 → 判是否锁定 → 解锁。
+     *
+     * @param userId 用户ID
+     * @return 明确结果（success + message），Controller 据此返回 Result.success/error
+     */
+    public UnlockResult unlockUserByUserId(Long userId) {
+        SysUser user = sysUserService.getById(userId);
+        if (user == null) {
+            return new UnlockResult(false, "用户不存在");
+        }
+        String username = user.getUserName();
+        if (username == null || username.trim().isEmpty()) {
+            return new UnlockResult(false, "用户名不能为空");
+        }
+        if (!isAccountLocked(username)) {
+            return new UnlockResult(true, "账户未被锁定，无需解锁");
+        }
+        unlockAccount(username);
+        return new UnlockResult(true, "账户已成功解锁");
     }
 
     /**
@@ -250,6 +279,18 @@ public class AccountLockService {
      */
     private String getFailureCountKey(String username) {
         return "login:failure-count:" + username;
+    }
+
+    /**
+     * 按 userId 解锁的结果，供 Controller 映射为 Result
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UnlockResult implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private boolean success;
+        private String message;
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.star.pivot.controller;
 
-import com.star.pivot.common.domain.Constants;
+import com.star.pivot.common.domain.AppConstants;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.common.exception.ServiceException;
 import com.star.pivot.common.utils.OssUtil;
@@ -46,7 +46,7 @@ public class AvatarController {
         if (roles == null || roles.isEmpty()) {
             return false;
         }
-        return roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
+        return roles.stream().anyMatch(role -> AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
     }
 
     /**
@@ -82,7 +82,7 @@ public class AvatarController {
         }
 
         // 管理员用户：不允许操作系统预置的超级管理员账号（除非是本人，上面已返回）
-        if (Constants.ADMIN_USER_ID.equals(targetId)) {
+        if (AppConstants.ADMIN_USER_ID.equals(targetId)) {
             return false;
         }
 

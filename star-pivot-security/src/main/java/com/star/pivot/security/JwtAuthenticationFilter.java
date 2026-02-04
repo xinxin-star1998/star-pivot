@@ -37,11 +37,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
         log.debug("处理请求: {} {}", request.getMethod(), requestURI);
 
-        // 获取 Authorization 请求头
-        String authHeader = request.getHeader("Authorization");
-        log.debug("Authorization Header: {}", authHeader != null ? "Bearer ***" : "未提供");
-
         String token = getTokenFromRequest(request);
+        log.debug("Authorization Header: {}", token != null ? "Bearer ***" : "未提供");
 
         if (token != null) {
             log.debug("成功提取Token: {}...", token.substring(0, Math.min(20, token.length())));

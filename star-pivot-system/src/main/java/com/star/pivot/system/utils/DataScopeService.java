@@ -2,7 +2,7 @@ package com.star.pivot.system.utils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.star.pivot.common.domain.Constants;
+import com.star.pivot.common.domain.AppConstants;
 import com.star.pivot.common.domain.DataScope;
 import com.star.pivot.system.domain.entity.SysDept;
 import com.star.pivot.system.domain.entity.SysRole;
@@ -43,11 +43,11 @@ public class DataScopeService {
 
     /** 数据权限优先级：1(全部) > 2(自定义) > 3(本部门) > 4(本部门及以下) > 5(仅本人) */
     private static final Map<String, Integer> SCOPE_PRIORITY = Map.of(
-            Constants.DataScope.ALL, 1,
-            Constants.DataScope.CUSTOM, 2,
-            Constants.DataScope.DEPT, 3,
-            Constants.DataScope.DEPT_AND_CHILD, 4,
-            Constants.DataScope.SELF, 5
+            AppConstants.DataScope.ALL, 1,
+            AppConstants.DataScope.CUSTOM, 2,
+            AppConstants.DataScope.DEPT, 3,
+            AppConstants.DataScope.DEPT_AND_CHILD, 4,
+            AppConstants.DataScope.SELF, 5
     );
 
     @Autowired
@@ -103,15 +103,15 @@ public class DataScopeService {
      * 计算数据权限范围（取最高优先级）
      */
     private ScopeResult calculateDataScope(List<SysRole> roleList, Long userDeptId) {
-        String highestScope = Constants.DataScope.SELF;
+        String highestScope = AppConstants.DataScope.SELF;
         Set<Long> deptIdSet = new HashSet<>();
 
         for (SysRole role : roleList) {
-            String scope = Optional.ofNullable(role.getDataScope()).orElse(Constants.DataScope.SELF);
+            String scope = Optional.ofNullable(role.getDataScope()).orElse(AppConstants.DataScope.SELF);
             
             // 如果遇到全部权限，直接返回
-            if (Constants.DataScope.ALL.equals(scope)) {
-                return new ScopeResult(Constants.DataScope.ALL, Collections.emptySet());
+            if (AppConstants.DataScope.ALL.equals(scope)) {
+                return new ScopeResult(AppConstants.DataScope.ALL, Collections.emptySet());
             }
 
             // 比较优先级，只处理更高优先级的权限
@@ -121,7 +121,7 @@ public class DataScopeService {
                 processScope(scope, role.getRoleId(), userDeptId, deptIdSet);
             } else if (scope.equals(highestScope)) {
                 // 相同优先级的权限处理
-                if (Constants.DataScope.CUSTOM.equals(scope)) {
+                if (AppConstants.DataScope.CUSTOM.equals(scope)) {
                     // 自定义权限：累加多个角色的部门ID
                     addCustomDeptIds(role.getRoleId(), deptIdSet);
                 }
@@ -144,20 +144,20 @@ public class DataScopeService {
      */
     private void processScope(String scope, Long roleId, Long userDeptId, Set<Long> deptIdSet) {
         switch (scope) {
-            case Constants.DataScope.CUSTOM:
+            case AppConstants.DataScope.CUSTOM:
                 addCustomDeptIds(roleId, deptIdSet);
                 break;
-            case Constants.DataScope.DEPT_AND_CHILD:
+            case AppConstants.DataScope.DEPT_AND_CHILD:
                 if (userDeptId != null) {
                     deptIdSet.addAll(selectDeptIdsByParentId(userDeptId));
                 }
                 break;
-            case Constants.DataScope.DEPT:
+            case AppConstants.DataScope.DEPT:
                 if (userDeptId != null) {
                     deptIdSet.add(userDeptId);
                 }
                 break;
-            case Constants.DataScope.SELF:
+            case AppConstants.DataScope.SELF:
             default:
                 // 仅本人权限，不需要部门ID
                 break;
@@ -178,12 +178,12 @@ public class DataScopeService {
      * 判断是否为超级管理员
      */
     private boolean isSuperAdmin(Long userId, List<SysRole> roleList) {
-        if (!Constants.ADMIN_USER_ID.equals(userId)) {
+        if (!AppConstants.ADMIN_USER_ID.equals(userId)) {
             return false;
         }
         return roleList.stream().anyMatch(role ->
-                Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()) ||
-                Constants.DataScope.ALL.equals(role.getDataScope())
+                AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()) ||
+                AppConstants.DataScope.ALL.equals(role.getDataScope())
         );
     }
 
@@ -196,21 +196,21 @@ public class DataScopeService {
      */
     private String buildSqlFilter(String dataScopeType, Long userId, Set<Long> deptIdSet, Long userDeptId) {
         switch (dataScopeType) {
-            case Constants.DataScope.ALL:
+            case AppConstants.DataScope.ALL:
                 return SQL_ALL;
-            case Constants.DataScope.CUSTOM:
-            case Constants.DataScope.DEPT_AND_CHILD:
+            case AppConstants.DataScope.CUSTOM:
+            case AppConstants.DataScope.DEPT_AND_CHILD:
                 if (CollectionUtils.isEmpty(deptIdSet)) {
                     return SQL_NONE;
                 }
                 // 直接拼接部门ID列表（Long类型，无SQL注入风险）
                 return "u.dept_id IN (" + String.join(",", deptIdSet.stream().map(String::valueOf).toList()) + ")";
-            case Constants.DataScope.DEPT:
+            case AppConstants.DataScope.DEPT:
                 if (userDeptId == null) {
                     return SQL_NONE;
                 }
                 return PLACEHOLDER_USER_DEPT_ID;
-            case Constants.DataScope.SELF:
+            case AppConstants.DataScope.SELF:
                 return PLACEHOLDER_USER_ID;
             default:
                 return SQL_NONE;
@@ -244,8 +244,8 @@ public class DataScopeService {
     private void selectChildrenDeptIds(Long parentId, Set<Long> deptIdSet) {
         LambdaQueryWrapper<SysDept> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysDept::getParentId, parentId)
-                .eq(SysDept::getDelFlag, Constants.DelFlag.NORMAL)
-                .eq(SysDept::getStatus, Constants.Status.NORMAL);
+                .eq(SysDept::getDelFlag, AppConstants.DelFlag.NORMAL)
+                .eq(SysDept::getStatus, AppConstants.Status.NORMAL);
         
         List<SysDept> children = deptMapper.selectList(wrapper);
         for (SysDept child : children) {

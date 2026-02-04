@@ -1,6 +1,6 @@
 package com.star.pivot.system.service.impl;
 
-import com.star.pivot.common.domain.Constants;
+import com.star.pivot.common.domain.AppConstants;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
@@ -64,9 +64,9 @@ public class CustomerUserDetailService implements UserDetailsService {
         List<SysRole> roles = roleMapper.selectRolesByUserId(user.getUserId());
         
         // 检查用户是否拥有admin角色或dataScope=1的角色，如果有则查询所有权限菜单
-        boolean isAdmin = roles.stream().anyMatch(role -> Constants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
+        boolean isAdmin = roles.stream().anyMatch(role -> AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
         // 检查是否有角色的dataScope为1（全部数据权限）
-        boolean hasAllDataScope = roles.stream().anyMatch(role -> Constants.DataScope.ALL.equals(role.getDataScope()));
+        boolean hasAllDataScope = roles.stream().anyMatch(role -> AppConstants.DataScope.ALL.equals(role.getDataScope()));
         
         List<SysMenu> permissions;
         if (isAdmin || hasAllDataScope) {
