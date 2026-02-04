@@ -3,6 +3,7 @@ package com.star.pivot.controller;
 import com.star.pivot.common.domain.AppConstants;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.common.exception.ServiceException;
+import com.star.pivot.common.utils.MinioUtil;
 import com.star.pivot.common.utils.OssUtil;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import com.star.pivot.system.domain.entity.SysRole;
@@ -31,7 +32,8 @@ public class AvatarController {
 
     @Autowired
     private OssUtil ossUtil;
-    
+    @Autowired
+    private MinioUtil minioUtil;
     @Autowired
     private SysUserService sysUserService;
 
@@ -145,12 +147,14 @@ public class AvatarController {
             
             if (usePresignedUrl) {
                 // 使用临时访问链接
-                String presignedUrl = ossUtil.uploadAvatarWithPresignedUrl(file, userId);
+//                String presignedUrl = ossUtil.uploadAvatarWithPresignedUrl(file, userId);
+                String presignedUrl = minioUtil.uploadAvatarWithPresignedUrl(file, userId);
                 data.put("avatarUrl", presignedUrl);
                 data.put("isPresigned", "true");
             } else {
                 // 使用完整访问URL
-                String avatarUrl = ossUtil.uploadAvatarWithUrl(file, userId);
+//                String avatarUrl = ossUtil.uploadAvatarWithUrl(file, userId);
+                String avatarUrl = minioUtil.uploadAvatarWithUrl(file, userId);
                 data.put("avatarUrl", avatarUrl);
                 data.put("isPresigned", "false");
             }
@@ -186,7 +190,8 @@ public class AvatarController {
                 throw new ServiceException("无权访问该用户的头像", 403);
             }
 
-            String presignedUrl = ossUtil.getPresignedUrl(filePath);
+//            String presignedUrl = ossUtil.getPresignedUrl(filePath);
+            String presignedUrl = minioUtil.getPresignedUrl(filePath);
             Map<String, String> data = new HashMap<>();
             data.put("presignedUrl", presignedUrl);
             return Result.success("获取成功", data);
@@ -211,7 +216,8 @@ public class AvatarController {
                 throw new ServiceException("无权删除该用户的头像", 403);
             }
 
-            ossUtil.deleteAvatar(userId);
+//            ossUtil.deleteAvatar(userId);
+            minioUtil.deleteAvatar(userId);
             return Result.success("删除成功");
         } catch (ServiceException e) {
             throw e;

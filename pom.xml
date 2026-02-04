@@ -68,6 +68,7 @@
         <easyexcel.version>3.3.2</easyexcel.version>
         <!-- SpringDoc OpenAPI 版本（用于 Swagger 文档） -->
         <springdoc.version>2.3.0</springdoc.version>
+        <minio.version>8.4.3</minio.version>
     </properties>
 
     <dependencyManagement>
@@ -249,6 +250,13 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
+            </dependency>
+                    
+            <!-- MinIO -->
+            <dependency>
+                <groupId>io.minio</groupId>
+                <artifactId>minio</artifactId>
+                <version>${minio.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

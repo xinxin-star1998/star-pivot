@@ -685,10 +685,15 @@
   }
 
   .cache-list-panel,
-  .key-list-panel,
   .cache-content-panel {
     display: flex;
-    flex: 1;
+    width: 400px;
+    flex-direction: column;
+  }
+
+  .key-list-panel {
+    display: flex;
+    width: 500px; /* 固定宽度为400px */
     flex-direction: column;
   }
 
