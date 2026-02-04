@@ -5,10 +5,12 @@ import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 /**
  * 阿里云 OSS 工具类
@@ -16,6 +18,13 @@ import java.util.Date;
  */
 @Component
 public class OssUtil {
+
+    /** 头像大小限制 2MB */
+    private static final long AVATAR_MAX_SIZE = 2 * 1024 * 1024;
+    /** 允许的头像 Content-Type */
+    private static final String[] ALLOWED_AVATAR_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"};
+    /** userId 仅允许数字，防止路径穿越 */
+    private static final Pattern USER_ID_PATTERN = Pattern.compile("^[0-9]+$");
 
     @Value("${oss.endpoint}")
     private String endpoint;
@@ -40,54 +49,96 @@ public class OssUtil {
     }
 
     /**
+     * 校验 userId 格式，仅允许纯数字，防止路径穿越
+     */
+    private void validateUserId(String userId) {
+        if (!StringUtils.hasText(userId) || !USER_ID_PATTERN.matcher(userId).matches()) {
+            throw new IllegalArgumentException("用户ID格式无效,仅允许数字");
+        }
+    }
+
+    /**
+     * 校验头像文件：大小与类型
+     */
+    private void checkAvatarFileValid(MultipartFile file) {
+        if (file.getSize() > AVATAR_MAX_SIZE) {
+            throw new IllegalArgumentException("头像文件大小不能超过2MB");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null) {
+            contentType = "";
+        }
+        boolean allowed = false;
+        for (String t : ALLOWED_AVATAR_TYPES) {
+            if (t.equals(contentType)) {
+                allowed = true;
+                break;
+            }
+        }
+        if (!allowed) {
+            throw new IllegalArgumentException("头像仅支持JPG、PNG、GIF、WEBP格式");
+        }
+    }
+
+    /**
+     * 安全获取文件后缀，仅允许图片扩展名，默认 .png
+     */
+    private String getSafeImageSuffix(String originalFilename) {
+        if (!StringUtils.hasText(originalFilename) || !originalFilename.contains(".")) {
+            return ".png";
+        }
+        String ext = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+        if (".jpeg".equals(ext) || ".jpg".equals(ext) || ".png".equals(ext) || ".gif".equals(ext) || ".webp".equals(ext)) {
+            return ext;
+        }
+        return ".png";
+    }
+
+    /**
      * 上传头像文件
      * @param file 头像文件
-     * @param userId 用户ID
+     * @param userId 用户ID（仅数字）
      * @return 头像文件在存储桶中的路径
      */
     public String uploadAvatar(MultipartFile file, String userId) throws Exception {
-        // 生成文件名：avatar/{userId}.{suffix}
-        // 每个用户只有一个头像，上传新头像时自动覆盖旧的
-        String originalFilename = file.getOriginalFilename();
-        assert originalFilename != null;
-        String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("上传的头像文件不能为空");
+        }
+        validateUserId(userId);
+        checkAvatarFileValid(file);
+
+        String suffix = getSafeImageSuffix(file.getOriginalFilename());
         String objectName = "avatar/" + userId + suffix;
 
         OSS ossClient = getOssClient();
-
         try {
-            // 先删除该用户的旧头像（如果存在）
-            String prefix = "avatar/" + userId;
-            ListObjectsV2Request listObjectsRequest = new ListObjectsV2Request()
-                    .withBucketName(bucketName)
-                    .withPrefix(prefix);
-            
-            ListObjectsV2Result result = ossClient.listObjectsV2(listObjectsRequest);
-            
-            // 遍历删除旧头像
-            for (OSSObjectSummary objectSummary : result.getObjectSummaries()) {
-                ossClient.deleteObject(bucketName, objectSummary.getKey());
-            }
-            
-            // 上传新文件
+            // 先上传新文件（避免先删后传导致上传失败时丢失旧头像）
+            ObjectMetadata metadata = new ObjectMetadata();
+            String contentType = file.getContentType();
+            metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "image/png");
+            metadata.setContentLength(file.getSize());
             PutObjectRequest putObjectRequest = new PutObjectRequest(
                     bucketName,
                     objectName,
                     file.getInputStream()
             );
-            // 设置文件元数据
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType(file.getContentType());
-            metadata.setContentLength(file.getSize());
             putObjectRequest.setMetadata(metadata);
-
             ossClient.putObject(putObjectRequest);
+
+            // 再删除该用户下其它旧头像（不同后缀的旧文件）
+            String prefix = "avatar/" + userId;
+            ListObjectsV2Request listRequest = new ListObjectsV2Request()
+                    .withBucketName(bucketName)
+                    .withPrefix(prefix);
+            ListObjectsV2Result listResult = ossClient.listObjectsV2(listRequest);
+            for (OSSObjectSummary summary : listResult.getObjectSummaries()) {
+                if (!objectName.equals(summary.getKey())) {
+                    ossClient.deleteObject(bucketName, summary.getKey());
+                }
+            }
         } finally {
-            // 关闭OSSClient
             ossClient.shutdown();
         }
-
-        // 返回文件在存储桶中的路径
         return objectName;
     }
     
@@ -126,12 +177,12 @@ public class OssUtil {
 
     /**
      * 删除用户头像
-     * @param userId 用户ID
+     * @param userId 用户ID（仅数字，防路径穿越）
      */
     public void deleteAvatar(String userId) throws Exception {
+        validateUserId(userId);
         OSS ossClient = getOssClient();
         try {
-            // 列出 avatar/ 目录下以 userId 开头的所有文件（支持不同后缀）
             String prefix = "avatar/" + userId;
             ListObjectsV2Request listObjectsRequest = new ListObjectsV2Request()
                     .withBucketName(bucketName)
@@ -151,10 +202,16 @@ public class OssUtil {
 
     /**
      * 生成文件临时访问链接（私有桶可用，有效期默认7天）
-     * @param objectName 文件路径
+     * @param objectName 文件路径（仅允许 avatar/ 下对象，禁止 .. 等路径穿越）
      * @return 临时URL
      */
     public String getPresignedUrl(String objectName) throws Exception {
+        if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
+            throw new IllegalArgumentException("无效的对象路径");
+        }
+        if (!objectName.startsWith("avatar/")) {
+            throw new IllegalArgumentException("仅支持头像路径");
+        }
         OSS ossClient = getOssClient();
         try {
             // 设置URL过期时间为7天

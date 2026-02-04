@@ -52,8 +52,8 @@ logging:
 
 oss:
   endpoint: ${OSS_ENDPOINT:oss-cn-beijing.aliyuncs.com} # OSS 服务端点，例如：oss-cn-hangzhou.aliyuncs.com
-  access-key-id: ${OSS_ACCESS_KEY_ID:} # AccessKey ID
-  access-key-secret: ${OSS_ACCESS_KEY_SECRET:} # AccessKey Secret
+  access-key-id: ${OSS_ACCESS_KEY_ID:LTAI5tG8uSJeTeuRYEY4x3nG} # AccessKey ID
+  access-key-secret: ${OSS_ACCESS_KEY_SECRET:UdbPwjfPHoobovEhJ9hsZ3c9sdWqGR} # AccessKey Secret
   url-prefix: ${OSS_URL_PREFIX:} # 访问文件的前缀（前端展示用，可选，为空则使用默认格式）
 # -----------------------------------------------------------------------------
 # MinIO 配置（可选，如需使用 MinIO 替换 OSS）

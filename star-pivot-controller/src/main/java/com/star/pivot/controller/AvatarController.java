@@ -147,14 +147,12 @@ public class AvatarController {
             
             if (usePresignedUrl) {
                 // 使用临时访问链接
-//                String presignedUrl = ossUtil.uploadAvatarWithPresignedUrl(file, userId);
-                String presignedUrl = minioUtil.uploadAvatarWithPresignedUrl(file, userId);
+                String presignedUrl = ossUtil.uploadAvatarWithPresignedUrl(file, userId);
                 data.put("avatarUrl", presignedUrl);
                 data.put("isPresigned", "true");
             } else {
                 // 使用完整访问URL
-//                String avatarUrl = ossUtil.uploadAvatarWithUrl(file, userId);
-                String avatarUrl = minioUtil.uploadAvatarWithUrl(file, userId);
+                String avatarUrl = ossUtil.uploadAvatarWithUrl(file, userId);
                 data.put("avatarUrl", avatarUrl);
                 data.put("isPresigned", "false");
             }
@@ -190,8 +188,7 @@ public class AvatarController {
                 throw new ServiceException("无权访问该用户的头像", 403);
             }
 
-//            String presignedUrl = ossUtil.getPresignedUrl(filePath);
-            String presignedUrl = minioUtil.getPresignedUrl(filePath);
+            String presignedUrl = ossUtil.getPresignedUrl(filePath);
             Map<String, String> data = new HashMap<>();
             data.put("presignedUrl", presignedUrl);
             return Result.success("获取成功", data);
@@ -216,8 +213,7 @@ public class AvatarController {
                 throw new ServiceException("无权删除该用户的头像", 403);
             }
 
-//            ossUtil.deleteAvatar(userId);
-            minioUtil.deleteAvatar(userId);
+            ossUtil.deleteAvatar(userId);
             return Result.success("删除成功");
         } catch (ServiceException e) {
             throw e;
