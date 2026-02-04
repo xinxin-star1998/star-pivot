@@ -32,7 +32,7 @@ import java.util.Objects;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 @EnableConfigurationProperties({CorsProperties.class, StarPivotSecurityProperties.class})
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -132,18 +132,13 @@ public class SecurityConfig {
      * </ul>
      */
     private String[] resolvePermitAllPaths() {
-        List<String> paths = new ArrayList<>();
 
         // 内置默认放行路径
-        paths.addAll(List.of(
+        List<String> paths = new ArrayList<>(List.of(
                 "/auth/login",
-                "/api/auth/login",
                 "/auth/refresh",
-                "/api/auth/refresh",
                 "/auth/captcha",
-                "/api/auth/captcha",
-                "/auth/captcha/verify",
-                "/api/auth/captcha/verify"
+                "/auth/captcha/verify"
         ));
 
         // 配置文件追加放行路径

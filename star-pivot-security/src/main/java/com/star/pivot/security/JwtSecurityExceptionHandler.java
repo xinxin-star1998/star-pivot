@@ -26,7 +26,7 @@ public class JwtSecurityExceptionHandler implements AuthenticationEntryPoint, Ac
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
-                         AuthenticationException authException) throws IOException, ServletException {
+                         AuthenticationException authException) throws IOException{
         log.error("未认证访问: {}", authException.getMessage());
         writeJson(response, HttpServletResponse.SC_UNAUTHORIZED, Result.error(401, "未认证，请先登录"));
     }

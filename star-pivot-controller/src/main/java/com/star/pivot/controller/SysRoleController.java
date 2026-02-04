@@ -1,7 +1,6 @@
 package com.star.pivot.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.star.pivot.common.domain.AppConstants;
 import com.star.pivot.common.domain.DeleteRequest;
 import com.star.pivot.common.domain.PageResponse;

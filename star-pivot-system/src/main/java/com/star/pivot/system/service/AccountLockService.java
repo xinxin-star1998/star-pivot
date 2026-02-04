@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
@@ -288,6 +289,7 @@ public class AccountLockService {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UnlockResult implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
         private boolean success;
         private String message;
@@ -301,6 +303,7 @@ public class AccountLockService {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AccountLockInfo implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
 
         /**
