@@ -110,12 +110,6 @@
         { type: 'selection' }, // 勾选列
         { type: 'index', width: 60, label: '序号' }, // 序号
         {
-          prop: 'noticeId',
-          label: '公告ID',
-          width: 100,
-          sortable: true
-        },
-        {
           prop: 'noticeTitle',
           label: '公告标题',
           minWidth: 150,
@@ -123,7 +117,7 @@
         },
         {
           prop: 'noticeType',
-          label: '公告类型（1通知 2公告）',
+          label: '公告类型',
           formatter: (row) => {
             // 字典类型：sys_notice_type
             // 这里需要根据实际字典数据格式化显示
@@ -138,7 +132,7 @@
         },
         {
           prop: 'status',
-          label: '公告状态（0正常 1关闭）',
+          label: '公告状态',
           formatter: (row) => {
             // 字典类型：sys_notice_status
             // 这里需要根据实际字典数据格式化显示
@@ -146,9 +140,15 @@
           }
         },
         {
-          prop: 'remark',
-          label: '备注',
-          width: 120,
+          prop: 'createBy',
+          label: '创建人',
+          width: 100,
+          showOverflowTooltip: true
+        },
+        {
+          prop: 'createTime',
+          label: '创建时间',
+          width: 150,
           showOverflowTooltip: true
         },
         {

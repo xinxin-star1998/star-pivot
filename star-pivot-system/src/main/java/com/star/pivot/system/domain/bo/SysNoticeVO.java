@@ -1,6 +1,9 @@
 package com.star.pivot.system.domain.bo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * 通知公告VO
@@ -35,4 +38,13 @@ public class SysNoticeVO {
      * 公告状态（0正常 1关闭）
      */
     private String status;
+    /**
+     * 创建人
+     */
+    private String createBy;
+    /**
+     * 创建时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime createTime;
 }
