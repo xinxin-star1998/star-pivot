@@ -6,7 +6,7 @@ import lombok.Data;
  * 通知公告查询DTO
  * 
  * @author admin
- * @date 2026-02-05
+ * @since 2026-02-05
  */
 @Data
 public class SysNoticeQueryDTO {

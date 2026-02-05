@@ -1,14 +1,12 @@
 package com.star.pivot.system.domain.bo;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import java.time.LocalDateTime;
 
 /**
  * 通知公告VO
  * 
  * @author admin
- * @date 2026-02-05
+ * @since 2026-02-05
  */
 @Data
 public class SysNoticeVO {

@@ -1,10 +1,8 @@
 package com.star.pivot.system.domain.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import java.time.LocalDateTime;
 
 /**
  * 通知公告DTO

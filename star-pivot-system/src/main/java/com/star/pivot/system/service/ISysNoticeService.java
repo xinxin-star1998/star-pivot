@@ -13,7 +13,7 @@ import java.util.List;
  * 通知公告Service接口
  * 
  * @author admin
- * @date 2026-02-05
+ * @since 2026-02-05
  */
 public interface ISysNoticeService extends IService<SysNotice>
 {

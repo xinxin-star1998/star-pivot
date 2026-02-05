@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Param;
  * 通知公告Mapper接口
  * 
  * @author admin
- * @date 2026-02-05
+ * @since 2026-02-05
  */
 @Mapper
 public interface SysNoticeMapper extends BaseMapper<SysNotice>

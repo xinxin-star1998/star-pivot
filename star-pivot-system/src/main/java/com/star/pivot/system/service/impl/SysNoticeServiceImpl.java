@@ -1,29 +1,27 @@
 package com.star.pivot.system.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.exception.BusinessException;
 import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.system.domain.bo.SysNoticeVO;
+import com.star.pivot.system.domain.dto.SysNoticeDTO;
+import com.star.pivot.system.domain.dto.SysNoticeQueryDTO;
 import com.star.pivot.system.domain.entity.SysNotice;
 import com.star.pivot.system.domain.entity.SysUser;
+import com.star.pivot.system.mapper.SysNoticeMapper;
+import com.star.pivot.system.service.ISysNoticeService;
 import com.star.pivot.system.utils.LoginUser;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.star.pivot.system.domain.dto.SysNoticeQueryDTO;
-import com.star.pivot.system.domain.bo.SysNoticeVO;
-import com.star.pivot.system.mapper.SysNoticeMapper;
-import com.star.pivot.system.domain.dto.SysNoticeDTO;
-import com.star.pivot.system.service.ISysNoticeService;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 通知公告Service业务层实现
@@ -91,7 +89,7 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
     {
         SysNotice sysNotice = new SysNotice();
         BeanUtils.copyProperties(sysNoticeDTO, sysNotice);
-        sysNotice.setCreateBy(getCurrentUser().getUserName());
+        sysNotice.setCreateBy(Objects.requireNonNull(getCurrentUser()).getUserName());
         sysNotice.setCreateTime(java.time.LocalDateTime.now());
         return this.save(sysNotice);
     }
@@ -111,7 +109,7 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
             throw new BusinessException("通知公告不存在");
         }
         BeanUtils.copyProperties(sysNoticeDTO, sysNotice, "noticeId");
-        sysNotice.setUpdateBy(getCurrentUser().getUserName());
+        sysNotice.setUpdateBy(Objects.requireNonNull(getCurrentUser()).getUserName());
         sysNotice.setUpdateTime(java.time.LocalDateTime.now());
         return this.updateById(sysNotice);
     }
