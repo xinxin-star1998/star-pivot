@@ -320,18 +320,19 @@
                       style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
                     },
                     [
-                      h(
-                        'span',
-                        {
-                          class: 'user-name font-medium text-gray-900',
-                          style: {
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }
-                        },
-                        row.userName || '未知用户'
-                      ),
+                  h(
+                    'span',
+                    {
+                      class: 'user-name font-medium',
+                      style: {
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        color: 'var(--art-gray-900)'
+                      }
+                    },
+                    row.userName || '未知用户'
+                  ),
                       h('span', {
                         class: 'status-indicator',
                         style: {
@@ -347,8 +348,13 @@
                   h(
                     'p',
                     {
-                      class: 'email text-sm text-gray-500',
-                      style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+                      class: 'email text-sm',
+                      style: {
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        color: 'var(--art-gray-500)'
+                      }
                     },
                     row.email || '无邮箱'
                   )
@@ -438,7 +444,7 @@
 
             if (actions.length === 0) {
               // 无任何操作权限时返回空占位
-              return h('span', { style: 'color: #999' }, '')
+              return h('span', { style: 'color: var(--art-gray-500)' }, '')
             }
 
             return h('div', actions)
@@ -623,7 +629,7 @@
 <style lang="scss" scoped>
   .user-page {
     padding: 16px;
-    background-color: #f5f7fa;
+    background-color: var(--default-bg-color);
   }
 
   .user-layout {
@@ -638,9 +644,14 @@
     flex-direction: column;
     width: 280px;
     overflow: hidden;
-    background-color: #fff;
+    background-color: var(--default-box-color);
     border-radius: 8px;
+    border: 1px solid var(--art-card-border);
     box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+  }
+
+  .dark .left-panel {
+    box-shadow: none;
   }
 
   .right-panel {
@@ -648,9 +659,14 @@
     flex: 1;
     flex-direction: column;
     overflow: hidden;
-    background-color: #fff;
+    background-color: var(--default-box-color);
     border-radius: 8px;
+    border: 1px solid var(--art-card-border);
     box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+  }
+
+  .dark .right-panel {
+    box-shadow: none;
   }
 
   .department-tree-card {
@@ -665,8 +681,8 @@
     padding: 12px 16px;
     font-size: 16px;
     font-weight: 600;
-    color: #303133;
-    border-bottom: 1px solid #ebeef5;
+    color: var(--art-gray-900);
+    border-bottom: 1px solid var(--default-border);
   }
 
   .department-tree-header {
@@ -690,7 +706,7 @@
     flex: 1;
     padding: 0 16px 16px;
     overflow-y: auto;
-    background-color: #fff;
+    background-color: var(--default-box-color);
   }
 
   :deep(.el-tree) {
