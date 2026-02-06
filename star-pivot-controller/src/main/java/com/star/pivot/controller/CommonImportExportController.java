@@ -7,13 +7,15 @@ import com.star.pivot.common.annotation.NoResponseWrapper;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.system.service.ImportExportService;
 import com.star.pivot.system.service.ImportExportServiceFactory;
-import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import java.util.Map;
  * @author xinxin
  * @since 2026-01-25
  */
+@Slf4j
 @RestController
 @RequestMapping("/common/import-export")
 public class CommonImportExportController {
@@ -81,7 +84,8 @@ public class CommonImportExportController {
     /**
      * 通用导出接口
      * <p>
-     * 直接写入 HttpServletResponse 流，不加统一 Result 包装，故排除 ResponseBodyAdvice
+     * 使用 ResponseEntity + byte[] 返回 Excel 字节流，避免 getWriter()/getOutputStream 冲突且无需自定义 MessageConverter。
+     * 不加统一 Result 包装，故排除 ResponseBodyAdvice。
      * </p>
      * <p>
      * 权限要求：需要拥有对应业务模块的导出权限，如 `system:user:export`、`system:dept:export` 等
@@ -89,90 +93,152 @@ public class CommonImportExportController {
      *
      * @param businessType 业务类型标识
      * @param queryParams  查询参数
-     * @param response     HTTP 响应
+     * @return 成功时为 Excel 字节流，失败时为 JSON 错误信息
      */
     @Log(title = "数据导出", businessType = 0)
     @PreAuthorize("hasAuthority('system:' + #businessType + ':export')")
     @NoResponseWrapper
     @PostMapping("/export/{businessType}")
-    public void exportData(
+    public ResponseEntity<?> exportData(
             @PathVariable("businessType") String businessType,
-            @RequestBody(required = false) Map<String, Object> queryParams,
-            HttpServletResponse response) throws IOException {
+            @RequestBody(required = false) Map<String, Object> queryParams) {
 
         try {
             ImportExportService service = serviceFactory.getService(businessType);
             List<Map<String, Object>> dataList = service.exportData(queryParams != null ? queryParams : Map.of());
 
-            generateExcelFile(dataList, businessType, response);
+            if (dataList == null || dataList.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Result.error("没有可导出的数据"));
+            }
+
+            List<List<String>> headList = buildHeadList(dataList);
+            List<List<Object>> dataRows = buildDataRows(dataList, headList);
+            String filename = businessType + "_export_" + System.currentTimeMillis() + ".xlsx";
+            String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            EasyExcel.write(baos)
+                    .head(headList)
+                    .sheet("数据导出")
+                    .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
+                    .doWrite(dataRows);
+            byte[] bytes = baos.toByteArray();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(bytes);
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"code\":500,\"msg\":\"导出失败：" + e.getMessage() + "\"}");
+            log.error("导出失败", e);
+            return ResponseEntity.status(500)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Result.error("导出失败：" + e.getMessage()));
         }
     }
 
     /**
      * 下载导入模板
      * <p>
-     * 直接写入 HttpServletResponse 流，不加统一 Result 包装，故排除 ResponseBodyAdvice
+     * 使用 ResponseEntity + byte[] 返回 Excel 字节流，避免 getWriter()/getOutputStream 冲突且无需自定义 MessageConverter。
      * </p>
      * <p>
      * 权限要求：需要拥有对应业务模块的导入权限（下载模板是为了导入），如 `system:user:import`、`system:dept:import` 等
      * </p>
      *
      * @param businessType 业务类型标识
-     * @param response     HTTP 响应
+     * @return 成功时为 Excel 模板字节流，失败时为 JSON 错误信息
      */
     @Log(title = "下载导入模板", businessType = 0)
     @PreAuthorize("hasAuthority('system:' + #businessType + ':import')")
     @NoResponseWrapper
     @GetMapping("/template/{businessType}")
-    public void downloadTemplate(
-            @PathVariable("businessType") String businessType,
-            HttpServletResponse response) throws IOException {
-
+    public ResponseEntity<?> downloadTemplate(@PathVariable("businessType") String businessType) {
         try {
             ImportExportService service = serviceFactory.getService(businessType);
             ImportExportService.ImportTemplate template = service.getImportTemplate();
 
-            generateTemplateExcelFile(template, businessType, response);
+            List<String> headers = template.getHeaders();
+            if (headers == null || headers.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(Result.error("模板数据为空"));
+            }
+
+            List<List<String>> headList = new ArrayList<>();
+            for (String h : headers) {
+                List<String> col = new ArrayList<>();
+                col.add(h);
+                headList.add(col);
+            }
+
+            List<List<Object>> dataRows = new ArrayList<>();
+            List<Map<String, Object>> sampleData = template.getSampleData();
+            if (sampleData != null && !sampleData.isEmpty()) {
+                for (Map<String, Object> rowMap : sampleData) {
+                    List<Object> row = new ArrayList<>();
+                    for (String key : headers) {
+                        Object val = rowMap.get(key);
+                        row.add(val != null ? val : "");
+                    }
+                    dataRows.add(row);
+                }
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            EasyExcel.write(baos)
+                    .head(headList)
+                    .sheet("导入模板")
+                    .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
+                    .doWrite(dataRows);
+            byte[] bytes = baos.toByteArray();
+
+            String filename = businessType + "_import_template.xlsx";
+            String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
+            HttpHeaders headersResp = new HttpHeaders();
+            headersResp.set(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename);
+
+            return ResponseEntity.ok()
+                    .headers(headersResp)
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(bytes);
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"code\":500,\"msg\":\"下载模板失败：" + e.getMessage() + "\"}");
+            log.error("下载模板失败", e);
+            return ResponseEntity.status(500)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Result.error("下载模板失败：" + e.getMessage()));
         }
     }
 
     /**
-     * 使用 EasyExcel 生成导出文件并写入响应流
-     *
-     * @param dataList     数据列表（Map 的 key 为表头，value 为单元格值）
-     * @param businessType 业务类型
-     * @param response     HTTP 响应
+     * 从数据列表构建 EasyExcel 表头（每列一个 List<String>）
      */
-    private void generateExcelFile(List<Map<String, Object>> dataList, String businessType, HttpServletResponse response)
-            throws IOException {
-        if (dataList == null || dataList.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"code\":400,\"msg\":\"没有可导出的数据\"}");
-            return;
-        }
-
-        // 表头：取第一行 key，保证顺序（若为 LinkedHashMap）
+    private static List<List<String>> buildHeadList(List<Map<String, Object>> dataList) {
         Map<String, Object> firstRow = dataList.get(0);
         List<String> headers = new ArrayList<>(firstRow.keySet());
-
-        // EasyExcel 动态表头：每列一个 List<String>
         List<List<String>> headList = new ArrayList<>();
         for (String h : headers) {
             List<String> col = new ArrayList<>();
             col.add(h);
             headList.add(col);
         }
+        return headList;
+    }
 
-        // 动态数据：每行一个 List<Object>，顺序与表头一致
+    /**
+     * 从数据列表按表头顺序构建 EasyExcel 数据行
+     */
+    private static List<List<Object>> buildDataRows(List<Map<String, Object>> dataList, List<List<String>> headList) {
+        List<String> headers = new ArrayList<>();
+        for (List<String> col : headList) {
+            headers.add(col.get(0));
+        }
         List<List<Object>> dataRows = new ArrayList<>();
         for (Map<String, Object> rowMap : dataList) {
             List<Object> row = new ArrayList<>();
@@ -182,73 +248,6 @@ public class CommonImportExportController {
             }
             dataRows.add(row);
         }
-
-        String filename = businessType + "_export_" + System.currentTimeMillis() + ".xlsx";
-        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        response.setHeader("Content-Disposition",
-                "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename);
-
-        try (OutputStream out = response.getOutputStream()) {
-            EasyExcel.write(out)
-                    .head(headList)
-                    .sheet("数据导出")
-                    .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
-                    .doWrite(dataRows);
-            out.flush();
-        }
-    }
-
-    /**
-     * 使用 EasyExcel 生成导入模板并写入响应流
-     *
-     * @param template     模板（表头 + 示例行）
-     * @param businessType 业务类型
-     * @param response     HTTP 响应
-     */
-    private void generateTemplateExcelFile(ImportExportService.ImportTemplate template, String businessType,
-                                           HttpServletResponse response) throws IOException {
-        List<String> headers = template.getHeaders();
-        if (headers == null || headers.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"code\":400,\"msg\":\"模板数据为空\"}");
-            return;
-        }
-
-        List<List<String>> headList = new ArrayList<>();
-        for (String h : headers) {
-            List<String> col = new ArrayList<>();
-            col.add(h);
-            headList.add(col);
-        }
-
-        List<List<Object>> dataRows = new ArrayList<>();
-        List<Map<String, Object>> sampleData = template.getSampleData();
-        if (sampleData != null && !sampleData.isEmpty()) {
-            for (Map<String, Object> rowMap : sampleData) {
-                List<Object> row = new ArrayList<>();
-                for (String key : headers) {
-                    Object val = rowMap.get(key);
-                    row.add(val != null ? val : "");
-                }
-                dataRows.add(row);
-            }
-        }
-
-        String filename = businessType + "_import_template.xlsx";
-        String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        response.setHeader("Content-Disposition",
-                "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename);
-
-        try (OutputStream out = response.getOutputStream()) {
-            EasyExcel.write(out)
-                    .head(headList)
-                    .sheet("导入模板")
-                    .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
-                    .doWrite(dataRows);
-            out.flush();
-        }
+        return dataRows;
     }
 }

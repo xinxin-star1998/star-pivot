@@ -6,4 +6,5 @@
  *   window.__APP_RUNTIME_CONFIG__.VITE_API_URL = '';
  */
 window.__APP_RUNTIME_CONFIG__ = window.__APP_RUNTIME_CONFIG__ || {};
-window.__APP_RUNTIME_CONFIG__.VITE_API_URL = 'http://101.201.181.191:8080';
+// window.__APP_RUNTIME_CONFIG__.VITE_API_URL = 'http://101.201.181.191:8080';
+window.__APP_RUNTIME_CONFIG__.VITE_API_URL = '';
