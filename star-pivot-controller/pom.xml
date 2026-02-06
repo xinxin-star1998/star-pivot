@@ -69,6 +69,11 @@
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>com.star.pivot.quartz</groupId>
+            <artifactId>star-pivot-quartz</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>com.star.pivot.security</groupId>
             <artifactId>star-pivot-security</artifactId>
             <version>0.0.1-SNAPSHOT</version>

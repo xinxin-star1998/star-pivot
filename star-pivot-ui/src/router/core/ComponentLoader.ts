@@ -23,9 +23,12 @@ export class ComponentLoader {
       return this.createEmptyComponent()
     }
 
+    // 确保以 / 开头，避免拼出 ../../viewsmonitor/... 导致找不到组件
+    const normalized = componentPath.startsWith('/') ? componentPath : `/${componentPath}`
+
     // 构建可能的路径
-    const fullPath = `../../views${componentPath}.vue`
-    const fullPathWithIndex = `../../views${componentPath}/index.vue`
+    const fullPath = `../../views${normalized}.vue`
+    const fullPathWithIndex = `../../views${normalized}/index.vue`
 
     // 先尝试直接路径，再尝试添加/index的路径
     const module = this.modules[fullPath] || this.modules[fullPathWithIndex]

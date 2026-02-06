@@ -36,12 +36,17 @@ import java.time.LocalDateTime;
 @Slf4j
 @Aspect
 @Component
-@RequiredArgsConstructor
 public class LogAspect {
-
+    
     private final SysOperLogService sysOperLogService;
     private final SysDeptMapper sysDeptMapper;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+    
+    public LogAspect(SysOperLogService sysOperLogService, SysDeptMapper sysDeptMapper, ObjectMapper objectMapper) {
+        this.sysOperLogService = sysOperLogService;
+        this.sysDeptMapper = sysDeptMapper;
+        this.objectMapper = objectMapper;
+    }
 
     /**
      * 配置切点：拦截所有带有 @Log 注解的方法

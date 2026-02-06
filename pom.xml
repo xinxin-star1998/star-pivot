@@ -13,6 +13,7 @@
         <module>star-pivot-common</module>
         <module>star-pivot-security</module>
         <module>star-pivot-system</module>
+        <module>star-pivot-quartz</module>
         <module>star-pivot-controller</module>
         <module>star-pivot-generator</module>
     </modules>
@@ -69,6 +70,8 @@
         <!-- SpringDoc OpenAPI 版本（用于 Swagger 文档） -->
         <springdoc.version>2.3.0</springdoc.version>
         <minio.version>8.4.3</minio.version>
+        <!-- Quartz 定时任务 -->
+        <quartz.version>2.3.2</quartz.version>
     </properties>
 
     <dependencyManagement>
@@ -257,6 +260,12 @@
                 <groupId>io.minio</groupId>
                 <artifactId>minio</artifactId>
                 <version>${minio.version}</version>
+            </dependency>
+            <!-- Quartz 定时任务 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-quartz</artifactId>
+                <version>${spring-boot.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
