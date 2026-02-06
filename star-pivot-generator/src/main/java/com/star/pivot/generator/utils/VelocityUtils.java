@@ -147,23 +147,31 @@ public class VelocityUtils
         templates.add("vm/xml/mapper.xml.vm");
         templates.add("vm/sql/sql.vm");
         templates.add("vm/js/api.js.vm");
+        // Element UI (vue2) 仅存在 index/index-tree 单文件模板，无 modules 子目录
+        boolean isVue2 = "vm/vue".equals(useWebType);
         if (GenConstants.TPL_CRUD.equals(tplCategory))
         {
             templates.add(useWebType + "/index.vue.vm");
-            templates.add(useWebType + "/modules/search.vue.vm");
-            templates.add(useWebType + "/modules/dialog.vue.vm");
+            if (!isVue2) {
+                templates.add(useWebType + "/modules/search.vue.vm");
+                templates.add(useWebType + "/modules/dialog.vue.vm");
+            }
         }
         else if (GenConstants.TPL_TREE.equals(tplCategory))
         {
             templates.add(useWebType + "/index-tree.vue.vm");
-            templates.add(useWebType + "/modules/search.vue.vm");
-            templates.add(useWebType + "/modules/dialog.vue.vm");
+            if (!isVue2) {
+                templates.add(useWebType + "/modules/search.vue.vm");
+                templates.add(useWebType + "/modules/dialog.vue.vm");
+            }
         }
         else if (GenConstants.TPL_SUB.equals(tplCategory))
         {
             templates.add(useWebType + "/index.vue.vm");
-            templates.add(useWebType + "/modules/search.vue.vm");
-            templates.add(useWebType + "/modules/dialog.vue.vm");
+            if (!isVue2) {
+                templates.add(useWebType + "/modules/search.vue.vm");
+                templates.add(useWebType + "/modules/dialog.vue.vm");
+            }
             templates.add("vm/java/sub-domain.java.vm");
             templates.add("vm/java/dto/sub-dto.java.vm");
             templates.add("vm/java/bo/sub-vo.java.vm");
