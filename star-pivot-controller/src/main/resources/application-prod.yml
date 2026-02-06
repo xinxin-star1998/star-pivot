@@ -11,6 +11,13 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     druid:
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        login-username: ${DRUID_LOGIN_USERNAME:admin}
+        login-password: ${DRUID_LOGIN_PASSWORD:admin123}
+      web-stat-filter:
+        enabled: true
       initial-size: 10
       min-idle: 10
       max-active: 50

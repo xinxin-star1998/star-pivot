@@ -101,8 +101,17 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
                     <skip>false</skip>
+                    <!-- 显式指定主类，确保 JAR 包含 Main-Class 清单，避免“没有主清单属性” -->
+                    <mainClass>com.star.pivot.StarPivotApplication</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

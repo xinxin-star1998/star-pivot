@@ -111,7 +111,20 @@ interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   returnFullResponse?: boolean
 }
 
-const { VITE_API_URL, VITE_WITH_CREDENTIALS } = import.meta.env
+const { VITE_WITH_CREDENTIALS } = import.meta.env
+
+/**
+ * 获取 API 基础地址（优先使用部署后的运行时配置，无需重新打包）
+ * 部署后修改 public/config.js 中的 VITE_API_URL 即可生效
+ */
+function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.__APP_RUNTIME_CONFIG__?.VITE_API_URL !== undefined) {
+    return window.__APP_RUNTIME_CONFIG__.VITE_API_URL
+  }
+  return (import.meta.env.VITE_API_URL as string) || ''
+}
+
+const VITE_API_URL = getApiBaseUrl()
 
 /** Axios实例 */
 const axiosInstance = axios.create({
@@ -143,7 +156,7 @@ function normalizeRequestUrl(url: string): string {
   // 只处理以 /api/ 开头的相对路径
   if (!url.startsWith('/api/')) return url
 
-  const base = (VITE_API_URL || '').trim()
+  const base = (getApiBaseUrl() || '').trim()
   const baseHasApi = base === '/api' || base.endsWith('/api') || base.includes('/api/')
 
   return baseHasApi ? url.replace(/^\/api/, '') : url

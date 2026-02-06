@@ -47,6 +47,16 @@ declare module 'dayjs'
 // 全局变量声明
 declare const __APP_VERSION__: string // 版本号
 
+// 运行时配置（部署后通过 public/config.js 注入，无需重新打包即可修改 API 地址）
+interface AppRuntimeConfig {
+  VITE_API_URL?: string
+}
+declare global {
+  interface Window {
+    __APP_RUNTIME_CONFIG__?: AppRuntimeConfig
+  }
+}
+
 // Vue i18n 全局类型声明
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {

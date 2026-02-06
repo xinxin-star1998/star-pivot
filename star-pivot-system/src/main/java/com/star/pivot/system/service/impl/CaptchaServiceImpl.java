@@ -224,6 +224,16 @@ public class CaptchaServiceImpl implements CaptchaService {
         return true;
     }
 
+    /** 从 throwable 及其 cause 链中取第一条非空消息 */
+    private static String getThrowableMessage(Throwable t) {
+        for (Throwable x = t; x != null; x = x.getCause()) {
+            if (x.getMessage() != null && !x.getMessage().isEmpty()) {
+                return x.getMessage();
+            }
+        }
+        return t.getClass().getSimpleName();
+    }
+
     /**
      * 生成随机验证码
      */
@@ -237,7 +247,8 @@ public class CaptchaServiceImpl implements CaptchaService {
     }
 
     /**
-     * 创建验证码图片
+     * 创建验证码图片。
+     * Linux 无头环境（如 ECS）需安装 fontconfig 与字体包，否则会抛出 ServiceException。
      */
     private BufferedImage createImage(String code) {
         // 创建图片
@@ -256,13 +267,20 @@ public class CaptchaServiceImpl implements CaptchaService {
                     random.nextInt(IMAGE_WIDTH), random.nextInt(IMAGE_HEIGHT));
         }
 
-        // 设置字体
-        g.setFont(new Font("Arial", Font.BOLD, 20));
-
-        // 绘制验证码
-        for (int i = 0; i < code.length(); i++) {
-            g.setColor(new Color(random.nextInt(80), random.nextInt(80), random.nextInt(80)));
-            g.drawString(String.valueOf(code.charAt(i)), 25 * i + 10, 25);
+        try {
+            // 使用逻辑字体 SansSerif，在 Linux 上通常由 fontconfig 提供；无字体时此处会抛 InternalError 等
+            g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
+            for (int i = 0; i < code.length(); i++) {
+                g.setColor(new Color(random.nextInt(80), random.nextInt(80), random.nextInt(80)));
+                g.drawString(String.valueOf(code.charAt(i)), 25 * i + 10, 25);
+            }
+        } catch (Throwable t) {
+            g.dispose();
+            String hint = getThrowableMessage(t);
+            if (hint.contains("Font") || hint.contains("fontconfig") || hint.contains("Fontconfig")) {
+                throw new ServiceException("验证码生成失败：服务器未安装字体。请在 ECS 上安装 fontconfig 与字体包，例如：yum install -y fontconfig dejavu-sans-fonts 或 apt-get install -y fontconfig fonts-dejavu-core", 500);
+            }
+            throw new ServiceException("验证码生成失败: " + hint, 500);
         }
 
         // 绘制干扰点

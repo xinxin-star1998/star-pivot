@@ -16,7 +16,8 @@ public class GlobalPermitAllPathProvider implements PermitAllPathProvider {
     @Override
     public List<String> permitAllPaths() {
         return List.of(
-                "/druid/**",  // 放行 Druid 内置监控页面（去掉 context-path 后的应用内路径）
+                "/druid/**",      // 放行 Druid 内置监控页面（应用内路径，无 context-path）
+                "/api/druid/**",  // 放行 Druid（部分网关/反向代理下 Security 看到的是带 context-path 的完整路径）
                 "/swagger-ui/**",  // 放行 Swagger UI 页面
                 "/v3/api-docs/**",  // 放行 OpenAPI JSON 文档
                 "/swagger-resources/**",  // 放行 Swagger 资源文件
