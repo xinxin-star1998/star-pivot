@@ -135,9 +135,9 @@
                     :label="dict.dictName"
                     :value="dict.dictType"
                   >
-                    <span style="float: left">{{ dict.dictName }}</span>
+                    <span style="float: left">{{ dict?.dictName }}</span>
                     <span style="float: right; font-size: 13px; color: #8492a6">
-                      {{ dict.dictType }}
+                      {{ dict?.dictType }}
                     </span>
                   </ElOption>
                 </ElSelect>
@@ -214,7 +214,7 @@
   // 生成信息表单数据
   const genInfoForm = reactive({
     tplCategory: 'crud',
-    tplWebType: 'element-plus',
+    tplWebType: 'element-ui',
     packageName: '',
     moduleName: '',
     businessName: '',
@@ -268,7 +268,7 @@
 
       // 填充生成信息表单
       genInfoForm.tplCategory = info.tplCategory || 'crud'
-      genInfoForm.tplWebType = info.tplWebType || 'element-plus'
+      genInfoForm.tplWebType = info.tplWebType || 'element-ui'
       genInfoForm.packageName = info.packageName || ''
       genInfoForm.moduleName = info.moduleName || ''
       genInfoForm.businessName = info.businessName || ''

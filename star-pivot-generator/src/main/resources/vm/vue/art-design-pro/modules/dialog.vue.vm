@@ -43,19 +43,19 @@
 #elseif($column.htmlType == "radio" && "" != $dictType)
         <ElRadioGroup v-model="formData.${column.javaField}">
           <!-- 字典类型：${dictType}，需要从字典服务获取选项 -->
-          <ElRadio label="0">正常</ElRadio>
-          <ElRadio label="1">停用</ElRadio>
+          <ElRadio value="0">正常</ElRadio>
+          <ElRadio value="1">停用</ElRadio>
         </ElRadioGroup>
 #elseif($column.htmlType == "radio" && $dictType)
         <ElRadioGroup v-model="formData.${column.javaField}">
-          <ElRadio label="0">正常</ElRadio>
-          <ElRadio label="1">停用</ElRadio>
+          <ElRadio value="0">正常</ElRadio>
+          <ElRadio value="1">停用</ElRadio>
         </ElRadioGroup>
 #elseif($column.htmlType == "checkbox" && "" != $dictType)
         <ElCheckboxGroup v-model="formData.${column.javaField}">
           <!-- 字典类型：${dictType}，需要从字典服务获取选项 -->
-          <ElCheckbox label="0">正常</ElCheckbox>
-          <ElCheckbox label="1">停用</ElCheckbox>
+          <ElCheckbox value="0">正常</ElCheckbox>
+          <ElCheckbox value="1">停用</ElCheckbox>
         </ElCheckboxGroup>
 #elseif($column.htmlType == "datetime")
         <ElDatePicker
@@ -79,10 +79,10 @@
       <ElDivider content-position="center">${subTable.functionName}信息</ElDivider>
       <ElRow :gutter="10" class="mb8">
         <ElCol :span="1.5">
-          <ElButton type="primary" :icon="Plus" @click="handleAdd${subClassName}">添加</ElButton>
+          <ElButton type="primary" icon="Plus" @click="handleAdd${subClassName}">添加</ElButton>
         </ElCol>
         <ElCol :span="1.5">
-          <ElButton type="danger" :icon="Delete" @click="handleDelete${subClassName}">删除</ElButton>
+          <ElButton type="danger" icon="Delete" @click="handleDelete${subClassName}">删除</ElButton>
         </ElCol>
       </ElRow>
       <ElTable :data="formData.${subclassName}List" :row-class-name="row${subClassName}Index" @selection-change="handle${subClassName}SelectionChange">
@@ -133,10 +133,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, watch, nextTick, reactive } from 'vue'
-#if($table.sub)
-  import { Plus, Delete } from '@element-plus/icons-vue'
-#end
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
 #if($table.tree)

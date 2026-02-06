@@ -64,7 +64,6 @@
       />
       <!-- 导入表弹窗 -->
       <ImportDialog v-model:visible="importDialogVisible" @success="handleImportSuccess" />
-
       <!-- 代码预览弹窗 -->
       <PreviewDialog v-model:visible="previewVisible" :table-id="previewTableId" />
     </ElCard>
@@ -205,9 +204,10 @@
           label: '前端模板',
           width: 120,
           formatter: (row: GenTableListItem) => {
-            const webTypeMap: Record<string, { text: string; type: 'success' | 'info' }> = {
+            const webTypeMap: Record<string, { text: string; type: 'success' | 'info' | 'warning' }> = {
               'element-ui': { text: 'Element UI', type: 'info' },
-              'element-plus': { text: 'Element Plus', type: 'success' }
+              'element-plus': { text: 'Element Plus', type: 'success' },
+              'art-design-pro': { text: 'Art Design Pro', type: 'warning' },
             }
             const config = webTypeMap[row.tplWebType || ''] || {
               text: row.tplWebType || '-',
@@ -222,11 +222,6 @@
           minWidth: 120,
           showOverflowTooltip: true
         },
-        // {
-        //   prop: 'functionAuthor',
-        //   label: '作者',
-        //   width: 100
-        // },
         {
           prop: 'createTime',
           label: '创建时间',

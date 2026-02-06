@@ -15,6 +15,7 @@
         <ElFormItem prop="tplWebType" label="前端类型">
           <ElSelect v-model="form.tplWebType">
             <ElOption label="Vue2 Element UI 模版" value="element-ui" />
+            <ElOption label="Vue3 Art Design Pro 模版" value="art-design-pro" />
             <ElOption label="Vue3 Element Plus 模版" value="element-plus" />
           </ElSelect>
         </ElFormItem>

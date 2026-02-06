@@ -128,12 +128,14 @@ public class VelocityUtils
      */
     public static List<String> getTemplateList(String tplCategory, String tplWebType)
     {
-        // 默认使用 v3 版本的 Vue 模板（Element Plus）
-        String useWebType = "vm/vue/v3";
+        // 默认使用 art-design-pro 版本的 Vue 模板（Element Plus）
+        String useWebType = "vm/vue/art-design-pro";
         // 如果明确指定了其他类型，可以使用旧版本
-        if (tplWebType != null && ("vue2".equals(tplWebType) || "element-ui".equals(tplWebType)))
+        if (("vue2".equals(tplWebType) || "element-ui".equals(tplWebType)))
         {
-            useWebType = "vm/vue";
+            useWebType = "vm/vue/v2";
+        }else if("vue3".equals(tplWebType) || "element-plus".equals(tplWebType)){
+            useWebType = "vm/vue/v3";
         }
         List<String> templates = new ArrayList<String>();
         templates.add("vm/java/domain.java.vm");
@@ -148,11 +150,11 @@ public class VelocityUtils
         templates.add("vm/sql/sql.vm");
         templates.add("vm/js/api.js.vm");
         // Element UI (vue2) 仅存在 index/index-tree 单文件模板，无 modules 子目录
-        boolean isVue2 = "vm/vue".equals(useWebType);
+        boolean isVue2 = "vm/vue/v2".equals(useWebType);
         if (GenConstants.TPL_CRUD.equals(tplCategory))
         {
             templates.add(useWebType + "/index.vue.vm");
-            if (!isVue2) {
+            if(!isVue2){
                 templates.add(useWebType + "/modules/search.vue.vm");
                 templates.add(useWebType + "/modules/dialog.vue.vm");
             }
@@ -160,7 +162,7 @@ public class VelocityUtils
         else if (GenConstants.TPL_TREE.equals(tplCategory))
         {
             templates.add(useWebType + "/index-tree.vue.vm");
-            if (!isVue2) {
+            if(!isVue2){
                 templates.add(useWebType + "/modules/search.vue.vm");
                 templates.add(useWebType + "/modules/dialog.vue.vm");
             }
@@ -168,7 +170,7 @@ public class VelocityUtils
         else if (GenConstants.TPL_SUB.equals(tplCategory))
         {
             templates.add(useWebType + "/index.vue.vm");
-            if (!isVue2) {
+            if(!isVue2){
                 templates.add(useWebType + "/modules/search.vue.vm");
                 templates.add(useWebType + "/modules/dialog.vue.vm");
             }
