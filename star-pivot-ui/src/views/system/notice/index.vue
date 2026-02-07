@@ -22,7 +22,7 @@
               :disabled="selectedRows.length === 0"
               @click="handleBatchDelete"
               v-ripple
-              v-auth="'system:notice:remove'"
+              v-auth="'system:notice:delete'"
             >
               批量删除
             </ElButton>
@@ -170,7 +170,7 @@
             }
 
             // 删除通知公告按钮权限：system:notice:remove
-            if (hasAuth('system:notice:remove')) {
+            if (hasAuth('system:notice:delete')) {
               actions.push(
                 h(ArtButtonTable, {
                   type: 'delete',

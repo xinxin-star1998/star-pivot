@@ -11,7 +11,7 @@
  Target Server Version : 50743
  File Encoding         : 65001
 
- Date: 06/02/2026 21:00:00
+ Date: 07/02/2026 13:37:12
 */
 
 SET NAMES utf8mb4;
@@ -604,7 +604,7 @@ CREATE TABLE `sys_job`  (
 -- ----------------------------
 -- Records of sys_job
 -- ----------------------------
-INSERT INTO `sys_job` VALUES (1, '定时清空操作日志', 'DEFAULT', 'com.star.pivot.quartz.task.CleanOperLogTask.cleanOperLog()', '0 0 2 * * ?', '3', '1', '0', 'admin', '2026-02-06 20:41:50', 'admin', '2026-02-06 20:44:35', '每天凌晨2点清空操作日志表 sys_oper_log');
+INSERT INTO `sys_job` VALUES (1, '定时清空操作日志', 'DEFAULT', 'com.star.pivot.quartz.task.CleanOperLogTask.cleanOperLog()', '0 0 2 * * ?', '3', '1', '0', 'admin', '2026-02-06 20:41:50', 'admin', '2026-02-07 13:22:52', '每天凌晨2点清空操作日志表 sys_oper_log');
 
 -- ----------------------------
 -- Table structure for sys_job_log
@@ -625,6 +625,8 @@ CREATE TABLE `sys_job_log`  (
 -- ----------------------------
 -- Records of sys_job_log
 -- ----------------------------
+INSERT INTO `sys_job_log` VALUES (1, '定时清空操作日志', 'DEFAULT', 'com.star.pivot.quartz.task.CleanOperLogTask.cleanOperLog()', '执行成功', '0', '', '2026-02-07 12:55:04');
+INSERT INTO `sys_job_log` VALUES (2, '定时清空操作日志', 'DEFAULT', 'com.star.pivot.quartz.task.CleanOperLogTask.cleanOperLog()', '执行成功', '0', '', '2026-02-07 13:08:55');
 
 -- ----------------------------
 -- Table structure for sys_logininfor
@@ -645,49 +647,11 @@ CREATE TABLE `sys_logininfor`  (
   INDEX `idx_sys_logininfor_lt`(`login_time`) USING BTREE,
   INDEX `idx_login_time`(`login_time`) USING BTREE,
   INDEX `idx_user_name`(`user_name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 147 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统访问记录' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 148 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统访问记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_logininfor
 -- ----------------------------
-INSERT INTO `sys_logininfor` VALUES (108, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-25 12:27:57');
-INSERT INTO `sys_logininfor` VALUES (109, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '1', '用户名或密码错误', '2026-01-25 12:43:41');
-INSERT INTO `sys_logininfor` VALUES (110, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '1', '用户名或密码错误', '2026-01-25 12:45:47');
-INSERT INTO `sys_logininfor` VALUES (111, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '1', '用户名或密码错误', '2026-01-25 12:48:55');
-INSERT INTO `sys_logininfor` VALUES (112, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '1', '用户名或密码错误', '2026-01-25 12:49:12');
-INSERT INTO `sys_logininfor` VALUES (114, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-25 17:16:36');
-INSERT INTO `sys_logininfor` VALUES (115, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-25 17:24:18');
-INSERT INTO `sys_logininfor` VALUES (116, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-25 19:25:08');
-INSERT INTO `sys_logininfor` VALUES (117, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-25 19:31:47');
-INSERT INTO `sys_logininfor` VALUES (118, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-25 20:06:23');
-INSERT INTO `sys_logininfor` VALUES (119, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-25 20:15:13');
-INSERT INTO `sys_logininfor` VALUES (120, 'xinxin', '0:0:0:0:0:0:0:1', '内网IP', 'Edge 144', 'Windows 10/11', '0', '登录成功', '2026-01-27 13:32:08');
-INSERT INTO `sys_logininfor` VALUES (121, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 14:34:15');
-INSERT INTO `sys_logininfor` VALUES (122, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 14:57:56');
-INSERT INTO `sys_logininfor` VALUES (123, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 15:32:51');
-INSERT INTO `sys_logininfor` VALUES (124, 'xinxin', '0:0:0:0:0:0:0:1', '内网IP', 'Edge 144', 'Windows 10/11', '0', '登录成功', '2026-01-27 16:57:05');
-INSERT INTO `sys_logininfor` VALUES (125, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 17:29:18');
-INSERT INTO `sys_logininfor` VALUES (126, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 18:15:17');
-INSERT INTO `sys_logininfor` VALUES (127, 'wangwu', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 18:36:02');
-INSERT INTO `sys_logininfor` VALUES (128, 'wangwu', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 18:36:25');
-INSERT INTO `sys_logininfor` VALUES (129, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 19:06:10');
-INSERT INTO `sys_logininfor` VALUES (130, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 19:15:57');
-INSERT INTO `sys_logininfor` VALUES (131, 'wangwu', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 19:17:41');
-INSERT INTO `sys_logininfor` VALUES (132, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 19:23:33');
-INSERT INTO `sys_logininfor` VALUES (133, 'wangwu', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 19:31:05');
-INSERT INTO `sys_logininfor` VALUES (134, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 143', 'Windows 10/11', '0', '登录成功', '2026-01-27 19:36:29');
-INSERT INTO `sys_logininfor` VALUES (135, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-01 17:10:20');
-INSERT INTO `sys_logininfor` VALUES (136, 'ADMIN', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-04 16:23:47');
-INSERT INTO `sys_logininfor` VALUES (137, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-04 16:29:50');
-INSERT INTO `sys_logininfor` VALUES (138, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-04 19:27:44');
-INSERT INTO `sys_logininfor` VALUES (139, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-04 19:33:41');
-INSERT INTO `sys_logininfor` VALUES (140, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-04 22:19:29');
-INSERT INTO `sys_logininfor` VALUES (141, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-05 17:40:21');
-INSERT INTO `sys_logininfor` VALUES (142, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-05 18:38:13');
-INSERT INTO `sys_logininfor` VALUES (143, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-06 11:25:45');
-INSERT INTO `sys_logininfor` VALUES (144, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-06 12:23:52');
-INSERT INTO `sys_logininfor` VALUES (145, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-06 20:04:51');
-INSERT INTO `sys_logininfor` VALUES (146, 'admin', '0:0:0:0:0:0:0:1', '内网IP', 'Chrome 144', 'Windows 10/11', '0', '登录成功', '2026-02-06 20:06:31');
 
 -- ----------------------------
 -- Table structure for sys_menu
@@ -800,13 +764,13 @@ INSERT INTO `sys_menu` VALUES (118, '通知公告', 1, 8, 'notice', '/system/not
 INSERT INTO `sys_menu` VALUES (119, '通知公告查询', 118, 1, '#', '', NULL, '', 1, 0, 'F', '0', '0', 'system:notice:query', '#', 'admin', '2026-02-05 17:38:35', '', NULL, '');
 INSERT INTO `sys_menu` VALUES (120, '通知公告新增', 118, 2, '#', '', NULL, '', 1, 0, 'F', '0', '0', 'system:notice:add', '#', 'admin', '2026-02-05 17:38:35', '', NULL, '');
 INSERT INTO `sys_menu` VALUES (121, '通知公告修改', 118, 3, '#', '', NULL, '', 1, 0, 'F', '0', '0', 'system:notice:edit', '#', 'admin', '2026-02-05 17:38:35', '', NULL, '');
-INSERT INTO `sys_menu` VALUES (122, '通知公告删除', 118, 4, '#', '', NULL, '', 1, 0, 'F', '0', '0', 'system:notice:remove', '#', 'admin', '2026-02-05 17:38:35', '', NULL, '');
+INSERT INTO `sys_menu` VALUES (122, '通知公告删除', 118, 4, '#', '', NULL, '', 1, 1, 'F', '0', '0', 'system:notice:delete', '#', 'admin', '2026-02-05 17:38:35', 'admin', '2026-02-07 12:54:52', '');
 INSERT INTO `sys_menu` VALUES (123, '通知公告导出', 118, 5, '#', '', NULL, '', 1, 0, 'F', '0', '0', 'system:notice:export', '#', 'admin', '2026-02-05 17:38:35', '', NULL, '');
 INSERT INTO `sys_menu` VALUES (124, '定时任务', 95, 5, 'job', '/monitor/job/index', NULL, 'MonitorJob', 1, 1, 'C', '0', '0', 'monitor:job:query', 'ri:time-line', 'admin', '2026-02-06 19:58:43', 'admin', '2026-02-06 20:34:11', '定时任务调度');
 INSERT INTO `sys_menu` VALUES (125, '任务查询', 124, 1, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:job:query', '#', 'admin', '2026-02-06 20:01:06', '', NULL, '');
 INSERT INTO `sys_menu` VALUES (126, '任务新增', 124, 2, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:job:add', '#', 'admin', '2026-02-06 20:01:06', '', NULL, '');
 INSERT INTO `sys_menu` VALUES (127, '任务修改', 124, 3, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:job:edit', '#', 'admin', '2026-02-06 20:01:06', '', NULL, '');
-INSERT INTO `sys_menu` VALUES (128, '任务删除', 124, 4, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:job:remove', '#', 'admin', '2026-02-06 20:01:06', '', NULL, '');
+INSERT INTO `sys_menu` VALUES (128, '任务删除', 124, 4, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:job:delete', '#', 'admin', '2026-02-06 20:01:06', 'admin', '2026-02-07 12:54:39', '');
 
 -- ----------------------------
 -- Table structure for sys_monitor_api_performance
@@ -981,14 +945,16 @@ CREATE TABLE `sys_oper_log`  (
   INDEX `idx_sys_oper_log_ot`(`oper_time`) USING BTREE,
   INDEX `idx_oper_time`(`oper_time`) USING BTREE,
   INDEX `idx_oper_name`(`oper_name`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4841 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志记录' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5090 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志记录' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_oper_log
 -- ----------------------------
-INSERT INTO `sys_oper_log` VALUES (4838, '操作日志', 0, 'com.star.pivot.controller.SysOperLogController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/operlog/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', '{\"code\":200,\"message\":\"操作成功\",\"data\":{\"total\":0,\"rows\":[],\"pageNum\":1,\"pageSize\":20,\"pageCount\":0},\"timestamp\":1770381803779}', 0, '', '2026-02-06 20:43:24', 6);
-INSERT INTO `sys_oper_log` VALUES (4839, '登录日志', 0, 'com.star.pivot.controller.SysLogininforController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/logininfor/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"ipaddr\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=38, rows=[LogininforVO(infoId=146, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T20:06:31), LogininforVO(infoId=145, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T20:04:51), LogininforVO(infoId=144, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T12:23:52), LogininforVO(infoId=143, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T11:25:45), LogininforVO(infoId=142, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-05T18:38:13), LogininforVO(infoId=141, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-05T17:40:21), LogininforVO(infoId=140, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-04T22:19:29), LogininforVO(infoId=139, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-04T19:33:41), LogininforVO(infoId=138, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-04T19:27:44), LogininforVO(infoId=137, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-04T16:29:50), LogininforVO(infoId=136, userName=ADMIN, ipaddr...', 0, '', '2026-02-06 20:43:26', 9);
-INSERT INTO `sys_oper_log` VALUES (4840, '操作日志', 0, 'com.star.pivot.controller.SysOperLogController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/operlog/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=2, rows=[OperLogVO(operId=4839, title=登录日志, businessType=0, method=com.star.pivot.controller.SysLogininforController.pageList(), requestMethod=POST, operatorType=1, operName=admin, deptName=星枢科技, operUrl=/api/sys/logininfor/pageList, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"ipaddr\":null,\"status\":null,\"startTime\":null,\"endTime\":null}], jsonResult=Result(code=200, message=操作成功, data=PageResponse(total=38, rows=[LogininforVO(infoId=146, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T20:06:31), LogininforVO(infoId=145, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T20:04:51), LogininforVO(infoId=144, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T12:23:52), LogininforVO(infoId=143, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T11:25:45), LogininforVO(infoId=142, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-05T18:38:13), LogininforVO(infoId=141, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-05T17:40:21), LogininforVO(infoId=140, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-04T22:19:29), LogininforVO(infoId=139, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, s...', 0, '', '2026-02-06 20:43:27', 9);
+INSERT INTO `sys_oper_log` VALUES (5085, '操作日志', 3, 'com.star.pivot.controller.SysOperLogController.clean()', 'DELETE', 1, 'admin', '星枢科技', '/api/sys/operlog/clean', '0:0:0:0:0:0:0:1', '', '', '{\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1770442613135}', 0, '', '2026-02-07 13:36:53', 5);
+INSERT INTO `sys_oper_log` VALUES (5086, '操作日志', 0, 'com.star.pivot.controller.SysOperLogController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/operlog/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"title\":null,\"businessType\":null,\"operName\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=1, rows=[OperLogVO(operId=5085, title=操作日志, businessType=3, method=com.star.pivot.controller.SysOperLogController.clean(), requestMethod=DELETE, operatorType=1, operName=admin, deptName=星枢科技, operUrl=/api/sys/operlog/clean, operIp=0:0:0:0:0:0:0:1, operLocation=, operParam=, jsonResult={\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1770442613135}, status=0, errorMsg=, operTime=2026-02-07T13:36:53, costTime=5)], pageNum=1, pageSize=20, pageCount=1), timestamp=1770442613200)', 0, '', '2026-02-07 13:36:53', 7);
+INSERT INTO `sys_oper_log` VALUES (5087, '登录日志', 0, 'com.star.pivot.controller.SysLogininforController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/logininfor/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"ipaddr\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', 'Result(code=200, message=操作成功, data=PageResponse(total=39, rows=[LogininforVO(infoId=147, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-07T13:34:11), LogininforVO(infoId=146, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T20:06:31), LogininforVO(infoId=145, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T20:04:51), LogininforVO(infoId=144, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T12:23:52), LogininforVO(infoId=143, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-06T11:25:45), LogininforVO(infoId=142, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-05T18:38:13), LogininforVO(infoId=141, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-05T17:40:21), LogininforVO(infoId=140, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-04T22:19:29), LogininforVO(infoId=139, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-04T19:33:41), LogininforVO(infoId=138, userName=admin, ipaddr=0:0:0:0:0:0:0:1, loginLocation=内网IP, browser=Chrome 144, os=Windows 10/11, status=0, msg=登录成功, loginTime=2026-02-04T19:27:44), LogininforVO(infoId=137, userName=admin, ipaddr...', 0, '', '2026-02-07 13:36:55', 19);
+INSERT INTO `sys_oper_log` VALUES (5088, '登录日志', 3, 'com.star.pivot.controller.SysLogininforController.clean()', 'DELETE', 1, 'admin', '星枢科技', '/api/sys/logininfor/clean', '0:0:0:0:0:0:0:1', '', '', '{\"code\":200,\"message\":\"清空成功\",\"data\":null,\"timestamp\":1770442616859}', 0, '', '2026-02-07 13:36:57', 4);
+INSERT INTO `sys_oper_log` VALUES (5089, '登录日志', 0, 'com.star.pivot.controller.SysLogininforController.pageList()', 'POST', 1, 'admin', '星枢科技', '/api/sys/logininfor/pageList', '0:0:0:0:0:0:0:1', '', '[{\"pageNum\":1,\"pageSize\":20,\"userName\":null,\"ipaddr\":null,\"status\":null,\"startTime\":null,\"endTime\":null}]', '{\"code\":200,\"message\":\"操作成功\",\"data\":{\"total\":0,\"rows\":[],\"pageNum\":1,\"pageSize\":20,\"pageCount\":0},\"timestamp\":1770442616921}', 0, '', '2026-02-07 13:36:57', 5);
 
 -- ----------------------------
 -- Table structure for sys_post

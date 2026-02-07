@@ -5,7 +5,13 @@
     width="560px"
     align-center
   >
-    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="120px">
+    <ElForm 
+      ref="formRef" 
+      :model="formData" 
+      :rules="rules" 
+      label-width="120px"
+      aria-label="定时任务表单"
+    >
       <ElFormItem label="任务名称" prop="jobName">
         <ElInput v-model="formData.jobName" placeholder="请输入任务名称" />
       </ElFormItem>
@@ -33,14 +39,14 @@
       </ElFormItem>
       <ElFormItem label="是否并发" prop="concurrent">
         <ElRadioGroup v-model="formData.concurrent">
-          <ElRadio value="0">允许</ElRadio>
-          <ElRadio value="1">禁止</ElRadio>
+          <ElRadio value="0" label="允许">允许</ElRadio>
+          <ElRadio value="1" label="禁止">禁止</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
       <ElFormItem label="状态" prop="status">
         <ElRadioGroup v-model="formData.status">
-          <ElRadio value="0">正常</ElRadio>
-          <ElRadio value="1">暂停</ElRadio>
+          <ElRadio value="0" label="正常">正常</ElRadio>
+          <ElRadio value="1" label="暂停">暂停</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
       <ElFormItem label="备注" prop="remark">
@@ -83,6 +89,8 @@
     get: () => props.visible,
     set: (value) => emit('update:visible', value)
   })
+
+  const dialogType = computed(() => props.type)
 
   const formRef = ref<FormInstance>()
   const formData = reactive<Partial<SysJob>>({

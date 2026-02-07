@@ -116,7 +116,7 @@ public class ${ClassName}Controller
      * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果
      */
-    @PreAuthorize("hasAuthority('${permissionPrefix}:remove')")
+    @PreAuthorize("hasAuthority('${permissionPrefix}:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest)
     {

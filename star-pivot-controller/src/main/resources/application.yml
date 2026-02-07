@@ -1,14 +1,14 @@
 # =============================================================================
 # StarPivot 主配置（公共部分）
 # =============================================================================
-# 激活环境：spring.profiles.active=dev|test|prod
+# 激活环境：spring.profiles.active=dev|test|prod|local
 # 启动覆盖：--spring.profiles.active=dev 或环境变量 SPRING_PROFILES_ACTIVE
 
 spring:
   application:
     name: star-pivot
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+    active: ${SPRING_PROFILES_ACTIVE:local}
   servlet:
     multipart:
       max-file-size: 10MB

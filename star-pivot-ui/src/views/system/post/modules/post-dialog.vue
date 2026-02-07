@@ -5,7 +5,13 @@
     width="30%"
     align-center
   >
-    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="100px">
+    <ElForm 
+      ref="formRef" 
+      :model="formData" 
+      :rules="rules" 
+      label-width="100px"
+      aria-label="岗位信息表单"
+    >
       <ElFormItem label="岗位编码" prop="postCode">
         <ElInput v-model="formData.postCode" placeholder="请输入岗位编码" />
       </ElFormItem>

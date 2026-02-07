@@ -5,7 +5,13 @@
     width="40%"
     align-center
   >
-    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="100px">
+    <ElForm 
+      ref="formRef" 
+      :model="formData" 
+      :rules="rules" 
+      label-width="100px"
+      aria-label="部门信息表单"
+    >
       <ElFormItem label="上级部门" prop="parentId">
         <ElTreeSelect
           v-model="formData.parentId"

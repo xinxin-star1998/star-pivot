@@ -98,7 +98,7 @@ public class SysNoticeController
      * @param deleteRequest 需要删除的通知公告主键数组
      * @return 操作结果
      */
-    @PreAuthorize("hasAuthority('system:notice:remove')")
+    @PreAuthorize("hasAuthority('system:notice:delete')")
     @DeleteMapping("/removeNotice")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest)
     {

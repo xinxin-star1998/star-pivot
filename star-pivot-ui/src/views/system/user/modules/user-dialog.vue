@@ -5,7 +5,13 @@
     width="40%"
     align-center
   >
-    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="80px">
+    <ElForm 
+      ref="formRef" 
+      :model="formData" 
+      :rules="rules" 
+      label-width="80px"
+      aria-label="用户信息表单"
+    >
       <ElFormItem label="用户名" prop="username">
         <ElInput v-model="formData.userName" placeholder="请输入用户名" />
       </ElFormItem>

@@ -105,7 +105,7 @@ export function fetchDeleteJob(ids: number[]) {
 
 /** 修改任务状态（暂停/恢复） */
 export function fetchChangeJobStatus(jobId: number, status: string) {
-  return request.put({
+  return request.post({
     url: '/api/monitor/job/changeStatus',
     params: { jobId, status }
   })

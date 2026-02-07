@@ -16,7 +16,7 @@
               :disabled="selectedRows.length === 0"
               @click="handleBatchDelete"
               v-ripple
-              v-auth="'${permissionPrefix}:remove'"
+              v-auth="'${permissionPrefix}:delete'"
             >
               批量删除
             </ElButton>
@@ -164,7 +164,7 @@
             }
 
             // 删除${functionName}按钮权限：${permissionPrefix}:remove
-            if (hasAuth('${permissionPrefix}:remove')) {
+            if (hasAuth('${permissionPrefix}:delete')) {
               actions.push(
                 h(ArtButtonTable, {
                   type: 'delete',

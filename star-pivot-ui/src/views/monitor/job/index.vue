@@ -6,7 +6,7 @@
           <ElSpace wrap>
             <ElButton v-auth="'monitor:job:add'" @click="showDialog('add')">新增任务</ElButton>
             <ElButton
-              v-auth="'monitor:job:remove'"
+              v-auth="'monitor:job:delete'"
               type="danger"
               :disabled="selectedRows.length === 0"
               @click="handleBatchDelete"
@@ -135,7 +135,7 @@
                   })
                 )
               }
-              if (hasAuth('monitor:job:remove')) {
+              if (hasAuth('monitor:job:delete')) {
                 actions.push(
                   h(ArtButtonTable, {
                     type: 'delete',

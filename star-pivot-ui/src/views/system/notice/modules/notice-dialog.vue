@@ -5,7 +5,13 @@
     width="60%"
     align-center
   >
-    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="100px">
+    <ElForm 
+      ref="formRef" 
+      :model="formData" 
+      :rules="rules" 
+      label-width="100px"
+      aria-label="通知公告表单"
+    >
       <ElFormItem label="公告标题" prop="noticeTitle">
         <ElInput v-model="formData.noticeTitle" placeholder="请输入公告标题" />
       </ElFormItem>

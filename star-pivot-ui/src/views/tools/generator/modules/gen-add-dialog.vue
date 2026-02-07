@@ -6,7 +6,14 @@
     align-center
     @closed="handleClosed"
   >
-    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="140px" label-position="top">
+    <ElForm 
+      ref="formRef" 
+      :model="formData" 
+      :rules="rules" 
+      label-width="140px" 
+      label-position="top"
+      aria-label="建表SQL表单"
+    >
       <ElFormItem label="创建表语句(支持多个建表语句)：" prop="tableSql">
         <ElInput
           v-model="formData.tableSql"

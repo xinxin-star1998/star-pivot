@@ -5,6 +5,7 @@ import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.common.domain.Result;
 import com.star.pivot.quartz.domain.bo.SysJobLogVO;
 import com.star.pivot.quartz.domain.bo.SysJobVO;
+import com.star.pivot.quartz.domain.dto.SysJobCommonDto;
 import com.star.pivot.quartz.domain.dto.SysJobDTO;
 import com.star.pivot.quartz.domain.dto.SysJobLogQueryDTO;
 import com.star.pivot.quartz.domain.dto.SysJobQueryDTO;
@@ -75,9 +76,9 @@ public class SysJobController {
 
     @Operation(summary = "修改任务状态（暂停/恢复）")
     @PreAuthorize("hasAuthority('monitor:job:edit')")
-    @PutMapping("/changeStatus")
-    public Result<?> changeStatus(@RequestParam Long jobId, @RequestParam String status) {
-        sysJobService.changeStatus(jobId, status);
+    @PostMapping("/changeStatus")
+    public Result<?> changeStatus(@RequestBody SysJobCommonDto commonDto) {
+        sysJobService.changeStatus(commonDto.getJobId(), commonDto.getStatus());
         return Result.success("操作成功");
     }
 
