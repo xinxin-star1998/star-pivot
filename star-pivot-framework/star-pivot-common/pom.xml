@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.star.pivot</groupId>
+        <artifactId>star-pivot-framework</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.star.pivot.common</groupId>
+    <artifactId>star-pivot-common</artifactId>
+    <packaging>pom</packaging>
+    <name>star-pivot-common</name>
+    <description>StarPivot 通用层聚合：依赖 core + log + file + web，保持对 star-pivot-common 的引用兼容</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-log</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-file</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-web</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

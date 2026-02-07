@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.star.pivot</groupId>
+        <artifactId>StarPivot</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>star-pivot-module</artifactId>
+    <packaging>pom</packaging>
+    <name>star-pivot-module</name>
+    <description>StarPivot 业务模块聚合（系统管理、代码生成等）</description>
+
+    <modules>
+        <module>star-pivot-system</module>
+        <module>star-pivot-generator</module>
+    </modules>
+</project>

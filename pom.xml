@@ -11,12 +11,9 @@
     <description>StarPivot是一个基于Spring Boot的权限管理系统</description>
     <modules>
         <module>star-pivot-dependencies</module>
-        <module>star-pivot-common</module>
-        <module>star-pivot-security</module>
-        <module>star-pivot-system</module>
-        <module>star-pivot-quartz</module>
+        <module>star-pivot-framework</module>
+        <module>star-pivot-module</module>
         <module>star-pivot-controller</module>
-        <module>star-pivot-generator</module>
     </modules>
     <properties>
         <java.version>17</java.version>

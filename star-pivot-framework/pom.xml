@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.star.pivot</groupId>
+        <artifactId>StarPivot</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>star-pivot-framework</artifactId>
+    <packaging>pom</packaging>
+    <name>star-pivot-framework</name>
+    <description>StarPivot 框架层聚合模块（通用组件、安全、定时任务等）</description>
+
+    <modules>
+        <module>star-pivot-framework-core</module>
+        <module>star-pivot-framework-log</module>
+        <module>star-pivot-framework-file</module>
+        <module>star-pivot-framework-web</module>
+        <module>star-pivot-common</module>
+        <module>star-pivot-security</module>
+        <module>star-pivot-quartz</module>
+        <module>star-pivot-framework-boot-starter</module>
+    </modules>
+</project>

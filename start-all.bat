@@ -26,9 +26,9 @@ if not exist "%UI_DIR%\node_modules" (
     echo.
 )
 
-:: 在新窗口启动后端（从根目录执行并 -am 构建依赖模块，避免找不到 common/system 的类）
-echo [1/2] 正在启动后端服务...
-start "StarPivot-Backend" cmd /k "cd /d %ROOT% && mvn spring-boot:run -pl star-pivot-controller -am"
+:: 确保 BOM 已安装（首次构建或清理后必须，否则 -am 可能解析不到版本）
+echo [1/2] 正在启动后端服务（先安装依赖 BOM）...
+start "StarPivot-Backend" cmd /k "cd /d %ROOT% && mvn install -f star-pivot-dependencies\pom.xml -q && mvn spring-boot:run -pl star-pivot-controller -am"
 timeout /t 3 /nobreak >nul
 
 :: 在新窗口启动前端（路径不放在引号内，避免 start 解析错误）

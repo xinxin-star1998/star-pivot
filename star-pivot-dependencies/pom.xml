@@ -226,6 +226,31 @@
 
             <!-- ========== 内部模块版本管理（与根 POM 版本一致）========== -->
             <dependency>
+                <groupId>com.star.pivot</groupId>
+                <artifactId>star-pivot-framework-core</artifactId>
+                <version>${star-pivot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.star.pivot</groupId>
+                <artifactId>star-pivot-framework-log</artifactId>
+                <version>${star-pivot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.star.pivot</groupId>
+                <artifactId>star-pivot-framework-file</artifactId>
+                <version>${star-pivot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.star.pivot</groupId>
+                <artifactId>star-pivot-framework-web</artifactId>
+                <version>${star-pivot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.star.pivot</groupId>
+                <artifactId>star-pivot-framework-boot-starter</artifactId>
+                <version>${star-pivot.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.star.pivot.common</groupId>
                 <artifactId>star-pivot-common</artifactId>
                 <version>${star-pivot.version}</version>

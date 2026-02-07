@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.star.pivot</groupId>
+        <artifactId>star-pivot-framework</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>star-pivot-framework-boot-starter</artifactId>
+    <packaging>jar</packaging>
+    <name>star-pivot-framework-boot-starter</name>
+    <description>StarPivot 框架启动聚合：引入 common + security + quartz，应用层仅依赖本模块即可</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.star.pivot.common</groupId>
+            <artifactId>star-pivot-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot.security</groupId>
+            <artifactId>star-pivot-security</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot.quartz</groupId>
+            <artifactId>star-pivot-quartz</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>
