@@ -41,11 +41,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.debug("Authorization Header: {}", token != null ? "Bearer ***" : "未提供");
 
         if (token != null) {
-            log.debug("成功提取Token: {}...", token.substring(0, Math.min(20, token.length())));
+            log.debug("成功提取Token，长度: {}", token.length());
 
             // 检查令牌是否在黑名单中
             if (jwtBlackListManager.isBlackListed(token)) {
-                log.info("Token在黑名单中，拒绝访问: {}", token.substring(0, Math.min(20, token.length())));
+                log.info("Token在黑名单中，拒绝访问");
                 // Token在黑名单中，直接返回401，不继续处理
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json;charset=UTF-8");

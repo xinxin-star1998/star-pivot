@@ -5,7 +5,7 @@ import com.star.pivot.system.utils.RedisCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,8 @@ import java.util.Collections;
 public class LoginRateLimitService {
 
     private final RedisCache redisCache;
-    private final RedisTemplate<String, Object> redisTemplate;
+    /** 执行 Lua 脚本时使用，保证 ARGV 为纯字符串，避免 JSON 序列化导致 Lua 中 tonumber(ARGV[2]) 为 nil */
+    private final StringRedisTemplate stringRedisTemplate;
 
     /**
      * IP维度限流：每分钟允许的最大登录次数
@@ -181,9 +182,9 @@ public class LoginRateLimitService {
             redisScript.setScriptText(script);
             redisScript.setResultType(Long.class);
             
-            // 使用毫秒时间戳，确保同一秒内的多次请求也能被区分
+            // 使用毫秒时间戳，确保同一秒内的多次请求也能被区分；必须用 stringRedisTemplate 否则 ARGV 被 JSON 序列化导致 Lua 中 tonumber(ARGV[2]) 为 nil
             long currentTimeMillis = System.currentTimeMillis();
-            Long count = redisTemplate.execute(redisScript, Collections.singletonList(key), 
+            Long count = stringRedisTemplate.execute(redisScript, Collections.singletonList(key),
                 String.valueOf(windowSeconds), String.valueOf(currentTimeMillis));
             
             return count != null ? count : 0L;

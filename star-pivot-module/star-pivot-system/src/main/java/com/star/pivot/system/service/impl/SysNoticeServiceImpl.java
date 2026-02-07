@@ -142,10 +142,10 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
     /**
      * 获取当前用户
      *
-     * @return 当前用户
+     * @return 当前用户，未登录或 principal 非 LoginUser 时返回 null
      */
     private SysUser getCurrentUser() {
-        LoginUser loginUser = (LoginUser) SecurityContextUtils.getLoginUser();
-        return loginUser != null ? loginUser.getUser() : null;
+        var info = SecurityContextUtils.getLoginUser();
+        return (info instanceof LoginUser) ? ((LoginUser) info).getUser() : null;
     }
 }

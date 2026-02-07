@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
@@ -23,6 +24,10 @@ public class RedisCache {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    /** 分布式锁使用，保证加锁/解锁为纯字符串，Lua 比较一致 */
+    @Autowired(required = false)
+    private StringRedisTemplate stringRedisTemplate;
 
     // ======================== 基础对象操作（优化原有方法） ========================
     /**
@@ -334,6 +339,10 @@ public class RedisCache {
         if (expireTime <= 0) {
             throw new IllegalArgumentException("锁过期时间必须大于0");
         }
+        // 使用 StringRedisTemplate 存纯字符串，与 releaseLock 的 Lua ARGV 一致，避免 JSON 序列化导致比较失败
+        if (stringRedisTemplate != null) {
+            return Boolean.TRUE.equals(stringRedisTemplate.opsForValue().setIfAbsent(lockKey, requestId, expireTime, TimeUnit.SECONDS));
+        }
         return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(lockKey, requestId, expireTime, TimeUnit.SECONDS));
     }
 
@@ -348,12 +357,13 @@ public class RedisCache {
         if (lockKey == null || requestId == null) {
             throw new IllegalArgumentException("锁key和请求标识均不能为空");
         }
-        // Lua脚本：先判断值是否匹配，匹配则删除
+        // Lua脚本：先判断值是否匹配，匹配则删除；用 StringRedisTemplate 保证 ARGV[1] 与 tryLock 存入的字符串一致
         String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
         DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
         redisScript.setScriptText(script);
         redisScript.setResultType(Long.class);
-        Long result = redisTemplate.execute(redisScript, Collections.singletonList(lockKey), requestId);
+        RedisTemplate<String, ?> template = (stringRedisTemplate != null) ? stringRedisTemplate : redisTemplate;
+        Long result = template.execute(redisScript, Collections.singletonList(lockKey), requestId);
         return result != null && result > 0;
     }
 }

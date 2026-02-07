@@ -253,11 +253,11 @@ sequenceDiagram
     Note over 用户,Redis: 后续请求
 
     用户->>前端: 访问业务接口
-    前端->>Nginx: 请求头 Authorization&#59; Bearer token
+    前端->>Nginx: 请求头 Authorization Bearer token
     Nginx->>Controller: 转发
     Controller->>JwtFilter: 拦截
     JwtFilter->>JwtFilter: 解析 token、校验签名与过期
-    JwtFilter->>Redis: 检查黑名单 jwt&#59;logout&#59;{token}
+    JwtFilter->>Redis: 检查黑名单 key
     alt 在黑名单或无效
         JwtFilter->>前端: 401 Unauthorized
     else 有效

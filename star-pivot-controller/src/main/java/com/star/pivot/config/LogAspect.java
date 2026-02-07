@@ -160,9 +160,21 @@ public class LogAspect {
      */
     private void setOperatorInfo(SysOperLog operLog) {
         try {
-            LoginUser loginUser = (LoginUser) SecurityContextHolder.getContext()
-                    .getAuthentication().getPrincipal();
-            if (loginUser != null && loginUser.getUser() != null) {
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || auth.getPrincipal() == null) {
+                operLog.setOperName("匿名用户");
+                operLog.setOperatorType(0);
+                return;
+            }
+            Object principal = auth.getPrincipal();
+            // 登录等接口在认证前 principal 可能为 String（用户名），不能强转为 LoginUser
+            if (!(principal instanceof LoginUser)) {
+                operLog.setOperName(principal instanceof String ? (String) principal : "未知");
+                operLog.setOperatorType(0);
+                return;
+            }
+            LoginUser loginUser = (LoginUser) principal;
+            if (loginUser.getUser() != null) {
                 SysUser user = loginUser.getUser();
                 operLog.setOperName(user.getUserName());
                 operLog.setOperatorType(1); // 1-后台用户
