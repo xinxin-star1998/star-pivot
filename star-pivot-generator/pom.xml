@@ -10,7 +10,6 @@
     </parent>
     <groupId>com.star.pivot.generator</groupId>
     <artifactId>star-pivot-generator</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>star-pivot-generator</name>
     <dependencies>
@@ -18,7 +17,6 @@
         <dependency>
             <groupId>com.star.pivot.common</groupId>
             <artifactId>star-pivot-common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <!-- MyBatis-Plus -->
         <dependency>
@@ -48,7 +46,6 @@
         <dependency>
             <groupId>com.star.pivot.system</groupId>
             <artifactId>star-pivot-system</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

@@ -11,7 +11,6 @@
 
     <groupId>com.star.pivot.common</groupId>
     <artifactId>star-pivot-common</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>star-pivot-common</name>
     <dependencies>
@@ -104,7 +103,6 @@
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>6.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.aliyun.oss</groupId>

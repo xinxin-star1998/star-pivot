@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Logback 日志配置文件
-    
+    Logback 日志配置文件（控制台输出优化）
+
     说明：
-    - 支持按环境（dev/test/prod）配置不同的日志级别
-    - 日志文件滚动：按日期和大小滚动
-    - 控制台输出：开发环境输出到控制台，生产环境仅输出到文件
-    - 异步日志：提升性能，避免阻塞主线程
-    
-    配置项：
-    - ${LOG_PATH:logs}：日志文件路径，可通过环境变量 LOG_PATH 配置
-    - ${LOG_LEVEL:INFO}：日志级别，可通过环境变量 LOG_LEVEL 配置
+    - local/dev/test：控制台彩色输出 + 文件；prod 仅文件
+    - 控制台格式：时间(淡色) 线程(紫) 级别  logger(青) 消息，便于扫读
+    - MyBatis SQL 建议走 Slf4jImpl，由本配置统一级别与格式
+    - 异步文件日志，includeCallerData=false 降低开销
+    - 配置项：LOG_PATH、LOG_LEVEL 等可通过环境变量覆盖
 -->
 <configuration>
     <!-- 引入 Spring Boot 默认配置 -->
@@ -22,11 +19,14 @@
     <!-- 应用名称 -->
     <property name="APP_NAME" value="star-pivot"/>
 
-    <!-- 控制台输出（开发环境） -->
-    <springProfile name="dev,test">
+    <!-- 控制台输出（local/dev）：仅 INFO 及以上，不刷屏 DEBUG/SQL/Security -->
+    <springProfile name="local,dev,test">
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
             <encoder>
-                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+                <pattern>%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level) %clr(%logger{50}){cyan} - %msg%n</pattern>
                 <charset>UTF-8</charset>
             </encoder>
         </appender>
@@ -86,24 +86,34 @@
     <appender name="ASYNC_ERROR_FILE" class="ch.qos.logback.classic.AsyncAppender">
         <discardingThreshold>0</discardingThreshold>
         <queueSize>256</queueSize>
-        <includeCallerData>true</includeCallerData>
+        <!-- 仅错误日志需要调用栈时可设为 true，生产可关以减开销 -->
+        <includeCallerData>false</includeCallerData>
         <appender-ref ref="ERROR_FILE"/>
     </appender>
 
-    <!-- 开发环境：控制台 + 文件 -->
+    <!-- local 环境：控制台仅 INFO+，文件保留 DEBUG；框架日志 INFO 减少噪音 -->
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_FILE"/>
+            <appender-ref ref="ASYNC_ERROR_FILE"/>
+        </root>
+        <logger name="com.star.pivot" level="INFO"/>
+        <logger name="org.springframework.security" level="WARN"/>
+        <logger name="org.apache.ibatis" level="WARN"/>
+        <logger name="com.baomidou.mybatisplus" level="WARN"/>
+    </springProfile>
+
+    <!-- 开发环境：同上，控制台干净、文件可单独开 DEBUG -->
     <springProfile name="dev">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ASYNC_FILE"/>
             <appender-ref ref="ASYNC_ERROR_FILE"/>
         </root>
-        <!-- 项目包日志级别 -->
-        <logger name="com.star.pivot" level="DEBUG"/>
-        <!-- Spring Security 日志 -->
-        <logger name="org.springframework.security" level="DEBUG"/>
-        <!-- SQL 日志 -->
-        <logger name="org.apache.ibatis" level="DEBUG"/>
-        <!-- MyBatis-Plus 日志 -->
+        <logger name="com.star.pivot" level="INFO"/>
+        <logger name="org.springframework.security" level="WARN"/>
+        <logger name="org.apache.ibatis" level="WARN"/>
         <logger name="com.baomidou.mybatisplus" level="WARN"/>
     </springProfile>
 
@@ -136,8 +146,8 @@
         <logger name="com.alibaba" level="WARN"/>
     </springProfile>
 
-    <!-- 默认配置（未指定环境时） -->
-    <springProfile name="!dev,!test,!prod">
+    <!-- 默认配置（未指定 profile 时仅文件，无控制台） -->
+    <springProfile name="!local,!dev,!test,!prod">
         <root level="INFO">
             <appender-ref ref="ASYNC_FILE"/>
             <appender-ref ref="ASYNC_ERROR_FILE"/>

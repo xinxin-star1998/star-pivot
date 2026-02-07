@@ -6,6 +6,7 @@ echo ========================================
 echo.
 
 echo [1/2] 正在打包后端...
+call mvn install -f star-pivot-dependencies\pom.xml -q
 call mvn clean package -DskipTests
 if %errorlevel% neq 0 (
     echo 后端打包失败

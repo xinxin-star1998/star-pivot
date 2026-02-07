@@ -11,7 +11,6 @@
 
     <groupId>com.star.pivot.system</groupId>
     <artifactId>star-pivot-system</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <dependencies>
         <!-- SpringBoot AOP 起步依赖（核心） -->
@@ -30,13 +29,11 @@
         <dependency>
             <groupId>com.star.pivot.common</groupId>
             <artifactId>star-pivot-common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <!-- Spring Security -->
         <dependency>
             <groupId>com.star.pivot.security</groupId>
             <artifactId>star-pivot-security</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <!-- 阿里云 OSS 依赖 -->
         <dependency>

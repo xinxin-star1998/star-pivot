@@ -10,7 +10,6 @@
     </parent>
     <groupId>com.star.pivot.controller</groupId>
     <artifactId>star-pivot-controller</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>star-pivot-controller</name>
     <dependencies>
@@ -61,27 +60,22 @@
         <dependency>
             <groupId>com.star.pivot.common</groupId>
             <artifactId>star-pivot-common</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.star.pivot.system</groupId>
             <artifactId>star-pivot-system</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.star.pivot.quartz</groupId>
             <artifactId>star-pivot-quartz</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.star.pivot.security</groupId>
             <artifactId>star-pivot-security</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.star.pivot.generator</groupId>
             <artifactId>star-pivot-generator</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <!-- Spring Boot Actuator（用于系统指标监控） -->
         <dependency>
@@ -105,7 +99,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring-boot.version}</version>
                 <executions>
                     <execution>
                         <goals>
