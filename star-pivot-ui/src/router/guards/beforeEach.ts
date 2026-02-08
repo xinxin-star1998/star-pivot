@@ -423,6 +423,7 @@ export function resetRouterState(delay: number): void {
 
 /**
  * 处理根路径重定向到首页
+ * 未登录访问 / 时重定向到登录页，避免停留在根路径或落入 404
  * @returns true 表示已处理跳转，false 表示无需跳转
  */
 function handleRootPathRedirect(to: RouteLocationNormalized, next: NavigationGuardNext): boolean {
@@ -430,7 +431,15 @@ function handleRootPathRedirect(to: RouteLocationNormalized, next: NavigationGua
     return false
   }
 
+  const userStore = useUserStore()
   const { homePath } = useCommon()
+
+  // 未登录时根路径直接重定向到登录页
+  if (!userStore.isLogin) {
+    next({ name: 'Login', query: { redirect: '/' }, replace: true })
+    return true
+  }
+
   if (homePath.value && homePath.value !== '/') {
     next({ path: homePath.value, replace: true })
     return true

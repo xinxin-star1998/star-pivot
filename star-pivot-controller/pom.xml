@@ -57,25 +57,23 @@
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
         </dependency>
+        <!-- 框架层：common + security -->
         <dependency>
-            <groupId>com.star.pivot.common</groupId>
-            <artifactId>star-pivot-common</artifactId>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-boot-starter</artifactId>
         </dependency>
+        <!-- 业务模块：系统管理、代码生成、定时任务 -->
         <dependency>
             <groupId>com.star.pivot.system</groupId>
             <artifactId>star-pivot-system</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.star.pivot.quartz</groupId>
-            <artifactId>star-pivot-quartz</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.star.pivot.security</groupId>
-            <artifactId>star-pivot-security</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.star.pivot.generator</groupId>
             <artifactId>star-pivot-generator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot.quartz</groupId>
+            <artifactId>star-pivot-quartz</artifactId>
         </dependency>
         <!-- Spring Boot Actuator（用于系统指标监控） -->
         <dependency>

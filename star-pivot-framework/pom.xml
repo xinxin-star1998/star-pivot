@@ -22,7 +22,6 @@
         <module>star-pivot-framework-web</module>
         <module>star-pivot-common</module>
         <module>star-pivot-security</module>
-        <module>star-pivot-quartz</module>
         <module>star-pivot-framework-boot-starter</module>
     </modules>
 </project>

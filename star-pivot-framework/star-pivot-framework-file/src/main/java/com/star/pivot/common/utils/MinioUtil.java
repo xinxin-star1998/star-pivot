@@ -142,7 +142,7 @@ public class MinioUtil {
      * 公共桶：MinIO存储桶配置了公共读，无需鉴权即可访问
      * @param file 头像文件
      * @param userId 用户ID
-     * @return 完整永久访问URL（如：http://127.0.0.1:9000/bucket/avatar/1001_8f2e3d4c.png）
+     * @return 完整永久访问URL（如：<a href="http://127.0.0.1:9000/bucket/avatar/1001_8f2e3d4c.png">...</a>）
      */
     public String uploadAvatarWithUrl(MultipartFile file, String userId) throws UtilException {
         String objectName = uploadAvatar(file, userId);

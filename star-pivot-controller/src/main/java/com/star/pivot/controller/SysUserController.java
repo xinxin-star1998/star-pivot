@@ -96,7 +96,7 @@ public class SysUserController {
             @ApiResponse(responseCode = "400", description = "参数错误或用户名已存在")
     })
     @PreAuthorize("hasAuthority('system:user:add')")
-    @PostMapping("add")
+    @PostMapping("/add")
     public Result<?> addUser(@RequestBody UserDTO userDTO) {
         boolean success = sysUserService.addUser(userDTO);
         return success ? Result.success("新增用户成功") : Result.error("新增用户失败");
@@ -115,7 +115,7 @@ public class SysUserController {
             @ApiResponse(responseCode = "404", description = "用户不存在")
     })
     @PreAuthorize("hasAuthority('system:user:edit')")
-    @PostMapping("update")
+    @PostMapping("/update")
     public Result<?> updateUser(@RequestBody UserDTO userDTO) {
         boolean success = sysUserService.updateUser(userDTO);
         return success ? Result.success("修改用户成功") : Result.error("修改用户失败");

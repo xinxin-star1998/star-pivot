@@ -15,8 +15,10 @@
     <name>star-pivot-module</name>
     <description>StarPivot 业务模块聚合（系统管理、代码生成等）</description>
 
+    <!-- 构建顺序：system、generator 先于 quartz（quartz 依赖 system）-->
     <modules>
         <module>star-pivot-system</module>
         <module>star-pivot-generator</module>
+        <module>star-pivot-quartz</module>
     </modules>
 </project>

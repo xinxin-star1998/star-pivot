@@ -13,7 +13,7 @@
     <artifactId>star-pivot-framework-boot-starter</artifactId>
     <packaging>jar</packaging>
     <name>star-pivot-framework-boot-starter</name>
-    <description>StarPivot 框架启动聚合：引入 common + security + quartz，应用层仅依赖本模块即可</description>
+    <description>StarPivot 框架启动聚合：引入 common + security，应用层依赖本模块 + 业务模块(system/generator/quartz)</description>
 
     <dependencies>
         <dependency>
@@ -24,11 +24,6 @@
         <dependency>
             <groupId>com.star.pivot.security</groupId>
             <artifactId>star-pivot-security</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.star.pivot.quartz</groupId>
-            <artifactId>star-pivot-quartz</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

@@ -9,6 +9,7 @@
     <name>StarPivot</name>
 
     <description>StarPivot是一个基于Spring Boot的权限管理系统</description>
+    <!-- 分层构建：dependencies → framework(common/security) → module(system/generator/quartz) → controller，无跨层反向依赖 -->
     <modules>
         <module>star-pivot-dependencies</module>
         <module>star-pivot-framework</module>

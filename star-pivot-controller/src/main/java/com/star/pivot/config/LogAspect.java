@@ -168,12 +168,11 @@ public class LogAspect {
             }
             Object principal = auth.getPrincipal();
             // 登录等接口在认证前 principal 可能为 String（用户名），不能强转为 LoginUser
-            if (!(principal instanceof LoginUser)) {
+            if (!(principal instanceof LoginUser loginUser)) {
                 operLog.setOperName(principal instanceof String ? (String) principal : "未知");
                 operLog.setOperatorType(0);
                 return;
             }
-            LoginUser loginUser = (LoginUser) principal;
             if (loginUser.getUser() != null) {
                 SysUser user = loginUser.getUser();
                 operLog.setOperName(user.getUserName());
