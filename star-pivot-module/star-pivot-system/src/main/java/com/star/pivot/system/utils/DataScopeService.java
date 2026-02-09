@@ -32,8 +32,8 @@ import java.util.*;
 @Service
 public class DataScopeService {
 
-    /** SQL 无数据：恒假条件，用于无权限时过滤掉所有数据 */
-    private static final String SQL_NONE = "1=0";
+    /** SQL 无数据：使用空 IN 条件（避免 Druid 将 1=0 判为注入而拦截） */
+    private static final String SQL_NONE = "EMPTY_IN";
     /** SQL 全部数据：恒真条件，用于超级管理员或全部数据权限 */
     private static final String SQL_ALL = "1=1";
     /** MyBatis 用户部门 ID 占位符，表别名使用 u */
@@ -93,10 +93,17 @@ public class DataScopeService {
 
         // 计算最终数据权限（取最高优先级）
         ScopeResult result = calculateDataScope(roleList, userDeptId);
+        // 仅本人但无 userId 时返回无数据，避免条件缺失导致数据泄露
+        if (AppConstants.DataScope.SELF.equals(result.scopeType) && userId == null) {
+            log.debug("数据权限：仅本人但 userId 为空，返回无数据");
+            return new DataScope(SQL_NONE, Collections.emptyList(), null, null);
+        }
         String sqlFilter = buildSqlFilter(result.scopeType, userId, result.deptIds, userDeptId);
 
         log.debug("数据权限：userId={}, scopeType={}, deptIds={}, userDeptId={}", userId, result.scopeType, result.deptIds, userDeptId);
-        return new DataScope(sqlFilter, new ArrayList<>(result.deptIds), userId, userDeptId);
+        // 仅本人时只传 userId，不传 userDeptId，避免 mapper 先匹配 dept 条件导致未按 create_by 过滤
+        Long scopeUserDeptId = AppConstants.DataScope.SELF.equals(result.scopeType) ? null : userDeptId;
+        return new DataScope(sqlFilter, new ArrayList<>(result.deptIds), userId, scopeUserDeptId);
     }
 
     /**
@@ -107,7 +114,7 @@ public class DataScopeService {
         Set<Long> deptIdSet = new HashSet<>();
 
         for (SysRole role : roleList) {
-            String scope = Optional.ofNullable(role.getDataScope()).orElse(AppConstants.DataScope.SELF);
+            String scope = Optional.ofNullable(role.getDataScope()).map(String::trim).orElse(AppConstants.DataScope.SELF);
             
             // 如果遇到全部权限，直接返回
             if (AppConstants.DataScope.ALL.equals(scope)) {

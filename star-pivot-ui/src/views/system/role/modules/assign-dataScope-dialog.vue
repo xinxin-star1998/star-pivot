@@ -421,11 +421,12 @@
         ) as number[]
       }
 
-      // 调用更新角色接口，保存数据权限
+      // 调用更新角色接口，保存数据权限（含 dataScope）
       const updateData: Api.SystemManage.RolePermissionAssignDTO = {
         roleId: form.roleId,
         menuIds: [], // 菜单权限为空数组（此弹窗只处理数据权限）
-        deptIds
+        deptIds,
+        dataScope: form.dataScope
       }
       await fetchAssignPermission(updateData)
 

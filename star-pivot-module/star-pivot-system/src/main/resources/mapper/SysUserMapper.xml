@@ -77,8 +77,9 @@
             <when test="param.dataScope != null and param.dataScope.sqlFilter == '1=1'">
                 <!-- 全部数据，不需要额外条件 -->
             </when>
-            <when test="param.dataScope != null and param.dataScope.sqlFilter == '1=0'">
-                AND 1=0
+            <!-- 无数据权限：MySQL 不支持 IN ()，用不可能成立的条件（dept_id 通常为正数 FK） -->
+            <when test="param.dataScope != null and param.dataScope.sqlFilter == 'EMPTY_IN'">
+                AND u.dept_id = -1
             </when>
             <when test="param.dataScope != null and param.deptIds != null and param.deptIds.size() > 0">
                 AND u.dept_id IN

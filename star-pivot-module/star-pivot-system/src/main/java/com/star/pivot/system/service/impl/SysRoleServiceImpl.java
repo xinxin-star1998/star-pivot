@@ -283,6 +283,11 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         if (role == null || AppConstants.DelFlag.DELETE.equals(role.getDelFlag())) {
             throw new BusinessException("角色不存在");
         }
+        // 2.1 若传入数据范围，更新角色的 data_scope 字段
+        if (StringUtils.hasText(rolePermissionAssignDTO.getDataScope())) {
+            role.setDataScope(rolePermissionAssignDTO.getDataScope());
+            sysRoleMapper.updateById(role);
+        }
         // 3.处理旧部门权限，添加新部门权限
         roleDeptMapper.deleteByRoleId(roleId);
         if(!deptIds.isEmpty()){

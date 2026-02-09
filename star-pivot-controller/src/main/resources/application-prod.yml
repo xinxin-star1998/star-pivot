@@ -2,6 +2,10 @@
 # 生产环境：spring.profiles.active=prod
 # =============================================================================
 # 敏感信息必须通过环境变量注入，不要使用默认值。
+#
+# Druid 监控页（context-path 为 /api 时）：
+#   完整地址：http://域名或IP:端口/api/druid/index.html
+#   若 404，请确认访问地址带 /api 前缀；若前有 Nginx，需把 /api 代理到后端。
 
 spring:
   datasource:
@@ -23,10 +27,11 @@ spring:
       max-active: 50
       max-wait: 60000
       time-between-eviction-runs-millis: 60000
-      min-evictable-idle-time-millis: 300000
+      min-evictable-idle-time-millis: 180000
       validation-query: SELECT 1
+      validation-query-timeout: 3
       test-while-idle: true
-      test-on-borrow: false
+      test-on-borrow: true
       test-on-return: false
       pool-prepared-statements: false
       max-pool-prepared-statement-per-connection-size: -1

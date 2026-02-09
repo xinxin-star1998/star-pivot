@@ -235,8 +235,10 @@ declare namespace Api {
     }
     interface RolePermissionAssignDTO {
       roleId: number
-      menuIds: number[]
+      menuIds?: number[]
       deptIds: number[]
+      /** 数据范围（1全部 2自定 3本部门 4本部门及以下 5仅本人） */
+      dataScope?: string
     }
 
     /** 角色搜索参数 */
