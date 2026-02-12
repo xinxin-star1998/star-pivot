@@ -10,6 +10,8 @@ import com.star.pivot.system.domain.bo.RegisterRequest;
 import com.star.pivot.system.domain.bo.RegisterResponse;
 import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.domain.entity.SysUser;
+import com.star.pivot.system.domain.entity.UserRole;
+import com.star.pivot.system.mapper.UserRoleMapper;
 import com.star.pivot.system.service.AccountLockService;
 import com.star.pivot.system.service.AuthService;
 import com.star.pivot.system.service.CaptchaService;
@@ -30,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Collections;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,6 +53,7 @@ public class AuthServiceImpl implements AuthService {
     private final SysLogininforService sysLogininforService;
     private final LoginRateLimitService rateLimitService;
     private final AccountLockService accountLockService;
+    private final UserRoleMapper userRoleMapper;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -195,6 +199,12 @@ if (user == null) {
         if (!success || user.getUserId() == null) {
             throw new ServiceException("注册失败，请稍后重试", 500);
         }
+
+        // 为新用户分配默认角色（普通角色），使登录后可获取菜单权限
+        UserRole userRole = new UserRole();
+        userRole.setUserId(user.getUserId());
+        userRole.setRoleId(AppConstants.DEFAULT_REGISTER_ROLE_ID);
+        userRoleMapper.insertBatchUserRoles(Collections.singletonList(userRole));
 
         RegisterResponse response = new RegisterResponse();
         response.setUserId(user.getUserId());

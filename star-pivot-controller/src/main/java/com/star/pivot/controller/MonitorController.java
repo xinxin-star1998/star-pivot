@@ -7,11 +7,9 @@ import com.star.pivot.system.domain.bo.OnlineUserVO;
 import com.star.pivot.system.domain.bo.RedisCacheVO;
 import com.star.pivot.system.domain.bo.RedisMonitorVO;
 import com.star.pivot.system.domain.bo.ServerInfoVO;
-import com.star.pivot.system.domain.entity.SysMonitorSlowSql;
 import com.star.pivot.common.domain.PageResponse;
 import com.star.pivot.system.domain.bo.ApiPerformanceReqBo;
 import com.star.pivot.system.service.MonitorService;
-import com.star.pivot.system.service.SlowSqlService;
 import com.star.pivot.system.service.impl.MonitorServiceImpl;
 import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
 import com.star.pivot.system.mapper.SysMonitorApiPerformanceMapper;
@@ -33,16 +31,13 @@ import java.util.Map;
 public class MonitorController {
 
     private final MonitorService monitorService;
-    private final SlowSqlService slowSqlService;
     private final SysMonitorApiPerformanceMapper apiPerformanceMapper;
     private final com.star.pivot.config.ApiPerformanceAspect apiPerformanceAspect;
 
-    public MonitorController(MonitorService monitorService, 
-                            SlowSqlService slowSqlService,
+    public MonitorController(MonitorService monitorService,
                             SysMonitorApiPerformanceMapper apiPerformanceMapper,
                             com.star.pivot.config.ApiPerformanceAspect apiPerformanceAspect) {
         this.monitorService = monitorService;
-        this.slowSqlService = slowSqlService;
         this.apiPerformanceMapper = apiPerformanceMapper;
         this.apiPerformanceAspect = apiPerformanceAspect;
     }
@@ -153,67 +148,6 @@ public class MonitorController {
         return Result.success(healthReport);
     }
 
-
-    /**
-     * 获取慢SQL列表
-     *
-     * @param limit 查询数量限制（可选）
-     * @return 慢SQL列表
-     */
-    @Log(title = "慢SQL分析")
-    @PreAuthorize("hasAuthority('monitor:sql:query')")
-    @GetMapping("/sql/slow")
-    public Result<List<SysMonitorSlowSql>> getSlowSqlList(
-            @RequestParam(required = false) Integer limit) {
-        List<SysMonitorSlowSql> slowSqlList = slowSqlService.getSlowSqlList(limit);
-        return Result.success(slowSqlList);
-    }
-
-    /**
-     * 获取慢SQL详情
-     *
-     * @param sqlId SQL ID
-     * @return 慢SQL详情
-     */
-    @Log(title = "慢SQL分析")
-    @PreAuthorize("hasAuthority('monitor:sql:query')")
-    @GetMapping("/sql/slow/{sqlId}")
-    public Result<SysMonitorSlowSql> getSlowSqlDetail(@PathVariable String sqlId) {
-        SysMonitorSlowSql slowSql = slowSqlService.getSlowSqlDetail(sqlId);
-        return Result.success(slowSql);
-    }
-
-    /**
-     * 从Druid提取慢SQL列表
-     *
-     * @param threshold 慢SQL阈值（毫秒，可选）
-     * @return 慢SQL列表
-     */
-    @Log(title = "慢SQL分析")
-    @PreAuthorize("hasAuthority('monitor:sql:extract')")
-    @PostMapping("/sql/slow/extract")
-    public Result<List<SysMonitorSlowSql>> extractSlowSqlList(
-            @RequestParam(required = false) Long threshold) {
-        List<SysMonitorSlowSql> slowSqlList = slowSqlService.extractSlowSqlList(threshold);
-        return Result.success(slowSqlList);
-    }
-
-    /**
-     * 更新慢SQL状态
-     *
-     * @param id 慢SQL ID
-     * @param status 状态（0待优化 1已优化 2已忽略）
-     * @return 操作结果
-     */
-    @Log(title = "慢SQL分析", businessType = 2)
-    @PreAuthorize("hasAuthority('monitor:sql:edit')")
-    @PutMapping("/sql/slow/{id}/status")
-    public Result<?> updateSlowSqlStatus(
-            @PathVariable Long id,
-            @RequestParam String status) {
-        boolean success = slowSqlService.updateSlowSqlStatus(id, status);
-        return success ? Result.success("更新状态成功") : Result.error("更新状态失败");
-    }
 
     /**
      * 获取缓存列表

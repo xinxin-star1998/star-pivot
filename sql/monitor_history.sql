@@ -63,30 +63,6 @@ CREATE TABLE `sys_monitor_alert_record` (
   KEY `idx_alert_status` (`alert_status`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='监控告警记录表';
 
--- 慢SQL记录表
-DROP TABLE IF EXISTS `sys_monitor_slow_sql`;
-CREATE TABLE `sys_monitor_slow_sql` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `sql_id` varchar(64) NOT NULL COMMENT 'SQL ID（Druid生成的SQL标识）',
-  `sql_text` text NOT NULL COMMENT 'SQL语句',
-  `execute_count` bigint(20) DEFAULT 0 COMMENT '执行次数',
-  `execute_time_total` bigint(20) DEFAULT 0 COMMENT '总执行时间（毫秒）',
-  `execute_time_max` bigint(20) DEFAULT 0 COMMENT '最大执行时间（毫秒）',
-  `execute_time_avg` decimal(20,2) DEFAULT 0 COMMENT '平均执行时间（毫秒）',
-  `slow_count` bigint(20) DEFAULT 0 COMMENT '慢SQL次数',
-  `error_count` bigint(20) DEFAULT 0 COMMENT '错误次数',
-  `last_execute_time` datetime DEFAULT NULL COMMENT '最后执行时间',
-  `optimization_suggestion` text COMMENT '优化建议',
-  `status` char(1) DEFAULT '0' COMMENT '状态（0待优化 1已优化 2已忽略）',
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `uk_sql_id` (`sql_id`) USING BTREE,
-  KEY `idx_execute_time_avg` (`execute_time_avg`) USING BTREE,
-  KEY `idx_slow_count` (`slow_count`) USING BTREE,
-  KEY `idx_status` (`status`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='慢SQL记录表';
-
 -- API接口性能监控表
 DROP TABLE IF EXISTS `sys_monitor_api_performance`;
 CREATE TABLE `sys_monitor_api_performance` (

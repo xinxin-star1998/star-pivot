@@ -752,10 +752,7 @@ INSERT INTO `sys_menu` VALUES (97, 'Druid监控', 95, 2, 'druid', '/monitor/drui
 INSERT INTO `sys_menu` VALUES (98, 'Redis监控', 95, 3, 'redis', '/monitor/redis/index', NULL, 'RedisMonitor', 1, 0, 'C', '0', '0', 'monitor:redis:query', 'ri:database-line', 'admin', '2026-01-25 18:00:43', 'admin', '2026-01-25 18:32:23', 'Redis缓存监控');
 INSERT INTO `sys_menu` VALUES (99, '在线用户', 95, 4, 'online', '/monitor/online/index', NULL, 'OnlineUser', 1, 0, 'C', '0', '0', 'monitor:online:query', 'ri:user-line', 'admin', '2026-01-25 18:00:43', 'admin', '2026-01-25 18:32:45', '在线用户监控');
 INSERT INTO `sys_menu` VALUES (100, '强制下线', 99, 5, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:online:force-logout', '', 'admin', '2026-01-25 18:00:43', 'admin', '2026-01-25 18:30:55', '强制用户下线');
-INSERT INTO `sys_menu` VALUES (106, '慢SQL分析', 95, 6, 'slow', '/monitor/sql/slow', NULL, 'SqlSlow', 1, 1, 'C', '0', '0', 'monitor:sql:query', 'tabler:sql', 'admin', '2026-01-25 20:51:46', 'admin', '2026-02-06 20:06:47', '');
 INSERT INTO `sys_menu` VALUES (107, 'API性能监控', 95, 7, 'api', '/monitor/api', NULL, 'ApiPerformance', 1, 1, 'C', '0', '0', 'monitor:api:query', 'tabler:api', 'admin', '2026-01-25 20:54:00', 'admin', '2026-02-06 20:06:52', '');
-INSERT INTO `sys_menu` VALUES (112, '提取慢SQL', 106, 1, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:sql:extract', '#', 'admin', '2026-01-25 21:01:44', '', NULL, '提取慢SQL');
-INSERT INTO `sys_menu` VALUES (113, '编辑慢SQL状态', 106, 2, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:sql:edit', '#', 'admin', '2026-01-25 21:02:05', '', NULL, '编辑慢SQL状态');
 INSERT INTO `sys_menu` VALUES (114, '删除缓存', 98, 1, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:cache:remove', '#', 'admin', '2026-01-25 22:19:38', '', NULL, 'monitor:cache:remove');
 INSERT INTO `sys_menu` VALUES (115, '清空缓存', 98, 2, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:cache:clear', '#', 'admin', '2026-01-25 22:20:00', '', NULL, '清空缓存');
 INSERT INTO `sys_menu` VALUES (116, '健康检查', 96, 1, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:health:query', '#', 'admin', '2026-01-25 22:29:27', '', NULL, '健康检查');
@@ -829,36 +826,6 @@ INSERT INTO `sys_monitor_api_performance` VALUES (25, '/api/auth/captcha', 'GET'
 INSERT INTO `sys_monitor_api_performance` VALUES (26, '/api/auth/captcha', 'GET', 1, 1, 0, 2010, 2010, 2010, 2010.00, '2026-02-05', 18, '2026-02-05 18:35:45', NULL);
 INSERT INTO `sys_monitor_api_performance` VALUES (27, '/api/auth/captcha', 'GET', 1, 1, 0, 2003, 2003, 2003, 2003.00, '2026-02-05', 19, '2026-02-05 19:50:34', NULL);
 INSERT INTO `sys_monitor_api_performance` VALUES (28, '/api/auth/login', 'POST', 1, 1, 0, 1885, 1885, 1885, 1885.00, '2026-02-06', 12, '2026-02-06 12:23:54', NULL);
-
--- ----------------------------
--- Table structure for sys_monitor_slow_sql
--- ----------------------------
-DROP TABLE IF EXISTS `sys_monitor_slow_sql`;
-CREATE TABLE `sys_monitor_slow_sql`  (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `sql_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'SQL ID（Druid生成的SQL标识）',
-  `sql_text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'SQL语句',
-  `execute_count` bigint(20) NULL DEFAULT 0 COMMENT '执行次数',
-  `execute_time_total` bigint(20) NULL DEFAULT 0 COMMENT '总执行时间（毫秒）',
-  `execute_time_max` bigint(20) NULL DEFAULT 0 COMMENT '最大执行时间（毫秒）',
-  `execute_time_avg` decimal(20, 2) NULL COMMENT '平均执行时间（毫秒）',
-  `slow_count` bigint(20) NULL DEFAULT 0 COMMENT '慢SQL次数',
-  `error_count` bigint(20) NULL DEFAULT 0 COMMENT '错误次数',
-  `last_execute_time` datetime(0) NULL DEFAULT NULL COMMENT '最后执行时间',
-  `optimization_suggestion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT '优化建议',
-  `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '0' COMMENT '状态（0待优化 1已优化 2已忽略）',
-  `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
-  `update_time` datetime(0) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_sql_id`(`sql_id`) USING BTREE,
-  INDEX `idx_execute_time_avg`(`execute_time_avg`) USING BTREE,
-  INDEX `idx_slow_count`(`slow_count`) USING BTREE,
-  INDEX `idx_status`(`status`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '慢SQL记录表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of sys_monitor_slow_sql
--- ----------------------------
 
 -- ----------------------------
 -- Table structure for sys_notice

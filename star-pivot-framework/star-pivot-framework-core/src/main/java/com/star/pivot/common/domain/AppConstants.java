@@ -77,6 +77,8 @@ public class AppConstants {
     }
 
     public static final String ADMIN_ROLE_KEY = "admin";
+    /** 注册用户默认角色 ID（注册用户角色，对应 sys_role 中 role_id=5） */
+    public static final Long DEFAULT_REGISTER_ROLE_ID = 5L;
     public static final Long ADMIN_USER_ID = 1L;
     public static final String DEFAULT_PASSWORD = "123456";
 }

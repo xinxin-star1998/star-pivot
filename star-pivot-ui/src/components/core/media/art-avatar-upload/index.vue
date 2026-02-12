@@ -219,10 +219,12 @@
       formData.append('usePresignedUrl', String(props.usePresignedUrl))
 
       const response = (await fetchUploadAvatar(formData)) as any
-      // 使用服务器返回的URL替换本地预览URL
-      imageUrl.value = response.avatarUrl
-      emit('update:modelValue', response.avatarUrl)
-      emit('success', response.avatarUrl)
+      // 私有桶场景：后端同时返回 avatarUrl（永久，存库）和 presignedUrl（临时，展示用）
+      const urlForSave = response.avatarUrl
+      const urlForDisplay = response.presignedUrl || response.avatarUrl
+      imageUrl.value = urlForDisplay
+      emit('update:modelValue', urlForSave)
+      emit('success', urlForSave)
       // 上传成功后清空临时文件
       currentFile.value = null
     } catch (uploadError: any) {

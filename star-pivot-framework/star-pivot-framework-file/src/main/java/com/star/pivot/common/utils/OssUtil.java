@@ -201,6 +201,27 @@ public class OssUtil {
     }
 
     /**
+     * 根据对象路径生成永久访问 URL（与 uploadAvatarWithUrl 中逻辑一致，私有桶下直接访问可能 403，需配合预签名使用）
+     * @param objectName 对象路径，如 avatar/113.webp
+     * @return 永久 URL，用于存库；若桶为私有，前端展示时应使用 getPresignedUrl 得到的链接
+     */
+    public String getPermanentUrl(String objectName) {
+        if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
+            throw new IllegalArgumentException("无效的对象路径");
+        }
+        if (!objectName.startsWith("avatar/")) {
+            throw new IllegalArgumentException("仅支持头像路径");
+        }
+        if (urlPrefix != null && !urlPrefix.isEmpty()) {
+            String prefix = urlPrefix.endsWith("/") ? urlPrefix.substring(0, urlPrefix.length() - 1) : urlPrefix;
+            String object = objectName.startsWith("/") ? objectName : "/" + objectName;
+            return prefix + object;
+        }
+        String endpointWithoutProtocol = endpoint.replace("https://", "").replace("http://", "");
+        return "https://" + bucketName + "." + endpointWithoutProtocol + "/" + objectName;
+    }
+
+    /**
      * 生成文件临时访问链接（私有桶可用，有效期默认7天）
      * @param objectName 文件路径（仅允许 avatar/ 下对象，禁止 .. 等路径穿越）
      * @return 临时URL

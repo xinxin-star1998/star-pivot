@@ -137,8 +137,8 @@
   const formRef = ref<FormInstance>()
 
   const formData = reactive({
-    username: 'starPivot',
-    password: 'starPivot',
+    username: '',
+    password: '',
     // 默认不勾选记住密码，由用户主动选择
     rememberPassword: false,
     /** 当前验证码 token，由服务端生成 */

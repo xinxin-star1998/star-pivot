@@ -146,12 +146,15 @@ public class AvatarController {
             Map<String, String> data = new HashMap<>();
             
             if (usePresignedUrl) {
-                // 使用临时访问链接
-                String presignedUrl = ossUtil.uploadAvatarWithPresignedUrl(file, userId);
-                data.put("avatarUrl", presignedUrl);
+                // 私有桶场景：上传一次，返回永久 URL（存库）与预签名 URL（前端展示用，避免 403）
+                String objectName = ossUtil.uploadAvatar(file, userId);
+                String avatarUrl = ossUtil.getPermanentUrl(objectName);
+                String presignedUrl = ossUtil.getPresignedUrl(objectName);
+                data.put("avatarUrl", avatarUrl);
+                data.put("presignedUrl", presignedUrl);
                 data.put("isPresigned", "true");
             } else {
-                // 使用完整访问URL
+                // 使用完整访问URL（公共读桶场景）
                 String avatarUrl = ossUtil.uploadAvatarWithUrl(file, userId);
                 data.put("avatarUrl", avatarUrl);
                 data.put("isPresigned", "false");

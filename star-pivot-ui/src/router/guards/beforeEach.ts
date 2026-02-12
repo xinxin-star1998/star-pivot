@@ -177,9 +177,12 @@ async function handleRouteGuard(
   // 3. 处理动态路由注册
   // 如果用户已登录，但菜单列表为空或路由未注册，需要重新加载菜单
   // 这种情况可能发生在：页面回退、刷新、或菜单数据被意外清空时
+  // 注意：若目标为静态路由（如 /403、/500），则不触发菜单加载，避免菜单为空时跳转 403 后再次进入本逻辑导致一直转圈
   const menuStore = useMenuStore()
   const needReloadMenu =
-    userStore.isLogin && (!routeRegistry?.isRegistered() || menuStore.menuList.length === 0)
+    userStore.isLogin &&
+    !isStaticRoute(to.path) &&
+    (!routeRegistry?.isRegistered() || menuStore.menuList.length === 0)
 
   if (needReloadMenu) {
     // 如果路由已注册但菜单列表为空，说明菜单数据被清空但路由状态还在
@@ -290,21 +293,19 @@ async function handleDynamicRoutes(
     const menuList = await menuProcessor.getMenuList()
     safeLog('[RouteGuard] 菜单数据获取成功，菜单数量:', menuList.length)
 
+    // 2.1 仪表盘和工作台无论动态菜单有无都要加载：若后端菜单为空，先追加前端固定路由（仪表盘/工作台等）
+    if (menuList.length === 0) {
+      safeLog('[RouteGuard] 动态菜单为空，追加仪表盘/工作台等固定路由')
+      DynamicRouteAppender.appendDynamicRoutes(menuList)
+    }
+
     // 3. 验证菜单数据
     if (!menuProcessor.validateMenuList(menuList)) {
-      console.error('[RouteGuard] 菜单数据验证失败，菜单列表为空或格式错误')
-      // 如果菜单列表为空，可能是用户没有菜单权限，跳转到403页面
-      if (menuList.length === 0) {
-        safeWarn('[RouteGuard] 用户没有菜单权限，跳转到403页面')
-        routeInitInProgress = false
-        closeLoading()
-        next({ name: 'Exception403', replace: true })
-        return
-      }
+      console.error('[RouteGuard] 菜单数据验证失败，菜单列表格式错误')
       throw new Error('获取菜单列表失败，菜单数据格式错误')
     }
 
-    // 3.1 前端动态追加路由（数据库不存菜单）
+    // 3.1 前端动态追加路由（数据库不存菜单，如个人中心、字典明细等）
     DynamicRouteAppender.appendDynamicRoutes(menuList)
 
     // 4. 注册动态路由

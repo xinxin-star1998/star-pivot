@@ -327,40 +327,6 @@ export interface OnlineUserQueryParams {
 
 
 /**
- * 慢SQL记录
- */
-export interface SlowSql {
-  /** 主键ID */
-  id?: number
-  /** SQL ID */
-  sqlId: string
-  /** SQL语句 */
-  sqlText: string
-  /** 执行次数 */
-  executeCount: number
-  /** 总执行时间（毫秒） */
-  executeTimeTotal: number
-  /** 最大执行时间（毫秒） */
-  executeTimeMax: number
-  /** 平均执行时间（毫秒） */
-  executeTimeAvg: number
-  /** 慢SQL次数 */
-  slowCount: number
-  /** 错误次数 */
-  errorCount: number
-  /** 最后执行时间 */
-  lastExecuteTime?: string
-  /** 优化建议 */
-  optimizationSuggestion?: string
-  /** 状态（0待优化 1已优化 2已忽略） */
-  status: string
-  /** 创建时间 */
-  createTime?: string
-  /** 更新时间 */
-  updateTime?: string
-}
-
-/**
  * API性能监控数据
  */
 export interface ApiPerformance {

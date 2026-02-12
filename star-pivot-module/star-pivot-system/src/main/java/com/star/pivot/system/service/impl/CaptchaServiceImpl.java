@@ -58,6 +58,9 @@ public class CaptchaServiceImpl implements CaptchaService {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
+    /** 缓存字体，避免每次生成验证码时重复解析字体（首请求后加速） */
+    private static final Font CAPTCHA_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 20);
+
     private static String buildCaptchaTokenKey(String token) {
         return "captcha:token:" + token;
     }
@@ -120,13 +123,6 @@ public class CaptchaServiceImpl implements CaptchaService {
         try {
             redisCache.setCacheObject(key, state, CAPTCHA_EXPIRE_SECONDS, TimeUnit.SECONDS);
             log.debug("验证码已存储到Redis，key: {}, scene: {}", key, scene);
-            
-            // 验证是否真的存储成功
-            CaptchaState verifyState = redisCache.getCacheObject(key);
-            if (verifyState == null) {
-                log.error("验证码存储失败：Redis中未找到key: {}", key);
-                throw new ServiceException("验证码存储失败，请检查Redis连接", 500);
-            }
         } catch (Exception e) {
             log.error("存储验证码到Redis失败，key: {}, error: {}", key, e.getMessage(), e);
             throw new ServiceException("验证码生成失败，请检查Redis连接: " + e.getMessage(), 500);
@@ -268,8 +264,8 @@ public class CaptchaServiceImpl implements CaptchaService {
         }
 
         try {
-            // 使用逻辑字体 SansSerif，在 Linux 上通常由 fontconfig 提供；无字体时此处会抛 InternalError 等
-            g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
+            // 使用缓存字体，减少重复字体解析
+            g.setFont(CAPTCHA_FONT);
             for (int i = 0; i < code.length(); i++) {
                 g.setColor(new Color(random.nextInt(80), random.nextInt(80), random.nextInt(80)));
                 g.drawString(String.valueOf(code.charAt(i)), 25 * i + 10, 25);
@@ -294,14 +290,14 @@ public class CaptchaServiceImpl implements CaptchaService {
     }
 
     /**
-     * 将图片转为 Base64 DataURL
+     * 将图片转为 Base64 DataURL（使用 JPEG 编码，比 PNG 更快、体积更小）
      */
     private String toBase64DataUrl(BufferedImage image) {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            ImageIO.write(image, "png", outputStream);
+            ImageIO.write(image, "jpg", outputStream);
             byte[] imageBytes = outputStream.toByteArray();
             String base64 = Base64.getEncoder().encodeToString(imageBytes);
-            return "data:image/png;base64," + base64;
+            return "data:image/jpeg;base64," + base64;
         } catch (IOException e) {
             log.error("验证码图片编码失败", e);
             throw new ServiceException("生成验证码失败", 500);
