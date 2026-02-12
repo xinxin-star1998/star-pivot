@@ -1,10 +1,10 @@
 package com.star.pivot.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.star.pivot.common.domain.AppConstants;
-import com.star.pivot.common.domain.DeleteRequest;
-import com.star.pivot.common.domain.PageResponse;
-import com.star.pivot.common.domain.Result;
+import com.star.pivot.framework.domain.AppConstants;
+import com.star.pivot.framework.domain.DeleteRequest;
+import com.star.pivot.framework.domain.PageResponse;
+import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.domain.dto.*;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;

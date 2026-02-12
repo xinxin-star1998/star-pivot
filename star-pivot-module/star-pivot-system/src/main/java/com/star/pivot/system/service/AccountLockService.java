@@ -1,6 +1,6 @@
 package com.star.pivot.system.service;
 
-import com.star.pivot.common.exception.ServiceException;
+import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.utils.RedisCache;
 import lombok.AllArgsConstructor;

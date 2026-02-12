@@ -1,10 +1,10 @@
 package com.star.pivot.controller;
 
-import com.star.pivot.common.domain.AppConstants;
-import com.star.pivot.common.domain.Result;
-import com.star.pivot.common.exception.ServiceException;
-import com.star.pivot.common.utils.MinioUtil;
-import com.star.pivot.common.utils.OssUtil;
+import com.star.pivot.framework.domain.AppConstants;
+import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.utils.MinioUtil;
+import com.star.pivot.framework.utils.OssUtil;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.service.SysUserService;

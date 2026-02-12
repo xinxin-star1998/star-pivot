@@ -1,6 +1,6 @@
 package com.star.pivot.system.service;
 
-import com.star.pivot.common.exception.ServiceException;
+import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.system.utils.RedisCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

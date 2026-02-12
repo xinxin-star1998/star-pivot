@@ -2,9 +2,9 @@ package com.star.pivot.controller;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
-import com.star.pivot.common.annotation.Log;
-import com.star.pivot.common.annotation.NoResponseWrapper;
-import com.star.pivot.common.domain.Result;
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.annotation.NoResponseWrapper;
+import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.service.ImportExportService;
 import com.star.pivot.system.service.ImportExportServiceFactory;
 import lombok.extern.slf4j.Slf4j;

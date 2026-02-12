@@ -1,8 +1,8 @@
 package com.star.pivot.controller;
 
-import com.star.pivot.common.domain.DeleteRequest;
-import com.star.pivot.common.domain.PageResponse;
-import com.star.pivot.common.domain.Result;
+import com.star.pivot.framework.domain.DeleteRequest;
+import com.star.pivot.framework.domain.PageResponse;
+import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.domain.bo.DictDataVO;
 import com.star.pivot.system.domain.dto.DictDataDTO;
 import com.star.pivot.system.domain.dto.DictDataQueryDTO;

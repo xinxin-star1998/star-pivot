@@ -251,27 +251,22 @@
                 <version>${star-pivot.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.star.pivot.common</groupId>
-                <artifactId>star-pivot-common</artifactId>
-                <version>${star-pivot.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.star.pivot.security</groupId>
+                <groupId>com.star.pivot</groupId>
                 <artifactId>star-pivot-security</artifactId>
                 <version>${star-pivot.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.star.pivot.system</groupId>
+                <groupId>com.star.pivot</groupId>
                 <artifactId>star-pivot-system</artifactId>
                 <version>${star-pivot.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.star.pivot.quartz</groupId>
+                <groupId>com.star.pivot</groupId>
                 <artifactId>star-pivot-quartz</artifactId>
                 <version>${star-pivot.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.star.pivot.generator</groupId>
+                <groupId>com.star.pivot</groupId>
                 <artifactId>star-pivot-generator</artifactId>
                 <version>${star-pivot.version}</version>
             </dependency>

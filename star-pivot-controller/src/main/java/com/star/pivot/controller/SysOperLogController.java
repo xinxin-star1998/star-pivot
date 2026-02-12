@@ -1,9 +1,9 @@
 package com.star.pivot.controller;
 
-import com.star.pivot.common.annotation.Log;
-import com.star.pivot.common.domain.DeleteRequest;
-import com.star.pivot.common.domain.PageResponse;
-import com.star.pivot.common.domain.Result;
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.DeleteRequest;
+import com.star.pivot.framework.domain.PageResponse;
+import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.domain.bo.OperLogReqBo;
 import com.star.pivot.system.domain.bo.OperLogVO;
 import com.star.pivot.system.service.SysOperLogService;

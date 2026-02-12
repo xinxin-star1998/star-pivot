@@ -1,6 +1,6 @@
 package com.star.pivot.controller;
 
-import com.star.pivot.common.domain.Result;
+import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.domain.bo.MetaVo;
 import com.star.pivot.system.domain.bo.RouterVo;
 import com.star.pivot.system.domain.entity.SysMenu;

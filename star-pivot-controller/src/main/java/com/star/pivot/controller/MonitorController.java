@@ -1,13 +1,13 @@
 package com.star.pivot.controller;
 
-import com.star.pivot.common.annotation.Log;
-import com.star.pivot.common.domain.Result;
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.domain.bo.DruidMonitorVO;
 import com.star.pivot.system.domain.bo.OnlineUserVO;
 import com.star.pivot.system.domain.bo.RedisCacheVO;
 import com.star.pivot.system.domain.bo.RedisMonitorVO;
 import com.star.pivot.system.domain.bo.ServerInfoVO;
-import com.star.pivot.common.domain.PageResponse;
+import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.system.domain.bo.ApiPerformanceReqBo;
 import com.star.pivot.system.service.MonitorService;
 import com.star.pivot.system.service.impl.MonitorServiceImpl;

@@ -1,8 +1,8 @@
 package ${packageName}.controller;
 
 import java.util.List;
-import com.star.pivot.common.domain.PageResponse;
-import com.star.pivot.common.domain.Result;
+import com.star.pivot.framework.domain.PageResponse;
+import com.star.pivot.framework.domain.Result;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import com.star.pivot.common.domain.DeleteRequest;
+import com.star.pivot.framework.domain.DeleteRequest;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;

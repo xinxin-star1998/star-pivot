@@ -2,7 +2,7 @@ package com.star.pivot.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.star.pivot.common.exception.BusinessException;
+import com.star.pivot.framework.exception.BusinessException;
 import com.star.pivot.system.domain.bo.DeptVO;
 import com.star.pivot.system.domain.dto.DeptDTO;
 import com.star.pivot.system.domain.entity.SysDept;

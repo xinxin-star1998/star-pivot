@@ -1,7 +1,7 @@
 package com.star.pivot.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.star.pivot.common.domain.PageResponse;
+import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.system.domain.bo.DictTypeVO;
 import com.star.pivot.system.domain.dto.DictTypeDTO;
 import com.star.pivot.system.domain.dto.DictTypeQueryDTO;

@@ -4,9 +4,9 @@
   import com.baomidou.mybatisplus.core.metadata.IPage;
   import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
   import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-  import com.star.pivot.common.domain.AppConstants;
-  import com.star.pivot.common.domain.PageResponse;
-  import com.star.pivot.common.exception.BusinessException;
+  import com.star.pivot.framework.domain.AppConstants;
+  import com.star.pivot.framework.domain.PageResponse;
+  import com.star.pivot.framework.exception.BusinessException;
   import com.star.pivot.security.utils.SecurityContextUtils;
   import com.star.pivot.system.domain.dto.RoleDTO;
   import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;

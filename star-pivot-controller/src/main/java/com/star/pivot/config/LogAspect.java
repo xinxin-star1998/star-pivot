@@ -1,8 +1,8 @@
 package com.star.pivot.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.star.pivot.common.annotation.Log;
-import com.star.pivot.common.utils.LogUtils;
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.utils.LogUtils;
 import com.star.pivot.system.domain.entity.SysDept;
 import com.star.pivot.system.domain.entity.SysOperLog;
 import com.star.pivot.system.domain.entity.SysUser;
@@ -10,7 +10,6 @@ import com.star.pivot.system.mapper.SysDeptMapper;
 import com.star.pivot.system.service.SysOperLogService;
 import com.star.pivot.system.utils.LoginUser;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -51,7 +50,7 @@ public class LogAspect {
     /**
      * 配置切点：拦截所有带有 @Log 注解的方法
      */
-    @Pointcut("@annotation(com.star.pivot.common.annotation.Log)")
+    @Pointcut("@annotation(com.star.pivot.framework.annotation.Log)")
     public void logPointcut() {
     }
 

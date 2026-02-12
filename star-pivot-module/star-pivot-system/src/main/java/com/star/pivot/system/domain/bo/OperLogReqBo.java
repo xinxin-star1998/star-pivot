@@ -1,7 +1,7 @@
 package com.star.pivot.system.domain.bo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.star.pivot.common.domain.PageReqBo;
+import com.star.pivot.framework.domain.PageReqBo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

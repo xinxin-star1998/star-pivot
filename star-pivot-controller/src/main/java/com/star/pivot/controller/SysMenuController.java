@@ -1,7 +1,7 @@
 package com.star.pivot.controller;
 
-import com.star.pivot.common.domain.DeleteRequest;
-import com.star.pivot.common.domain.Result;
+import com.star.pivot.framework.domain.DeleteRequest;
+import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.service.SysMenuService;

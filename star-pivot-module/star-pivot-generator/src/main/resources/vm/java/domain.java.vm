@@ -4,9 +4,9 @@ package ${packageName}.domain.entity;
 import ${import};
 #end
 import lombok.Data;
-import com.star.pivot.common.domain.BaseEntity;
+import com.star.pivot.framework.domain.BaseEntity;
 #if($table.tree)
-import com.star.pivot.common.domain.TreeEntity;
+import com.star.pivot.framework.domain.TreeEntity;
 #end
 
 /**

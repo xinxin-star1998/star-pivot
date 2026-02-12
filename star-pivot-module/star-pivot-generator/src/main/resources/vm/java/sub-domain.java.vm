@@ -4,7 +4,6 @@ package ${packageName}.domain;
 import ${import};
 #end
 import lombok.Data;
-import com.star.pivot.common.domain.BaseEntity;
 
 /**
  * ${subTable.functionName}实体类 ${subTableName}

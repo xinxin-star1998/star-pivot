@@ -3,7 +3,7 @@ package com.star.pivot.system.utils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.star.pivot.common.security.LoginUserInfo;
+import com.star.pivot.framework.security.LoginUserInfo;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.utils.serializer.GrantedAuthorityJsonSupport;
 import lombok.AllArgsConstructor;

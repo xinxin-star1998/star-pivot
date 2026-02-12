@@ -1,7 +1,7 @@
 package com.star.pivot.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.star.pivot.common.domain.PageResponse;
+import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.system.domain.bo.OperLogReqBo;
 import com.star.pivot.system.domain.bo.OperLogVO;
 import com.star.pivot.system.domain.entity.SysOperLog;

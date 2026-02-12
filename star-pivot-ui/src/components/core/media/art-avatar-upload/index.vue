@@ -87,14 +87,17 @@
   watch(
     () => props.modelValue,
     (newVal) => {
-      imageUrl.value = newVal
-      // 如果设置了使用临时链接且有文件路径，自动获取临时链接
-      if (props.usePresignedUrl && newVal && newVal.includes('/')) {
-        // 从完整URL中提取文件路径
-        const filePath = extractFilePathFromUrl(newVal)
-        if (filePath) {
-          getPresignedUrlForExistingAvatar(filePath)
-        }
+      // OSS 私有桶永久地址直接赋给 imageUrl 会 403，先不展示，等 presigned 再展示
+      const isOssPermanentUrl =
+        props.usePresignedUrl &&
+        newVal &&
+        (newVal.includes('aliyuncs.com') || newVal.includes('.oss-'))
+      const filePath = newVal ? extractFilePathFromUrl(newVal) : null
+      if (isOssPermanentUrl && filePath) {
+        imageUrl.value = ''
+        getPresignedUrlForExistingAvatar(filePath)
+      } else {
+        imageUrl.value = newVal ?? ''
       }
     }
   )
@@ -103,12 +106,13 @@
   watch(
     () => props.usePresignedUrl,
     (newVal) => {
-      if (newVal && imageUrl.value && imageUrl.value.includes('/')) {
-        // 当切换为使用临时链接时，自动获取现有头像的临时链接
-        const filePath = extractFilePathFromUrl(imageUrl.value)
-        if (filePath) {
-          getPresignedUrlForExistingAvatar(filePath)
-        }
+      const url = imageUrl.value
+      if (!newVal || !url || !url.includes('/')) return
+      const filePath = extractFilePathFromUrl(url)
+      const isOssUrl = url.includes('aliyuncs.com') || url.includes('.oss-')
+      if (filePath && isOssUrl) {
+        imageUrl.value = ''
+        getPresignedUrlForExistingAvatar(filePath)
       }
     }
   )
@@ -176,27 +180,33 @@
   const getPresignedUrlForExistingAvatar = async (filePath: string) => {
     try {
       const response = (await fetchGetAvatarPresignedUrl(filePath)) as any
-      if (response && response.presignedUrl) {
-        imageUrl.value = response.presignedUrl
-        emit('update:modelValue', response.presignedUrl)
+      const presigned = response?.presignedUrl ?? response?.data?.presignedUrl
+      if (presigned) {
+        imageUrl.value = presigned
+        emit('update:modelValue', presigned)
       } else {
-        console.warn('获取临时访问链接失败：响应中未包含 presignedUrl', response)
+        imageUrl.value = ''
       }
     } catch (error: any) {
-      console.error('获取临时访问链接失败：', error)
-      // 获取失败时保持原有URL，不更新 imageUrl
-      // 这样用户仍然可以看到原有的头像（如果原URL仍然有效）
+      if (import.meta.env.DEV) console.error('获取临时访问链接失败：', error)
+      imageUrl.value = ''
     }
   }
 
-  // 组件挂载时初始化
+  // 组件挂载时初始化（OSS 永久地址不先赋给 imageUrl，避免 403 导致不显示）
   onMounted(() => {
-    // 如果设置了使用临时链接且有初始头像URL，自动获取临时链接
-    if (props.usePresignedUrl && props.modelValue && props.modelValue.includes('/')) {
-      const filePath = extractFilePathFromUrl(props.modelValue)
-      if (filePath) {
-        getPresignedUrlForExistingAvatar(filePath)
-      }
+    const val = props.modelValue
+    if (!props.usePresignedUrl || !val || !val.includes('/')) {
+      imageUrl.value = val ?? ''
+      return
+    }
+    const filePath = extractFilePathFromUrl(val)
+    const isOssUrl = val.includes('aliyuncs.com') || val.includes('.oss-')
+    if (filePath && isOssUrl) {
+      imageUrl.value = ''
+      getPresignedUrlForExistingAvatar(filePath)
+    } else {
+      imageUrl.value = val
     }
   })
 

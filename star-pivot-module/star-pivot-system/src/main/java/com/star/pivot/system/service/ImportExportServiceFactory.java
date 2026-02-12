@@ -1,6 +1,6 @@
 package com.star.pivot.system.service;
 
-import com.star.pivot.common.exception.BusinessException;
+import com.star.pivot.framework.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

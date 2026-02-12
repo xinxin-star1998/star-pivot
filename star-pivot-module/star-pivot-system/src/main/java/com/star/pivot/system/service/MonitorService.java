@@ -1,6 +1,6 @@
 package com.star.pivot.system.service;
 
-import com.star.pivot.common.domain.PageResponse;
+import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.system.domain.bo.ApiPerformanceReqBo;
 import com.star.pivot.system.domain.bo.DruidMonitorVO;
 import com.star.pivot.system.domain.bo.OnlineUserVO;

@@ -2,7 +2,7 @@ package ${packageName}.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 #if($table.crud || $table.sub)
-import com.star.pivot.common.domain.PageResponse;
+import com.star.pivot.framework.domain.PageResponse;
 import ${packageName}.domain.dto.${ClassName}QueryDTO;
 import ${packageName}.domain.bo.${ClassName}VO;
 #end

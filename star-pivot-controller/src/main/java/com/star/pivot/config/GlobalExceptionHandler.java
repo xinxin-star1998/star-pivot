@@ -1,8 +1,8 @@
 package com.star.pivot.config;
 
-import com.star.pivot.common.domain.Result;
-import com.star.pivot.common.exception.BusinessException;
-import com.star.pivot.common.exception.ServiceException;
+import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.ServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;

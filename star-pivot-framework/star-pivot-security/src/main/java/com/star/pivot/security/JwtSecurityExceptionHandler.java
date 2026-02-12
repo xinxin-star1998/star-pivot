@@ -1,8 +1,7 @@
 package com.star.pivot.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.star.pivot.common.domain.Result;
-import jakarta.servlet.ServletException;
+import com.star.pivot.framework.domain.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;

@@ -1,8 +1,8 @@
 package com.star.pivot.controller;
 
-import com.star.pivot.common.annotation.Log;
-import com.star.pivot.common.domain.AppConstants;
-import com.star.pivot.common.domain.Result;
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
+import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
 import com.star.pivot.system.domain.bo.CaptchaVerifyResponse;

@@ -2,10 +2,9 @@ package com.star.pivot.generator.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.star.pivot.common.domain.BaseEntity;
+import com.star.pivot.framework.domain.BaseEntity;
 import com.star.pivot.generator.utils.StringUtils;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;

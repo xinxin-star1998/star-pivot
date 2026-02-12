@@ -2,7 +2,7 @@ package com.star.pivot.system.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.star.pivot.common.domain.BaseEntity;
+import com.star.pivot.framework.domain.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

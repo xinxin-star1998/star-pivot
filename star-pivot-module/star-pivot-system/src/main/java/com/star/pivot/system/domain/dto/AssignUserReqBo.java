@@ -1,6 +1,6 @@
 package com.star.pivot.system.domain.dto;
 
-import com.star.pivot.common.domain.PageReqBo;
+import com.star.pivot.framework.domain.PageReqBo;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -1,6 +1,6 @@
 package com.star.pivot.security.utils;
 
-import com.star.pivot.common.security.LoginUserInfo;
+import com.star.pivot.framework.security.LoginUserInfo;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;

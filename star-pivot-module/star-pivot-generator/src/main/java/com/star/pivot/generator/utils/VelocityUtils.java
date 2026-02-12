@@ -5,13 +5,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.star.pivot.common.constants.GenConstants;
+import com.star.pivot.framework.constants.GenConstants;
 import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.entity.GenTableColumn;
 import org.apache.velocity.VelocityContext;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.star.pivot.common.utils.DateUtils;
+import com.star.pivot.framework.utils.DateUtils;
 /**
  * 模板处理工具类
  * 

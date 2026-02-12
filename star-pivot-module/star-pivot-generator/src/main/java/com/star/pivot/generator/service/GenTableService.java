@@ -1,7 +1,7 @@
 package com.star.pivot.generator.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.star.pivot.common.domain.PageResponse;
+import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.bo.GenTableVO;
 import com.star.pivot.generator.domain.dto.GenTableQueryDTO;

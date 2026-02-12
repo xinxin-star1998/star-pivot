@@ -1,12 +1,12 @@
 package com.star.pivot.generator.utils;
 
 import java.util.Arrays;
-import com.star.pivot.common.constants.GenConstants;
+import com.star.pivot.framework.constants.GenConstants;
 import com.star.pivot.generator.config.GenConfig;
 import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.entity.GenTableColumn;
 import org.apache.commons.lang3.RegExUtils;
-import com.star.pivot.generator.utils.StringUtils;
+
 /**
  * 代码生成器 工具类
  * 

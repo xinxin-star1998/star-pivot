@@ -8,7 +8,7 @@
           <img
             class="relative z-10 w-20 h-20 mt-30 mx-auto object-cover border-2 rounded-full transition-colors"
             :class="isDark ? 'border-g-600' : 'border-white'"
-            :src="userDetail.avatar || defaultAvatar"
+            :src="topAvatarDisplayUrl"
             :alt="userDetail.userName || ''"
           />
           <h2
@@ -151,6 +151,7 @@
                   :auto-upload="isEdit"
                   :show-actions="isEdit"
                   :size="120"
+                  use-presigned-url
                 />
               </ElFormItem>
             </ElRow>
@@ -241,7 +242,12 @@
 
 <script setup lang="ts">
   import { useUserStore } from '@/store/modules/user'
-  import { fetchGetUserById, fetchUpdateUser, fetchResetUserPassword } from '@/api/user/user'
+  import {
+    fetchGetUserById,
+    fetchUpdateUser,
+    fetchResetUserPassword,
+    fetchGetAvatarPresignedUrl
+  } from '@/api/user/user'
   import { fetchGetUserInfo } from '@/api/auth'
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
@@ -251,6 +257,21 @@
   import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
 
   defineOptions({ name: 'UserCenter' })
+
+  /** 从 OSS/MinIO 完整 URL 中提取对象路径，用于请求 presigned URL */
+  function extractAvatarPathFromUrl(url: string): string | null {
+    if (!url || !url.startsWith('http')) return null
+    try {
+      const u = new URL(url)
+      let path = u.pathname.replace(/^\//, '')
+      if (u.hostname.includes('.oss-') || u.hostname.includes('aliyuncs.com')) return path || null
+      const parts = path.split('/')
+      if (parts.length > 1) return parts.slice(1).join('/')
+      return path || null
+    } catch {
+      return null
+    }
+  }
 
   // 主题状态
   const settingStore = useSettingStore()
@@ -276,6 +297,11 @@
    * 用户详情数据
    */
   const userDetail = ref<Partial<Api.SystemManage.UserListItem>>({})
+
+  /**
+   * 顶部卡片头像展示 URL：若存的是 OSS 私有桶永久地址则用 presigned URL 展示，避免 403
+   */
+  const topAvatarDisplayUrl = ref(defaultAvatarImg)
 
   /**
    * 用户信息表单
@@ -351,6 +377,32 @@
     { value: '1', label: '女' },
     { value: '2', label: '未知' }
   ]
+
+  /** 根据 userDetail.avatar 更新顶部头像展示 URL（私有桶时用 presigned 避免 403） */
+  const updateTopAvatarDisplayUrl = async () => {
+    const avatar = userDetail.value.avatar
+    if (!avatar || avatar === '') {
+      topAvatarDisplayUrl.value = defaultAvatar
+      return
+    }
+    const path = extractAvatarPathFromUrl(avatar)
+    const isOssUrl = avatar.includes('aliyuncs.com') || avatar.includes('.oss-')
+    if (path && isOssUrl) {
+      try {
+        const res = (await fetchGetAvatarPresignedUrl(path)) as any
+        const presigned = res?.presignedUrl ?? res?.data?.presignedUrl
+        if (presigned) {
+          topAvatarDisplayUrl.value = presigned
+        } else {
+          topAvatarDisplayUrl.value = defaultAvatar
+        }
+      } catch {
+        topAvatarDisplayUrl.value = defaultAvatar
+      }
+    } else {
+      topAvatarDisplayUrl.value = avatar
+    }
+  }
 
   /**
    * 获取用户详情
@@ -434,6 +486,8 @@
         })
         // 保存当前表单数据
         savedFormData.value = { ...form }
+        // 顶部头像用 presigned URL 展示，避免 OSS 私有桶 403
+        await updateTopAvatarDisplayUrl()
       }
     } catch (error) {
       if (import.meta.env.DEV) {

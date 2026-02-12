@@ -2,8 +2,8 @@ package com.star.pivot.system.utils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.star.pivot.common.domain.AppConstants;
-import com.star.pivot.common.domain.DataScope;
+import com.star.pivot.framework.domain.AppConstants;
+import com.star.pivot.framework.domain.DataScope;
 import com.star.pivot.system.domain.entity.SysDept;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;

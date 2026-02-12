@@ -1,7 +1,7 @@
 package com.star.pivot.config;
 
-import com.star.pivot.common.annotation.NoResponseWrapper;
-import com.star.pivot.common.domain.Result;
+import com.star.pivot.framework.annotation.NoResponseWrapper;
+import com.star.pivot.framework.domain.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;

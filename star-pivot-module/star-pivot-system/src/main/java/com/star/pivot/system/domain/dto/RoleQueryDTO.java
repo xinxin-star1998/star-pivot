@@ -1,7 +1,7 @@
 package com.star.pivot.system.domain.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.star.pivot.common.utils.DateDeserializer;
+import com.star.pivot.framework.utils.DateDeserializer;
 import lombok.Data;
 
 import java.util.Date;

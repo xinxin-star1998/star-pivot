@@ -1,7 +1,7 @@
 package com.star.pivot.quartz.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.star.pivot.common.domain.PageResponse;
+import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.quartz.domain.bo.SysJobLogVO;
 import com.star.pivot.quartz.domain.bo.SysJobVO;
 import com.star.pivot.quartz.domain.dto.SysJobDTO;

@@ -10,7 +10,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.star.pivot.security</groupId>
+    <groupId>com.star.pivot</groupId>
     <artifactId>star-pivot-security</artifactId>
     <packaging>jar</packaging>
     <name>star-pivot-security</name>
@@ -38,10 +38,22 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- 通用模块 -->
+        <!-- 通用模块（直接依赖 framework 子模块，不再依赖根目录 star-pivot-common） -->
         <dependency>
-            <groupId>com.star.pivot.common</groupId>
-            <artifactId>star-pivot-common</artifactId>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-log</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-file</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-web</artifactId>
         </dependency>
 
         <!-- JWT -->

@@ -1,9 +1,11 @@
 package com.star.pivot.system.service.impl;
 
-import com.star.pivot.common.domain.AppConstants;
-import com.star.pivot.common.exception.ServiceException;
-import com.star.pivot.common.utils.LogUtils;
-import com.star.pivot.common.utils.SecurityUtils;
+import com.star.pivot.framework.domain.AppConstants;
+import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.utils.LogUtils;
+import com.star.pivot.framework.utils.SecurityUtils;
+import com.star.pivot.security.JwtUtil;
+import com.star.pivot.security.RefreshTokenManager;
 import com.star.pivot.system.domain.bo.LoginRequest;
 import com.star.pivot.system.domain.bo.LoginResponse;
 import com.star.pivot.system.domain.bo.RegisterRequest;
@@ -12,15 +14,8 @@ import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.domain.entity.UserRole;
 import com.star.pivot.system.mapper.UserRoleMapper;
-import com.star.pivot.system.service.AccountLockService;
-import com.star.pivot.system.service.AuthService;
-import com.star.pivot.system.service.CaptchaService;
-import com.star.pivot.system.service.LoginRateLimitService;
-import com.star.pivot.system.service.SysLogininforService;
-import com.star.pivot.system.service.SysUserService;
+import com.star.pivot.system.service.*;
 import com.star.pivot.system.utils.LoginUser;
-import com.star.pivot.security.JwtUtil;
-import com.star.pivot.security.RefreshTokenManager;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.Collections;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,7 +39,10 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-    
+
+    /** 注册用户默认角色 ID（与 sys_role 中普通角色一致，如 role_id=5） */
+    private static final Long DEFAULT_REGISTER_ROLE_ID = 5L;
+
     private final JwtUtil jwtUtil;
     private final RefreshTokenManager refreshTokenManager;
     private final AuthenticationManager authenticationManager;
@@ -203,7 +201,7 @@ if (user == null) {
         // 为新用户分配默认角色（普通角色），使登录后可获取菜单权限
         UserRole userRole = new UserRole();
         userRole.setUserId(user.getUserId());
-        userRole.setRoleId(AppConstants.DEFAULT_REGISTER_ROLE_ID);
+        userRole.setRoleId(DEFAULT_REGISTER_ROLE_ID);
         userRoleMapper.insertBatchUserRoles(Collections.singletonList(userRole));
 
         RegisterResponse response = new RegisterResponse();

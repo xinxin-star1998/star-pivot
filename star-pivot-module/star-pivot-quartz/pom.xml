@@ -10,7 +10,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.star.pivot.quartz</groupId>
+    <groupId>com.star.pivot</groupId>
     <artifactId>star-pivot-quartz</artifactId>
     <packaging>jar</packaging>
     <name>star-pivot-quartz</name>
@@ -29,16 +29,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-quartz</artifactId>
         </dependency>
+        <!-- 框架层：仅依赖 boot-starter，不直接引用 framework 内部子模块 -->
         <dependency>
-            <groupId>com.star.pivot.common</groupId>
-            <artifactId>star-pivot-common</artifactId>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-boot-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.star.pivot.security</groupId>
-            <artifactId>star-pivot-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.star.pivot.system</groupId>
+            <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-system</artifactId>
         </dependency>
         <dependency>

@@ -19,7 +19,6 @@
         <dependency>
             <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-framework-core</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

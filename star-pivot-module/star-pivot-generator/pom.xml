@@ -9,15 +9,15 @@
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <groupId>com.star.pivot.generator</groupId>
+    <groupId>com.star.pivot</groupId>
     <artifactId>star-pivot-generator</artifactId>
     <packaging>jar</packaging>
     <name>star-pivot-generator</name>
     <dependencies>
-        <!-- 公共模块 -->
+        <!-- 框架层：仅依赖 boot-starter，不直接引用 framework 内部子模块 -->
         <dependency>
-            <groupId>com.star.pivot.common</groupId>
-            <artifactId>star-pivot-common</artifactId>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-boot-starter</artifactId>
         </dependency>
         <!-- MyBatis-Plus -->
         <dependency>
@@ -45,7 +45,7 @@
             <artifactId>mybatis-plus-generator</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.star.pivot.system</groupId>
+            <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-system</artifactId>
             <scope>compile</scope>
         </dependency>

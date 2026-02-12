@@ -13,14 +13,21 @@
     <artifactId>star-pivot-framework</artifactId>
     <packaging>pom</packaging>
     <name>star-pivot-framework</name>
-    <description>StarPivot 框架层聚合模块（通用组件、安全、定时任务等）</description>
+    <description>StarPivot 框架层聚合模块（通用组件、安全、启动聚合等）</description>
 
+    <!--
+    依赖关系（分层，无循环）：
+    - star-pivot-framework-core：底座，仅第三方依赖，无内部依赖
+    - star-pivot-framework-log / file / web：仅依赖 framework-core
+    - star-pivot-security：依赖 framework-core + log + file + web（本框架内直接依赖，不依赖根目录 star-pivot-common）
+    - star-pivot-framework-boot-starter：聚合 security + core，应用层只依赖本模块即可
+    版本由根 POM 的 dependencyManagement（star-pivot-dependencies BOM）统一管理。
+    -->
     <modules>
         <module>star-pivot-framework-core</module>
         <module>star-pivot-framework-log</module>
         <module>star-pivot-framework-file</module>
         <module>star-pivot-framework-web</module>
-        <module>star-pivot-common</module>
         <module>star-pivot-security</module>
         <module>star-pivot-framework-boot-starter</module>
     </modules>
