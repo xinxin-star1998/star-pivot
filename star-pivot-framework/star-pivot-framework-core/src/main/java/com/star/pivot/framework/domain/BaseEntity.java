@@ -20,6 +20,5 @@ public class BaseEntity implements Serializable {
 
     private String createBy;
     private String updateBy;
-    private String delFlag;
     private String remark;
 }

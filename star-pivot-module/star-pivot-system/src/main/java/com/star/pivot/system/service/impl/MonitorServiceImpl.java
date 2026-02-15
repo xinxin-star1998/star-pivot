@@ -490,53 +490,31 @@ public class MonitorServiceImpl implements MonitorService {
                 return vo;
             }
 
-            // 直接执行 INFO 命令获取字符串结果，避免 Properties 解析时的编码问题
+            // 直接通过 Lettuce 原生连接执行 INFO 获取原始字符串，避免 Spring 将 INFO 解析为 Properties 时
+            // 的 Malformed unicode 编码问题（Redis 返回中若含反斜杠 u 等字符会被 Properties 误解析）
             String infoStr = null;
             Exception lastException = null;
-            
+
             try {
                 infoStr = redisTemplate.execute((RedisCallback<String>) connection -> {
-                    // 使用 Properties 方式获取，但手动构建字符串避免编码问题
+                    Object nativeConn = connection.getNativeConnection();
+                    if (nativeConn == null) {
+                        return null;
+                    }
                     try {
-                        // 注入 RedisTemplate 或直接获取 RedisConnection
-                        RedisServerCommands serverCommands = connection.serverCommands();
-                        // 获取全量信息（替代原 info()）
-                        Properties props = serverCommands.info();
-                        if (props != null && !props.isEmpty()) {
-                            // 手动构建字符串，避免 toString() 的编码问题和 Unicode 编码错误
-                            StringBuilder sb = new StringBuilder();
-                            for (String key : props.stringPropertyNames()) {
-                                String value = props.getProperty(key);
-                                if (value != null) {
-                                    // 直接追加，避免 Properties 的 Unicode 编码问题
-                                    sb.append(key).append(':').append(value).append("\r\n");
-                                }
-                            }
-                            String result = sb.toString();
-                            if (!result.isEmpty()) {
-                                return result;
+                        // Lettuce: StatefulRedisConnection.sync().info() 返回原始 String，不经 Properties 解析
+                        java.lang.reflect.Method syncMethod = nativeConn.getClass().getMethod("sync");
+                        Object sync = syncMethod.invoke(nativeConn);
+                        if (sync != null) {
+                            java.lang.reflect.Method infoMethod = sync.getClass().getMethod("info");
+                            Object infoResult = infoMethod.invoke(sync);
+                            if (infoResult instanceof String s && !s.isEmpty()) {
+                                return s;
                             }
                         }
                     } catch (Exception e) {
-                        // 如果 Properties 方式失败（如 Unicode 编码错误），尝试使用 Lettuce 底层连接
-                        log.warn("使用 Properties 方式获取 Redis INFO 失败，尝试底层连接方式: {}", e.getMessage());
-                        try {
-                            // 使用 Lettuce 底层连接直接执行 INFO 命令获取字符串
-                            Object nativeConnection = connection.getNativeConnection();
-                            // 使用反射调用 info() 方法，避免类型转换问题
-                            java.lang.reflect.Method infoMethod = nativeConnection.getClass().getMethod("info");
-                            Object result = infoMethod.invoke(nativeConnection);
-                            if (result instanceof String resultStr) {
-                                if (!resultStr.isEmpty()) {
-                                    return resultStr;
-                                }
-                            }
-                        } catch (Exception e2) {
-                            log.warn("使用底层连接方式获取 Redis INFO 也失败: {}", e2.getMessage());
-                            throw new RuntimeException("所有方式获取 Redis INFO 都失败", e2);
-                        }
+                        log.warn("通过 Lettuce sync().info() 获取 Redis INFO 失败: {}", e.getMessage());
                     }
-                    
                     return null;
                 });
             } catch (Exception e) {
@@ -592,8 +570,8 @@ public class MonitorServiceImpl implements MonitorService {
             try {
 //                Long dbSize = redisTemplate.execute((RedisCallback<Long>) DefaultedRedisConnection::dbSize);
 //                keyInfo.setTotalKeys(dbSize != null ? dbSize : 0L);
-                Long dbSize = redisTemplate.execute((RedisCallback<Long>) connection -> {
-                    RedisServerCommands serverCommands = connection.serverCommands();
+                Long dbSize = redisTemplate.execute((RedisCallback<Long>) conn -> {
+                    RedisServerCommands serverCommands = conn.serverCommands();
                     return serverCommands.dbSize();
                     // 执行原生Redis命令 "DBSIZE"
 //                    return Long.valueOf(connection.execute("DBSIZE").toString());
