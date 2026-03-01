@@ -422,6 +422,62 @@
 </script>
 
 <style scoped lang="scss">
+  :deep(.el-dialog) {
+    border-radius: 16px;
+    overflow: hidden;
+
+    .el-dialog__header {
+      padding: 20px 24px;
+      margin: 0;
+      background: linear-gradient(135deg, var(--el-color-primary-light-9) 0%, var(--el-color-primary-light-8) 100%);
+      border-bottom: 1px solid var(--art-card-border);
+
+      .el-dialog__title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--art-gray-900);
+      }
+    }
+
+    .el-dialog__body {
+      padding: 24px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .el-dialog__footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--art-card-border);
+      background-color: var(--art-gray-50);
+    }
+  }
+
+  :deep(.el-form-item__label) {
+    font-weight: 500;
+    color: var(--art-gray-700);
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-textarea__inner) {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+    }
+  }
+
+  :deep(.el-button) {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 10px 24px;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
   .permission-tree-wrapper {
     .permission-controls {
       display: flex;
@@ -437,10 +493,10 @@
       height: auto;
       min-height: 100px;
       max-height: 600px;
-      padding: 12px;
+      padding: 16px;
       overflow: auto;
       border: 1px solid var(--el-border-color-lighter);
-      border-radius: 4px;
+      border-radius: 8px;
       transition:
         height 0.3s ease,
         background-color 0.3s ease;
@@ -453,5 +509,21 @@
         background: var(--el-bg-color-page);
       }
     }
+  }
+
+  :deep(.el-tree) {
+    .el-tree-node__content {
+      height: 36px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: var(--art-gray-100);
+      }
+    }
+  }
+
+  :deep(.el-switch) {
+    --el-switch-on-color: var(--el-color-primary);
   }
 </style>

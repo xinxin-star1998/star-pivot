@@ -8,10 +8,13 @@
 
       <div class="auth-right-wrap">
         <div class="form">
-          <h3 class="title">{{ t('register.title') }}</h3>
-          <p class="sub-title">{{ t('register.subTitle') }}</p>
+          <div class="form-header">
+            <h3 class="title">{{ t('register.title') }}</h3>
+            <p class="sub-title">{{ t('register.subTitle') }}</p>
+          </div>
+          
           <ElForm
-            class="mt-7.5"
+            class="form-content"
             ref="formRef"
             :model="formData"
             :rules="rules"
@@ -23,7 +26,16 @@
                 class="custom-height"
                 v-model.trim="formData.username"
                 :placeholder="t('register.placeholder.username')"
-              />
+                clearable
+              >
+                <template #prefix>
+                  <ArtSvgIcon
+                    icon="ri:user-line"
+                    class="text-lg transition-colors"
+                    :class="isDark ? 'text-g-500' : 'text-g-400'"
+                  />
+                </template>
+              </ElInput>
             </ElFormItem>
 
             <ElFormItem prop="password">
@@ -34,7 +46,15 @@
                 type="password"
                 autocomplete="off"
                 show-password
-              />
+              >
+                <template #prefix>
+                  <ArtSvgIcon
+                    icon="ri:lock-line"
+                    class="text-lg transition-colors"
+                    :class="isDark ? 'text-g-500' : 'text-g-400'"
+                  />
+                </template>
+              </ElInput>
             </ElFormItem>
 
             <ElFormItem prop="confirmPassword">
@@ -46,37 +66,41 @@
                 autocomplete="off"
                 @keyup.enter="register"
                 show-password
-              />
+              >
+                <template #prefix>
+                  <ArtSvgIcon
+                    icon="ri:lock-2-line"
+                    class="text-lg transition-colors"
+                    :class="isDark ? 'text-g-500' : 'text-g-400'"
+                  />
+                </template>
+              </ElInput>
             </ElFormItem>
 
-            <ElFormItem prop="agreement">
-              <ElCheckbox v-model="formData.agreement">
+            <ElFormItem prop="agreement" class="agreement-item">
+              <ElCheckbox v-model="formData.agreement" class="agreement-checkbox">
                 {{ t('register.agreeText') }}
-                <RouterLink
-                  style="color: var(--theme-color); text-decoration: none"
-                  to="/privacy-policy"
-                  >{{ t('register.privacyPolicy') }}</RouterLink
-                >
+                <RouterLink class="privacy-link" to="/privacy-policy">
+                  {{ t('register.privacyPolicy') }}
+                </RouterLink>
               </ElCheckbox>
             </ElFormItem>
 
-            <div style="margin-top: 15px">
-              <ElButton
-                class="w-full custom-height"
-                type="primary"
-                @click="register"
-                :loading="loading"
-                v-ripple
-              >
-                {{ t('register.submitBtnText') }}
-              </ElButton>
-            </div>
+            <ElButton
+              class="submit-btn custom-height"
+              type="primary"
+              @click="register"
+              :loading="loading"
+              v-ripple
+            >
+              {{ t('register.submitBtnText') }}
+            </ElButton>
 
-            <div class="mt-5 text-sm text-g-600">
-              <span>{{ t('register.hasAccount') }}</span>
-              <RouterLink class="text-theme" :to="{ name: 'Login' }">{{
-                t('register.toLogin')
-              }}</RouterLink>
+            <div class="form-footer">
+              <span class="footer-text">{{ t('register.hasAccount') }}</span>
+              <RouterLink class="login-link" :to="{ name: 'Login' }">
+                {{ t('register.toLogin') }}
+              </RouterLink>
             </div>
           </ElForm>
         </div>
@@ -89,8 +113,12 @@
   import { useI18n } from 'vue-i18n'
   import type { FormInstance, FormRules } from 'element-plus'
   import { fetchRegister } from '@/api/auth'
+  import { useSettingStore } from '@/store/modules/setting'
 
   defineOptions({ name: 'Register' })
+
+  const settingStore = useSettingStore()
+  const { isDark } = storeToRefs(settingStore)
 
   interface RegisterForm {
     username: string

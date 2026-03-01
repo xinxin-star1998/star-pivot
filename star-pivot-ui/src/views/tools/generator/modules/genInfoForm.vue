@@ -356,3 +356,55 @@
     }
   )
 </script>
+
+<style scoped lang="scss">
+  :deep(.el-form-item__label) {
+    font-weight: 500;
+    color: var(--art-gray-700);
+  }
+
+  :deep(.el-input__wrapper) {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+    }
+  }
+
+  :deep(.el-select) {
+    width: 100%;
+
+    .el-select__wrapper {
+      border-radius: 8px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+      }
+    }
+  }
+
+  :deep(.el-radio-group) {
+    .el-radio {
+      margin-right: 20px;
+    }
+  }
+
+  :deep(.el-tree-select) {
+    width: 100%;
+
+    .el-select__wrapper {
+      border-radius: 8px;
+    }
+  }
+
+  .form-header {
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--art-gray-800);
+    border-bottom: 1px solid var(--art-card-border);
+  }
+</style>

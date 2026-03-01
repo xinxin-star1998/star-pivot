@@ -289,12 +289,102 @@
 <style scoped lang="scss">
   .druid-monitor-page {
     padding: 20px;
+    background-color: var(--default-bg-color);
+  }
+
+  :deep(.art-table-card) {
+    border: 1px solid var(--art-card-border);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+    }
   }
 
   .card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+
+  :deep(.el-card) {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+    }
+
+    .el-card__header {
+      padding: 16px 20px;
+      font-weight: 600;
+      color: var(--art-gray-800);
+      border-bottom: 1px solid var(--art-card-border);
+    }
+  }
+
+  :deep(.el-descriptions) {
+    .el-descriptions__label {
+      font-weight: 500;
+      color: var(--art-gray-600);
+    }
+
+    .el-descriptions__content {
+      color: var(--art-gray-800);
+    }
+  }
+
+  :deep(.el-progress) {
+    .el-progress-bar__outer {
+      border-radius: 4px;
+    }
+
+    .el-progress-bar__inner {
+      border-radius: 4px;
+    }
+  }
+
+  :deep(.el-table) {
+    border-radius: 8px;
+
+    .el-table__header-wrapper {
+      th {
+        background-color: var(--art-gray-100) !important;
+        font-weight: 600;
+        color: var(--art-gray-800);
+      }
+    }
+
+    .el-table__body-wrapper {
+      tr {
+        transition: all 0.2s ease;
+
+        &:hover > td {
+          background-color: var(--art-gray-50) !important;
+        }
+      }
+    }
+  }
+
+  :deep(.el-button) {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  :deep(.el-switch) {
+    --el-switch-on-color: var(--el-color-primary);
+  }
+
+  :deep(.el-tag) {
+    border-radius: 6px;
+    font-weight: 500;
   }
 
   .text-success {

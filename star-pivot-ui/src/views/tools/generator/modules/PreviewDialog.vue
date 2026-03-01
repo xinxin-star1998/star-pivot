@@ -270,9 +270,32 @@
 
 <style scoped lang="scss">
   .code-preview-dialog {
-    :deep(.el-dialog__body) {
-      padding-top: 0;
-      padding-bottom: 0;
+    :deep(.el-dialog) {
+      border-radius: 16px;
+      overflow: hidden;
+
+      .el-dialog__header {
+        padding: 20px 24px;
+        margin: 0;
+        background: linear-gradient(135deg, var(--el-color-primary-light-9) 0%, var(--el-color-primary-light-8) 100%);
+        border-bottom: 1px solid var(--art-card-border);
+
+        .el-dialog__title {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--art-gray-900);
+        }
+      }
+
+      .el-dialog__body {
+        padding: 24px;
+      }
+
+      .el-dialog__footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--art-card-border);
+        background-color: var(--art-gray-50);
+      }
     }
   }
 

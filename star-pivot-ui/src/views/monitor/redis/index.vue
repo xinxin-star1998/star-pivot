@@ -434,6 +434,18 @@
 <style scoped lang="scss">
   .redis-page {
     padding: 20px;
+    background-color: var(--default-bg-color);
+  }
+
+  :deep(.art-table-card) {
+    border: 1px solid var(--art-card-border);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+    }
   }
 
   .card-header {
@@ -457,7 +469,7 @@
 
   .key-list-panel {
     display: flex;
-    width: 500px; /* 固定宽度为400px */
+    width: 500px;
     flex-direction: column;
   }
 
@@ -466,6 +478,21 @@
     flex: 1;
     flex-direction: column;
     overflow: hidden;
+    border: 1px solid var(--art-card-border);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px 0 rgb(0 0 0 / 6%);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px 0 rgb(0 0 0 / 10%);
+    }
+
+    :deep(.el-card__header) {
+      padding: 14px 18px;
+      font-weight: 600;
+      color: var(--art-gray-800);
+      border-bottom: 1px solid var(--art-card-border);
+    }
 
     :deep(.el-card__body) {
       display: flex;
@@ -481,9 +508,28 @@
     justify-content: space-between;
   }
 
-  .el-table {
+  :deep(.el-table) {
     flex: 1;
     overflow: auto;
+    border-radius: 8px;
+
+    .el-table__header-wrapper {
+      th {
+        background-color: var(--art-gray-100) !important;
+        font-weight: 600;
+        color: var(--art-gray-800);
+      }
+    }
+
+    .el-table__body-wrapper {
+      tr {
+        transition: all 0.2s ease;
+
+        &:hover > td {
+          background-color: var(--art-gray-50) !important;
+        }
+      }
+    }
   }
 
   .key-list-wrapper {
@@ -502,6 +548,7 @@
     font-weight: 600;
     color: var(--el-text-color-regular);
     background: var(--el-fill-color-lighter);
+    border-radius: 8px 8px 0 0;
 
     .col-index {
       flex-shrink: 0;
@@ -530,7 +577,7 @@
     align-items: center;
     padding: 0 12px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
 
     &:hover {
       background: var(--el-fill-color-light);
@@ -565,8 +612,29 @@
     white-space: nowrap;
   }
 
-  .el-form {
+  :deep(.el-form) {
     flex: 1;
     overflow: auto;
+  }
+
+  :deep(.el-form-item__label) {
+    font-weight: 500;
+    color: var(--art-gray-700);
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-textarea__inner) {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  :deep(.el-button) {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
   }
 </style>

@@ -424,9 +424,19 @@
     height: 100%;
     padding: 20px;
     overflow-y: auto;
+    background-color: var(--default-bg-color);
   }
 
-  .server-monitor-card {
+  :deep(.server-monitor-card) {
+    border: 1px solid var(--art-card-border);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+    }
+
     .el-card__body {
       max-height: calc(100vh - 180px);
       padding: 16px;
@@ -441,8 +451,25 @@
     height: 15px;
   }
 
+  :deep(.el-card) {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+    }
+
+    .el-card__header {
+      padding: 14px 18px;
+      font-weight: 600;
+      color: var(--art-gray-800);
+      border-bottom: 1px solid var(--art-card-border);
+    }
+  }
+
   .info-card {
     margin-bottom: 12px;
+    border: 1px solid var(--art-card-border);
 
     :deep(.el-card__body) {
       padding: 12px;
@@ -477,11 +504,26 @@
     }
   }
 
+  :deep(.el-progress) {
+    .el-progress-bar__outer {
+      border-radius: 4px;
+    }
+
+    .el-progress-bar__inner {
+      border-radius: 4px;
+    }
+  }
+
   .health-item {
     padding: 10px;
     margin-bottom: 8px;
     background-color: var(--el-bg-color-page);
-    border-radius: 6px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: var(--el-fill-color-light);
+    }
 
     .health-label {
       margin-bottom: 6px;
@@ -531,5 +573,31 @@
     .health-duration {
       margin: 0 8px;
     }
+  }
+
+  :deep(.el-descriptions) {
+    .el-descriptions__label {
+      font-weight: 500;
+      color: var(--art-gray-600);
+    }
+
+    .el-descriptions__content {
+      color: var(--art-gray-800);
+    }
+  }
+
+  :deep(.el-button) {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  :deep(.el-tag) {
+    border-radius: 6px;
+    font-weight: 500;
   }
 </style>
