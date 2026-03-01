@@ -35,7 +35,7 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       database: ${REDIS_DATABASE:0}
-      timeout: ${REDIS_TIMEOUT:1500ms}
+      timeout: ${REDIS_TIMEOUT:5000ms}
 
 mybatis-plus:
   configuration:
@@ -73,3 +73,10 @@ star-pivot:
     api-performance-enabled: true
     slow-api-threshold-ms: 1000
     sample-rate: 0.1
+
+# 本地环境：默认关闭 Redis 健康检查，避免未启动 Redis 时反复报 WARN
+# 启动 Redis 后可将 REDIS_HEALTH_ENABLED=true 或改为 true
+management:
+  health:
+    redis:
+      enabled: ${REDIS_HEALTH_ENABLED:false}

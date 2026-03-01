@@ -5,7 +5,6 @@ import com.star.pivot.system.domain.bo.ApiPerformanceReqBo;
 import com.star.pivot.system.domain.bo.DruidMonitorVO;
 import com.star.pivot.system.domain.bo.OnlineUserVO;
 import com.star.pivot.system.domain.bo.RedisCacheVO;
-import com.star.pivot.system.domain.bo.RedisMonitorVO;
 import com.star.pivot.system.domain.bo.ServerInfoVO;
 import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
 
@@ -33,13 +32,6 @@ public interface MonitorService {
      * @return Druid 监控信息
      */
     DruidMonitorVO getDruidMonitorInfo();
-
-    /**
-     * 获取 Redis 监控信息
-     *
-     * @return Redis 监控信息
-     */
-    RedisMonitorVO getRedisMonitorInfo();
 
     /**
      * 获取在线用户列表

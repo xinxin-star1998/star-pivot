@@ -108,7 +108,7 @@
         {
           prop: 'operation',
           label: '操作',
-          width: 220,
+          width: 300,
           fixed: 'right',
           formatter: (row: SysJob) => {
             try {
@@ -117,19 +117,20 @@
                 actions.push(
                   h(ArtButtonTable, {
                     type: 'edit',
+                    label: '编辑',
                     onClick: () => showDialog('edit', row)
                   })
                 )
                 actions.push(
                   h(ArtButtonTable, {
-                    type: 'sync',
+                    type: row.status === '0' ? 'pause' : 'resume',
                     label: row.status === '0' ? '暂停' : '恢复',
                     onClick: () => toggleStatus(row)
                   })
                 )
                 actions.push(
                   h(ArtButtonTable, {
-                    type: 'sync',
+                    type: 'execute',
                     label: '执行',
                     onClick: () => runOnce(row)
                   })
@@ -139,6 +140,7 @@
                 actions.push(
                   h(ArtButtonTable, {
                     type: 'delete',
+                    label: '删除',
                     onClick: () => deleteOne(row)
                   })
                 )

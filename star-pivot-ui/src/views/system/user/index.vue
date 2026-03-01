@@ -152,7 +152,6 @@
   import UserDialog from './modules/user-dialog.vue'
   import {
     ElMessageBox,
-    ElImage,
     ElSwitch,
     ElMessage,
     ElTree,
@@ -164,6 +163,7 @@
   import { DialogType } from '@/types'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import ArtAvatarDisplay from '@/components/core/media/art-avatar-display/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
 
   defineOptions({ name: 'User' })
@@ -293,16 +293,13 @@
             const hasAvatar = !!avatarUrl && avatarUrl !== ''
 
             return h('div', { class: 'user-info flex-c items-center' }, [
-              // 只有当有头像时才显示头像容器
+              // 有头像时用 ArtAvatarDisplay 展示（支持 OSS 私有桶 presigned，列表页可正常显示）
               hasAvatar &&
                 h('div', { class: 'avatar-wrapper' }, [
-                  h(ElImage, {
-                    class: 'size-10 rounded-full object-cover',
-                    src: avatarUrl,
-                    previewSrcList: [avatarUrl],
-                    previewTeleported: true,
-                    fallback: '加载失败',
-                    fit: 'cover'
+                  h(ArtAvatarDisplay, {
+                    avatarUrl,
+                    size: 40,
+                    avatarClass: 'size-10'
                   })
                 ]),
 
@@ -320,19 +317,19 @@
                       style: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
                     },
                     [
-                  h(
-                    'span',
-                    {
-                      class: 'user-name font-medium',
-                      style: {
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        color: 'var(--art-gray-900)'
-                      }
-                    },
-                    row.userName || '未知用户'
-                  ),
+                      h(
+                        'span',
+                        {
+                          class: 'user-name font-medium',
+                          style: {
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            color: 'var(--art-gray-900)'
+                          }
+                        },
+                        row.userName || '未知用户'
+                      ),
                       h('span', {
                         class: 'status-indicator',
                         style: {

@@ -2,14 +2,14 @@
 <template>
   <div
     :class="[
-      'inline-flex items-center justify-center min-w-8 h-8 px-2.5 mr-2.5 text-sm c-p rounded-md align-middle',
+      'inline-flex items-center justify-center min-w-6 h-6 px-1.5 mr-1.5 text-xs c-p rounded align-middle',
       buttonClass
     ]"
     :style="{ backgroundColor: buttonBgColor, color: iconColor }"
     @click="handleClick"
   >
-    <ArtSvgIcon :icon="iconContent" />
-    <span v-if="label" class="ml-1">{{ label }}</span>
+    <ArtSvgIcon :icon="iconContent" class="text-[0.875rem]" />
+    <span v-if="label" class="ml-0.5">{{ label }}</span>
   </div>
 </template>
 
@@ -18,7 +18,17 @@
 
   interface Props {
     /** 按钮类型 */
-    type?: 'add' | 'edit' | 'delete' | 'more' | 'view' | 'sync' | 'generate'
+    type?:
+      | 'add'
+      | 'edit'
+      | 'delete'
+      | 'more'
+      | 'view'
+      | 'sync'
+      | 'generate'
+      | 'execute'
+      | 'pause'
+      | 'resume'
     /** 按钮图标 */
     icon?: string
     /** 按钮样式类 */
@@ -45,6 +55,11 @@
     view: { icon: 'ri:eye-line', class: 'bg-info/12 text-info' },
     sync: { icon: 'ri:refresh-line', class: 'bg-info/12 text-info' },
     generate: { icon: 'ri:code-s-slash-line', class: 'bg-success/12 text-success' },
+    execute: { icon: 'ri:play-circle-line', class: 'bg-success/12 text-success' },
+    // 新增：暂停按钮（黄色系 + 暂停图标）
+    pause: { icon: 'ri:pause-circle-line', class: 'bg-warning/12 text-warning' },
+    // 新增：恢复按钮（蓝色系 + 播放图标）
+    resume: { icon: 'ri:play-circle-fill', class: 'bg-primary/12 text-primary' },
     more: { icon: 'ri:more-2-fill', class: '' }
   }
 

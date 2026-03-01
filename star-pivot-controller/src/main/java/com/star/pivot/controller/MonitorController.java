@@ -5,7 +5,6 @@ import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.domain.bo.DruidMonitorVO;
 import com.star.pivot.system.domain.bo.OnlineUserVO;
 import com.star.pivot.system.domain.bo.RedisCacheVO;
-import com.star.pivot.system.domain.bo.RedisMonitorVO;
 import com.star.pivot.system.domain.bo.ServerInfoVO;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.system.domain.bo.ApiPerformanceReqBo;
@@ -79,19 +78,6 @@ public class MonitorController {
             druidInfo = monitorService.getDruidMonitorInfo();
         }
         return Result.success(druidInfo);
-    }
-
-    /**
-     * 获取 Redis 监控信息
-     *
-     * @return Redis 监控信息
-     */
-    @Log(title = "Redis监控")
-    @PreAuthorize("hasAuthority('monitor:redis:query')")
-    @GetMapping("/redis")
-    public Result<RedisMonitorVO> getRedisMonitorInfo() {
-        RedisMonitorVO redisInfo = monitorService.getRedisMonitorInfo();
-        return Result.success(redisInfo);
     }
 
     /**

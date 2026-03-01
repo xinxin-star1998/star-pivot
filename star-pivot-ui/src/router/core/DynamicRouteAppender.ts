@@ -225,14 +225,14 @@ export class DynamicRouteAppender {
           isHide: true,
           // 指定父级菜单路径，用于面包屑、高亮等
           parentPath: '/system/dict',
-          keepAlive: true
-          // 手动配置权限列表，因为该路由不在数据库中，无法从菜单获取 perms
-          // authList: [
-          //   { title: '查询字典数据', authMark: 'system:data:query' },
-          //   { title: '新增字典数据', authMark: 'system:data:add' },
-          //   { title: '编辑字典数据', authMark: 'system:data:edit' },
-          //   { title: '删除字典数据', authMark: 'system:data:delete' }
-          // ]
+          keepAlive: true,
+          // 字典数据页为前端动态路由，不在数据库中，需手动配置权限列表供 v-auth 使用
+          authList: [
+            { title: '查询字典数据', authMark: 'system:data:query' },
+            { title: '新增字典数据', authMark: 'system:data:add' },
+            { title: '编辑字典数据', authMark: 'system:data:edit' },
+            { title: '删除字典数据', authMark: 'system:data:delete' }
+          ]
         },
         menuType: 'C',
         status: '0',

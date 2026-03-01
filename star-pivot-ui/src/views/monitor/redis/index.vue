@@ -1,277 +1,160 @@
-<!-- Redis 监控与缓存管理页面 -->
+<!-- 缓存管理页面 -->
 <template>
   <div class="redis-page art-full-height">
     <ElCard class="art-table-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <span>Redis 监控与缓存管理</span>
+          <span>缓存管理</span>
           <ElButton type="primary" :icon="Refresh" @click="handleRefresh" :loading="loading">
             刷新
           </ElButton>
         </div>
       </template>
 
-      <ElTabs v-model="activeTab" @tab-change="handleTabChange">
-        <!-- Redis 监控标签页 -->
-        <ElTabPane label="Redis 监控" name="monitor">
-          <div v-loading="loadingMonitor">
-            <!-- Redis 未配置或连接失败时展示空状态 -->
-            <ElEmpty
-              v-if="redisInfo && redisInfo.available === false"
-              :description="redisInfo.message || 'Redis 未配置或未启用'"
-              class="redis-empty"
-            />
-            <!-- Redis 正常时展示监控卡片 -->
-            <ElRow v-else-if="redisInfo && redisInfo.available !== false" :gutter="20">
-              <!-- Redis 基本信息 -->
-              <ElCol :xs="24" :sm="12" :md="8">
-                <ElCard shadow="hover">
-                  <template #header>基本信息</template>
-                  <ElDescriptions :column="1" border>
-                    <ElDescriptionsItem label="Redis 版本">
-                      {{ redisInfo.version || '-' }}
-                    </ElDescriptionsItem>
-                    <ElDescriptionsItem label="运行模式">
-                      {{ redisInfo.mode || '-' }}
-                    </ElDescriptionsItem>
-                    <ElDescriptionsItem label="端口">
-                      {{ redisInfo.port || '-' }}
-                    </ElDescriptionsItem>
-                    <ElDescriptionsItem label="连接状态">
-                      <ElTag :type="redisInfo.connected ? 'success' : 'danger'">
-                        {{ redisInfo.connected ? '已连接' : '未连接' }}
-                      </ElTag>
-                    </ElDescriptionsItem>
-                  </ElDescriptions>
-                </ElCard>
-              </ElCol>
-
-              <!-- 内存信息 -->
-              <ElCol :xs="24" :sm="12" :md="8">
-                <ElCard shadow="hover">
-                  <template #header>内存信息</template>
-                  <ElDescriptions :column="1" border>
-                    <ElDescriptionsItem label="已使用内存">
-                      {{ formatSize(redisInfo.memory?.usedMemory || 0) }} MB
-                    </ElDescriptionsItem>
-                    <ElDescriptionsItem label="最大内存">
-                      {{ formatSize(redisInfo.memory?.maxMemory || 0) }} MB
-                    </ElDescriptionsItem>
-                    <ElDescriptionsItem label="内存使用率">
-                      <span :class="getUsageClass(redisInfo.memory?.usage || 0)">
-                        {{ formatPercent(redisInfo.memory?.usage || 0) }}
-                      </span>
-                    </ElDescriptionsItem>
-                  </ElDescriptions>
-                  <ElProgress
-                    :percentage="redisInfo.memory?.usage || 0"
-                    :color="getProgressColor(redisInfo.memory?.usage || 0)"
-                    :stroke-width="8"
-                    style="margin-top: 10px"
+      <div class="cache-container">
+        <!-- 左侧：缓存列表 -->
+        <div class="cache-list-panel">
+          <ElCard shadow="hover" class="panel-card">
+            <template #header>
+              <div class="panel-header">
+                <span>缓存列表</span>
+                <ElButton
+                  :icon="Refresh"
+                  circle
+                  size="small"
+                  @click="refreshCacheList"
+                  :loading="loadingCacheList"
+                />
+              </div>
+            </template>
+            <ElTable
+              :data="cacheList"
+              highlight-current-row
+              @current-change="handleCacheSelect"
+              v-loading="loadingCacheList"
+            >
+              <ElTableColumn type="index" label="序号" width="60" />
+              <ElTableColumn prop="cacheName" label="缓存名称" />
+              <ElTableColumn prop="remark" label="备注" />
+              <ElTableColumn label="操作" width="80">
+                <template #default="{ row }">
+                  <ElButton
+                    type="danger"
+                    :icon="Delete"
+                    circle
+                    size="small"
+                    @click="handleDeleteCache(row)"
+                    :loading="deletingCache === row.cacheName"
                   />
-                </ElCard>
-              </ElCol>
-
-              <!-- 客户端信息 -->
-              <ElCol :xs="24" :sm="12" :md="8">
-                <ElCard shadow="hover">
-                  <template #header>客户端信息</template>
-                  <ElDescriptions :column="1" border>
-                    <ElDescriptionsItem label="已连接客户端数">
-                      {{ redisInfo.clients?.connectedClients || 0 }}
-                    </ElDescriptionsItem>
-                    <ElDescriptionsItem label="阻塞客户端数">
-                      <ElTag type="warning">
-                        {{ redisInfo.clients?.blockedClients || 0 }}
-                      </ElTag>
-                    </ElDescriptionsItem>
-                  </ElDescriptions>
-                </ElCard>
-              </ElCol>
-            </ElRow>
-
-            <!-- 统计信息 -->
-            <ElRow :gutter="20" style="margin-top: 20px" v-if="redisInfo">
-              <ElCol :xs="24" :sm="12" :md="12">
-                <ElCard shadow="hover">
-                  <template #header>键值统计</template>
-                  <ElDescriptions :column="1" border>
-                    <ElDescriptionsItem label="键总数">
-                      {{ formatNumber(redisInfo.keys?.totalKeys || 0) }}
-                    </ElDescriptionsItem>
-                    <ElDescriptionsItem label="过期键数">
-                      {{ formatNumber(redisInfo.keys?.expiredKeys || 0) }}
-                    </ElDescriptionsItem>
-                  </ElDescriptions>
-                </ElCard>
-              </ElCol>
-
-              <ElCol :xs="24" :sm="12" :md="12">
-                <ElCard shadow="hover">
-                  <template #header>命令统计</template>
-                  <ElDescriptions :column="1" border>
-                    <ElDescriptionsItem label="总命令数">
-                      {{ formatNumber(redisInfo.commands?.totalCommands || 0) }}
-                    </ElDescriptionsItem>
-                    <ElDescriptionsItem label="每秒命令数">
-                      {{ formatNumber(redisInfo.commands?.commandsPerSecond || 0, 2) }}
-                    </ElDescriptionsItem>
-                  </ElDescriptions>
-                </ElCard>
-              </ElCol>
-            </ElRow>
-          </div>
-        </ElTabPane>
-
-        <!-- 缓存管理标签页 -->
-        <ElTabPane label="缓存管理" name="cache">
-          <div class="cache-container">
-            <!-- 左侧：缓存列表 -->
-            <div class="cache-list-panel">
-              <ElCard shadow="hover" class="panel-card">
-                <template #header>
-                  <div class="panel-header">
-                    <span>缓存列表</span>
-                    <ElButton
-                      :icon="Refresh"
-                      circle
-                      size="small"
-                      @click="refreshCacheList"
-                      :loading="loadingCacheList"
-                    />
-                  </div>
                 </template>
-                <ElTable
-                  :data="cacheList"
-                  highlight-current-row
-                  @current-change="handleCacheSelect"
-                  v-loading="loadingCacheList"
-                >
-                  <ElTableColumn type="index" label="序号" width="60" />
-                  <ElTableColumn prop="cacheName" label="缓存名称" />
-                  <ElTableColumn prop="remark" label="备注" />
-                  <ElTableColumn label="操作" width="80">
-                    <template #default="{ row }">
+              </ElTableColumn>
+            </ElTable>
+          </ElCard>
+        </div>
+
+        <!-- 中间：键名列表（虚拟滚动，适用于大量键） -->
+        <div class="key-list-panel">
+          <ElCard shadow="hover" class="panel-card">
+            <template #header>
+              <div class="panel-header">
+                <span>键名列表</span>
+                <ElButton
+                  :icon="Refresh"
+                  circle
+                  size="small"
+                  @click="refreshKeys"
+                  :loading="loadingKeys"
+                />
+              </div>
+            </template>
+            <div v-loading="loadingKeys" class="key-list-wrapper">
+              <!-- 表头 -->
+              <div class="key-list-header">
+                <span class="col-index">序号</span>
+                <span class="col-key">缓存键名</span>
+                <span class="col-action">操作</span>
+              </div>
+              <!-- 虚拟滚动列表 -->
+              <ArtVirtualList
+                ref="keyListRef"
+                :data="keyList"
+                :item-height="48"
+                :height="'100%'"
+                item-key="key"
+                class="key-list-virtual"
+              >
+                <template #default="{ item, index }">
+                  <div
+                    class="key-list-row"
+                    :class="{ 'is-active': selectedKey?.key === item.key }"
+                    @click="handleKeySelect(item)"
+                  >
+                    <span class="col-index">{{ index + 1 }}</span>
+                    <ElTooltip :content="item.key" placement="top">
+                      <span class="col-key text-ellipsis">{{ item.key }}</span>
+                    </ElTooltip>
+                    <span class="col-action">
                       <ElButton
                         type="danger"
                         :icon="Delete"
                         circle
                         size="small"
-                        @click="handleDeleteCache(row)"
-                        :loading="deletingCache === row.cacheName"
+                        @click.stop="handleDeleteKey(item)"
+                        :loading="deletingKey === item.key"
                       />
-                    </template>
-                  </ElTableColumn>
-                </ElTable>
-              </ElCard>
-            </div>
-
-            <!-- 中间：键名列表（虚拟滚动，适用于大量键） -->
-            <div class="key-list-panel">
-              <ElCard shadow="hover" class="panel-card">
-                <template #header>
-                  <div class="panel-header">
-                    <span>键名列表</span>
-                    <ElButton
-                      :icon="Refresh"
-                      circle
-                      size="small"
-                      @click="refreshKeys"
-                      :loading="loadingKeys"
-                    />
+                    </span>
                   </div>
                 </template>
-                <div v-loading="loadingKeys" class="key-list-wrapper">
-                  <!-- 表头 -->
-                  <div class="key-list-header">
-                    <span class="col-index">序号</span>
-                    <span class="col-key">缓存键名</span>
-                    <span class="col-action">操作</span>
-                  </div>
-                  <!-- 虚拟滚动列表 -->
-                  <ArtVirtualList
-                    ref="keyListRef"
-                    :data="keyList"
-                    :item-height="48"
-                    :height="'100%'"
-                    item-key="key"
-                    class="key-list-virtual"
+              </ArtVirtualList>
+            </div>
+          </ElCard>
+        </div>
+
+        <!-- 右侧：缓存内容 -->
+        <div class="cache-content-panel">
+          <ElCard shadow="hover" class="panel-card">
+            <template #header>
+              <div class="panel-header">
+                <span>缓存内容</span>
+                <div>
+                  <ElButton
+                    type="danger"
+                    size="small"
+                    @click="handleClearAll"
+                    :loading="clearingAll"
                   >
-                    <template #default="{ item, index }">
-                      <div
-                        class="key-list-row"
-                        :class="{ 'is-active': selectedKey?.key === item.key }"
-                        @click="handleKeySelect(item)"
-                      >
-                        <span class="col-index">{{ index + 1 }}</span>
-                        <ElTooltip :content="item.key" placement="top">
-                          <span class="col-key text-ellipsis">{{ item.key }}</span>
-                        </ElTooltip>
-                        <span class="col-action">
-                          <ElButton
-                            type="danger"
-                            :icon="Delete"
-                            circle
-                            size="small"
-                            @click.stop="handleDeleteKey(item)"
-                            :loading="deletingKey === item.key"
-                          />
-                        </span>
-                      </div>
-                    </template>
-                  </ArtVirtualList>
+                    清理全部
+                  </ElButton>
+                  <ElButton
+                    :icon="Refresh"
+                    circle
+                    size="small"
+                    @click="refreshContent"
+                    :loading="loadingContent"
+                  />
                 </div>
-              </ElCard>
-            </div>
-
-            <!-- 右侧：缓存内容 -->
-            <div class="cache-content-panel">
-              <ElCard shadow="hover" class="panel-card">
-                <template #header>
-                  <div class="panel-header">
-                    <span>缓存内容</span>
-                    <div>
-                      <ElButton
-                        type="danger"
-                        size="small"
-                        @click="handleClearAll"
-                        :loading="clearingAll"
-                      >
-                        清理全部
-                      </ElButton>
-                      <ElButton
-                        :icon="Refresh"
-                        circle
-                        size="small"
-                        @click="refreshContent"
-                        :loading="loadingContent"
-                      />
-                    </div>
-                  </div>
-                </template>
-                <ElForm :model="cacheContent" label-width="100px">
-                  <ElFormItem label="缓存名称">
-                    <ElInput v-model="cacheContent.cacheName" disabled />
-                  </ElFormItem>
-                  <ElFormItem label="缓存键名">
-                    <ElInput v-model="cacheContent.key" disabled />
-                  </ElFormItem>
-                  <ElFormItem label="缓存内容">
-                    <ElInput v-model="cacheContent.content" type="textarea" :rows="15" disabled />
-                  </ElFormItem>
-                </ElForm>
-              </ElCard>
-            </div>
-          </div>
-        </ElTabPane>
-      </ElTabs>
+              </div>
+            </template>
+            <ElForm :model="cacheContent" label-width="100px">
+              <ElFormItem label="缓存名称">
+                <ElInput v-model="cacheContent.cacheName" disabled />
+              </ElFormItem>
+              <ElFormItem label="缓存键名">
+                <ElInput v-model="cacheContent.key" disabled />
+              </ElFormItem>
+              <ElFormItem label="缓存内容">
+                <ElInput v-model="cacheContent.content" type="textarea" :rows="15" disabled />
+              </ElFormItem>
+            </ElForm>
+          </ElCard>
+        </div>
+      </div>
     </ElCard>
   </div>
 </template>
 
 <script setup lang="ts">
   import { Refresh, Delete } from '@element-plus/icons-vue'
-  import { fetchGetRedisMonitorInfo } from '@/api/monitor/redis'
   import {
     fetchGetCacheList,
     fetchGetCacheKeys,
@@ -280,20 +163,13 @@
     fetchDeleteCacheKey,
     fetchClearAllCache
   } from '@/api/monitor/cache'
-  import type {
-    RedisMonitorInfo,
-    RedisCacheInfo,
-    CacheKeyInfo,
-    CacheContentInfo
-  } from '@/types/api/monitor'
+  import type { RedisCacheInfo, CacheKeyInfo, CacheContentInfo } from '@/types/api/monitor'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import ArtVirtualList from '@/components/core/lists/art-virtual-list/index.vue'
 
-  defineOptions({ name: 'RedisMonitor' })
+  defineOptions({ name: 'CacheManage' })
 
-  const activeTab = ref('monitor')
   const loading = ref(false)
-  const loadingMonitor = ref(false)
   const keyListRef = ref<InstanceType<typeof ArtVirtualList> | null>(null)
 
   const loadingCacheList = ref(false)
@@ -303,7 +179,6 @@
   const deletingKey = ref<string | null>(null)
   const clearingAll = ref(false)
 
-  const redisInfo = ref<RedisMonitorInfo | null>(null)
   const cacheList = ref<RedisCacheInfo[]>([])
   const selectedCache = ref<RedisCacheInfo | null>(null)
   const keyList = ref<CacheKeyInfo[]>([])
@@ -315,61 +190,6 @@
     type: '',
     ttl: -2
   })
-
-  let refreshTimer: number | null = null
-
-  // 格式化百分比
-  const formatPercent = (value: number) => {
-    return `${value.toFixed(2)}%`
-  }
-
-  // 格式化大小
-  const formatSize = (value: number) => {
-    return value.toLocaleString()
-  }
-
-  // 格式化数字
-  const formatNumber = (value: number, decimals: number = 0) => {
-    return value.toLocaleString('zh-CN', {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
-    })
-  }
-
-  // 获取使用率样式类
-  const getUsageClass = (usage: number) => {
-    if (usage >= 90) return 'text-danger'
-    if (usage >= 70) return 'text-warning'
-    return 'text-success'
-  }
-
-  // 获取进度条颜色
-  const getProgressColor = (usage: number) => {
-    if (usage >= 90) return '#f56c6c'
-    if (usage >= 70) return '#e6a23c'
-    return '#67c23a'
-  }
-
-  /**
-   * 获取 Redis 监控数据
-   */
-  const getRedisMonitorInfo = async () => {
-    loadingMonitor.value = true
-    try {
-      const data = await fetchGetRedisMonitorInfo()
-      redisInfo.value = data
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('获取 Redis 监控信息失败:', error)
-      }
-      redisInfo.value = {
-        available: false,
-        message: '获取 Redis 监控信息失败'
-      }
-    } finally {
-      loadingMonitor.value = false
-    }
-  }
 
   /**
    * 获取缓存列表
@@ -594,60 +414,20 @@
   }
 
   /**
-   * 处理标签页切换
-   */
-  const handleTabChange = (tabName: string) => {
-    if (tabName === 'monitor') {
-      getRedisMonitorInfo()
-    } else if (tabName === 'cache') {
-      getCacheList()
-    }
-  }
-
-  /**
    * 处理刷新按钮点击
    */
   const handleRefresh = () => {
-    if (activeTab.value === 'monitor') {
-      getRedisMonitorInfo()
-    } else if (activeTab.value === 'cache') {
-      getCacheList()
-      if (selectedCache.value) {
-        getCacheKeys(selectedCache.value.cacheName)
-      }
-      if (selectedCache.value && selectedKey.value) {
-        getCacheContent(selectedCache.value.cacheName, selectedKey.value.key)
-      }
+    getCacheList()
+    if (selectedCache.value) {
+      getCacheKeys(selectedCache.value.cacheName)
     }
-  }
-
-  // 自动刷新（仅监控标签页，每10秒）
-  const startAutoRefresh = () => {
-    if (refreshTimer) {
-      clearInterval(refreshTimer)
-    }
-    refreshTimer = window.setInterval(() => {
-      if (activeTab.value === 'monitor') {
-        getRedisMonitorInfo()
-      }
-    }, 10000)
-  }
-
-  // 停止自动刷新
-  const stopAutoRefresh = () => {
-    if (refreshTimer) {
-      clearInterval(refreshTimer)
-      refreshTimer = null
+    if (selectedCache.value && selectedKey.value) {
+      getCacheContent(selectedCache.value.cacheName, selectedKey.value.key)
     }
   }
 
   onMounted(() => {
-    getRedisMonitorInfo()
-    startAutoRefresh()
-  })
-
-  onBeforeUnmount(() => {
-    stopAutoRefresh()
+    getCacheList()
   })
 </script>
 
@@ -660,22 +440,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-  }
-
-  .text-success {
-    color: var(--el-color-success);
-  }
-
-  .text-warning {
-    color: var(--el-color-warning);
-  }
-
-  .text-danger {
-    color: var(--el-color-danger);
-  }
-
-  .redis-empty {
-    padding: 48px 0;
   }
 
   .cache-container {
