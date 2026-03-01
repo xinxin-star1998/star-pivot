@@ -2,28 +2,33 @@ package com.star.pivot.system.service.impl;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.stat.DruidStatManagerFacade;
-import com.star.pivot.system.domain.bo.DruidMonitorVO;
-import com.star.pivot.system.domain.bo.OnlineUserVO;
-import com.star.pivot.system.domain.bo.RedisCacheVO;
-import com.star.pivot.system.domain.bo.ServerInfoVO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.star.pivot.framework.domain.PageResponse;
+import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.security.RefreshTokenManager;
+import com.star.pivot.security.RefreshTokenManager.RefreshTokenValue;
+import com.star.pivot.system.domain.bo.*;
+import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.mapper.SysMonitorApiPerformanceMapper;
 import com.star.pivot.system.service.MonitorService;
-import com.star.pivot.system.service.SysUserService;
-import com.star.pivot.system.service.SysDeptService;
 import com.star.pivot.system.service.OnlineUserService;
-import com.star.pivot.framework.exception.ServiceException;
-import com.star.pivot.security.RefreshTokenManager;
-import com.star.pivot.security.RefreshTokenManager.RefreshTokenValue;
+import com.star.pivot.system.service.SysDeptService;
+import com.star.pivot.system.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.connection.*;
+import org.springframework.data.redis.connection.DataType;
+import org.springframework.data.redis.connection.RedisServerCommands;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.GlobalMemory;
@@ -40,19 +45,10 @@ import java.net.InetAddress;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.Objects;
-import java.util.Map;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.system.domain.bo.ApiPerformanceReqBo;
-import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
-import org.springframework.util.StringUtils;
 
 /**
  * 监控服务实现类
@@ -144,7 +140,7 @@ public class MonitorServiceImpl implements MonitorService {
             serverInfo.setDisk(diskInfo);
         } catch (Exception e) {
             log.error("获取服务器信息失败", e);
-            throw new ServiceException("获取服务器信息失败: " + e.getMessage(), 500);
+            throw new ServiceException(ErrorCode.INTERNAL_ERROR, "获取服务器信息失败: " + e.getMessage());
         }
 
         return serverInfo;
@@ -460,29 +456,6 @@ public class MonitorServiceImpl implements MonitorService {
         }
         return str.substring(0, maxLength) + "...";
     }
-
-    private int parseInt(String value, int defaultValue) {
-        if (value == null || value.isEmpty()) {
-            return defaultValue;
-        }
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
-    private long parseLong(String value, long defaultValue) {
-        if (value == null || value.isEmpty()) {
-            return defaultValue;
-        }
-        try {
-            return Long.parseLong(value);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
-
     /**
      * 使用 SCAN 命令扫描 Redis key，避免阻塞 Redis
      *
@@ -986,7 +959,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<RedisCacheVO> getCacheList() {
         if (redisTemplate == null) {
-            throw new ServiceException("Redis 未配置或未启用", 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         try {
@@ -1020,7 +993,7 @@ public class MonitorServiceImpl implements MonitorService {
             return cacheList;
         } catch (Exception e) {
             log.error("获取缓存列表失败", e);
-            throw new ServiceException("获取缓存列表失败: " + e.getMessage(), 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "获取缓存列表失败: " + e.getMessage());
         }
     }
 
@@ -1048,11 +1021,11 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<RedisCacheVO.CacheKeyInfo> getCacheKeys(String cacheName) {
         if (redisTemplate == null) {
-            throw new ServiceException("Redis 未配置或未启用", 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         if (cacheName == null || cacheName.trim().isEmpty()) {
-            throw new ServiceException("缓存名称不能为空", 400);
+            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "缓存名称不能为空");
         }
 
         try {
@@ -1098,18 +1071,18 @@ public class MonitorServiceImpl implements MonitorService {
             return keyInfoList;
         } catch (Exception e) {
             log.error("获取缓存键列表失败，cacheName: {}", cacheName, e);
-            throw new ServiceException("获取缓存键列表失败: " + e.getMessage(), 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "获取缓存键列表失败: " + e.getMessage());
         }
     }
 
     @Override
     public RedisCacheVO.CacheContentInfo getCacheContent(String cacheName, String key) {
         if (redisTemplate == null) {
-            throw new ServiceException("Redis 未配置或未启用", 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         if (key == null || key.trim().isEmpty()) {
-            throw new ServiceException("缓存键名不能为空", 400);
+            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "缓存键名不能为空");
         }
 
         try {
@@ -1119,7 +1092,7 @@ public class MonitorServiceImpl implements MonitorService {
 
             // 检查键是否存在
             Boolean exists = redisTemplate.hasKey(key);
-            if (Boolean.FALSE.equals(exists)) {
+            if (!exists) {
                 contentInfo.setType("none");
                 contentInfo.setTtl(-2L);
                 contentInfo.setContent("(键不存在)");
@@ -1151,7 +1124,7 @@ public class MonitorServiceImpl implements MonitorService {
             throw e;
         } catch (Exception e) {
             log.error("获取缓存内容失败，cacheName: {}, key: {}", cacheName, key, e);
-            throw new ServiceException("获取缓存内容失败: " + e.getMessage(), 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "获取缓存内容失败: " + e.getMessage());
         }
     }
 
@@ -1361,15 +1334,14 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public long deleteCache(String cacheName) {
         if (redisTemplate == null) {
-            throw new ServiceException("Redis 未配置或未启用", 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         if (cacheName == null || cacheName.trim().isEmpty()) {
-            throw new ServiceException("缓存名称不能为空", 400);
+            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "缓存名称不能为空");
         }
 
         try {
-            // 使用缓存名称作为前缀，删除所有匹配的键
             String keyPattern = cacheName + ":*";
             Set<String> keys = scanKeys(keyPattern);
             if (keys.isEmpty()) {
@@ -1380,18 +1352,18 @@ public class MonitorServiceImpl implements MonitorService {
             return deletedCount != null ? deletedCount : 0L;
         } catch (Exception e) {
             log.error("删除缓存失败，cacheName: {}", cacheName, e);
-            throw new ServiceException("删除缓存失败: " + e.getMessage(), 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "删除缓存失败: " + e.getMessage());
         }
     }
 
     @Override
     public boolean deleteCacheKey(String cacheName, String key) {
         if (redisTemplate == null) {
-            throw new ServiceException("Redis 未配置或未启用", 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         if (key == null || key.trim().isEmpty()) {
-            throw new ServiceException("缓存键名不能为空", 400);
+            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "缓存键名不能为空");
         }
 
         try {
@@ -1399,21 +1371,19 @@ public class MonitorServiceImpl implements MonitorService {
             return Boolean.TRUE.equals(deleted);
         } catch (Exception e) {
             log.error("删除缓存键失败，cacheName: {}, key: {}", cacheName, key, e);
-            throw new ServiceException("删除缓存键失败: " + e.getMessage(), 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "删除缓存键失败: " + e.getMessage());
         }
     }
 
     @Override
     public boolean clearAllCache() {
         if (redisTemplate == null) {
-            throw new ServiceException("Redis 未配置或未启用", 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         try {
             redisTemplate.execute((RedisCallback<Object>) connection -> {
-                // 适配 Spring Data Redis 3.x+：使用 RedisServerCommands 执行 FLUSHDB
                 RedisServerCommands serverCommands = connection.serverCommands();
-                // FLUSHDB 有两种模式：ASYNC（异步）/ SYNC（同步），默认用 ASYNC 性能更高
                 serverCommands.flushDb(RedisServerCommands.FlushOption.ASYNC);
                 return null;
             });
@@ -1421,7 +1391,7 @@ public class MonitorServiceImpl implements MonitorService {
             return true;
         } catch (Exception e) {
             log.error("清空所有缓存失败", e);
-            throw new ServiceException("清空所有缓存失败: " + e.getMessage(), 500);
+            throw new ServiceException(ErrorCode.REDIS_ERROR, "清空所有缓存失败: " + e.getMessage());
         }
     }
 

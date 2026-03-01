@@ -5,7 +5,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.system.domain.bo.DictDataVO;
 import com.star.pivot.system.domain.dto.DictDataDTO;
 import com.star.pivot.system.domain.dto.DictDataQueryDTO;
@@ -77,9 +78,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
     @Transactional(readOnly = true)
     public DictDataVO selectDictDataById(Long dictCode) {
         DictData dictData = this.getById(dictCode);
-        if (dictData == null) {
-            throw new BusinessException("字典数据不存在");
-        }
+        AssertUtils.notNull(dictData, ErrorCode.DICT_NOT_FOUND);
         return convertToVO(dictData);
     }
 
@@ -106,11 +105,8 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
     @CacheEvict(cacheNames = "dictData", allEntries = true)
     public boolean updateDictData(DictDataDTO dictDataDTO) {
         DictData dictData = this.getById(dictDataDTO.getDictCode());
-        if (dictData == null) {
-            throw new BusinessException("字典数据不存在");
-        }
+        AssertUtils.notNull(dictData, ErrorCode.DICT_NOT_FOUND);
 
-        // 更新字典数据信息
         BeanUtils.copyProperties(dictDataDTO, dictData, "dictCode");
         String currentUser = SecurityContextUtils.getUsername();
         dictData.setUpdateBy(currentUser);

@@ -3,6 +3,7 @@ package com.star.pivot.controller;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.MinioUtil;
 import com.star.pivot.framework.utils.OssUtil;
 import com.star.pivot.security.utils.SecurityContextUtils;
@@ -140,7 +141,7 @@ public class AvatarController {
         try {
             // 权限校验：只能上传自己的头像，或具备管理权限
             if (!hasPermissionToOperateUser(userId)) {
-                throw new ServiceException("无权操作该用户的头像", 403);
+                throw new ServiceException(ErrorCode.ACCESS_DENIED, "无权操作该用户的头像");
             }
 
             Map<String, String> data = new HashMap<>();
@@ -183,12 +184,11 @@ public class AvatarController {
             // 从文件路径中提取用户ID
             String userId = extractUserIdFromPath(filePath);
             if (userId == null) {
-                throw new ServiceException("无效的文件路径格式", 400);
+                throw new ServiceException(ErrorCode.PARAM_INVALID, "无效的文件路径格式");
             }
 
-            // 权限校验：只能获取自己头像的临时链接，或具备管理权限
             if (!hasPermissionToOperateUser(userId)) {
-                throw new ServiceException("无权访问该用户的头像", 403);
+                throw new ServiceException(ErrorCode.ACCESS_DENIED, "无权访问该用户的头像");
             }
 
             String presignedUrl = ossUtil.getPresignedUrl(filePath);
@@ -211,9 +211,8 @@ public class AvatarController {
     @DeleteMapping("/delete")
     public Result<?> delete(@RequestParam("userId") String userId) {
         try {
-            // 权限校验：只能删除自己的头像，或具备管理权限
             if (!hasPermissionToOperateUser(userId)) {
-                throw new ServiceException("无权删除该用户的头像", 403);
+                throw new ServiceException(ErrorCode.ACCESS_DENIED, "无权删除该用户的头像");
             }
 
             ossUtil.deleteAvatar(userId);

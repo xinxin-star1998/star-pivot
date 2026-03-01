@@ -6,42 +6,57 @@ import java.io.Serial;
 
 @Getter
 public final class ServiceException extends RuntimeException {
+
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private Integer code;
-    private String message;
-    private String detailMessage;
+    private final ErrorCode errorCode;
+    private final String detailMessage;
 
-    public ServiceException() {
+    public ServiceException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+        this.detailMessage = null;
+    }
+
+    public ServiceException(ErrorCode errorCode, String detailMessage) {
+        super(detailMessage != null ? detailMessage : errorCode.getMessage());
+        this.errorCode = errorCode;
+        this.detailMessage = detailMessage;
+    }
+
+    public ServiceException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode.getMessage(), cause);
+        this.errorCode = errorCode;
+        this.detailMessage = null;
+    }
+
+    public ServiceException(ErrorCode errorCode, String detailMessage, Throwable cause) {
+        super(detailMessage != null ? detailMessage : errorCode.getMessage(), cause);
+        this.errorCode = errorCode;
+        this.detailMessage = detailMessage;
     }
 
     public ServiceException(String message) {
-        this.message = message;
+        super(message);
+        this.errorCode = ErrorCode.INTERNAL_ERROR;
+        this.detailMessage = message;
     }
 
-    public ServiceException(String message, Integer code) {
-        this.message = message;
-        this.code = code;
+    public ServiceException(String message, Throwable cause) {
+        super(message, cause);
+        this.errorCode = ErrorCode.INTERNAL_ERROR;
+        this.detailMessage = message;
     }
 
-    @Override
-    public String getMessage() {
-        return message;
+    public int getCode() {
+        return errorCode.getCode();
     }
 
-    public ServiceException setMessage(String message) {
-        this.message = message;
-        return this;
-    }
-
-    public ServiceException setCode(Integer code) {
-        this.code = code;
-        return this;
-    }
-
-    public ServiceException setDetailMessage(String detailMessage) {
-        this.detailMessage = detailMessage;
-        return this;
+    public String getDisplayMessage() {
+        if (detailMessage != null) {
+            return detailMessage;
+        }
+        return errorCode.getMessage();
     }
 }

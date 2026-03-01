@@ -121,6 +121,6 @@ public class SysLogininforController {
     private LogininforVO convertToVO(com.star.pivot.system.domain.entity.SysLogininfor logininfor) {
         LogininforVO vo = new LogininforVO();
         org.springframework.beans.BeanUtils.copyProperties(logininfor, vo);
-        return vo;
+       return vo;
     }
 }

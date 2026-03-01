@@ -108,6 +108,6 @@ public class SysNoticeController
         }
 
         boolean success = sysNoticeService.deleteSysNoticeByNoticeIds(noticeIds);
-        return success ? Result.success("删除通知公告成功") : Result.error("删除通知公告失败");
-    }
+       return success ? Result.success("删除通知公告成功") : Result.error("删除通知公告失败");
+   }
 }

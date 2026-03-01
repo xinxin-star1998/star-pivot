@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.system.domain.bo.PostBo;
 import com.star.pivot.system.domain.bo.PostVO;
 import com.star.pivot.system.domain.dto.PostDTO;
@@ -72,9 +74,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     @Transactional(readOnly = true)
     public PostVO selectPostById(Long postId) {
         SysPost post = this.getById(postId);
-        if (post == null) {
-            throw new BusinessException("岗位不存在");
-        }
+        AssertUtils.notNull(post, ErrorCode.POST_NOT_FOUND);
         return convertToVO(post);
     }
 
@@ -82,9 +82,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     @CacheEvict(cacheNames = "postList", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean insertPost(PostDTO postDTO) {
-        // 检查岗位编码是否唯一
         if (!checkPostCodeUnique(postDTO.getPostCode(), null)) {
-            throw new BusinessException("岗位编码已存在");
+            throw new BusinessException(ErrorCode.POST_CODE_EXISTS);
         }
 
         // 创建岗位
@@ -105,13 +104,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     @Transactional(rollbackFor = Exception.class)
     public boolean updatePost(PostDTO postDTO) {
         SysPost post = this.getById(postDTO.getPostId());
-        if (post == null) {
-            throw new BusinessException("岗位不存在");
-        }
+        AssertUtils.notNull(post, ErrorCode.POST_NOT_FOUND);
 
-        // 检查岗位编码是否唯一
         if (!checkPostCodeUnique(postDTO.getPostCode(), postDTO.getPostId())) {
-            throw new BusinessException("岗位编码已被使用");
+            throw new BusinessException(ErrorCode.POST_CODE_USED);
         }
 
         // 更新岗位信息
@@ -134,12 +130,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
         for (Long postId : postIds) {
             SysPost post = this.getById(postId);
             if (post != null) {
-                // 检查是否有用户使用该岗位
                 LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
                 wrapper.eq(UserPost::getPostId, postId);
                 long count = userPostMapper.selectCount(wrapper);
                 if (count > 0) {
-                    throw new BusinessException("岗位[" + post.getPostName() + "]已被使用，不能删除");
+                    throw new BusinessException(ErrorCode.POST_USED, "岗位[" + post.getPostName() + "]已被使用，不能删除");
                 }
                 
                 this.removeById(postId);

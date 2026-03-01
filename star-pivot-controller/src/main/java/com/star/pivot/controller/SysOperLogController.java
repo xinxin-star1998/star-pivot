@@ -117,6 +117,6 @@ public class SysOperLogController {
     private OperLogVO convertToVO(com.star.pivot.system.domain.entity.SysOperLog operLog) {
         OperLogVO vo = new OperLogVO();
         org.springframework.beans.BeanUtils.copyProperties(operLog, vo);
-        return vo;
+       return vo;
     }
 }

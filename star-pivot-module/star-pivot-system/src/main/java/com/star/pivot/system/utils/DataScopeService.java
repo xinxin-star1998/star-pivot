@@ -93,11 +93,7 @@ public class DataScopeService {
 
         // 计算最终数据权限（取最高优先级）
         ScopeResult result = calculateDataScope(roleList, userDeptId);
-        // 仅本人但无 userId 时返回无数据，避免条件缺失导致数据泄露
-        if (AppConstants.DataScope.SELF.equals(result.scopeType) && userId == null) {
-            log.debug("数据权限：仅本人但 userId 为空，返回无数据");
-            return new DataScope(SQL_NONE, Collections.emptyList(), null, null);
-        }
+        // 构建 SQL 过滤条件
         String sqlFilter = buildSqlFilter(result.scopeType, userId, result.deptIds, userDeptId);
 
         log.debug("数据权限：userId={}, scopeType={}, deptIds={}, userDeptId={}", userId, result.scopeType, result.deptIds, userDeptId);

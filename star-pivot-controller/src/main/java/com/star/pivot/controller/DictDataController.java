@@ -126,6 +126,6 @@ public class DictDataController {
         }
         boolean success = dictDataService.deleteDictDataByIds(dictCodes);
         return success ? Result.success("删除字典数据成功") : Result.error("删除字典数据失败");
-    }
+   }
 }
 

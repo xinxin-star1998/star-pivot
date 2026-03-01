@@ -8,6 +8,8 @@ import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DataScope;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.framework.utils.SecurityUtils;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import com.star.pivot.system.domain.bo.UserReqBo;
@@ -106,11 +108,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public boolean addUser(UserDTO userDTO) {
-        // 检查用户名是否已存在
-        if (getUserByUsername(userDTO.getUserName()) != null) {
-            throw new BusinessException("用户名已存在");
-        }
-        //创建用户
+        AssertUtils.isNull(getUserByUsername(userDTO.getUserName()), ErrorCode.USER_USERNAME_EXISTS);
         SysUser sysUser = new SysUser();
         BeanUtils.copyProperties(userDTO, sysUser);
         sysUser.setUserType("00");
@@ -154,14 +152,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public boolean updateUser(UserDTO userDTO) {
         SysUser user = this.getById(userDTO.getUserId());
-        if (user == null || AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
-            throw new BusinessException("用户不存在");
+        AssertUtils.notNull(user, ErrorCode.USER_NOT_FOUND);
+        if (AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
-        // 检查用户名是否已被其他用户使用
         SysUser existUser = getUserByUsername(userDTO.getUserName());
         if (existUser != null && !existUser.getUserId().equals(userDTO.getUserId())) {
-            throw new BusinessException("用户名已被使用");
+            throw new BusinessException(ErrorCode.USER_USERNAME_USED);
         }
 
         // 更新用户信息
@@ -209,8 +207,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public boolean changeUserStatus(Long userId, String status) {
         SysUser user = this.getById(userId);
-        if (user == null || AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
-            throw new BusinessException("用户不存在");
+        AssertUtils.notNull(user, ErrorCode.USER_NOT_FOUND);
+        if (AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         user.setStatus(status);
@@ -224,8 +223,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public boolean resetUserPassword(Long userId, String password) {
         SysUser user = this.getById(userId);
-        if (user == null || AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
-            throw new BusinessException("用户不存在");
+        AssertUtils.notNull(user, ErrorCode.USER_NOT_FOUND);
+        if (AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         user.setPassword(SecurityUtils.encryptPassword(password));
@@ -327,9 +327,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public int importUsers(List<Map<String, Object>> rowList) {
-        if (rowList == null || rowList.isEmpty()) {
-            throw new BusinessException("导入数据不能为空");
-        }
+        AssertUtils.notEmpty(rowList, ErrorCode.USER_IMPORT_EMPTY);
         int successCount = 0;
         int rowIndex = 1; // 用于错误提示（从 1 开始，方便与 Excel 行号对应）
 
@@ -366,22 +364,20 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      */
     private UserDTO buildUserDTOFromRow(Map<String, Object> row, int rowIndex) {
         if (row == null || row.isEmpty()) {
-            throw new BusinessException("第 " + rowIndex + " 行数据为空");
+            throw new BusinessException(ErrorCode.USER_IMPORT_ROW_EMPTY, "第 " + rowIndex + " 行数据为空");
         }
 
         UserDTO userDTO = new UserDTO();
 
-        // 用户账号（必填）
         String userName = getStringCell(row, "用户账号");
         if (!StringUtils.hasText(userName)) {
-            throw new BusinessException("第 " + rowIndex + " 行用户账号不能为空");
+            throw new BusinessException(ErrorCode.USER_IMPORT_USERNAME_EMPTY, "第 " + rowIndex + " 行用户账号不能为空");
         }
         userDTO.setUserName(userName.trim());
 
-        // 用户昵称（必填）
         String nickName = getStringCell(row, "用户昵称");
         if (!StringUtils.hasText(nickName)) {
-            throw new BusinessException("第 " + rowIndex + " 行用户昵称不能为空");
+            throw new BusinessException(ErrorCode.USER_IMPORT_NICKNAME_EMPTY, "第 " + rowIndex + " 行用户昵称不能为空");
         }
         userDTO.setNickName(nickName.trim());
 
@@ -421,13 +417,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
         userDTO.setStatus(statusCode);
 
-        // 部门ID（可选，数字）
         String deptIdText = getStringCell(row, "部门ID");
         if (StringUtils.hasText(deptIdText)) {
             try {
                 userDTO.setDeptId(Long.parseLong(deptIdText.trim()));
             } catch (NumberFormatException e) {
-                throw new BusinessException("第 " + rowIndex + " 行部门ID格式不正确，应为数字");
+                throw new BusinessException(ErrorCode.USER_IMPORT_DEPT_FORMAT_ERROR, "第 " + rowIndex + " 行部门ID格式不正确，应为数字");
             }
         }
 
@@ -500,9 +495,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public ImportExportService.ImportExportResult importData(List<Map<String, Object>> rowList, Map<String, Object> options) {
-        if (rowList == null || rowList.isEmpty()) {
-            throw new BusinessException("导入数据不能为空");
-        }
+        AssertUtils.notEmpty(rowList, ErrorCode.USER_IMPORT_EMPTY);
 
         ImportExportService.ImportExportResult result = new ImportExportService.ImportExportResult();
         int rowIndex = 1; // 用于错误提示（从 1 开始，方便与 Excel 行号对应）

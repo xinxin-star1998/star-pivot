@@ -125,7 +125,7 @@ public class DictTypeController {
             return Result.error("删除ID不能为空");
         }
         boolean success = dictTypeService.deleteDictTypeByIds(dictIds);
-        return success ? Result.success("删除字典类型成功") : Result.error("删除字典类型失败");
+       return success ? Result.success("删除字典类型成功") : Result.error("删除字典类型失败");
     }
 }
 

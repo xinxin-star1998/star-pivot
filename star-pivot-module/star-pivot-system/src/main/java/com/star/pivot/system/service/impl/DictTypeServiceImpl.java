@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.system.domain.bo.DictTypeVO;
 import com.star.pivot.system.domain.dto.DictTypeDTO;
 import com.star.pivot.system.domain.dto.DictTypeQueryDTO;
@@ -67,18 +69,15 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
     @Override
     public DictTypeVO selectDictTypeById(Long dictId) {
         DictType dictType = this.getById(dictId);
-        if (dictType == null) {
-            throw new BusinessException("字典类型不存在");
-        }
+        AssertUtils.notNull(dictType, ErrorCode.DICT_TYPE_NOT_FOUND);
         return convertToVO(dictType);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean insertDictType(DictTypeDTO dictTypeDTO) {
-        // 检查字典类型是否唯一
         if (!checkDictTypeUnique(dictTypeDTO.getDictType(), null)) {
-            throw new BusinessException("字典类型已存在");
+            throw new BusinessException(ErrorCode.DICT_TYPE_NOT_FOUND, "字典类型已存在");
         }
 
         // 创建字典类型
@@ -97,16 +96,12 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
     @Transactional(rollbackFor = Exception.class)
     public boolean updateDictType(DictTypeDTO dictTypeDTO) {
         DictType dictType = this.getById(dictTypeDTO.getDictId());
-        if (dictType == null) {
-            throw new BusinessException("字典类型不存在");
-        }
+        AssertUtils.notNull(dictType, ErrorCode.DICT_TYPE_NOT_FOUND);
 
-        // 检查字典类型是否唯一
         if (!checkDictTypeUnique(dictTypeDTO.getDictType(), dictTypeDTO.getDictId())) {
-            throw new BusinessException("字典类型已被使用");
+            throw new BusinessException(ErrorCode.DICT_TYPE_NOT_FOUND, "字典类型已被使用");
         }
 
-        // 如果修改了字典类型，需要更新关联的字典数据
         if (!dictType.getDictType().equals(dictTypeDTO.getDictType())) {
             LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(DictData::getDictType, dictType.getDictType());

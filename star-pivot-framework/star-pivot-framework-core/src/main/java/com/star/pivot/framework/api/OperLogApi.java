@@ -1,7 +1,5 @@
 package com.star.pivot.framework.api;
 
-import java.util.function.Consumer;
-
 public interface OperLogApi {
 
     void cleanAll();

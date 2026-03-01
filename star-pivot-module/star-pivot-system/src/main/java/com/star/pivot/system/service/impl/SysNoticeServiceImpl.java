@@ -4,7 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import com.star.pivot.system.domain.bo.SysNoticeVO;
 import com.star.pivot.system.domain.dto.SysNoticeDTO;
@@ -71,9 +72,7 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
     public SysNoticeVO selectSysNoticeByNoticeId(Integer noticeId)
     {
         SysNotice sysNotice = this.getById(noticeId);
-        if (sysNotice == null) {
-            throw new BusinessException("通知公告不存在");
-        }
+        AssertUtils.notNull(sysNotice, ErrorCode.NOTICE_NOT_FOUND);
         return convertToVO(sysNotice);
     }
 
@@ -105,9 +104,7 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
     public boolean updateSysNotice(SysNoticeDTO sysNoticeDTO)
     {
         SysNotice sysNotice = this.getById(sysNoticeDTO.getNoticeId());
-        if (sysNotice == null) {
-            throw new BusinessException("通知公告不存在");
-        }
+        AssertUtils.notNull(sysNotice, ErrorCode.NOTICE_NOT_FOUND);
         BeanUtils.copyProperties(sysNoticeDTO, sysNotice, "noticeId");
         sysNotice.setUpdateBy(Objects.requireNonNull(getCurrentUser()).getUserName());
         sysNotice.setUpdateTime(java.time.LocalDateTime.now());

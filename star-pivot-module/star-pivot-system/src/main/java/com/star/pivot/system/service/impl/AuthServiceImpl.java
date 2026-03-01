@@ -2,6 +2,8 @@ package com.star.pivot.system.service.impl;
 
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.framework.utils.LogUtils;
 import com.star.pivot.framework.utils.SecurityUtils;
 import com.star.pivot.security.JwtUtil;
@@ -83,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
             if (!captchaService.validateAndConsumeCaptchaProof(request.getCaptchaProof(), "login")) {
                 recordLoginFailure(logininfor, "验证码错误或已失效");
                 accountLockService.recordLoginFailure(request.getUsername());
-                throw new ServiceException("验证码错误或已失效", 401);
+                throw new ServiceException(ErrorCode.CAPTCHA_ERROR, "验证码错误或已失效");
             }
             
             // 5. 使用 AuthenticationManager 进行认证
@@ -106,7 +108,7 @@ public class AuthServiceImpl implements AuthService {
 if (user == null) {
                 log.error("用户不存在: {}", request.getUsername());
                     recordLoginFailure(logininfor, "用户不存在");
-                    throw new ServiceException("用户不存在", 404);
+                    throw new ServiceException(ErrorCode.USER_NOT_FOUND);
                 }
             }
             
@@ -145,15 +147,13 @@ if (user == null) {
             log.error("认证失败: {}", e.getMessage());
             accountLockService.recordLoginFailure(request.getUsername());
             recordLoginFailure(logininfor, "用户名或密码错误");
-            throw new ServiceException("用户名或密码错误", 401);
+            throw new ServiceException(ErrorCode.LOGIN_FAILED);
         } catch (ServiceException e) {
-            // ServiceException已经在上面处理了，这里不需要重复记录
-            // 但如果是账户锁定或限流异常，不需要再记录失败次数（已经在对应服务中处理）
             throw e;
         } catch (Exception e) {
             log.error("登录异常: {}", e.getMessage(), e);
             recordLoginFailure(logininfor, "登录异常: " + (e.getMessage() != null ? LogUtils.truncateString(e.getMessage(), 255) : "未知错误"));
-            throw new ServiceException("登录失败", 500);
+            throw new ServiceException(ErrorCode.INTERNAL_ERROR, "登录失败");
         }
     }
 
@@ -168,21 +168,12 @@ if (user == null) {
         String username = request.getUsername();
         String password = request.getPassword();
 
-        // 基础参数校验
-        if (username == null || username.trim().isEmpty()) {
-            throw new ServiceException("用户名不能为空", 400);
-        }
-        if (password == null || password.trim().isEmpty()) {
-            throw new ServiceException("密码不能为空", 400);
-        }
+        AssertUtils.notEmpty(username, ErrorCode.PARAM_NOT_NULL, "用户名不能为空");
+        AssertUtils.notEmpty(password, ErrorCode.PARAM_NOT_NULL, "密码不能为空");
 
-        // 检查用户名是否已存在
         SysUser exists = userService.getUserByUsername(username.trim());
-        if (exists != null) {
-            throw new ServiceException("用户名已存在", 400);
-        }
+        AssertUtils.isNull(exists, ErrorCode.USER_USERNAME_EXISTS);
 
-        // 构建用户实体
         SysUser user = new SysUser();
         user.setUserName(username.trim());
         user.setNickName(username.trim());
@@ -195,7 +186,7 @@ if (user == null) {
 
         boolean success = userService.save(user);
         if (!success || user.getUserId() == null) {
-            throw new ServiceException("注册失败，请稍后重试", 500);
+            throw new ServiceException(ErrorCode.INTERNAL_ERROR, "注册失败，请稍后重试");
         }
 
         // 为新用户分配默认角色（普通角色），使登录后可获取菜单权限
