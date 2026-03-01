@@ -121,7 +121,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (StringUtils.hasText(userDTO.getPassword())) {
             sysUser.setPassword(SecurityUtils.encryptPassword(userDTO.getPassword()));
         } else {
-            // 默认密码
             sysUser.setPassword(SecurityUtils.encryptPassword("123456"));
         }
         //创建人 当前登录人

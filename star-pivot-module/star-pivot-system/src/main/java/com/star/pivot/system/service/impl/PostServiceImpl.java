@@ -19,6 +19,8 @@ import com.star.pivot.system.service.PostService;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -42,6 +44,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     private final UserPostMapper userPostMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<PostVO> selectPostPage(PostQueryDTO queryDTO) {
         Page<SysPost> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         LambdaQueryWrapper<SysPost> wrapper = new LambdaQueryWrapper<>();
@@ -66,6 +69,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PostVO selectPostById(Long postId) {
         SysPost post = this.getById(postId);
         if (post == null) {
@@ -75,6 +79,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     }
 
     @Override
+    @CacheEvict(cacheNames = "postList", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean insertPost(PostDTO postDTO) {
         // 检查岗位编码是否唯一
@@ -96,6 +101,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     }
 
     @Override
+    @CacheEvict(cacheNames = "postList", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean updatePost(PostDTO postDTO) {
         SysPost post = this.getById(postDTO.getPostId());
@@ -118,6 +124,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     }
 
     @Override
+    @CacheEvict(cacheNames = "postList", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean deletePostByIds(List<Long> postIds) {
         if (postIds == null || postIds.isEmpty()) {
@@ -152,6 +159,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     }
 
     @Override
+    @Cacheable(cacheNames = "postList", key = "'all'")
     public List<PostBo> selectPost() {
         List<PostBo> postVOList;
         QueryWrapper<SysPost> wrapper = new QueryWrapper<>();
@@ -169,6 +177,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PostVO> all() {
         List<PostVO> postVOList = new ArrayList<>();
         List<SysPost> list= postMapper.selectList(null);

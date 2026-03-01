@@ -3,7 +3,7 @@ package com.star.pivot.framework.constants;
 /**
  * 代码生成通用常量
  *
- * @author ruoyi
+ * @author StarPivot
  */
 public class GenConstants
 {

@@ -13,6 +13,8 @@ import com.star.pivot.system.service.SysDeptService;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -34,12 +36,15 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     private final SysUserMapper userMapper;
 
     @Override
+    @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "deptTree", key = "'all'")
     public List<DeptVO> selectDeptTree() {
         List<SysDept> depts = this.list(new LambdaQueryWrapper<SysDept>().eq(SysDept::getDelFlag, "0"));
         return buildDeptTree(depts, 0L);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DeptVO selectDeptById(Long deptId) {
         SysDept dept = this.getById(deptId);
         if (dept == null || "2".equals(dept.getDelFlag())) {
@@ -51,6 +56,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     }
 
     @Override
+    @CacheEvict(cacheNames = "deptTree", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean insertDept(DeptDTO deptDTO) {
         // 检查部门名称是否唯一
@@ -87,6 +93,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     }
 
     @Override
+    @CacheEvict(cacheNames = "deptTree", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean updateDept(DeptDTO deptDTO) {
         SysDept dept = this.getById(deptDTO.getDeptId());
@@ -128,6 +135,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     }
 
     @Override
+    @CacheEvict(cacheNames = "deptTree", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteDeptByIds(List<Long> deptIds) {
         if (deptIds == null || deptIds.isEmpty()) {
@@ -161,6 +169,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean checkDeptNameUnique(String deptName, Long parentId, Long deptId) {
         LambdaQueryWrapper<SysDept> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysDept::getDeptName, deptName)
@@ -173,6 +182,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasChildDept(Long deptId) {
         LambdaQueryWrapper<SysDept> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysDept::getParentId, deptId)
@@ -181,6 +191,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean hasUser(Long deptId) {
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysUser::getDeptId, deptId)

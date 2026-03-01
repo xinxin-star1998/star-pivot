@@ -38,6 +38,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
     private final DictDataMapper dictDataMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<DictDataVO> selectDictDataPage(DictDataQueryDTO queryDTO) {
         Page<DictData> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
@@ -63,6 +64,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(cacheNames = "dictData", key = "#dictType")
     public List<DictDataVO> selectDictDataByType(String dictType) {
         List<DictData> dictDataList = dictDataMapper.selectDictDataByType(dictType);
@@ -72,6 +74,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DictDataVO selectDictDataById(Long dictCode) {
         DictData dictData = this.getById(dictCode);
         if (dictData == null) {

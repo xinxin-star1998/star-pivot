@@ -20,6 +20,8 @@
   import com.star.pivot.system.service.UserPermissionCacheService;
   import org.springframework.beans.BeanUtils;
   import org.springframework.beans.factory.annotation.Autowired;
+  import org.springframework.cache.annotation.CacheEvict;
+  import org.springframework.cache.annotation.Cacheable;
   import org.springframework.stereotype.Service;
   import org.springframework.transaction.annotation.Transactional;
   import org.springframework.util.StringUtils;
@@ -51,6 +53,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Autowired
     private UserPermissionCacheService userPermissionCacheService;
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<SysRole> selectRoleList(RoleQueryDTO roleQueryDTO) {
         PageResponse<SysRole> pageResponse = new PageResponse<>();
         Page<SysRole> page = new Page<>(roleQueryDTO.getPageNum(), roleQueryDTO.getPageSize());
@@ -63,11 +66,24 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SysRole selectRoleById(Long roleId) {
         return sysRoleMapper.selectById(roleId);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "roleList", key = "'all'")
+    public List<SysRole> selectAllRoles() {
+        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysRole::getDelFlag, AppConstants.DelFlag.NORMAL)
+                .eq(SysRole::getStatus, AppConstants.Status.NORMAL)
+                .orderByAsc(SysRole::getRoleSort);
+        return this.list(wrapper);
+    }
+
+    @Override
+    @CacheEvict(cacheNames = "roleList", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean insertRole(RoleDTO roleDTO) {
         // 检查角色权限字符串是否已存在
@@ -100,6 +116,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     @Override
+    @CacheEvict(cacheNames = "roleList", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean updateRole(RoleDTO roleDTO) {
         SysRole role = this.getById(roleDTO.getRoleId());
@@ -147,6 +164,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     @Override
+    @CacheEvict(cacheNames = "roleList", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteRoleByIds(List<Long> roleIds) {
         if (roleIds == null || roleIds.isEmpty()) {
@@ -179,6 +197,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     @Override
+    @CacheEvict(cacheNames = "roleList", allEntries = true)
     public boolean changeRoleStatus(Long roleId, String status) {
         SysRole role = this.getById(roleId);
         if (role == null || "2".equals(role.getDelFlag())) {
@@ -204,6 +223,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
      * @return deptIds 部门id列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Long> selectDeptIdsByRoleId(Long roleId) {
         SysRole sysRole = sysRoleMapper.selectById(roleId);
         if(sysRole == null){
@@ -230,6 +250,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
      * @return menuIds 菜单id列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Long> getMenuIdsByRoleId(Long roleId) {
         SysRole sysRole = sysRoleMapper.selectById(roleId);
         if(sysRole == null){

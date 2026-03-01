@@ -23,6 +23,12 @@ public interface SysRoleService extends IService<SysRole> {
 
     SysRole selectRoleById(Long roleId);
 
+    /**
+     * 获取所有有效角色列表（用于下拉选择等场景）
+     * @return 角色列表
+     */
+    List<SysRole> selectAllRoles();
+
     boolean insertRole(RoleDTO roleDTO);
 
     boolean updateRole(RoleDTO roleDTO);

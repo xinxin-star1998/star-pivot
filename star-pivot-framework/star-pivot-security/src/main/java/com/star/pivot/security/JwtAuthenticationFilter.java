@@ -35,13 +35,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
-        log.debug("处理请求: {} {}", request.getMethod(), requestURI);
+        if (log.isTraceEnabled()) {
+            log.trace("处理请求: {} {}", request.getMethod(), requestURI);
+        }
 
         String token = getTokenFromRequest(request);
-        log.debug("Authorization Header: {}", token != null ? "Bearer ***" : "未提供");
+        if (log.isTraceEnabled()) {
+            log.trace("Authorization Header: {}", token != null ? "Bearer ***" : "未提供");
+        }
 
         if (token != null) {
-            log.debug("成功提取Token，长度: {}", token.length());
+            if (log.isTraceEnabled()) {
+                log.trace("成功提取Token，长度: {}", token.length());
+            }
 
             // 检查令牌是否在黑名单中
             if (jwtBlackListManager.isBlackListed(token)) {
@@ -55,7 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (jwtUtil.validateToken(token)) {
                 String username = jwtUtil.getUsernameFromToken(token);
-                log.info("Token验证成功，用户: {}", username);
+                log.debug("Token验证成功，用户: {}", username);
 
                 // 仅在上下文中尚未存在认证信息时才进行设置，避免覆盖其他认证
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -65,15 +71,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    log.debug("用户 {} 认证成功，权限: {}", username, userDetails.getAuthorities());
+                    if (log.isTraceEnabled()) {
+                        log.trace("用户 {} 认证成功，权限: {}", username, userDetails.getAuthorities());
+                    }
                 } else {
-                    log.debug("SecurityContext 已包含认证信息，跳过重复认证");
+                    if (log.isTraceEnabled()) {
+                        log.trace("SecurityContext 已包含认证信息，跳过重复认证");
+                    }
                 }
             } else {
                 log.warn("Token验证失败或已过期");
             }
         } else {
-            log.debug("请求未携带Token");
+            if (log.isTraceEnabled()) {
+                log.trace("请求未携带Token");
+            }
         }
 
         filterChain.doFilter(request, response);

@@ -48,6 +48,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     private final UserPermissionCacheService userPermissionCacheService;
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(cacheNames = "menuTree", key = "'all'")
     public List<SysMenu> menuTree() {
         // 查询所有权限
@@ -61,6 +62,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SysMenu> getUserMenuTree(Long userId) {
         log.debug("获取用户菜单树，userId: {}", userId);
         // 查询用户角色
@@ -217,6 +219,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<SysMenu> getParent() {
         // 查询目录和菜单类型（排除按钮类型）
         List<String> menuTypes = Arrays.asList(
@@ -267,6 +270,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         return tree;
     }
 
+    @Transactional(readOnly = true)
     public boolean checkMenuNameUnique(String menuName, Long parentId, Long menuId) {
         LambdaQueryWrapper<SysMenu> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysMenu::getMenuName, menuName)

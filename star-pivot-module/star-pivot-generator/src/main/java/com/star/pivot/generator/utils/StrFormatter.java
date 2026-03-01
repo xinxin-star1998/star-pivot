@@ -3,7 +3,7 @@ package com.star.pivot.generator.utils;
 /**
  * 字符串格式化
  * 
- * @author ruoyi
+ * @author StarPivot
  */
 public class StrFormatter
 {

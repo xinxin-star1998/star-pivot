@@ -16,7 +16,7 @@
         <ElInput v-model="formData.userName" placeholder="请输入用户名" />
       </ElFormItem>
       <ElFormItem label="用户密码" prop="username" v-if="dialogType === 'add'">
-        <ElInput v-model="formData.password" placeholder="请输入用户名" />
+        <ElInput v-model="formData.password" placeholder="请输入用户密码" />
       </ElFormItem>
       <ElFormItem label="用户昵称" prop="nickName">
         <ElInput v-model="formData.nickName" placeholder="请输入用户昵称" />

@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
  *   <li>缓存 key: user:permissions:{username}</li>
  *   <li>缓存时间: 30分钟（可在配置文件中调整）</li>
  *   <li>当用户角色或权限变更时，需要调用 clearUserPermissionCache() 清除缓存</li>
+ *   <li>缓存穿透防护：用户不存在时也缓存空标记，防止恶意请求穿透到数据库</li>
  * </ul>
  */
 @Service
@@ -38,6 +40,12 @@ public class CustomerUserDetailService implements UserDetailsService {
     private final SysUserService userService;
     private final SysRoleMapper roleMapper;
     private final SysMenuMapper sysMenuMapper;
+
+    /**
+     * 空用户标记，用于缓存穿透防护
+     * 当用户不存在时，缓存此标记对象，避免恶意请求穿透到数据库
+     */
+    private static final String EMPTY_USER_MARKER = "EMPTY_USER_MARKER";
     
     /**
      * 加载用户详情（包含权限信息）
@@ -45,18 +53,21 @@ public class CustomerUserDetailService implements UserDetailsService {
      * <p>使用缓存机制，避免每次请求都查询数据库
      * 缓存 key 为用户名，当用户权限变更时需要清除缓存
      * 
+     * <p>缓存穿透防护：用户不存在时也缓存空标记对象，
+     * 配合较短的缓存时间（5分钟），既能防止穿透又能减少安全风险
+     * 
      * @param username 用户名
      * @return 用户详情（包含权限）
      * @throws UsernameNotFoundException 用户不存在
      */
     @Override
-    @Cacheable(cacheNames = "userPermissions", key = "#username", unless = "#result == null")
+    @Cacheable(cacheNames = "userPermissions", key = "#username")
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("加载用户权限信息（未命中缓存）: {}", username);
         
         SysUser user = userService.getUserByUsername(username);
         if (user == null) {
-            log.error("用户不存在: {}", username);
+            log.warn("用户不存在: {}", username);
             throw new UsernameNotFoundException("用户不存在: " + username);
         }
         

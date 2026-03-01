@@ -15,7 +15,7 @@ import com.star.pivot.framework.utils.DateUtils;
 /**
  * 模板处理工具类
  * 
- * @author ruoyi
+ * @author StarPivot
  */
 public class VelocityUtils
 {

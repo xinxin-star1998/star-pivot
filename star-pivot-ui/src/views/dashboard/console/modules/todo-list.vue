@@ -2,8 +2,8 @@
   <div class="art-card h-128 p-5 mb-5 max-sm:mb-4">
     <div class="art-card-header">
       <div class="title">
-        <h4>代办事项</h4>
-        <p>待处理<span class="text-danger">3</span></p>
+        <h4>待办事项</h4>
+        <p>待处理<span class="text-danger">{{ pendingCount }}</span></p>
       </div>
     </div>
 
@@ -18,7 +18,7 @@
             <p class="text-sm">{{ item.username }}</p>
             <p class="text-g-500 mt-1">{{ item.date }}</p>
           </div>
-          <ElCheckbox v-model="item.complate" />
+          <ElCheckbox v-model="item.complete" />
         </div>
       </ElScrollbar>
     </div>
@@ -29,7 +29,7 @@
   interface TodoItem {
     username: string
     date: string
-    complate: boolean
+    complete: boolean
   }
 
   /**
@@ -40,32 +40,34 @@
     {
       username: '查看今天工作内容',
       date: '上午 09:30',
-      complate: true
+      complete: true
     },
     {
       username: '回复邮件',
       date: '上午 10:30',
-      complate: true
+      complete: true
     },
     {
       username: '工作汇报整理',
       date: '上午 11:00',
-      complate: true
+      complete: true
     },
     {
       username: '产品需求会议',
       date: '下午 02:00',
-      complate: false
+      complete: false
     },
     {
       username: '整理会议内容',
       date: '下午 03:30',
-      complate: false
+      complete: false
     },
     {
       username: '明天工作计划',
       date: '下午 06:30',
-      complate: false
+      complete: false
     }
   ])
+
+  const pendingCount = computed(() => list.filter((item) => !item.complete).length)
 </script>

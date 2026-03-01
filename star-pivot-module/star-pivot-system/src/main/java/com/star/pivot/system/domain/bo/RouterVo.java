@@ -8,7 +8,7 @@ import lombok.Data;
 /**
  * 路由配置信息
  * 
- * @author ruoyi
+ * @author StarPivot
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Data

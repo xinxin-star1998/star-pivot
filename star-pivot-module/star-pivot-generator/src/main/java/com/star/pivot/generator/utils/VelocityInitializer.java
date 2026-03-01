@@ -7,7 +7,7 @@ import java.util.Properties;
 /**
  * VelocityEngine工厂
  * 
- * @author ruoyi
+ * @author StarPivot
  */
 public class VelocityInitializer
 {

@@ -87,12 +87,12 @@ public class RedisConfig {
 
         // 默认缓存配置：使用 JSON 序列化，过期时间 1 小时
         // 添加缓存 key 前缀 "cache:"，避免与旧数据冲突
+        // 注意：允许缓存空值以防止缓存穿透
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .prefixCacheNameWith("cache:")  // 添加缓存 key 前缀，避免与旧数据冲突
+                .prefixCacheNameWith("cache:")
                 .entryTtl(Duration.ofHours(1))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(stringSerializer))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer))
-                .disableCachingNullValues(); // 不缓存 null 值
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer));
 
         // 为不同的缓存名称配置不同的过期时间（添加随机时间防止缓存雪崩）
         // 注意：这里的随机时间在配置类初始化时生成，不同缓存名称会有不同的随机偏移
@@ -101,6 +101,7 @@ public class RedisConfig {
         java.util.Random random = new java.util.Random();
         
         // 用户权限缓存：30 分钟 + 随机0-10分钟
+        // 允许缓存空值以防止缓存穿透攻击
         cacheConfigurations.put("userPermissions", 
                 defaultConfig.entryTtl(Duration.ofMinutes(30).plusMinutes(random.nextInt(10))));
         

@@ -16,6 +16,7 @@ import com.star.pivot.generator.mapper.GenTableColumnMapper;
 import com.star.pivot.generator.mapper.GenTableMapper;
 import com.star.pivot.generator.service.GenTableService;
 import com.star.pivot.generator.utils.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.velocity.Template;
@@ -44,6 +45,7 @@ import java.util.zip.ZipOutputStream;
  * @author xinxin
  * @since 2025-01-17
  */
+@Slf4j
 @Service
 public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> implements GenTableService {
     @Autowired
@@ -152,7 +154,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         try (ZipOutputStream zip = new ZipOutputStream(outputStream)) {
             generatorCode(tableName, zip);
         } catch (IOException e) {
-            log.error("生成代码压缩包失败，表名：" + tableName, e);
+            log.error("生成代码压缩包失败，表名: {}", tableName, e);
             throw new ServiceException("生成代码失败：" + e.getMessage());
         }
         return outputStream.toByteArray();
@@ -318,7 +320,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
                 zip.flush();
                 zip.closeEntry();
             } catch (IOException e) {
-                log.error("渲染模板失败，表名：" + table.getTableName(), e);
+                log.error("渲染模板失败，表名: {}", table.getTableName(), e);
             }
         }
     }
