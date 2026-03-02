@@ -45,6 +45,7 @@ public class GenController {
     
     private final GenTableService genTableService;
     private final GenTableColumnService genTableColumnService;
+    private final GenConfig genConfig;
 
     /**
      * 分页查询代码生成表列表接口
@@ -216,7 +217,7 @@ public class GenController {
     @GetMapping("/genCode/{tableName}")
     public Result<?> genCode(@PathVariable("tableName") String tableName)
     {
-        if (!GenConfig.isAllowOverwrite())
+        if (!genConfig.isAllowOverwrite())
         {
             return Result.error("【系统预设】不允许生成文件覆盖到本地");
         }

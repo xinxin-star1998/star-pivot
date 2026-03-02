@@ -1,62 +1,37 @@
 package com.star.pivot.framework.exception;
 
-import lombok.Getter;
-
 import java.io.Serial;
 
-@Getter
-public class BusinessException extends RuntimeException {
+/**
+ * 业务异常
+ * 用于业务逻辑校验失败的场景
+ */
+public class BusinessException extends BaseException {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final ErrorCode errorCode;
-    private final String detailMessage;
-
     public BusinessException(ErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.errorCode = errorCode;
-        this.detailMessage = null;
+        super(errorCode);
     }
 
     public BusinessException(ErrorCode errorCode, String detailMessage) {
-        super(detailMessage != null ? detailMessage : errorCode.getMessage());
-        this.errorCode = errorCode;
-        this.detailMessage = detailMessage;
+        super(errorCode, detailMessage);
     }
 
     public BusinessException(ErrorCode errorCode, Throwable cause) {
-        super(errorCode.getMessage(), cause);
-        this.errorCode = errorCode;
-        this.detailMessage = null;
+        super(errorCode, cause);
     }
 
     public BusinessException(ErrorCode errorCode, String detailMessage, Throwable cause) {
-        super(detailMessage != null ? detailMessage : errorCode.getMessage(), cause);
-        this.errorCode = errorCode;
-        this.detailMessage = detailMessage;
+        super(errorCode, detailMessage, cause);
     }
 
     public BusinessException(String message) {
         super(message);
-        this.errorCode = ErrorCode.INTERNAL_ERROR;
-        this.detailMessage = message;
     }
 
     public BusinessException(String message, Throwable cause) {
         super(message, cause);
-        this.errorCode = ErrorCode.INTERNAL_ERROR;
-        this.detailMessage = message;
-    }
-
-    public int getCode() {
-        return errorCode.getCode();
-    }
-
-    public String getDisplayMessage() {
-        if (detailMessage != null) {
-            return detailMessage;
-        }
-        return errorCode.getMessage();
     }
 }

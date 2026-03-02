@@ -10,7 +10,7 @@ import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BusinessException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.AssertUtils;
-import com.star.pivot.framework.utils.SecurityUtils;
+import com.star.pivot.security.utils.SecurityUtils;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;

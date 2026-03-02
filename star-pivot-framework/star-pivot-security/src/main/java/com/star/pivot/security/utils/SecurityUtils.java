@@ -1,4 +1,4 @@
-package com.star.pivot.framework.utils;
+package com.star.pivot.security.utils;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 

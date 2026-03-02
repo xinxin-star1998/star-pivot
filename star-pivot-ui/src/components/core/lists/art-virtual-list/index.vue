@@ -27,7 +27,7 @@
 
   interface Props {
     /** 数据列表 */
-    data: any[]
+    data: Record<string, unknown>[]
     /** 每项高度（px），固定高度 */
     itemHeight: number
     /** 容器高度（px），如果不设置则自动计算 */
@@ -35,7 +35,7 @@
     /** 缓冲区大小（上下各保留多少项），默认 5 */
     bufferSize?: number
     /** 获取列表项的唯一 key，默认使用索引 */
-    itemKey?: string | ((item: any, index: number) => string | number)
+    itemKey?: string | ((item: Record<string, unknown>, index: number) => string | number)
   }
 
   const props = withDefaults(defineProps<Props>(), {
@@ -93,7 +93,7 @@
   /**
    * 获取列表项的唯一 key
    */
-  const getItemKey = (item: any, index: number): string | number => {
+  const getItemKey = (item: Record<string, unknown>, index: number): string | number => {
     if (typeof props.itemKey === 'function') {
       return props.itemKey(item, index)
     }
