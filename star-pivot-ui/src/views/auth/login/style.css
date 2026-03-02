@@ -65,14 +65,16 @@
       dark:from-g-800 dark:to-g-700
       transition-all duration-300 ease-out
       hover:border-theme hover:shadow-[0_4px_20px_rgba(var(--theme-color-rgb),0.25)]
-      hover:scale-[1.02]
-      group;
+      hover:scale-[1.02];
   }
 
   .captcha-image {
     @apply w-full h-full object-cover cursor-pointer
-      transition-all duration-300
-      group-hover:scale-105;
+      transition-all duration-300;
+  }
+
+  .captcha-image-wrapper:hover .captcha-image {
+    transform: scale(1.05);
   }
 
   .captcha-placeholder {

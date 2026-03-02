@@ -17,6 +17,7 @@
   --art-danger: oklch(0.68 0.22 25.3);
 
   /* Gray Scale - Light Mode */
+  --art-gray-50: #fafbfc;
   --art-gray-100: #f9fafb;
   --art-gray-200: #f2f4f5;
   --art-gray-300: #e6eaeb;
@@ -53,6 +54,7 @@
   --art-color: #000000;
 
   /* Gray Scale - Dark Mode */
+  --art-gray-50: #0a0909;
   --art-gray-100: #110f0f;
   --art-gray-200: #17171c;
   --art-gray-300: #393946;
@@ -110,6 +112,7 @@
   --color-danger: var(--art-danger);
 
   /* Gray Scale Colors (Auto-adapts to dark mode) */
+  --color-g-50: var(--art-gray-50);
   --color-g-100: var(--art-gray-100);
   --color-g-200: var(--art-gray-200);
   --color-g-300: var(--art-gray-300);
