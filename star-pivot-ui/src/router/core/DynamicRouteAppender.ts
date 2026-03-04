@@ -22,6 +22,7 @@
  */
 
 import type { AppRouteRecord } from '@/types/router'
+import { useMenuStore } from '@/store/modules/menu'
 
 /**
  * 前端动态路由追加器
@@ -213,6 +214,26 @@ export class DynamicRouteAppender {
     )
 
     if (!existsDictData) {
+      // 动态获取 system:data 开头的权限列表
+      const menuStore = useMenuStore()
+      const dataPerms = menuStore.getPermsByPrefix('system:data')
+
+      // 将权限标识转换为 authList 格式
+      const authList = dataPerms.map((perm) => {
+        // 根据权限后缀生成标题
+        const actionMap: Record<string, string> = {
+          query: '查询字典数据',
+          add: '新增字典数据',
+          edit: '编辑字典数据',
+          delete: '删除字典数据',
+          export: '导出字典数据',
+          import: '导入字典数据'
+        }
+        const action = perm.split(':').pop() || ''
+        const title = actionMap[action] || `操作(${action})`
+        return { title, authMark: perm }
+      })
+
       const dictDataRoute: AppRouteRecord = {
         // 明细页路径，带上动态参数 dictType
         path: '/system/dict/data/:dictType',
@@ -226,13 +247,8 @@ export class DynamicRouteAppender {
           // 指定父级菜单路径，用于面包屑、高亮等
           parentPath: '/system/dict',
           keepAlive: true,
-          // 字典数据页为前端动态路由，不在数据库中，需手动配置权限列表供 v-auth 使用
-          authList: [
-            { title: '查询字典数据', authMark: 'system:data:query' },
-            { title: '新增字典数据', authMark: 'system:data:add' },
-            { title: '编辑字典数据', authMark: 'system:data:edit' },
-            { title: '删除字典数据', authMark: 'system:data:delete' }
-          ]
+          // 动态从菜单中获取权限列表
+          authList: authList.length > 0 ? authList : undefined
         },
         menuType: 'C',
         status: '0',
@@ -241,7 +257,7 @@ export class DynamicRouteAppender {
 
       menuList.push(dictDataRoute)
       if (import.meta.env.DEV) {
-        console.log('[DynamicRouteAppender] 已动态追加字典数据明细路由')
+        console.log('[DynamicRouteAppender] 已动态追加字典数据明细路由，权限列表:', dataPerms)
       }
     }
   }

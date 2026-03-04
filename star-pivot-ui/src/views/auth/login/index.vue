@@ -1,6 +1,6 @@
 <!-- 登录页面 -->
 <template>
-  <div class="flex w-full h-screen">
+  <div class="flex w-full h-screen" :class="isDark ? 'dark-bg' : 'light-bg'">
     <LoginLeftView />
 
     <div class="relative flex-1">

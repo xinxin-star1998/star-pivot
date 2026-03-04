@@ -4,6 +4,7 @@ import { useWorktabStore } from '@/store/modules/worktab'
 import { loadingService } from '@/utils/ui'
 import { useCommon } from '@/hooks/core/useCommon'
 import { fetchGetUserInfo } from '@/api/auth'
+import { fetchGetMenuList } from '@/api/menu/menu'
 import { ApiStatus } from '@/utils/http/status'
 import { isHttpError } from '@/utils/http/error'
 import { safeLog, safeWarn } from '@/utils'
@@ -96,7 +97,12 @@ export async function handleDynamicRoutes(
     const menuList = await menuProcessor.getMenuList()
     safeLog('[RouteGuard] 菜单数据获取成功，菜单数量:', menuList.length)
 
-    // 2.1 仪表盘和工作台无论动态菜单有无都要加载：若后端菜单为空，先追加前端固定路由
+    // 2.1 保存原始菜单数据到 store（在追加动态路由之前，以便权限获取）
+    const menuStore = useMenuStore()
+    const rawMenus = await fetchGetMenuList()
+    menuStore.setRawMenuList(rawMenus || [])
+
+    // 2.2 仪表盘和工作台无论动态菜单有无都要加载：若后端菜单为空，先追加前端固定路由
     if (menuList.length === 0) {
       safeLog('[RouteGuard] 动态菜单为空，追加仪表盘/工作台等固定路由')
       DynamicRouteAppender.appendDynamicRoutes(menuList)
@@ -117,7 +123,6 @@ export async function handleDynamicRoutes(
     safeLog('[RouteGuard] 动态路由注册成功')
 
     // 5. 保存菜单数据到 store（必须在重新导航之前）
-    const menuStore = useMenuStore()
     menuStore.setMenuList(menuList)
     menuStore.addRemoveRouteFns(routeRegistry?.getRemoveRouteFns() || [])
 
@@ -221,6 +226,7 @@ export function resetRouterState(delay: number): void {
     const menuStore = useMenuStore()
     menuStore.removeAllDynamicRoutes()
     menuStore.setMenuList([])
+    menuStore.setRawMenuList([])
     menuStore.clearRemoveRouteFns()
     menuStore.setHomePath('')
 

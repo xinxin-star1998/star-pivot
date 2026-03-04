@@ -599,13 +599,16 @@
 
   // 暗色主题
   .dark .login-left-view {
-    background: linear-gradient(135deg, color-mix(in srgb, $primary-light-9 60%, #070707) 0%, color-mix(in srgb, $primary-light-8 30%, #0a0a0a) 100%);
+    background:
+      radial-gradient(ellipse at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 100%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+      linear-gradient(135deg, color-mix(in srgb, $primary-light-9 60%, #070707) 0%, color-mix(in srgb, $primary-light-8 30%, #0a0a0a) 100%);
 
     // 暗色背景纹理
     &::before {
-      background-image: 
-        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 40%);
+      background-image:
+        radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 40%);
     }
 
     @media only screen and (width <= 1180px) {
@@ -617,6 +620,16 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+    }
+
+    .text-wrap {
+      h1 {
+        color: var(--art-gray-100) !important;
+      }
+
+      p {
+        color: var(--art-gray-400) !important;
+      }
     }
 
     .geometric-decorations {
@@ -655,8 +668,10 @@
       }
 
       .bg-bubble {
-        background: linear-gradient(135deg, $bg-mix-light-9, color-mix(in srgb, $primary-light-8 40%, #0a0a0a));
-        opacity: 0.4;
+        background:
+          radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.2) 0%, transparent 60%),
+          linear-gradient(135deg, $bg-mix-light-9, color-mix(in srgb, $primary-light-8 40%, #0a0a0a));
+        opacity: 0.5;
       }
 
       // 其他元素颜色调整

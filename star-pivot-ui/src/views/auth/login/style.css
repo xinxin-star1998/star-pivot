@@ -1,5 +1,17 @@
 @reference '@styles/core/tailwind.css';
 
+/* 登录页面背景 */
+.light-bg {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+}
+
+.dark-bg {
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+    linear-gradient(135deg, #0f0f12 0%, #1a1a1f 50%, #0d0d10 100%);
+}
+
 /* 授权页右侧区域 */
 .auth-right-wrap {
   @apply absolute inset-0 w-[480px] h-[680px] py-[5px] m-auto overflow-hidden
@@ -16,6 +28,12 @@
       shadow-[0_8px_32px_rgba(0,0,0,0.08)]
       dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]
       border border-white/50 dark:border-g-700/30;
+  }
+
+  .dark .form {
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      0 0 60px rgba(99, 102, 241, 0.08);
   }
 
   .form-header {
@@ -230,6 +248,7 @@
 
 .dark :deep(.el-input__wrapper) {
   box-shadow: 0 0 0 1px var(--art-gray-600) inset;
+  background: rgba(26, 26, 30, 0.8);
 }
 
 .dark :deep(.el-input__wrapper:hover) {
@@ -240,7 +259,15 @@
 .dark :deep(.el-input__wrapper.is-focus) {
   box-shadow: 0 0 0 2px var(--theme-color) inset,
     0 4px 12px rgba(0, 0, 0, 0.3);
-  background: var(--art-gray-800);
+  background: rgba(26, 26, 30, 0.95);
+}
+
+.dark :deep(.el-input__inner) {
+  color: #e5e7eb;
+}
+
+.dark :deep(.el-input__inner::placeholder) {
+  color: #6b7280;
 }
 
 /* 表单项动画 */

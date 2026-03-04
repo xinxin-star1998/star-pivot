@@ -139,6 +139,18 @@
   // 选中的行
   const selectedRows = ref<ImportTableItem[]>([])
 
+  // 监听弹窗打开，自动加载数据
+  watch(
+    () => props.visible,
+    (newVal) => {
+      if (newVal) {
+        // 弹窗打开时重置分页并查询
+        pagination.current = 1
+        handleSearch()
+      }
+    }
+  )
+
   /**
    * 执行查询
    * 从后端加载可导入的数据表列表

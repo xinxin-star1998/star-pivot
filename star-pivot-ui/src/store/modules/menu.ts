@@ -32,6 +32,7 @@ import { defineStore } from 'pinia'
 import { AppRouteRecord } from '@/types/router'
 import { getFirstMenuPath } from '@/utils'
 import { HOME_PAGE_PATH } from '@/router'
+import type { SysMenu } from '@/api/menu/menu'
 
 /**
  * 菜单状态管理
@@ -40,8 +41,10 @@ import { HOME_PAGE_PATH } from '@/router'
 export const useMenuStore = defineStore('menuStore', () => {
   /** 首页路径 */
   const homePath = ref(HOME_PAGE_PATH)
-  /** 菜单列表 */
+  /** 菜单列表（转换后的路由数据） */
   const menuList = ref<AppRouteRecord[]>([])
+  /** 原始菜单数据（后端返回的SysMenu数组） */
+  const rawMenuList = ref<SysMenu[]>([])
   /** 菜单宽度 */
   const menuWidth = ref('')
   /** 存储路由移除函数的数组 */
@@ -54,6 +57,51 @@ export const useMenuStore = defineStore('menuStore', () => {
   const setMenuList = (list: AppRouteRecord[]) => {
     menuList.value = list
     setHomePath(HOME_PAGE_PATH || getFirstMenuPath(list))
+  }
+
+  /**
+   * 设置原始菜单数据（后端返回的SysMenu数组）
+   * @param list 原始菜单数据
+   */
+  const setRawMenuList = (list: SysMenu[]) => {
+    rawMenuList.value = list
+  }
+
+  /**
+   * 获取原始菜单数据
+   * @returns 原始菜单数据数组
+   */
+  const getRawMenuList = () => rawMenuList.value
+
+  /**
+   * 递归获取所有菜单的权限标识
+   * @param menus 菜单列表
+   * @returns 权限标识数组
+   */
+  const getAllPerms = (menus: SysMenu[]): string[] => {
+    const perms: string[] = []
+    for (const menu of menus) {
+      if (menu.perms) {
+        // perms 可能是逗号分隔的多个权限标识
+        const permsArray = menu.perms.split(',').map((p) => p.trim()).filter(Boolean)
+        perms.push(...permsArray)
+      }
+      if (menu.children && menu.children.length > 0) {
+        perms.push(...getAllPerms(menu.children))
+      }
+    }
+    return perms
+  }
+
+  /**
+   * 获取指定前缀的权限列表
+   * @param prefix 权限前缀，如 'system:data'
+   * @returns 匹配前缀的权限标识数组
+   */
+  const getPermsByPrefix = (prefix: string): string[] => {
+    const allPerms = getAllPerms(rawMenuList.value)
+    if (!prefix) return allPerms
+    return allPerms.filter((perm) => perm.startsWith(prefix))
   }
 
   /**
@@ -96,9 +144,13 @@ export const useMenuStore = defineStore('menuStore', () => {
 
   return {
     menuList,
+    rawMenuList,
     menuWidth,
     removeRouteFns,
     setMenuList,
+    setRawMenuList,
+    getRawMenuList,
+    getPermsByPrefix,
     getHomePath,
     setHomePath,
     addRemoveRouteFns,
