@@ -38,8 +38,8 @@ public class DataScopeService {
     private static final String SQL_ALL = "1=1";
     /** MyBatis 用户部门 ID 占位符，表别名使用 u */
     private static final String PLACEHOLDER_USER_DEPT_ID = "u.dept_id = #{param.userDeptId}";
-    /** MyBatis 创建人占位符（仅本人权限），表别名使用 u */
-    private static final String PLACEHOLDER_USER_ID = "u.create_by = #{param.userId}";
+    /** MyBatis 用户ID占位符（仅本人权限），表别名使用 u */
+    private static final String PLACEHOLDER_USER_ID = "u.user_id = #{param.userId}";
 
     /** 数据权限优先级：1(全部) > 2(自定义) > 3(本部门) > 4(本部门及以下) > 5(仅本人) */
     private static final Map<String, Integer> SCOPE_PRIORITY = Map.of(
