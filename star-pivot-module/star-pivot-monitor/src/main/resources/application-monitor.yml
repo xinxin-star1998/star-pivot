@@ -1,0 +1,62 @@
+# Spring Boot Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# 监控模块配置
+star-pivot:
+  monitor:
+    # 是否启用API性能监控
+    api-performance-enabled: true
+    # 采样率：只记录10%的请求（高频接口）
+    sample-rate: 0.1
+    # 慢接口阈值：只记录响应时间超过1秒的接口（毫秒）
+    slow-api-threshold-ms: 1000
+    # 批量写入队列大小
+    queue-size: 1000
+    # 批量写入批次大小
+    batch-size: 100
+    # 批量写入间隔（秒）
+    batch-interval: 5
+
+# Druid 监控配置
+spring:
+  datasource:
+    druid:
+      # 监控统计配置
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        login-username: admin
+        login-password: admin
+        allow: ""
+        deny: ""
+      # WebStatFilter配置
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
+      # 过滤器配置
+      filter:
+        stat:
+          enabled: true
+          log-slow-sql: true
+          slow-sql-millis: 2000
+          merge-sql: true
+        wall:
+          enabled: true
+          config:
+            multi-statement-allow: true

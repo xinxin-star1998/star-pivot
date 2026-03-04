@@ -1,7 +1,7 @@
-package com.star.pivot.system.mapper;
+package com.star.pivot.monitor.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
+import com.star.pivot.monitor.domain.entity.SysMonitorApiPerformance;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

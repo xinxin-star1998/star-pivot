@@ -1,4 +1,4 @@
-package com.star.pivot.system.service.impl;
+package com.star.pivot.monitor.service.impl;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.stat.DruidStatManagerFacade;
@@ -9,13 +9,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.monitor.domain.bo.ApiPerformanceReqBo;
+import com.star.pivot.monitor.domain.vo.DruidMonitorVO;
+
+import com.star.pivot.monitor.domain.vo.OnlineUserVO;
+import com.star.pivot.monitor.domain.vo.RedisCacheVO;
+import com.star.pivot.monitor.domain.vo.ServerInfoVO;
+import com.star.pivot.monitor.domain.entity.SysMonitorApiPerformance;
+
+import com.star.pivot.monitor.mapper.SysMonitorApiPerformanceMapper;
+import com.star.pivot.monitor.service.MonitorService;
 import com.star.pivot.security.RefreshTokenManager;
 import com.star.pivot.security.RefreshTokenManager.RefreshTokenValue;
-import com.star.pivot.system.domain.bo.*;
-import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
 import com.star.pivot.system.domain.entity.SysUser;
-import com.star.pivot.system.mapper.SysMonitorApiPerformanceMapper;
-import com.star.pivot.system.service.MonitorService;
 import com.star.pivot.system.service.OnlineUserService;
 import com.star.pivot.system.service.SysDeptService;
 import com.star.pivot.system.service.SysUserService;
@@ -355,7 +361,7 @@ public class MonitorServiceImpl implements MonitorService {
             DruidStatManagerFacade statManagerFacade = DruidStatManagerFacade.getInstance();
             // 获取 SQL 统计列表，传入 null 表示获取所有 SQL 统计
             List<Map<String, Object>> sqlList = statManagerFacade.getSqlStatDataList(null);
-            
+
             DruidMonitorVO.SqlStatInfo sqlStatInfo = new DruidMonitorVO.SqlStatInfo();
             long executeCount = 0;
             long executeMillisTotal = 0;
@@ -368,7 +374,7 @@ public class MonitorServiceImpl implements MonitorService {
                 slowSqlList = new ArrayList<>();
                 // 默认慢SQL阈值为 5000 毫秒
                 long threshold = (slowSqlThreshold != null && slowSqlThreshold > 0) ? slowSqlThreshold : 5000L;
-                
+
                 if (sqlList != null) {
                     for (Map<String, Object> sql : sqlList) {
                         try {
@@ -433,7 +439,7 @@ public class MonitorServiceImpl implements MonitorService {
             sqlStatInfo.setSlowSqlCount(slowSqlCount);
             sqlStatInfo.setErrorSqlCount(errorSqlCount);
             monitorVO.setSqlStat(sqlStatInfo);
-            
+
             // 设置慢SQL列表
             monitorVO.setSlowSqlList(slowSqlList);
 
@@ -515,12 +521,12 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<OnlineUserVO> getOnlineUserList(String userName, String ipaddr) {
         List<OnlineUserVO> onlineUserList = new ArrayList<>();
-        
+
         if (redisTemplate == null || sysUserService == null || refreshTokenManager == null) {
             log.warn("Redis、SysUserService 或 RefreshTokenManager 未配置，无法获取在线用户列表");
             return onlineUserList;
         }
-        
+
         try {
             // 参数规范化处理
             String normalizedUserName = (userName != null) ? userName.trim() : null;
@@ -545,7 +551,7 @@ public class MonitorServiceImpl implements MonitorService {
                         log.warn("解析用户ID失败，key: {}", key, e);
                     }
                 }
-                
+
                 // 批量查询用户信息
                 Map<Long, SysUser> userMap = new HashMap<>();
                 if (!userIds.isEmpty() && sysUserService != null) {
@@ -559,7 +565,7 @@ public class MonitorServiceImpl implements MonitorService {
                         log.error("批量查询用户信息失败", e);
                     }
                 }
-                
+
                 // 批量查询部门信息
                 Map<Long, String> deptNameMap = new HashMap<>();
                 if (sysDeptService != null) {
@@ -568,9 +574,9 @@ public class MonitorServiceImpl implements MonitorService {
                                 .map(SysUser::getDeptId)
                                 .filter(Objects::nonNull)
                                 .collect(Collectors.toSet());
-                        
+
                         if (!deptIds.isEmpty()) {
-                            List<com.star.pivot.system.domain.entity.SysDept> depts = 
+                            List<com.star.pivot.system.domain.entity.SysDept> depts =
                                     sysDeptService.listByIds(new ArrayList<>(deptIds));
                             if (depts != null) {
                                 deptNameMap = depts.stream()
@@ -583,20 +589,20 @@ public class MonitorServiceImpl implements MonitorService {
                         log.warn("批量查询部门信息失败", e);
                     }
                 }
-                
+
                 // 构建在线用户列表
                 for (Map.Entry<String, Long> entry : keyToUserIdMap.entrySet()) {
                     try {
                         String key = entry.getKey();
                         Long userId = entry.getValue();
-                        
+
                         // 从 RefreshTokenManager 获取完整的登录信息
                         RefreshTokenValue tokenValue = refreshTokenManager.getRefreshTokenValue(userId);
                         if (tokenValue == null) {
                             // 刷新令牌不存在或已过期，跳过
                             continue;
                         }
-                        
+
                         // 从批量查询结果中获取用户信息
                         SysUser user = userMap.get(userId);
                         if (user == null) {
@@ -606,7 +612,7 @@ public class MonitorServiceImpl implements MonitorService {
 
                         // 构建在线用户信息（使用公共方法）
                         OnlineUserVO onlineUser = buildOnlineUserVO(key, userId, user, tokenValue, deptNameMap);
-                        
+
                         // 过滤条件：用户名
                         if (normalizedUserName != null && !normalizedUserName.isEmpty()) {
                             String userDisplayName = user.getUserName() != null ? user.getUserName() : "";
@@ -615,7 +621,7 @@ public class MonitorServiceImpl implements MonitorService {
                                 continue;
                             }
                         }
-                        
+
                         // 过滤条件：IP地址
                         if (normalizedIpaddr != null && !normalizedIpaddr.isEmpty()) {
                             String userIp = onlineUser.getIpaddr();
@@ -623,10 +629,10 @@ public class MonitorServiceImpl implements MonitorService {
                                 continue;
                             }
                         }
-                        
+
                         onlineUserList.add(onlineUser);
                     } catch (Exception e) {
-                        log.warn("构建在线用户信息失败，userId: {}, error: {}", 
+                        log.warn("构建在线用户信息失败，userId: {}, error: {}",
                             entry.getValue(), e.getMessage());
                     }
                 }
@@ -666,7 +672,7 @@ public class MonitorServiceImpl implements MonitorService {
         onlineUser.setUserId(userId);
         onlineUser.setUserName(user.getUserName());
         onlineUser.setNickName(user.getNickName());
-        
+
         // 获取部门名称（优先使用传入的映射，避免重复查询）
         if (deptNameMap != null && user.getDeptId() != null) {
             String deptName = deptNameMap.get(user.getDeptId());
@@ -684,28 +690,28 @@ public class MonitorServiceImpl implements MonitorService {
                 log.debug("获取部门信息失败，deptId: {}", user.getDeptId());
             }
         }
-        
+
         // 从 RefreshTokenValue 中读取登录信息
         // 注意：如果用户是在实现此功能之前登录的，这些字段可能为 null（旧数据）
         onlineUser.setIpaddr(tokenValue.getIpaddr() != null ? tokenValue.getIpaddr() : "");
         onlineUser.setBrowser(tokenValue.getBrowser() != null ? tokenValue.getBrowser() : "");
         onlineUser.setOs(tokenValue.getOs() != null ? tokenValue.getOs() : "");
         onlineUser.setLoginLocation(tokenValue.getLoginLocation() != null ? tokenValue.getLoginLocation() : "");
-        
+
         // 转换登录时间和最后访问时间
         if (tokenValue.getIssuedAt() != null) {
             onlineUser.setLoginTime(convertToLocalDateTime(tokenValue.getIssuedAt()));
         } else {
             onlineUser.setLoginTime(LocalDateTime.now());
         }
-        
+
         if (tokenValue.getLastAccessTime() != null) {
             onlineUser.setLastAccessTime(convertToLocalDateTime(tokenValue.getLastAccessTime()));
         } else {
             // 如果没有最后访问时间，使用登录时间
             onlineUser.setLastAccessTime(onlineUser.getLoginTime());
         }
-        
+
         return onlineUser;
     }
 
@@ -731,7 +737,7 @@ public class MonitorServiceImpl implements MonitorService {
             log.warn("强制下线失败：sessionId 为空");
             return false;
         }
-        
+
         try {
             // sessionId 格式为 "{REDIS_KEY_PREFIX_JWT_REFRESH_USER}:{userId}"
             if (sessionId.startsWith(REDIS_KEY_PREFIX_JWT_REFRESH_USER + ":")) {
@@ -768,177 +774,9 @@ public class MonitorServiceImpl implements MonitorService {
         }
     }
 
-    @Override
-    public Map<String, Object> getHealthCheck() {
-        Map<String, Object> healthReport = new HashMap<>();
-        long startTime = System.currentTimeMillis();
-        healthReport.put("timestamp", LocalDateTime.now());
-        
-        try {
-            // 使用并发检查提升性能，每个检查项最多等待3秒
-            CompletableFuture<Map<String, Object>> dbFuture = 
-                CompletableFuture.supplyAsync(this::checkDatabaseHealth)
-                    .orTimeout(3, TimeUnit.SECONDS)
-                    .exceptionally(ex -> createErrorHealth("数据库检查超时或异常: " + ex.getMessage()));
-            
-            CompletableFuture<Map<String, Object>> redisFuture = 
-                CompletableFuture.supplyAsync(this::checkRedisHealth)
-                    .orTimeout(3, TimeUnit.SECONDS)
-                    .exceptionally(ex -> createErrorHealth("Redis检查超时或异常: " + ex.getMessage()));
-            
-            CompletableFuture<Map<String, Object>> diskFuture = 
-                CompletableFuture.supplyAsync(this::checkDiskHealth)
-                    .orTimeout(3, TimeUnit.SECONDS)
-                    .exceptionally(ex -> createErrorHealth("磁盘检查超时或异常: " + ex.getMessage()));
-            
-            CompletableFuture<Map<String, Object>> jvmFuture = 
-                CompletableFuture.supplyAsync(this::checkJvmHealth)
-                    .orTimeout(3, TimeUnit.SECONDS)
-                    .exceptionally(ex -> createErrorHealth("JVM检查超时或异常: " + ex.getMessage()));
-            
-            // 等待所有检查完成（最多等待5秒）
-            CompletableFuture.allOf(dbFuture, redisFuture, diskFuture, jvmFuture)
-                .get(5, TimeUnit.SECONDS);
-            
-            // 获取检查结果
-            Map<String, Object> dbHealth = dbFuture.get();
-            Map<String, Object> redisHealth = redisFuture.get();
-            Map<String, Object> diskHealth = diskFuture.get();
-            Map<String, Object> jvmHealth = jvmFuture.get();
-            
-            healthReport.put("database", dbHealth);
-            healthReport.put("redis", redisHealth);
-            healthReport.put("disk", diskHealth);
-            healthReport.put("jvm", jvmHealth);
-            
-            // 计算整体健康状态
-            boolean overallHealthy = (boolean) dbHealth.get("healthy") 
-                    && (boolean) redisHealth.get("healthy")
-                    && (boolean) diskHealth.get("healthy")
-                    && (boolean) jvmHealth.get("healthy");
-            healthReport.put("overall", overallHealthy ? "healthy" : "unhealthy");
-            
-            // 记录检查耗时
-            long duration = System.currentTimeMillis() - startTime;
-            healthReport.put("duration", duration);
-            
-        } catch (TimeoutException e) {
-            log.error("系统健康检查超时", e);
-            healthReport.put("overall", "timeout");
-            healthReport.put("error", "健康检查超时，部分检查项可能未完成");
-            healthReport.put("duration", System.currentTimeMillis() - startTime);
-        } catch (Exception e) {
-            log.error("系统健康检查失败", e);
-            healthReport.put("overall", "error");
-            healthReport.put("error", e.getMessage());
-            healthReport.put("duration", System.currentTimeMillis() - startTime);
-        }
-        
-        return healthReport;
-    }
-    
-    /**
-     * 创建错误健康状态Map
-     * 
-     * @param errorMessage 错误信息
-     * @return 健康状态Map
-     */
-    private Map<String, Object> createErrorHealth(String errorMessage) {
-        Map<String, Object> health = new HashMap<>();
-        health.put("healthy", false);
-        health.put("error", errorMessage);
-        return health;
-    }
 
 
-    /**
-     * 检查数据库健康状态
-     */
-    private Map<String, Object> checkDatabaseHealth() {
-        Map<String, Object> health = new HashMap<>();
-        try {
-            if (dataSource != null && dataSource instanceof DruidDataSource druidDataSource) {
-                int activeCount = druidDataSource.getActiveCount();
-                int maxActive = druidDataSource.getMaxActive();
-                double usage = maxActive > 0 ? (double) activeCount / maxActive * 100 : 0;
-                
-                health.put("healthy", usage < 90); // 连接池使用率低于90%认为健康
-                health.put("activeCount", activeCount);
-                health.put("maxActive", maxActive);
-                health.put("usage", usage);
-            } else {
-                health.put("healthy", false);
-                health.put("message", "数据源未配置或不是Druid数据源");
-            }
-        } catch (Exception e) {
-            health.put("healthy", false);
-            health.put("error", e.getMessage());
-        }
-        return health;
-    }
 
-    /**
-     * 检查Redis健康状态
-     */
-    private Map<String, Object> checkRedisHealth() {
-        Map<String, Object> health = new HashMap<>();
-        try {
-            if (redisTemplate != null) {
-                redisTemplate.execute((RedisCallback<Object>) connection -> {
-                    connection.ping();
-                    return null;
-                });
-                health.put("healthy", true);
-            } else {
-                health.put("healthy", false);
-                health.put("message", "Redis未配置");
-            }
-        } catch (Exception e) {
-            health.put("healthy", false);
-            health.put("error", e.getMessage());
-        }
-        return health;
-    }
-
-    /**
-     * 检查磁盘健康状态
-     */
-    private Map<String, Object> checkDiskHealth() {
-        Map<String, Object> health = new HashMap<>();
-        try {
-            ServerInfoVO.DiskInfo diskInfo = getDiskInfo();
-            double usage = diskInfo.getUsage();
-            health.put("healthy", usage < 90); // 磁盘使用率低于90%认为健康
-            health.put("usage", usage);
-            health.put("total", diskInfo.getTotal());
-            health.put("used", diskInfo.getUsed());
-            health.put("free", diskInfo.getFree());
-        } catch (Exception e) {
-            health.put("healthy", false);
-            health.put("error", e.getMessage());
-        }
-        return health;
-    }
-
-    /**
-     * 检查JVM健康状态
-     */
-    private Map<String, Object> checkJvmHealth() {
-        Map<String, Object> health = new HashMap<>();
-        try {
-            ServerInfoVO.JvmInfo jvmInfo = getJvmInfo();
-            double usage = jvmInfo.getUsage();
-            health.put("healthy", usage < 90); // JVM堆内存使用率低于90%认为健康
-            health.put("usage", usage);
-            health.put("max", jvmInfo.getMax());
-            health.put("used", jvmInfo.getUsed());
-            health.put("free", jvmInfo.getFree());
-        } catch (Exception e) {
-            health.put("healthy", false);
-            health.put("error", e.getMessage());
-        }
-        return health;
-    }
 
     @Override
     public List<RedisCacheVO> getCacheList() {
@@ -949,7 +787,7 @@ public class MonitorServiceImpl implements MonitorService {
         try {
             // 扫描所有键，动态发现缓存组
             Set<String> allKeys = scanKeys("*");
-            
+
             // 按前缀分组
             Map<String, Set<String>> cacheGroups = new HashMap<>();
             for (String key : allKeys) {
@@ -973,7 +811,7 @@ public class MonitorServiceImpl implements MonitorService {
 
             // 按缓存名称排序
             cacheList.sort(Comparator.comparing(RedisCacheVO::getCacheName));
-            
+
             return cacheList;
         } catch (Exception e) {
             log.error("获取缓存列表失败", e);
@@ -992,12 +830,12 @@ public class MonitorServiceImpl implements MonitorService {
         if (key == null || key.isEmpty()) {
             return null;
         }
-        
+
         int colonIndex = key.indexOf(':');
         if (colonIndex > 0) {
             return key.substring(0, colonIndex);
         }
-        
+
         // 如果没有冒号，返回整个键作为前缀
         return key;
     }
@@ -1022,7 +860,7 @@ public class MonitorServiceImpl implements MonitorService {
             for (String key : keys) {
                 RedisCacheVO.CacheKeyInfo keyInfo = new RedisCacheVO.CacheKeyInfo();
                 keyInfo.setKey(key);
-                
+
                 // 获取键类型
                 String type = redisTemplate.execute((RedisCallback<String>) connection -> {
                     DataType dataType = connection.keyCommands().type(key.getBytes());
@@ -1262,7 +1100,7 @@ public class MonitorServiceImpl implements MonitorService {
                         sb.append(",\n");
                     }
                     sb.append("  \"").append(field.getName()).append("\": ");
-                    
+
                     if (fieldValue == null) {
                         sb.append("null");
                     } else if (fieldValue instanceof String || fieldValue instanceof Number || fieldValue instanceof Boolean) {
@@ -1382,7 +1220,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public PageResponse<SysMonitorApiPerformance> getApiPerformancePageList(ApiPerformanceReqBo reqBo) {
         PageResponse<SysMonitorApiPerformance> pageResponse = new PageResponse<>();
-        
+
         if (apiPerformanceMapper == null) {
             log.warn("ApiPerformanceMapper 未配置，无法查询API性能数据");
             pageResponse.setTotal(0L);
@@ -1395,17 +1233,17 @@ public class MonitorServiceImpl implements MonitorService {
 
         // 构建查询条件
         LambdaQueryWrapper<SysMonitorApiPerformance> queryWrapper = new LambdaQueryWrapper<>();
-        
+
         // 接口路径（模糊查询）
         if (StringUtils.hasText(reqBo.getApiPath())) {
             queryWrapper.like(SysMonitorApiPerformance::getApiPath, reqBo.getApiPath());
         }
-        
+
         // 请求方法
         if (StringUtils.hasText(reqBo.getApiMethod())) {
             queryWrapper.eq(SysMonitorApiPerformance::getApiMethod, reqBo.getApiMethod());
         }
-        
+
         // 日期范围
         if (reqBo.getStartDate() != null) {
             queryWrapper.ge(SysMonitorApiPerformance::getStatDate, reqBo.getStartDate());
@@ -1413,12 +1251,12 @@ public class MonitorServiceImpl implements MonitorService {
         if (reqBo.getEndDate() != null) {
             queryWrapper.le(SysMonitorApiPerformance::getStatDate, reqBo.getEndDate());
         }
-        
+
         // 排序
         if (StringUtils.hasText(reqBo.getOrderBy())) {
             String orderBy = reqBo.getOrderBy();
             boolean isAsc = "asc".equalsIgnoreCase(reqBo.getOrderDirection());
-            
+
             switch (orderBy.toLowerCase()) {
                 case "responsetimeavg":
                     if (isAsc) {
@@ -1450,18 +1288,18 @@ public class MonitorServiceImpl implements MonitorService {
             // 默认按平均响应时间倒序
             queryWrapper.orderByDesc(SysMonitorApiPerformance::getResponseTimeAvg);
         }
-        
+
         // 分页查询
         Page<SysMonitorApiPerformance> page = new Page<>(reqBo.getPageNum(), reqBo.getPageSize());
         IPage<SysMonitorApiPerformance> pageList = apiPerformanceMapper.selectPage(page, queryWrapper);
-        
+
         // 设置分页结果
         pageResponse.setTotal(pageList.getTotal());
         pageResponse.setRows(pageList.getRecords());
         pageResponse.setPageNum(pageList.getCurrent());
         pageResponse.setPageSize(pageList.getSize());
         pageResponse.setPageCount(pageList.getPages());
-        
+
         return pageResponse;
     }
 
@@ -1471,7 +1309,7 @@ public class MonitorServiceImpl implements MonitorService {
             log.warn("ApiPerformanceMapper 未配置，无法查询最慢API");
             return new ArrayList<>();
         }
-        
+
         return apiPerformanceMapper.selectSlowestApis(limit, startDate, endDate);
     }
 
@@ -1481,7 +1319,7 @@ public class MonitorServiceImpl implements MonitorService {
             log.warn("ApiPerformanceMapper 未配置，无法查询错误率最高的API");
             return new ArrayList<>();
         }
-        
+
         return apiPerformanceMapper.selectHighestErrorRateApis(limit, startDate, endDate);
     }
 }

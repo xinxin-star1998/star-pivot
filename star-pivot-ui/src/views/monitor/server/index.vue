@@ -98,138 +98,6 @@
           </ElCol>
         </ElRow>
 
-        <!-- 健康检查状态 -->
-        <ElRow :gutter="15" style="margin-top: 5px" v-if="healthReport">
-          <ElCol :xs="24">
-            <ElCard shadow="hover">
-              <template #header>
-                <div class="card-header">
-                  <span>系统健康检查</span>
-                  <ElTag :type="getHealthTagType(healthReport.overall)" size="large" effect="dark">
-                    {{ getOverallStatusText(healthReport.overall) }}
-                  </ElTag>
-                </div>
-              </template>
-              <ElRow :gutter="16">
-                <!-- 数据库健康状态 -->
-                <ElCol :xs="24" :sm="12" :md="6" v-if="healthReport.database">
-                  <div class="health-item">
-                    <div class="health-label">数据库</div>
-                    <div
-                      class="health-status"
-                      :class="getHealthStatusClass(healthReport.database.healthy)"
-                    >
-                      <ElIcon :size="20">
-                        <Check v-if="healthReport.database.healthy" />
-                        <Warning v-else />
-                      </ElIcon>
-                      <span>{{ healthReport.database.healthy ? '正常' : '异常' }}</span>
-                    </div>
-                    <div
-                      class="health-detail"
-                      v-if="healthReport.database.activeCount !== undefined"
-                    >
-                      连接池: {{ healthReport.database.activeCount }}/{{
-                        healthReport.database.maxActive
-                      }}
-                    </div>
-                    <div class="health-detail" v-if="healthReport.database.usage !== undefined">
-                      使用率: {{ healthReport.database.usage.toFixed(1) }}%
-                    </div>
-                    <div class="health-error" v-if="healthReport.database.error">
-                      {{ healthReport.database.error }}
-                    </div>
-                  </div>
-                </ElCol>
-
-                <!-- Redis健康状态 -->
-                <ElCol :xs="24" :sm="12" :md="6" v-if="healthReport.redis">
-                  <div class="health-item">
-                    <div class="health-label">Redis</div>
-                    <div
-                      class="health-status"
-                      :class="getHealthStatusClass(healthReport.redis.healthy)"
-                    >
-                      <ElIcon :size="20">
-                        <Check v-if="healthReport.redis.healthy" />
-                        <Warning v-else />
-                      </ElIcon>
-                      <span>{{ healthReport.redis.healthy ? '正常' : '异常' }}</span>
-                    </div>
-                    <div class="health-error" v-if="healthReport.redis.error">
-                      {{ healthReport.redis.error }}
-                    </div>
-                    <div class="health-error" v-if="healthReport.redis.message">
-                      {{ healthReport.redis.message }}
-                    </div>
-                  </div>
-                </ElCol>
-
-                <!-- 磁盘健康状态 -->
-                <ElCol :xs="24" :sm="12" :md="6" v-if="healthReport.disk">
-                  <div class="health-item">
-                    <div class="health-label">磁盘</div>
-                    <div
-                      class="health-status"
-                      :class="getHealthStatusClass(healthReport.disk.healthy)"
-                    >
-                      <ElIcon :size="20">
-                        <Check v-if="healthReport.disk.healthy" />
-                        <Warning v-else />
-                      </ElIcon>
-                      <span>{{ healthReport.disk.healthy ? '正常' : '异常' }}</span>
-                    </div>
-                    <div class="health-detail" v-if="healthReport.disk.usage !== undefined">
-                      使用率: {{ healthReport.disk.usage.toFixed(1) }}%
-                    </div>
-                    <div class="health-detail" v-if="healthReport.disk.free !== undefined">
-                      剩余: {{ formatSize(healthReport.disk.free) }} GB
-                    </div>
-                    <div class="health-error" v-if="healthReport.disk.error">
-                      {{ healthReport.disk.error }}
-                    </div>
-                  </div>
-                </ElCol>
-
-                <!-- JVM健康状态 -->
-                <ElCol :xs="24" :sm="12" :md="6" v-if="healthReport.jvm">
-                  <div class="health-item">
-                    <div class="health-label">JVM</div>
-                    <div
-                      class="health-status"
-                      :class="getHealthStatusClass(healthReport.jvm.healthy)"
-                    >
-                      <ElIcon :size="20">
-                        <Check v-if="healthReport.jvm.healthy" />
-                        <Warning v-else />
-                      </ElIcon>
-                      <span>{{ healthReport.jvm.healthy ? '正常' : '异常' }}</span>
-                    </div>
-                    <div class="health-detail" v-if="healthReport.jvm.usage !== undefined">
-                      内存使用: {{ healthReport.jvm.usage.toFixed(1) }}%
-                    </div>
-                    <div class="health-detail" v-if="healthReport.jvm.used !== undefined">
-                      已用: {{ formatSize(healthReport.jvm.used) }} MB
-                    </div>
-                    <div class="health-error" v-if="healthReport.jvm.error">
-                      {{ healthReport.jvm.error }}
-                    </div>
-                  </div>
-                </ElCol>
-              </ElRow>
-              <ElDivider />
-              <div class="health-footer">
-                <span class="health-time" v-if="healthReport.timestamp">
-                  检查时间: {{ formatTime(healthReport.timestamp) }}
-                </span>
-                <span class="health-duration" v-if="healthReport.duration">
-                  检查耗时: {{ healthReport.duration }}ms
-                </span>
-              </div>
-            </ElCard>
-          </ElCol>
-        </ElRow>
-
         <!-- 详细信息 -->
         <ElRow :gutter="20" style="margin-top: 16px" v-if="serverInfo">
           <!-- 系统信息 -->
@@ -280,17 +148,14 @@
 </template>
 
 <script setup lang="ts">
-  import { Refresh, Check, Warning } from '@element-plus/icons-vue'
+  import { Refresh } from '@element-plus/icons-vue'
   import { fetchGetServerInfo } from '@/api/monitor/server'
-  import { fetchGetHealthCheck } from '@/api/monitor/api'
   import type { ServerInfo } from '@/types/api/monitor'
-  import type { HealthCheckReport } from '@/types/api/monitor'
 
   defineOptions({ name: 'ServerMonitor' })
 
   const loading = ref(false)
   const serverInfo = ref<ServerInfo | null>(null)
-  const healthReport = ref<HealthCheckReport | null>(null)
   let refreshTimer: number | null = null
 
   // 格式化百分比
@@ -351,12 +216,8 @@
   const getData = async () => {
     loading.value = true
     try {
-      const [serverData, healthData] = await Promise.all([
-        fetchGetServerInfo(),
-        fetchGetHealthCheck().catch(() => null) // 健康检查失败不影响服务器信息展示
-      ])
+      const serverData = await fetchGetServerInfo()
       serverInfo.value = serverData
-      healthReport.value = healthData
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('获取监控数据失败:', error)
@@ -364,26 +225,6 @@
     } finally {
       loading.value = false
     }
-  }
-
-  // 获取健康状态标签类型
-  const getHealthTagType = (overall: string) => {
-    if (overall === 'healthy') return 'success'
-    if (overall === 'unhealthy') return 'warning'
-    return 'danger'
-  }
-
-  // 获取整体状态文本
-  const getOverallStatusText = (overall: string) => {
-    if (overall === 'healthy') return '系统正常'
-    if (overall === 'unhealthy') return '存在异常'
-    if (overall === 'timeout') return '检查超时'
-    return '检查失败'
-  }
-
-  // 获取健康状态样式类
-  const getHealthStatusClass = (healthy: boolean) => {
-    return healthy ? 'status-healthy' : 'status-unhealthy'
   }
 
   // 刷新数据

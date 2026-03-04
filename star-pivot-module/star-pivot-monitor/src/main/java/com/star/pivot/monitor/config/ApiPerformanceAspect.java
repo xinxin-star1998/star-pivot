@@ -1,9 +1,10 @@
-package com.star.pivot.config;
+package com.star.pivot.monitor.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
-import com.star.pivot.system.mapper.SysMonitorApiPerformanceMapper;
+import com.star.pivot.monitor.config.properties.MonitorProperties;
+import com.star.pivot.monitor.domain.entity.SysMonitorApiPerformance;
+import com.star.pivot.monitor.mapper.SysMonitorApiPerformanceMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +16,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -48,10 +50,11 @@ import java.util.stream.Collectors;
 @Aspect
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "star-pivot.monitor", name = "api-performance-enabled", havingValue = "true", matchIfMissing = true)
 public class ApiPerformanceAspect {
 
     private final SysMonitorApiPerformanceMapper apiPerformanceMapper;
-    private final StarPivotProperties starPivotProperties;
+    private final MonitorProperties monitorProperties;
 
     /**
      * 采样率：只记录10%的请求（高频接口）
@@ -109,42 +112,38 @@ public class ApiPerformanceAspect {
      */
     @PostConstruct
     public void init() {
-        // 从配置中读取参数（如果配置了的话）
-        if (starPivotProperties != null && starPivotProperties.getMonitor() != null) {
-            StarPivotProperties.Monitor monitor = starPivotProperties.getMonitor();
-            
-            // 检查是否启用API性能监控
-            if (monitor.getApiPerformanceEnabled() != null && !monitor.getApiPerformanceEnabled()) {
-                log.info("API性能监控已禁用");
-                return;
-            }
-            
+        // 从配置中读取参数
+        if (monitorProperties != null) {
             // 读取慢接口阈值
-            if (monitor.getSlowApiThresholdMs() != null) {
-                slowApiThreshold = monitor.getSlowApiThresholdMs();
+            if (monitorProperties.getSlowApiThresholdMs() != null) {
+                slowApiThreshold = monitorProperties.getSlowApiThresholdMs();
             }
-            
+
             // 读取采样率
-            if (monitor.getSampleRate() != null) {
-                sampleRate = monitor.getSampleRate();
+            if (monitorProperties.getSampleRate() != null) {
+                sampleRate = monitorProperties.getSampleRate();
             }
         }
-        
+
         scheduledExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "api-performance-batch-writer");
             t.setDaemon(true);
             return t;
         });
-        
-        // 定时批量写入（每5秒执行一次）
+
+        // 定时批量写入
+        Integer batchInterval = monitorProperties != null && monitorProperties.getBatchInterval() != null
+                ? monitorProperties.getBatchInterval()
+                : BATCH_INTERVAL;
+
         scheduledExecutor.scheduleAtFixedRate(
                 this::batchSaveRecords,
-                BATCH_INTERVAL,
-                BATCH_INTERVAL,
+                batchInterval,
+                batchInterval,
                 TimeUnit.SECONDS
         );
-        
-        log.info("API性能监控切面初始化完成，采样率: {}%, 慢接口阈值: {}ms", 
+
+        log.info("API性能监控切面初始化完成，采样率: {}%, 慢接口阈值: {}ms",
                 (int)(sampleRate * 100), slowApiThreshold);
     }
 

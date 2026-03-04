@@ -2,10 +2,10 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.star.pivot.system.mapper.SysMonitorApiPerformanceMapper">
+<mapper namespace="com.star.pivot.monitor.mapper.SysMonitorApiPerformanceMapper">
 
     <!-- 查询指定日期范围内的接口性能数据 -->
-    <select id="selectByDateRange" resultType="com.star.pivot.system.domain.entity.SysMonitorApiPerformance">
+    <select id="selectByDateRange" resultType="com.star.pivot.monitor.domain.entity.SysMonitorApiPerformance">
         SELECT id, api_path, api_method, request_count, success_count, error_count,
                response_time_total, response_time_max, response_time_min, response_time_avg,
                stat_date, stat_hour, create_time, update_time
@@ -16,8 +16,8 @@
 
     <!-- 查询响应时间最慢的接口（Top N） -->
     <!-- 按接口路径和方法分组，计算聚合值，按平均响应时间降序排列 -->
-    <select id="selectSlowestApis" resultType="com.star.pivot.system.domain.entity.SysMonitorApiPerformance">
-        SELECT 
+    <select id="selectSlowestApis" resultType="com.star.pivot.monitor.domain.entity.SysMonitorApiPerformance">
+        SELECT
             MAX(id) AS id,
             api_path,
             api_method,
@@ -42,8 +42,8 @@
 
     <!-- 查询错误率最高的接口（Top N） -->
     <!-- 按接口路径和方法分组，计算聚合值，按错误率降序排列 -->
-    <select id="selectHighestErrorRateApis" resultType="com.star.pivot.system.domain.entity.SysMonitorApiPerformance">
-        SELECT 
+    <select id="selectHighestErrorRateApis" resultType="com.star.pivot.monitor.domain.entity.SysMonitorApiPerformance">
+        SELECT
             MAX(id) AS id,
             api_path,
             api_method,

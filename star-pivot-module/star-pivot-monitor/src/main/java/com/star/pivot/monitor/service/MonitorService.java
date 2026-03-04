@@ -1,16 +1,16 @@
-package com.star.pivot.system.service;
+package com.star.pivot.monitor.service;
 
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.system.domain.bo.ApiPerformanceReqBo;
-import com.star.pivot.system.domain.bo.DruidMonitorVO;
-import com.star.pivot.system.domain.bo.OnlineUserVO;
-import com.star.pivot.system.domain.bo.RedisCacheVO;
-import com.star.pivot.system.domain.bo.ServerInfoVO;
-import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
+import com.star.pivot.monitor.domain.bo.ApiPerformanceReqBo;
+import com.star.pivot.monitor.domain.vo.DruidMonitorVO;
+
+import com.star.pivot.monitor.domain.vo.OnlineUserVO;
+import com.star.pivot.monitor.domain.vo.RedisCacheVO;
+import com.star.pivot.monitor.domain.vo.ServerInfoVO;
+import com.star.pivot.monitor.domain.entity.SysMonitorApiPerformance;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 监控服务接口
@@ -35,9 +35,9 @@ public interface MonitorService {
     DruidMonitorVO getDruidMonitorInfo();
 
     /**
-     * 获取包含慢SQL列表的 Druid 监控信息
+     * 获取 Druid 监控信息（包含慢SQL列表）
      *
-     * @param slowSqlThreshold 慢SQL阈值（毫秒），null 则使用默认值 5000
+     * @param slowSqlThreshold 慢SQL阈值（毫秒）
      * @return Druid 监控信息（包含慢SQL列表）
      */
     DruidMonitorVO getDruidMonitorInfoWithSlowSql(Long slowSqlThreshold);
@@ -45,13 +45,12 @@ public interface MonitorService {
     /**
      * 获取在线用户列表
      * <p>
-     * 说明：当前为简化实现，基于 JWT 无状态认证。
-     * 通过 Redis 中存储的刷新令牌（jwt:refresh:user:{userId}）来判断用户是否在线。
-     * 后续可按需优化为更完善的会话管理方案。
+     * 说明：基于 JWT 无状态认证，通过 Redis 中存储的刷新令牌（jwt:refresh:user:{userId}）来判断用户是否在线。
+     * 从刷新令牌的存储结构中读取完整的登录信息（IP、浏览器、操作系统、登录地点、登录时间等）。
      * </p>
      *
      * @param userName 用户名（可选，用于过滤）
-     * @param ipaddr   IP地址（可选，当前实现暂不支持）
+     * @param ipaddr   IP地址（可选，用于过滤）
      * @return 在线用户列表
      */
     List<OnlineUserVO> getOnlineUserList(String userName, String ipaddr);
@@ -60,7 +59,12 @@ public interface MonitorService {
      * 强制用户下线
      * <p>
      * 说明：通过删除 Redis 中的刷新令牌来实现强制下线。
-     * 删除刷新令牌后，用户无法刷新 JWT Token，从而间接实现下线效果。
+     * 由于 JWT 是无状态的，无法直接使已签发的 Token 失效，
+     * 因此通过删除刷新令牌，使用户无法刷新 Token，从而间接实现下线效果。
+     * </p>
+     * <p>
+     * 注意：已签发的 Access Token 在过期前仍然有效，这是 JWT 无状态特性的限制。
+     * 如需立即失效，可考虑引入 Token 黑名单机制。
      * </p>
      *
      * @param sessionId 会话ID（实际为 Redis 中的刷新令牌 key，格式：jwt:refresh:user:{userId}）
@@ -69,15 +73,9 @@ public interface MonitorService {
     boolean forceLogout(String sessionId);
 
 
-    /**
-     * 获取系统健康检查报告
-     *
-     * @return 健康检查报告
-     */
-    Map<String, Object> getHealthCheck();
 
     /**
-     * 获取缓存列表（预定义的缓存组）
+     * 获取缓存列表
      *
      * @return 缓存列表
      */
@@ -95,7 +93,7 @@ public interface MonitorService {
      * 获取缓存内容
      *
      * @param cacheName 缓存名称
-     * @param key 缓存键名
+     * @param key       缓存键名
      * @return 缓存内容
      */
     RedisCacheVO.CacheContentInfo getCacheContent(String cacheName, String key);
@@ -112,7 +110,7 @@ public interface MonitorService {
      * 删除单个缓存键
      *
      * @param cacheName 缓存名称
-     * @param key 缓存键名
+     * @param key       缓存键名
      * @return 是否成功
      */
     boolean deleteCacheKey(String cacheName, String key);
@@ -135,9 +133,9 @@ public interface MonitorService {
     /**
      * 获取最慢的API接口（Top N）
      *
-     * @param limit 查询数量限制
+     * @param limit     查询数量限制
      * @param startDate 开始日期
-     * @param endDate 结束日期
+     * @param endDate   结束日期
      * @return API性能数据列表
      */
     List<SysMonitorApiPerformance> getSlowestApis(Integer limit, LocalDate startDate, LocalDate endDate);
@@ -145,9 +143,9 @@ public interface MonitorService {
     /**
      * 获取错误率最高的API接口（Top N）
      *
-     * @param limit 查询数量限制
+     * @param limit     查询数量限制
      * @param startDate 开始日期
-     * @param endDate 结束日期
+     * @param endDate   结束日期
      * @return API性能数据列表
      */
     List<SysMonitorApiPerformance> getHighestErrorRateApis(Integer limit, LocalDate startDate, LocalDate endDate);

@@ -270,6 +270,11 @@
                 <artifactId>star-pivot-generator</artifactId>
                 <version>${star-pivot.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.star.pivot</groupId>
+                <artifactId>star-pivot-monitor</artifactId>
+                <version>${star-pivot.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

@@ -292,50 +292,7 @@ export interface ApiPerformance {
   updateTime?: string
 }
 
-/**
- * 系统健康检查报告
- */
-export interface HealthCheckReport {
-  /** 时间戳 */
-  timestamp: string
-  /** 整体健康状态 */
-  overall: string
-  /** 数据库健康状态 */
-  database?: {
-    healthy: boolean
-    activeCount?: number
-    maxActive?: number
-    usage?: number
-    message?: string
-    error?: string
-  }
-  /** Redis健康状态 */
-  redis?: {
-    healthy: boolean
-    message?: string
-    error?: string
-  }
-  /** 磁盘健康状态 */
-  disk?: {
-    healthy: boolean
-    usage?: number
-    total?: number
-    used?: number
-    free?: number
-    error?: string
-  }
-  /** JVM健康状态 */
-  jvm?: {
-    healthy: boolean
-    usage?: number
-    max?: number
-    used?: number
-    free?: number
-    error?: string
-  }
-  /** 错误信息 */
-  error?: string
-}
+
 
 /**
  * API性能监控查询参数
