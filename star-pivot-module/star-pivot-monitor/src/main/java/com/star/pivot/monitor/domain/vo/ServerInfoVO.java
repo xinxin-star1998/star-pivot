@@ -2,6 +2,7 @@ package com.star.pivot.monitor.domain.vo;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -13,6 +14,7 @@ import java.io.Serializable;
 @Data
 public class ServerInfoVO implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

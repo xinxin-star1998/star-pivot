@@ -2,6 +2,7 @@ package com.star.pivot.monitor.domain.vo;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @Data
 public class RedisCacheVO implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -36,6 +38,7 @@ public class RedisCacheVO implements Serializable {
      */
     @Data
     public static class CacheKeyInfo implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
 
         /**
@@ -64,6 +67,7 @@ public class RedisCacheVO implements Serializable {
      */
     @Data
     public static class CacheContentInfo implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
 
         /**

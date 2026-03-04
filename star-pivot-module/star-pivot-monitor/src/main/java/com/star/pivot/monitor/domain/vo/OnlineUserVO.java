@@ -3,6 +3,7 @@ package com.star.pivot.monitor.domain.vo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @Data
 public class OnlineUserVO implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
