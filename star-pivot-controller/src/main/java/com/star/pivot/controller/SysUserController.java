@@ -4,6 +4,8 @@ import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.ResetPasswordDTO;
@@ -227,8 +229,7 @@ public class SysUserController {
      */
     private List<Long> validateIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
-            throw new com.star.pivot.framework.exception.ServiceException(
-                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+            throw new ServiceException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
         }
         return ids;
     }
