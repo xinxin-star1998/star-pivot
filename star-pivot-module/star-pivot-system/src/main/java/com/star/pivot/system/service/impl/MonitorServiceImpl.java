@@ -19,6 +19,7 @@ import com.star.pivot.system.service.MonitorService;
 import com.star.pivot.system.service.OnlineUserService;
 import com.star.pivot.system.service.SysDeptService;
 import com.star.pivot.system.service.SysUserService;
+import com.star.pivot.system.service.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.DataType;
@@ -50,6 +51,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static com.star.pivot.framework.utils.LogUtils.truncateString;
+
 /**
  * 监控服务实现类
  *
@@ -79,6 +82,9 @@ public class MonitorServiceImpl implements MonitorService {
     private OnlineUserService onlineUserService;
 
     @Autowired(required = false)
+    private TokenService tokenService;
+
+    @Autowired(required = false)
     private SysMonitorApiPerformanceMapper apiPerformanceMapper;
 
     private static final SystemInfo SYSTEM_INFO = new SystemInfo();
@@ -99,19 +105,31 @@ public class MonitorServiceImpl implements MonitorService {
     private static final String CACHE_KEY_CPU_INFO = "cpu_info";
     private static final String CACHE_KEY_CPU_TIMESTAMP = "cpu_timestamp";
 
+    // Redis 键前缀常量
+    private static final String REDIS_KEY_PREFIX_JWT_REFRESH_USER = "jwt:refresh:user";
+    private static final String REDIS_KEY_PREFIX_JWT_LOGOUT = "jwt:logout";
+    private static final String REDIS_KEY_PREFIX_ONLINE_USER = "online:user";
+    private static final String REDIS_KEY_PREFIX_SYS_CONFIG = "sys_config";
+    private static final String REDIS_KEY_PREFIX_SYS_DICT = "sys_dict";
+    private static final String REDIS_KEY_PREFIX_CAPTCHA = "captcha";
+    private static final String REDIS_KEY_PREFIX_REPEAT_SUBMIT = "repeat_submit";
+    private static final String REDIS_KEY_PREFIX_RATE_LIMIT = "rate_limit";
+    private static final String REDIS_KEY_PREFIX_PWD_ERR_CNT = "pwd_err_cnt";
+
     // Redis 缓存名称和键前缀映射（用于备注显示）
     private static final Map<String, String> CACHE_REMARK_MAP = new HashMap<>();
-    
+
     static {
         // 初始化缓存备注映射（用于显示友好的备注信息）
-        CACHE_REMARK_MAP.put("jwt:refresh:user", "用户信息");
-        CACHE_REMARK_MAP.put("jwt:logout", "登出黑名单");
-        CACHE_REMARK_MAP.put("sys_config", "配置信息");
-        CACHE_REMARK_MAP.put("sys_dict", "数据字典");
-        CACHE_REMARK_MAP.put("captcha", "验证码");
-        CACHE_REMARK_MAP.put("repeat_submit", "防重提交");
-        CACHE_REMARK_MAP.put("rate_limit", "限流处理");
-        CACHE_REMARK_MAP.put("pwd_err_cnt", "密码错误次数");
+        // 注意：这些键前缀应与 Redis 中实际使用的键保持一致
+        CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_JWT_REFRESH_USER, "用户信息");
+        CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_JWT_LOGOUT, "登出黑名单");
+        CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_SYS_CONFIG, "配置信息");
+        CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_SYS_DICT, "数据字典");
+        CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_CAPTCHA, "验证码");
+        CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_REPEAT_SUBMIT, "防重提交");
+        CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_RATE_LIMIT, "限流处理");
+        CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_PWD_ERR_CNT, "密码错误次数");
     }
 
     @Override
@@ -448,15 +466,6 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     /**
-     * 截断字符串
-     */
-    private String truncateString(String str, int maxLength) {
-        if (str == null || str.length() <= maxLength) {
-            return str;
-        }
-        return str.substring(0, maxLength) + "...";
-    }
-    /**
      * 使用 SCAN 命令扫描 Redis key，避免阻塞 Redis
      *
      * @param pattern key 匹配模式
@@ -512,17 +521,17 @@ public class MonitorServiceImpl implements MonitorService {
             String normalizedIpaddr = (ipaddr != null) ? ipaddr.trim() : null;
 
             // 使用 SCAN 命令替代 keys()，避免阻塞 Redis
-            // 刷新令牌的 key 格式为 "jwt:refresh:user:{userId}"
-            Set<String> keys = scanKeys("jwt:refresh:user:*");
-            
+            // 刷新令牌的 key 格式为 "{REDIS_KEY_PREFIX_JWT_REFRESH_USER}:{userId}"
+            Set<String> keys = scanKeys(REDIS_KEY_PREFIX_JWT_REFRESH_USER + ":*");
+
             if (!keys.isEmpty()) {
                 // 批量查询优化：先收集所有 userId
                 List<Long> userIds = new ArrayList<>();
                 Map<String, Long> keyToUserIdMap = new HashMap<>();
-                
+
                 for (String key : keys) {
                     try {
-                        String userIdStr = key.substring("jwt:refresh:user:".length());
+                        String userIdStr = key.substring((REDIS_KEY_PREFIX_JWT_REFRESH_USER + ":").length());
                         Long userId = Long.parseLong(userIdStr);
                         userIds.add(userId);
                         keyToUserIdMap.put(key, userId);
@@ -718,20 +727,28 @@ public class MonitorServiceImpl implements MonitorService {
         }
         
         try {
-            // 从 Redis 中删除刷新令牌
-            // sessionId 格式为 "jwt:refresh:user:{userId}"
-            if (sessionId.startsWith("jwt:refresh:user:")) {
-                String userIdStr = sessionId.substring("jwt:refresh:user:".length());
+            // sessionId 格式为 "{REDIS_KEY_PREFIX_JWT_REFRESH_USER}:{userId}"
+            if (sessionId.startsWith(REDIS_KEY_PREFIX_JWT_REFRESH_USER + ":")) {
+                String userIdStr = sessionId.substring((REDIS_KEY_PREFIX_JWT_REFRESH_USER + ":").length());
                 Long userId = Long.parseLong(userIdStr);
 
-                // 在删除前，先获取在线用户信息并保存历史记录
-                saveOnlineUserHistoryBeforeLogout(userId, sessionId, "1"); // 1表示强制下线
+                // 统一通过 TokenService 处理刷新令牌吊销与在线用户历史记录（1 表示强制下线）
+                if (tokenService != null) {
+                    tokenService.forceLogout(userId, "1");
+                    log.info("强制用户下线成功，sessionId: {}", sessionId);
+                    return true;
+                }
 
+                // 兼容降级逻辑：直接删除刷新令牌
+                if (refreshTokenManager != null) {
+                    refreshTokenManager.revokeRefreshToken(userId);
+                }
+
+                // 降级逻辑需要手动删除 Redis key
                 redisTemplate.delete(sessionId);
-                // 同时删除对应的在线用户信息（如果存在）
-                String userKey = "online:user:" + userIdStr;
+                String userKey = REDIS_KEY_PREFIX_ONLINE_USER + ":" + userIdStr;
                 redisTemplate.delete(userKey);
-                log.info("强制用户下线成功，sessionId: {}", sessionId);
+                log.info("强制用户下线成功（降级模式），sessionId: {}", sessionId);
                 return true;
             } else {
                 // 如果不是标准格式，直接删除
@@ -744,45 +761,6 @@ public class MonitorServiceImpl implements MonitorService {
             return false;
         }
     }
-
-    /**
-     * 在强制下线前保存在线用户历史记录
-     *
-     * @param userId     用户ID
-     * @param sessionId  会话ID
-     * @param logoutType 下线类型（1强制下线）
-     */
-    private void saveOnlineUserHistoryBeforeLogout(Long userId, String sessionId, String logoutType) {
-        if (onlineUserService == null || refreshTokenManager == null || sysUserService == null) {
-            log.debug("OnlineUserService、RefreshTokenManager 或 SysUserService 未配置，跳过保存历史记录");
-            return;
-        }
-
-        try {
-            // 从 RefreshTokenManager 获取在线用户信息
-            RefreshTokenValue tokenValue = refreshTokenManager.getRefreshTokenValue(userId);
-            if (tokenValue == null) {
-                log.debug("用户 {} 的刷新令牌不存在，跳过保存历史记录", userId);
-                return;
-            }
-
-            // 从数据库获取用户信息
-            SysUser user = sysUserService.getById(userId);
-            if (user == null) {
-                log.warn("用户 {} 不存在，跳过保存历史记录", userId);
-                return;
-            }
-
-            // 构建 OnlineUserVO（使用公共方法）
-            OnlineUserVO onlineUser = buildOnlineUserVO(sessionId, userId, user, tokenValue, null);
-
-            // 保存历史记录
-            onlineUserService.saveOnlineUserHistory(onlineUser, logoutType);
-        } catch (Exception e) {
-            log.warn("保存在线用户历史记录失败，userId: {}, sessionId: {}", userId, sessionId, e);
-        }
-    }
-
 
     @Override
     public Map<String, Object> getHealthCheck() {

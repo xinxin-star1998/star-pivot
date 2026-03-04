@@ -1,13 +1,11 @@
 package com.star.pivot.system.service.impl;
 
 import com.star.pivot.framework.domain.AppConstants;
-import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.framework.utils.LogUtils;
 import com.star.pivot.security.utils.SecurityUtils;
-import com.star.pivot.security.JwtUtil;
-import com.star.pivot.security.RefreshTokenManager;
 import com.star.pivot.system.domain.bo.LoginRequest;
 import com.star.pivot.system.domain.bo.LoginResponse;
 import com.star.pivot.system.domain.bo.RegisterRequest;
@@ -16,7 +14,13 @@ import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.domain.entity.UserRole;
 import com.star.pivot.system.mapper.UserRoleMapper;
-import com.star.pivot.system.service.*;
+import com.star.pivot.system.service.AccountLockService;
+import com.star.pivot.system.service.AuthService;
+import com.star.pivot.system.service.CaptchaService;
+import com.star.pivot.system.service.LoginRateLimitService;
+import com.star.pivot.system.service.SysLogininforService;
+import com.star.pivot.system.service.SysUserService;
+import com.star.pivot.system.service.TokenService;
 import com.star.pivot.system.utils.LoginUser;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +35,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 认证服务实现类
@@ -42,11 +44,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    /** 注册用户默认角色 ID（与 sys_role 中普通角色一致，如 role_id=5） */
+    /**
+     * 注册用户默认角色 ID
+     *
+     * 注意：此 ID 必须与数据库表 sys_role 中普通用户的 role_id 保持一致
+     * 默认为 5，对应 "common" 或 "user" 角色
+     *
+     * 建议后续改造：通过配置文件（application.yml）读取，如：
+     * @Value("${auth.register.default-role-id:5}")
+     */
     private static final Long DEFAULT_REGISTER_ROLE_ID = 5L;
 
-    private final JwtUtil jwtUtil;
-    private final RefreshTokenManager refreshTokenManager;
+    private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
     private final SysUserService userService;
     private final CaptchaService captchaService;
@@ -62,31 +71,11 @@ public class AuthServiceImpl implements AuthService {
         String browser = LogUtils.getBrowser(httpRequest);
         String os = LogUtils.getOs(httpRequest);
         String loginLocation = LogUtils.getLoginLocation(ipaddr);
-        
-        SysLogininfor logininfor = new SysLogininfor();
-        logininfor.setUserName(request.getUsername());
-        logininfor.setIpaddr(ipaddr);
-        logininfor.setBrowser(browser);
-        logininfor.setOs(os);
-        logininfor.setLoginLocation(loginLocation);
-        logininfor.setLoginTime(LocalDateTime.now());
+
+        SysLogininfor logininfor = buildLoginInfo(request.getUsername(), ipaddr, browser, os, loginLocation);
         
         try {
-            // 1. 检查账户是否被锁定（在验证码之前检查，避免浪费验证码）
-            accountLockService.checkAccountLocked(request.getUsername());
-            
-            // 2. 检查IP维度限流
-            rateLimitService.checkIpRateLimit(ipaddr);
-            
-            // 3. 检查IP+用户名维度限流
-            rateLimitService.checkIpUsernameRateLimit(ipaddr, request.getUsername());
-            
-            // 4. 验证验证码 proof（一次性）
-            if (!captchaService.validateAndConsumeCaptchaProof(request.getCaptchaProof(), "login")) {
-                recordLoginFailure(logininfor, "验证码错误或已失效");
-                accountLockService.recordLoginFailure(request.getUsername());
-                throw new ServiceException(ErrorCode.CAPTCHA_ERROR, "验证码错误或已失效");
-            }
+            preCheckBeforeAuthentication(request, ipaddr, logininfor);
             
             // 5. 使用 AuthenticationManager 进行认证
             UsernamePasswordAuthenticationToken authenticationToken = 
@@ -105,41 +94,30 @@ public class AuthServiceImpl implements AuthService {
             if (user == null) {
                 log.warn("无法从认证对象中获取用户信息，降级查询数据库: {}", request.getUsername());
                 user = userService.getUserByUsername(request.getUsername());
-if (user == null) {
-                log.error("用户不存在: {}", request.getUsername());
+                if (user == null) {
+                    log.error("用户不存在: {}", request.getUsername());
                     recordLoginFailure(logininfor, "用户不存在");
                     throw new ServiceException(ErrorCode.USER_NOT_FOUND);
                 }
             }
             
-            // 7. 生成访问令牌（Access Token）
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("username", request.getUsername());
-            claims.put("userId", user.getUserId());
-            String token = jwtUtil.generateToken(request.getUsername(), claims);
+            // 7. 生成访问令牌与刷新令牌
+            com.star.pivot.system.domain.bo.TokenPair tokenPair =
+                tokenService.createTokenPair(user, request.getUsername(), ipaddr, browser, os, loginLocation);
 
-            // 8. 生成刷新令牌（Refresh Token），并存储完整的登录信息到 Redis
-            String refreshToken = refreshTokenManager.generateAndStoreRefreshToken(
-                user.getUserId(),
-                ipaddr,
-                browser,
-                os,
-                loginLocation
-            );
-
-            // 9. 返回登录响应
+            // 8. 返回登录响应
             LoginResponse response = new LoginResponse();
-            response.setToken(token);
-            response.setRefreshToken(refreshToken);
+            response.setToken(tokenPair.getAccessToken());
+            response.setRefreshToken(tokenPair.getRefreshToken());
             response.setUsername(request.getUsername());
             response.setNickname(user.getNickName());
 
-            // 10. 登录成功，清除失败记录和限流计数
+            // 9. 登录成功，清除失败记录和限流计数
             accountLockService.clearLoginFailures(request.getUsername());
             rateLimitService.clearIpRateLimit(ipaddr);
             rateLimitService.clearIpUsernameRateLimit(ipaddr, request.getUsername());
-            
-            // 11. 记录登录成功日志
+
+            // 10. 记录登录成功日志
             recordLoginSuccess(logininfor);
             log.info("用户登录成功: {}", request.getUsername());
             return response;
@@ -214,6 +192,47 @@ if (user == null) {
         logininfor.setStatus("1");
         logininfor.setMsg(message);
         sysLogininforService.saveLogininfor(logininfor);
+    }
+
+    /**
+     * 构建登录信息实体
+     */
+    private SysLogininfor buildLoginInfo(String username,
+                                         String ipaddr,
+                                         String browser,
+                                         String os,
+                                         String loginLocation) {
+        SysLogininfor logininfor = new SysLogininfor();
+        logininfor.setUserName(username);
+        logininfor.setIpaddr(ipaddr);
+        logininfor.setBrowser(browser);
+        logininfor.setOs(os);
+        logininfor.setLoginLocation(loginLocation);
+        logininfor.setLoginTime(LocalDateTime.now());
+        return logininfor;
+    }
+
+    /**
+     * 登录前安全校验：账号锁定、限流、验证码
+     */
+    private void preCheckBeforeAuthentication(LoginRequest request,
+                                              String ipaddr,
+                                              SysLogininfor logininfor) {
+        // 1. 检查账户是否被锁定（在验证码之前检查，避免浪费验证码）
+        accountLockService.checkAccountLocked(request.getUsername());
+
+        // 2. 检查IP维度限流
+        rateLimitService.checkIpRateLimit(ipaddr);
+
+        // 3. 检查IP+用户名维度限流
+        rateLimitService.checkIpUsernameRateLimit(ipaddr, request.getUsername());
+
+        // 4. 验证验证码 proof（一次性）
+        if (!captchaService.validateAndConsumeCaptchaProof(request.getCaptchaProof(), "login")) {
+            recordLoginFailure(logininfor, "验证码错误或已失效");
+            accountLockService.recordLoginFailure(request.getUsername());
+            throw new ServiceException(ErrorCode.CAPTCHA_ERROR, "验证码错误或已失效");
+        }
     }
 
     /**

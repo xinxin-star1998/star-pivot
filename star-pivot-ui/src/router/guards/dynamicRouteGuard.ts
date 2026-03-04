@@ -1,0 +1,237 @@
+import type { Router, RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
+import { useMenuStore } from '@/store/modules/menu'
+import { useWorktabStore } from '@/store/modules/worktab'
+import { loadingService } from '@/utils/ui'
+import { useCommon } from '@/hooks/core/useCommon'
+import { fetchGetUserInfo } from '@/api/auth'
+import { ApiStatus } from '@/utils/http/status'
+import { isHttpError } from '@/utils/http/error'
+import { safeLog, safeWarn } from '@/utils'
+import {
+  RouteRegistry,
+  MenuProcessor,
+  IframeRouteManager,
+  RoutePermissionValidator,
+  DynamicRouteAppender
+} from '../core'
+import { useUserStore } from '@/store/modules/user'
+
+// 路由注册器实例
+let routeRegistry: RouteRegistry | null = null
+
+// 菜单处理器实例
+const menuProcessor = new MenuProcessor()
+
+// 跟踪是否需要关闭 loading
+let pendingLoading = false
+
+// 路由初始化失败标记，防止死循环
+let routeInitFailed = false
+
+/**
+ * 初始化路由注册器
+ */
+export function setupRouteRegistry(router: Router): void {
+  routeRegistry = new RouteRegistry(router)
+}
+
+/**
+ * 获取 pendingLoading 状态
+ */
+export function getPendingLoading(): boolean {
+  return pendingLoading
+}
+
+/**
+ * 重置 pendingLoading 状态
+ */
+export function resetPendingLoading(): void {
+  pendingLoading = false
+}
+
+/**
+ * 获取路由初始化失败状态
+ */
+export function getRouteInitFailed(): boolean {
+  return routeInitFailed
+}
+
+/**
+ * 重置路由初始化状态（用于重新登录场景）
+ */
+export function resetRouteInitState(): void {
+  routeInitFailed = false
+}
+
+/**
+ * 关闭 loading 效果
+ */
+export function closeLoading(): void {
+  if (pendingLoading) {
+    loadingService.hideLoading()
+    pendingLoading = false
+  }
+}
+
+/**
+ * 处理动态路由注册与菜单初始化
+ */
+export async function handleDynamicRoutes(
+  to: RouteLocationNormalized,
+  next: NavigationGuardNext,
+  router: Router
+): Promise<void> {
+  // 显示 loading
+  pendingLoading = true
+  loadingService.showLoading()
+
+  try {
+    // 1. 获取用户信息
+    safeLog('[RouteGuard] 开始获取用户信息...')
+    await fetchUserInfo()
+    safeLog('[RouteGuard] 用户信息获取成功')
+
+    // 2. 获取菜单数据
+    safeLog('[RouteGuard] 开始获取菜单数据...')
+    const menuList = await menuProcessor.getMenuList()
+    safeLog('[RouteGuard] 菜单数据获取成功，菜单数量:', menuList.length)
+
+    // 2.1 仪表盘和工作台无论动态菜单有无都要加载：若后端菜单为空，先追加前端固定路由
+    if (menuList.length === 0) {
+      safeLog('[RouteGuard] 动态菜单为空，追加仪表盘/工作台等固定路由')
+      DynamicRouteAppender.appendDynamicRoutes(menuList)
+    }
+
+    // 3. 验证菜单数据
+    if (!menuProcessor.validateMenuList(menuList)) {
+      console.error('[RouteGuard] 菜单数据验证失败，菜单列表格式错误')
+      throw new Error('获取菜单列表失败，菜单数据格式错误')
+    }
+
+    // 3.1 前端动态追加路由（数据库不存菜单，如个人中心、字典明细等）
+    DynamicRouteAppender.appendDynamicRoutes(menuList)
+
+    // 4. 注册动态路由
+    safeLog('[RouteGuard] 开始注册动态路由...')
+    routeRegistry?.register(menuList)
+    safeLog('[RouteGuard] 动态路由注册成功')
+
+    // 5. 保存菜单数据到 store（必须在重新导航之前）
+    const menuStore = useMenuStore()
+    menuStore.setMenuList(menuList)
+    menuStore.addRemoveRouteFns(routeRegistry?.getRemoveRouteFns() || [])
+
+    // 确保 homePath 已被正确设置
+    if (!menuStore.getHomePath() || menuStore.getHomePath() === '/') {
+      safeWarn('[RouteGuard] 首页路径为空，使用默认路径 /dashboard/console')
+      menuStore.setHomePath('/dashboard/console')
+    }
+
+    // 6. 保存 iframe 路由
+    IframeRouteManager.getInstance().save()
+
+    // 7. 验证工作标签页
+    useWorktabStore().validateWorktabs(router)
+
+    // 8. 验证目标路径权限
+    const { homePath } = useCommon()
+    const { path: validatedPath, hasPermission } = RoutePermissionValidator.validatePath(
+      to.path,
+      menuList,
+      homePath.value || '/'
+    )
+
+    // 初始化成功
+
+    // 9. 重新导航到目标路由
+    if (!hasPermission) {
+      // 无权限访问，跳转到首页
+      closeLoading()
+
+      // 输出警告信息
+      safeWarn(`[RouteGuard] 用户无权限访问路径: ${to.path}，已跳转到首页`)
+
+      // 直接跳转到首页
+      next({
+        path: validatedPath,
+        replace: true
+      })
+    } else {
+      // 有权限，正常导航
+      next({
+        path: to.path,
+        query: to.query,
+        hash: to.hash,
+        replace: true
+      })
+    }
+  } catch (error) {
+    console.error('[RouteGuard] 动态路由注册失败:', error)
+    console.error('[RouteGuard] 错误详情:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      error
+    })
+
+    // 关闭 loading
+    closeLoading()
+
+    // 401 错误：axios 拦截器已处理退出登录，取消当前导航
+    if (isUnauthorizedError(error)) {
+      safeWarn('[RouteGuard] 401未授权错误，已取消导航')
+      next(false)
+      return
+    }
+
+    // 标记初始化失败，防止死循环
+    routeInitFailed = true
+
+    // 输出详细错误信息，便于排查
+    if (isHttpError(error)) {
+      console.error(`[RouteGuard] HTTP错误 - 错误码: ${error.code}, 消息: ${error.message}`)
+    } else if (error instanceof Error) {
+      console.error(`[RouteGuard] 错误类型: ${error.constructor.name}, 消息: ${error.message}`)
+    }
+
+    // 跳转到 500 页面，使用 replace 避免产生历史记录
+    console.error('[RouteGuard] 跳转到500错误页面')
+    next({ name: 'Exception500', replace: true })
+  }
+}
+
+/**
+ * 获取用户信息
+ */
+export async function fetchUserInfo(): Promise<void> {
+  const userStore = useUserStore()
+  const data = await fetchGetUserInfo()
+  userStore.setUserInfo(data)
+  // 检查并清理工作台标签页（如果是不同用户登录）
+  userStore.checkAndClearWorktabs()
+}
+
+/**
+ * 重置路由相关状态
+ */
+export function resetRouterState(delay: number): void {
+  setTimeout(() => {
+    routeRegistry?.unregister()
+    IframeRouteManager.getInstance().clear()
+
+    const menuStore = useMenuStore()
+    menuStore.removeAllDynamicRoutes()
+    menuStore.setMenuList([])
+    menuStore.clearRemoveRouteFns()
+    menuStore.setHomePath('')
+
+    // 重置路由初始化状态，允许重新登录后再次初始化
+    resetRouteInitState()
+  }, delay)
+}
+
+/**
+ * 判断是否为未授权错误（401）
+ */
+export function isUnauthorizedError(error: unknown): boolean {
+  return isHttpError(error) && error.code === ApiStatus.unauthorized
+}

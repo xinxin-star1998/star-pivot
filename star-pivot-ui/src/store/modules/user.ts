@@ -38,7 +38,7 @@ import { useSettingStore } from './setting'
 import { useWorktabStore } from './worktab'
 import { AppRouteRecord } from '@/types/router'
 import { setPageTitle } from '@/utils/router'
-import { resetRouterState } from '@/router/guards/beforeEach'
+import { resetRouterState } from '@/router/guards/dynamicRouteGuard'
 import { useMenuStore } from './menu'
 import { StorageConfig } from '@/utils/storage/storage-config'
 
@@ -53,8 +53,9 @@ function clearAuthRelatedPersistedStorage() {
   storeIds.forEach((id) => {
     try {
       localStorage.removeItem(StorageConfig.generateStorageKey(id))
-    } catch {
-      // ignore
+    } catch (error) {
+      // 清理失败不应阻塞登出流程，仅记录警告
+      console.warn(`[UserStore] 清理持久化存储失败，storeId: ${id}`, error)
     }
   })
 }
