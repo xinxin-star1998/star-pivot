@@ -111,6 +111,38 @@ public class RedisCacheManagerConfig {
         cacheConfigurations.put("dictData",
                 defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
 
+        // 字典类型缓存：1 小时 + 随机0-30分钟
+        cacheConfigurations.put("dictType",
+                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
+
+        // 部门树缓存：1 小时 + 随机0-30分钟
+        cacheConfigurations.put("deptTree",
+                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
+
+        // 岗位列表缓存：1 小时 + 随机0-30分钟
+        cacheConfigurations.put("postList",
+                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
+
+        // 角色列表缓存：1 小时 + 随机0-30分钟
+        cacheConfigurations.put("roleList",
+                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
+
+        // 系统配置缓存：2 小时 + 随机0-60分钟
+        cacheConfigurations.put("sysConfig",
+                defaultConfig.entryTtl(Duration.ofHours(2).plusMinutes(random.nextInt(60))));
+
+        // 验证码缓存：5 分钟
+        cacheConfigurations.put("captcha",
+                defaultConfig.entryTtl(Duration.ofMinutes(5)));
+
+        // 登录失败次数缓存：10 分钟
+        cacheConfigurations.put("loginFailCount",
+                defaultConfig.entryTtl(Duration.ofMinutes(10)));
+
+        // API限流缓存：1 分钟
+        cacheConfigurations.put("rateLimit",
+                defaultConfig.entryTtl(Duration.ofMinutes(1)));
+
         // 创建 RedisCacheManager
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
