@@ -1,7 +1,7 @@
-package com.star.pivot.system.mapper;
+package com.star.pivot.dict.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.star.pivot.system.domain.entity.DictType;
+import com.star.pivot.dict.domain.entity.DictType;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -13,4 +13,3 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface DictTypeMapper extends BaseMapper<DictType> {
 }
-

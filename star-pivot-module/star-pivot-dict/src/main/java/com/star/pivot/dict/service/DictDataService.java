@@ -1,11 +1,11 @@
-package com.star.pivot.system.service;
+package com.star.pivot.dict.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.star.pivot.dict.domain.bo.DictDataVO;
+import com.star.pivot.dict.domain.dto.DictDataDTO;
+import com.star.pivot.dict.domain.dto.DictDataQueryDTO;
+import com.star.pivot.dict.domain.entity.DictData;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.system.domain.bo.DictDataVO;
-import com.star.pivot.system.domain.dto.DictDataDTO;
-import com.star.pivot.system.domain.dto.DictDataQueryDTO;
-import com.star.pivot.system.domain.entity.DictData;
 
 import java.util.List;
 
@@ -29,8 +29,8 @@ public interface DictDataService extends IService<DictData> {
      * 根据字典类型查询字典数据
      *
      * @param dictType 字典类型
-     * @return 字典数据列表
-     */
+    字典数据列表
+ * @return      */
     List<DictDataVO> selectDictDataByType(String dictType);
 
     /**
@@ -65,4 +65,3 @@ public interface DictDataService extends IService<DictData> {
      */
     boolean deleteDictDataByIds(List<Long> dictCodes);
 }
-

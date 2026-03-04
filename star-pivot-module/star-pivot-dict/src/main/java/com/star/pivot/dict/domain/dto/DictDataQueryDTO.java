@@ -1,4 +1,4 @@
-package com.star.pivot.system.domain.dto;
+package com.star.pivot.dict.domain.dto;
 
 import lombok.Data;
 
@@ -36,4 +36,3 @@ public class DictDataQueryDTO {
      */
     private String status;
 }
-

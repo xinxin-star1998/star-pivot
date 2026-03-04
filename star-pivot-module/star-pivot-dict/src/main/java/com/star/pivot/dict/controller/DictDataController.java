@@ -1,12 +1,13 @@
-package com.star.pivot.controller;
+package com.star.pivot.dict.controller;
 
+import com.star.pivot.dict.domain.bo.DictDataVO;
+import com.star.pivot.dict.domain.dto.DictDataDTO;
+import com.star.pivot.dict.domain.dto.DictDataQueryDTO;
+import com.star.pivot.dict.service.DictDataService;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
-import com.star.pivot.system.domain.bo.DictDataVO;
-import com.star.pivot.system.domain.dto.DictDataDTO;
-import com.star.pivot.system.domain.dto.DictDataQueryDTO;
-import com.star.pivot.system.service.DictDataService;
+import com.star.pivot.framework.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -123,7 +124,7 @@ public class DictDataController {
         List<Long> dictCodes = validateIds(deleteRequest.getIds());
         boolean success = dictDataService.deleteDictDataByIds(dictCodes);
         return success ? Result.success("删除字典数据成功") : Result.error("删除字典数据失败");
-   }
+    }
 
     /**
      * 验证ID列表非空
@@ -131,9 +132,8 @@ public class DictDataController {
     private List<Long> validateIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             throw new com.star.pivot.framework.exception.ServiceException(
-                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+                ErrorCode.PARAM_INVALID, "删除ID不能为空");
         }
         return ids;
     }
 }
-

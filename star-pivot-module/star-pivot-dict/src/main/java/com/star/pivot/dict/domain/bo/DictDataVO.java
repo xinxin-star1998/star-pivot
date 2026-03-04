@@ -1,4 +1,4 @@
-package com.star.pivot.system.domain.bo;
+package com.star.pivot.dict.domain.bo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -70,4 +70,3 @@ public class DictDataVO {
      */
     private String remark;
 }
-

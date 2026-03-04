@@ -17,6 +17,7 @@
 
     <modules>
         <module>star-pivot-system</module>
+        <module>star-pivot-dict</module>
         <module>star-pivot-generator</module>
         <module>star-pivot-quartz</module>
         <module>star-pivot-monitor</module>

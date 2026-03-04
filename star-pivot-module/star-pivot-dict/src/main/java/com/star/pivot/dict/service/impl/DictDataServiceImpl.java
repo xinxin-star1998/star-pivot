@@ -1,18 +1,18 @@
-package com.star.pivot.system.service.impl;
+package com.star.pivot.dict.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.star.pivot.dict.domain.bo.DictDataVO;
+import com.star.pivot.dict.domain.dto.DictDataDTO;
+import com.star.pivot.dict.domain.dto.DictDataQueryDTO;
+import com.star.pivot.dict.domain.entity.DictData;
+import com.star.pivot.dict.mapper.DictDataMapper;
+import com.star.pivot.dict.service.DictDataService;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.AssertUtils;
-import com.star.pivot.system.domain.bo.DictDataVO;
-import com.star.pivot.system.domain.dto.DictDataDTO;
-import com.star.pivot.system.domain.dto.DictDataQueryDTO;
-import com.star.pivot.system.domain.entity.DictData;
-import com.star.pivot.system.mapper.DictDataMapper;
-import com.star.pivot.system.service.DictDataService;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -43,7 +43,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
     public PageResponse<DictDataVO> selectDictDataPage(DictDataQueryDTO queryDTO) {
         Page<DictData> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
-        
+
         // 构建查询条件
         wrapper.like(StringUtils.hasText(queryDTO.getDictLabel()), DictData::getDictLabel, queryDTO.getDictLabel())
                 .eq(StringUtils.hasText(queryDTO.getDictType()), DictData::getDictType, queryDTO.getDictType())
@@ -51,7 +51,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
                 .orderByAsc(DictData::getDictSort);
 
         IPage<DictData> dictDataPage = this.page(page, wrapper);
-        
+
         // 转换为VO
         List<DictDataVO> voList = dictDataPage.getRecords().stream()
                 .map(this::convertToVO)
@@ -134,4 +134,3 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
         return vo;
     }
 }
-

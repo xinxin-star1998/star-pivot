@@ -62,10 +62,14 @@
             <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-framework-boot-starter</artifactId>
         </dependency>
-        <!-- 业务模块：系统管理、代码生成、定时任务 -->
+        <!-- 业务模块：系统管理、代码生成、定时任务、字典 -->
         <dependency>
             <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-system</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-dict</artifactId>
         </dependency>
         <dependency>
             <groupId>com.star.pivot</groupId>

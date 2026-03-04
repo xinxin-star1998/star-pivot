@@ -1,11 +1,11 @@
-package com.star.pivot.system.service;
+package com.star.pivot.dict.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.star.pivot.dict.domain.bo.DictTypeVO;
+import com.star.pivot.dict.domain.dto.DictTypeDTO;
+import com.star.pivot.dict.domain.dto.DictTypeQueryDTO;
+import com.star.pivot.dict.domain.entity.DictType;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.system.domain.bo.DictTypeVO;
-import com.star.pivot.system.domain.dto.DictTypeDTO;
-import com.star.pivot.system.domain.dto.DictTypeQueryDTO;
-import com.star.pivot.system.domain.entity.DictType;
 
 import java.util.List;
 
@@ -68,4 +68,3 @@ public interface DictTypeService extends IService<DictType> {
 
     List<DictTypeVO> selectList();
 }
-

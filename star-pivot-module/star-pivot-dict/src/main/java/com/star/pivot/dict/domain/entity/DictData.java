@@ -1,4 +1,4 @@
-package com.star.pivot.system.domain.entity;
+package com.star.pivot.dict.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -89,4 +89,3 @@ public class DictData {
      */
     private String remark;
 }
-

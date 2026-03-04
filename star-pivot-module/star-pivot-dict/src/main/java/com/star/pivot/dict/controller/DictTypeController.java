@@ -1,12 +1,13 @@
-package com.star.pivot.controller;
+package com.star.pivot.dict.controller;
 
+import com.star.pivot.dict.domain.bo.DictTypeVO;
+import com.star.pivot.dict.domain.dto.DictTypeDTO;
+import com.star.pivot.dict.domain.dto.DictTypeQueryDTO;
+import com.star.pivot.dict.service.DictTypeService;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
-import com.star.pivot.system.domain.bo.DictTypeVO;
-import com.star.pivot.system.domain.dto.DictTypeDTO;
-import com.star.pivot.system.domain.dto.DictTypeQueryDTO;
-import com.star.pivot.system.service.DictTypeService;
+import com.star.pivot.framework.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -131,9 +132,8 @@ public class DictTypeController {
     private List<Long> validateIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             throw new com.star.pivot.framework.exception.ServiceException(
-                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+                ErrorCode.PARAM_INVALID, "删除ID不能为空");
         }
         return ids;
     }
 }
-

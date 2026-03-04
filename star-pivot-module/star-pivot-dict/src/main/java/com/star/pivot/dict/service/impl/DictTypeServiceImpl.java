@@ -1,21 +1,21 @@
-package com.star.pivot.system.service.impl;
+package com.star.pivot.dict.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.star.pivot.dict.domain.bo.DictTypeVO;
+import com.star.pivot.dict.domain.dto.DictTypeDTO;
+import com.star.pivot.dict.domain.dto.DictTypeQueryDTO;
+import com.star.pivot.dict.domain.entity.DictData;
+import com.star.pivot.dict.domain.entity.DictType;
+import com.star.pivot.dict.mapper.DictDataMapper;
+import com.star.pivot.dict.mapper.DictTypeMapper;
+import com.star.pivot.dict.service.DictTypeService;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BusinessException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.AssertUtils;
-import com.star.pivot.system.domain.bo.DictTypeVO;
-import com.star.pivot.system.domain.dto.DictTypeDTO;
-import com.star.pivot.system.domain.dto.DictTypeQueryDTO;
-import com.star.pivot.system.domain.entity.DictData;
-import com.star.pivot.system.domain.entity.DictType;
-import com.star.pivot.system.mapper.DictDataMapper;
-import com.star.pivot.system.mapper.DictTypeMapper;
-import com.star.pivot.system.service.DictTypeService;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -44,7 +44,7 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
         PageResponse<DictTypeVO> pageResponse = new PageResponse<>();
         Page<DictType> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         LambdaQueryWrapper<DictType> wrapper = new LambdaQueryWrapper<>();
-        
+
         // 构建查询条件
         wrapper.like(StringUtils.hasText(queryDTO.getDictName()), DictType::getDictName, queryDTO.getDictName())
                 .like(StringUtils.hasText(queryDTO.getDictType()), DictType::getDictType, queryDTO.getDictType())
@@ -52,7 +52,7 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
                 .orderByDesc(DictType::getCreateTime);
 
         IPage<DictType> dictTypePage = this.page(page, wrapper);
-        
+
         // 转换为VO
         IPage<DictTypeVO> voPage = new Page<>(dictTypePage.getCurrent(), dictTypePage.getSize(), dictTypePage.getTotal());
         List<DictTypeVO> voList = dictTypePage.getRecords().stream()
@@ -127,7 +127,7 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
         if (dictIds == null || dictIds.isEmpty()) {
             return false;
         }
-        
+
         for (Long dictId : dictIds) {
             DictType dictType = this.getById(dictId);
             if (dictType != null) {
@@ -138,7 +138,7 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
                 if (count > 0) {
                     throw new BusinessException("字典类型[" + dictType.getDictName() + "]存在字典数据，不能删除");
                 }
-                
+
                 this.removeById(dictId);
             }
         }
@@ -169,4 +169,3 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
         return vo;
     }
 }
-

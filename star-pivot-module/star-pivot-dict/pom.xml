@@ -7,19 +7,16 @@
         <groupId>com.star.pivot</groupId>
         <artifactId>star-pivot-module</artifactId>
         <version>0.0.1-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.star.pivot</groupId>
-    <artifactId>star-pivot-system</artifactId>
+    <artifactId>star-pivot-dict</artifactId>
     <packaging>jar</packaging>
+    <name>star-pivot-dict</name>
+    <description>StarPivot 字典模块 - 提供字典类型和字典数据管理</description>
+
     <dependencies>
-        <!-- 字典模块 -->
-        <dependency>
-            <groupId>com.star.pivot</groupId>
-            <artifactId>star-pivot-dict</artifactId>
-        </dependency>
-        <!-- SpringBoot AOP 起步依赖（核心） -->
+        <!-- SpringBoot AOP 起步依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
@@ -32,40 +29,30 @@
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
         </dependency>
-        <!-- 框架层：仅依赖 boot-starter，不直接引用 framework 内部子模块 -->
+        <!-- 框架层 -->
         <dependency>
             <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-framework-boot-starter</artifactId>
         </dependency>
-        <!-- 阿里数据库连接池 -->
+        <!-- 安全模块（获取当前用户） -->
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-security</artifactId>
+        </dependency>
+        <!-- Druid 数据库连接池 -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-3-starter</artifactId>
         </dependency>
+        <!-- SpringDoc OpenAPI（Swagger） -->
         <dependency>
-            <groupId>com.github.oshi</groupId>
-            <artifactId>oshi-core</artifactId>
-            <scope>compile</scope>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
         <!-- 测试依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

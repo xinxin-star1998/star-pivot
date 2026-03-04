@@ -1,4 +1,4 @@
-package com.star.pivot.system.domain.entity;
+package com.star.pivot.dict.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -9,9 +9,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 字典类型实体类
- *
- * @author stardust
+ * 字典 *
+ * @author类型实体类
+ stardust
  * @since 2024-01-01
  */
 @Data
@@ -65,4 +65,3 @@ public class DictType {
      */
     private String remark;
 }
-

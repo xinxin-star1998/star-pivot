@@ -1,4 +1,4 @@
-package com.star.pivot.system.domain.dto;
+package com.star.pivot.dict.domain.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -69,4 +69,3 @@ public class DictDataDTO {
      */
     private String remark;
 }
-
