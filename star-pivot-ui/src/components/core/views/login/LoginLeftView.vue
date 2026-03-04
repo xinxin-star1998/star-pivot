@@ -31,12 +31,12 @@
       ></div>
 
       <!-- 背景泡泡 -->
-      <div class="geo-element bg-bubble animate-scale-in" style="animation-delay: 0.5"></div>
+      <div class="geo-element bg-bubble animate-scale-in" style="animation-delay: 0.5s"></div>
 
       <!-- 太阳/月亮 -->
       <div
         class="geo-element circle-top-right animate-fade-in-down"
-        style="animation-delay: 0.5"
+        style="animation-delay: 0.5s"
         @click="themeAnimation"
       ></div>
 

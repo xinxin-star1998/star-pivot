@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
   import { formatMenuTitle } from '@/utils/router'
-  import { deepClone, findInTree, safeError } from '@/utils'
+  import { deepClone, safeError } from '@/utils'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import { useAuth } from '@/hooks/core/useAuth'
