@@ -120,12 +120,20 @@ public class DictDataController {
     @PreAuthorize("hasAuthority('system:data:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        List<Long> dictCodes = deleteRequest.getIds();
-        if (dictCodes == null || dictCodes.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> dictCodes = validateIds(deleteRequest.getIds());
         boolean success = dictDataService.deleteDictDataByIds(dictCodes);
         return success ? Result.success("删除字典数据成功") : Result.error("删除字典数据失败");
    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new com.star.pivot.framework.exception.ServiceException(
+                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
+    }
 }
 

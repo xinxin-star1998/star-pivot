@@ -7,6 +7,7 @@ import com.star.pivot.framework.annotation.NoResponseWrapper;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.service.ImportExportService;
 import com.star.pivot.system.service.ImportExportServiceFactory;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -32,10 +33,10 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/common/import-export")
+@RequiredArgsConstructor
 public class CommonImportExportController {
 
-    @Autowired
-    private ImportExportServiceFactory serviceFactory;
+    private final ImportExportServiceFactory serviceFactory;
 
     /**
      * 通用导入接口
@@ -220,7 +221,13 @@ public class CommonImportExportController {
      * 从数据列表构建 EasyExcel 表头（每列一个 List<String>）
      */
     private static List<List<String>> buildHeadList(List<Map<String, Object>> dataList) {
+        if (dataList == null || dataList.isEmpty()) {
+            return new ArrayList<>();
+        }
         Map<String, Object> firstRow = dataList.get(0);
+        if (firstRow == null) {
+            return new ArrayList<>();
+        }
         List<String> headers = new ArrayList<>(firstRow.keySet());
         List<List<String>> headList = new ArrayList<>();
         for (String h : headers) {

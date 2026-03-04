@@ -44,8 +44,11 @@ public class AuthCaptchaController {
         try {
             CaptchaIssueResponse response = captchaService.generateCaptcha(scene != null ? scene : "login");
             return Result.success(response);
-        } catch (Exception e) {
-            log.error("生成验证码失败", e);
+        } catch (IllegalArgumentException e) {
+            log.error("验证码场景参数错误: {}", scene, e);
+            return Result.error(400, "验证码场景参数错误");
+        } catch (RuntimeException e) {
+            log.error("生成验证码失败, scene={}", scene, e);
             return Result.error(500, "生成验证码失败");
         }
     }

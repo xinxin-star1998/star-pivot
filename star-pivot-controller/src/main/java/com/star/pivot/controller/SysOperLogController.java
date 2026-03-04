@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 操作日志控制器
  *
@@ -86,10 +88,7 @@ public class SysOperLogController {
     @PreAuthorize("hasAuthority('system:operlog:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        java.util.List<Long> operIds = deleteRequest.getIds();
-        if (operIds == null || operIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> operIds = validateIds(deleteRequest.getIds());
         boolean success = sysOperLogService.removeByIds(operIds);
         return success ? Result.success("删除成功") : Result.error("删除失败");
     }
@@ -118,5 +117,16 @@ public class SysOperLogController {
         OperLogVO vo = new OperLogVO();
         org.springframework.beans.BeanUtils.copyProperties(operLog, vo);
        return vo;
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new com.star.pivot.framework.exception.ServiceException(
+                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }

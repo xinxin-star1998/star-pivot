@@ -8,6 +8,7 @@ import com.star.pivot.system.domain.bo.RedisCacheVO;
 import com.star.pivot.system.domain.bo.ServerInfoVO;
 import com.star.pivot.system.domain.entity.SysMonitorApiPerformance;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +33,14 @@ public interface MonitorService {
      * @return Druid 监控信息
      */
     DruidMonitorVO getDruidMonitorInfo();
+
+    /**
+     * 获取包含慢SQL列表的 Druid 监控信息
+     *
+     * @param slowSqlThreshold 慢SQL阈值（毫秒），null 则使用默认值 5000
+     * @return Druid 监控信息（包含慢SQL列表）
+     */
+    DruidMonitorVO getDruidMonitorInfoWithSlowSql(Long slowSqlThreshold);
 
     /**
      * 获取在线用户列表
@@ -122,4 +131,24 @@ public interface MonitorService {
      * @return 分页结果
      */
     PageResponse<SysMonitorApiPerformance> getApiPerformancePageList(ApiPerformanceReqBo reqBo);
+
+    /**
+     * 获取最慢的API接口（Top N）
+     *
+     * @param limit 查询数量限制
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return API性能数据列表
+     */
+    List<SysMonitorApiPerformance> getSlowestApis(Integer limit, LocalDate startDate, LocalDate endDate);
+
+    /**
+     * 获取错误率最高的API接口（Top N）
+     *
+     * @param limit 查询数量限制
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return API性能数据列表
+     */
+    List<SysMonitorApiPerformance> getHighestErrorRateApis(Integer limit, LocalDate startDate, LocalDate endDate);
 }

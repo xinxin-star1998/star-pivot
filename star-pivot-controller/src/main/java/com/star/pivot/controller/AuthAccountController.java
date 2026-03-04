@@ -49,7 +49,7 @@ public class AuthAccountController {
     private final SysUserService sysUserService;
     private final SysMenuService sysMenuService;
 
-    @Log(title = "用户登录", businessType = 0)
+    @Log(title = "用户登录")
     @Operation(summary = "用户登录", description = "通过用户名和密码进行登录，返回访问令牌和刷新令牌")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "登录成功", content = @Content(schema = @Schema(implementation = LoginResponse.class))),
@@ -97,7 +97,9 @@ public class AuthAccountController {
         }
 
         SysUser userWithRoles = sysUserService.getUserWithRoles(user.getUserId());
-        List<SysRole> roles = userWithRoles.getRoles() != null ? userWithRoles.getRoles() : new ArrayList<>();
+        List<SysRole> roles = userWithRoles != null && userWithRoles.getRoles() != null 
+            ? userWithRoles.getRoles() 
+            : new ArrayList<>();
 
         // 判断用户权限：是否为管理员或拥有全部数据权限
         boolean hasAdminPrivilege = checkAdminPrivilege(roles);

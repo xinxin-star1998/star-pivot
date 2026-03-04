@@ -102,12 +102,20 @@ public class SysNoticeController
     @DeleteMapping("/removeNotice")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest)
     {
-        List<Long> noticeIds = deleteRequest.getIds();
-        if (noticeIds == null || noticeIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> noticeIds = validateIds(deleteRequest.getIds());
 
         boolean success = sysNoticeService.deleteSysNoticeByNoticeIds(noticeIds);
        return success ? Result.success("删除通知公告成功") : Result.error("删除通知公告失败");
    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new com.star.pivot.framework.exception.ServiceException(
+                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
+    }
 }

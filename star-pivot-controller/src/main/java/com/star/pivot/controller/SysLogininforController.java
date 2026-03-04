@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 登录日志控制器
  *
@@ -90,10 +92,7 @@ public class SysLogininforController {
     @PreAuthorize("hasAuthority('system:logininfor:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        java.util.List<Long> infoIds = deleteRequest.getIds();
-        if (infoIds == null || infoIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> infoIds = validateIds(deleteRequest.getIds());
         boolean success = sysLogininforService.removeByIds(infoIds);
         return success ? Result.success("删除成功") : Result.error("删除失败");
     }
@@ -122,5 +121,16 @@ public class SysLogininforController {
         LogininforVO vo = new LogininforVO();
         org.springframework.beans.BeanUtils.copyProperties(logininfor, vo);
        return vo;
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new com.star.pivot.framework.exception.ServiceException(
+                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }

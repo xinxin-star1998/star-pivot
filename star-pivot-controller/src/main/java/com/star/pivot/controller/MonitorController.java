@@ -30,14 +30,11 @@ import java.util.Map;
 public class MonitorController {
 
     private final MonitorService monitorService;
-    private final SysMonitorApiPerformanceMapper apiPerformanceMapper;
     private final com.star.pivot.config.ApiPerformanceAspect apiPerformanceAspect;
 
     public MonitorController(MonitorService monitorService,
-                            SysMonitorApiPerformanceMapper apiPerformanceMapper,
                             com.star.pivot.config.ApiPerformanceAspect apiPerformanceAspect) {
         this.monitorService = monitorService;
-        this.apiPerformanceMapper = apiPerformanceMapper;
         this.apiPerformanceAspect = apiPerformanceAspect;
     }
 
@@ -70,10 +67,10 @@ public class MonitorController {
     public Result<DruidMonitorVO> getDruidMonitorInfo(
             @RequestParam(required = false, defaultValue = "false") Boolean includeSlowSqlList,
             @RequestParam(required = false) Long slowSqlThreshold) {
-        // 调用实现类的重载方法获取包含慢SQL列表的监控信息
+        // 调用服务方法获取监控信息
         DruidMonitorVO druidInfo;
         if (includeSlowSqlList != null && includeSlowSqlList) {
-            druidInfo = ((MonitorServiceImpl) monitorService).getDruidMonitorInfo(true, slowSqlThreshold);
+            druidInfo = monitorService.getDruidMonitorInfoWithSlowSql(slowSqlThreshold);
         } else {
             druidInfo = monitorService.getDruidMonitorInfo();
         }
@@ -238,7 +235,18 @@ public class MonitorController {
             @RequestParam(defaultValue = "20") Integer limit,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
-        List<SysMonitorApiPerformance> apis = apiPerformanceMapper.selectSlowestApis(limit, startDate, endDate);
+        // 参数验证
+        if (startDate == null || endDate == null) {
+            return Result.error("开始日期和结束日期不能为空");
+        }
+        if (startDate.isAfter(endDate)) {
+            return Result.error("开始日期不能晚于结束日期");
+        }
+        if (limit != null && (limit < 1 || limit > 100)) {
+            return Result.error("limit 参数必须在 1-100 之间");
+        }
+        
+        List<SysMonitorApiPerformance> apis = monitorService.getSlowestApis(limit, startDate, endDate);
         return Result.success(apis);
     }
 
@@ -257,7 +265,18 @@ public class MonitorController {
             @RequestParam(defaultValue = "20") Integer limit,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
-        List<SysMonitorApiPerformance> apis = apiPerformanceMapper.selectHighestErrorRateApis(limit, startDate, endDate);
+        // 参数验证
+        if (startDate == null || endDate == null) {
+            return Result.error("开始日期和结束日期不能为空");
+        }
+        if (startDate.isAfter(endDate)) {
+            return Result.error("开始日期不能晚于结束日期");
+        }
+        if (limit != null && (limit < 1 || limit > 100)) {
+            return Result.error("limit 参数必须在 1-100 之间");
+        }
+        
+        List<SysMonitorApiPerformance> apis = monitorService.getHighestErrorRateApis(limit, startDate, endDate);
         return Result.success(apis);
     }
 

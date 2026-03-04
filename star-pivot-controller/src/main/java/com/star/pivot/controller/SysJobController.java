@@ -66,10 +66,7 @@ public class SysJobController {
     @PreAuthorize("hasAuthority('monitor:job:remove')")
     @DeleteMapping
     public Result<?> remove(@RequestBody DeleteRequest request) {
-        List<Long> jobIds = request.getIds();
-        if (jobIds == null || jobIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> jobIds = validateIds(request.getIds());
         sysJobService.deleteJobByIds(jobIds);
         return Result.success("删除成功");
     }
@@ -103,5 +100,16 @@ public class SysJobController {
     public Result<?> clearLog() {
         sysJobService.clearJobLog();
         return Result.success("清空成功");
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new com.star.pivot.framework.exception.ServiceException(
+                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }

@@ -133,10 +133,7 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        List<Long> userIds = deleteRequest.getIds();
-        if (userIds == null || userIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> userIds = validateIds(deleteRequest.getIds());
         
         // 不能删除自己
         Long currentUserId = SecurityContextUtils.getUserId();
@@ -223,6 +220,17 @@ public class SysUserController {
     public Result<?> importUsers(@RequestBody List<Map<String, Object>> rowList) {
         int successCount = sysUserService.importUsers(rowList);
         return Result.success("成功导入 " + successCount + " 个用户");
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new com.star.pivot.framework.exception.ServiceException(
+                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }
 

@@ -92,7 +92,7 @@ public class AuthTokenController {
 
         if (token == null || token.isEmpty()) {
             SecurityContextHolder.clearContext();
-            log.warn("登出请求的令牌格式不正确，已清除本地会话");
+            log.debug("登出请求的令牌格式不正确，已清除本地会话");
             return Result.success("已清除会话");
         }
 

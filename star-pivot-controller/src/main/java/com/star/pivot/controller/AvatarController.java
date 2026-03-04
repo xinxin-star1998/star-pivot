@@ -9,6 +9,8 @@ import com.star.pivot.framework.utils.OssUtil;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.service.SysUserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,16 +29,15 @@ import java.util.Map;
  *   <li>获取临时访问链接需要校验：filePath 必须属于当前用户，或当前用户具备 system:user:edit 权限</li>
  * </ul>
  */
+@Slf4j
 @RestController
 @RequestMapping("/avatar")
+@RequiredArgsConstructor
 public class AvatarController {
 
-    @Autowired
-    private OssUtil ossUtil;
-    @Autowired
-    private MinioUtil minioUtil;
-    @Autowired
-    private SysUserService sysUserService;
+    private final OssUtil ossUtil;
+    private final MinioUtil minioUtil;
+    private final SysUserService sysUserService;
 
     /**
      * 判断指定用户是否为管理员角色
@@ -139,6 +140,18 @@ public class AvatarController {
             @RequestParam("userId") String userId,
             @RequestParam(value = "usePresignedUrl", defaultValue = "false") boolean usePresignedUrl) {
         try {
+            // 文件大小验证（限制5MB）
+            if (file.getSize() > 5 * 1024 * 1024) {
+                throw new ServiceException(ErrorCode.PARAM_INVALID, "文件大小不能超过5MB");
+            }
+            
+            // 文件类型验证
+            String contentType = file.getContentType();
+            if (contentType == null || (!contentType.startsWith("image/") && 
+                !contentType.startsWith("application/octet-stream"))) {
+                throw new ServiceException(ErrorCode.PARAM_INVALID, "只允许上传图片文件");
+            }
+            
             // 权限校验：只能上传自己的头像，或具备管理权限
             if (!hasPermissionToOperateUser(userId)) {
                 throw new ServiceException(ErrorCode.ACCESS_DENIED, "无权操作该用户的头像");
@@ -164,7 +177,11 @@ public class AvatarController {
             return Result.success("上传成功", data);
         } catch (ServiceException e) {
             throw e;
+        } catch (IllegalArgumentException e) {
+            log.error("上传头像参数错误, userId={}", userId, e);
+            return Result.error("参数错误：" + e.getMessage());
         } catch (Exception e) {
+            log.error("上传头像失败, userId={}", userId, e);
             return Result.error("上传失败：" + e.getMessage());
         }
     }

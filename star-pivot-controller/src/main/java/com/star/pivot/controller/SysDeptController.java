@@ -118,12 +118,20 @@ public class SysDeptController {
     @PreAuthorize("hasAuthority('system:dept:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        List<Long> deptIds = deleteRequest.getIds();
-        if (deptIds == null || deptIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> deptIds = validateIds(deleteRequest.getIds());
         boolean success = deptService.deleteDeptByIds(deptIds);
         return success ? Result.success("删除部门成功") : Result.error("删除部门失败");
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new com.star.pivot.framework.exception.ServiceException(
+                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }
 

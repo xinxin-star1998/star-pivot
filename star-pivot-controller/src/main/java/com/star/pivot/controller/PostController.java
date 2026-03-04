@@ -151,12 +151,20 @@ public class PostController {
     @PreAuthorize("hasAuthority('system:post:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        List<Long> postIds = deleteRequest.getIds();
-        if (postIds == null || postIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> postIds = validateIds(deleteRequest.getIds());
         boolean success = postService.deletePostByIds(postIds);
         return success ? Result.success("删除岗位成功") : Result.error("删除岗位失败");
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new com.star.pivot.framework.exception.ServiceException(
+                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }
 

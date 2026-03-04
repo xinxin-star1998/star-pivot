@@ -43,6 +43,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.net.InetAddress;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -307,6 +308,11 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public DruidMonitorVO getDruidMonitorInfo() {
         return getDruidMonitorInfo(false, null);
+    }
+
+    @Override
+    public DruidMonitorVO getDruidMonitorInfoWithSlowSql(Long slowSqlThreshold) {
+        return getDruidMonitorInfo(true, slowSqlThreshold);
     }
 
     /**
@@ -1457,5 +1463,25 @@ public class MonitorServiceImpl implements MonitorService {
         pageResponse.setPageCount(pageList.getPages());
         
         return pageResponse;
+    }
+
+    @Override
+    public List<SysMonitorApiPerformance> getSlowestApis(Integer limit, LocalDate startDate, LocalDate endDate) {
+        if (apiPerformanceMapper == null) {
+            log.warn("ApiPerformanceMapper 未配置，无法查询最慢API");
+            return new ArrayList<>();
+        }
+        
+        return apiPerformanceMapper.selectSlowestApis(limit, startDate, endDate);
+    }
+
+    @Override
+    public List<SysMonitorApiPerformance> getHighestErrorRateApis(Integer limit, LocalDate startDate, LocalDate endDate) {
+        if (apiPerformanceMapper == null) {
+            log.warn("ApiPerformanceMapper 未配置，无法查询错误率最高的API");
+            return new ArrayList<>();
+        }
+        
+        return apiPerformanceMapper.selectHighestErrorRateApis(limit, startDate, endDate);
     }
 }

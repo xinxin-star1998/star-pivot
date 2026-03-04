@@ -120,12 +120,20 @@ public class DictTypeController {
     @PreAuthorize("hasAuthority('system:type:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        List<Long> dictIds = deleteRequest.getIds();
-        if (dictIds == null || dictIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> dictIds = validateIds(deleteRequest.getIds());
         boolean success = dictTypeService.deleteDictTypeByIds(dictIds);
        return success ? Result.success("删除字典类型成功") : Result.error("删除字典类型失败");
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new com.star.pivot.framework.exception.ServiceException(
+                com.star.pivot.framework.exception.ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }
 
