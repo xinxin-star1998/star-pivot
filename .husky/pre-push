@@ -1,0 +1,75 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running pre-push checks..."
+
+# 获取要推送的分支
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# 如果是 main/master 分支，跳过检查
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+  echo "Pushing to main/master. Skipping pre-push checks."
+  exit 0
+fi
+
+# 获取要推送的提交
+COMMITS=$(git rev-list origin/$BRANCH..HEAD 2>/dev/null || git rev-list HEAD)
+
+if [ -z "$COMMITS" ]; then
+  echo "No commits to push. Skipping pre-push checks."
+  exit 0
+fi
+
+echo "Checking commits: $COMMITS"
+
+# 检查提交信息格式
+for COMMIT in $COMMITS; do
+  MESSAGE=$(git log -1 --pretty=%B $COMMIT)
+  
+  # 检查是否遵循 Conventional Commits 规范
+  if ! echo "$MESSAGE" | grep -qE '^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{1,}'; then
+    echo "❌ Commit message does not follow Conventional Commits format:"
+    echo "   $MESSAGE"
+    echo ""
+    echo "Expected format: type(scope): description"
+    echo "Types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+    echo "Example: feat(auth): add JWT token refresh mechanism"
+    exit 1
+  fi
+done
+
+echo "✅ Commit messages follow Conventional Commits format"
+
+# 运行后端测试
+echo "Running backend tests..."
+mvn test -pl star-pivot-module -am -q
+if [ $? -ne 0 ]; then
+  echo "❌ Backend tests failed!"
+  exit 1
+fi
+echo "✅ Backend tests passed"
+
+# 运行前端测试
+echo "Running frontend tests..."
+cd star-pivot-ui
+npm run test -- --run
+if [ $? -ne 0 ]; then
+  echo "❌ Frontend tests failed!"
+  exit 1
+fi
+echo "✅ Frontend tests passed"
+
+cd ..
+
+# 检查覆盖率（可选，如果太慢可以注释掉）
+echo "Checking coverage..."
+mvn jacoco:check -pl star-pivot-module -am -q
+if [ $? -ne 0 ]; then
+  echo "⚠️  Coverage check failed (below 50%)"
+  echo "   Consider adding more tests before pushing"
+  # 不阻止推送，只是警告
+  # exit 1
+fi
+
+echo "✅ All pre-push checks passed!"
+echo "Ready to push to $BRANCH"
