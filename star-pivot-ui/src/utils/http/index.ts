@@ -103,8 +103,8 @@ export interface BlobFullResponse {
 /** 扩展 AxiosRequestConfig */
 interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   url: string
-  params?: any
-  data?: any
+  params?: Record<string, unknown>
+  data?: Record<string, unknown>
   showErrorMessage?: boolean
   showSuccessMessage?: boolean
   /** blob 请求时是否返回 { data, headers }，便于解析 Content-Disposition 等响应头 */

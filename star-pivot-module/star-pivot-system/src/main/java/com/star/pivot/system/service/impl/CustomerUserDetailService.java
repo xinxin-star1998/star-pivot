@@ -17,8 +17,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,12 +38,6 @@ public class CustomerUserDetailService implements UserDetailsService {
     private final SysUserService userService;
     private final SysRoleMapper roleMapper;
     private final SysMenuMapper sysMenuMapper;
-
-    /**
-     * 空用户标记，用于缓存穿透防护
-     * 当用户不存在时，缓存此标记对象，避免恶意请求穿透到数据库
-     */
-    private static final String EMPTY_USER_MARKER = "EMPTY_USER_MARKER";
     
     /**
      * 加载用户详情（包含权限信息）

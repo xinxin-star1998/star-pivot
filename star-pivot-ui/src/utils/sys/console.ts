@@ -14,7 +14,7 @@ const asciiArt = `
 /**
  * 安全的 console.log（仅在开发环境输出）
  */
-export const safeLog = (...args: any[]) => {
+export const safeLog = (...args: unknown[]) => {
   if (isDev) {
     console.log(...args)
   }
@@ -23,7 +23,7 @@ export const safeLog = (...args: any[]) => {
 /**
  * 安全的 console.warn（仅在开发环境输出）
  */
-export const safeWarn = (...args: any[]) => {
+export const safeWarn = (...args: unknown[]) => {
   if (isDev) {
     console.warn(...args)
   }
@@ -32,7 +32,7 @@ export const safeWarn = (...args: any[]) => {
 /**
  * 安全的 console.error（仅在开发环境输出）
  */
-export const safeError = (...args: any[]) => {
+export const safeError = (...args: unknown[]) => {
   if (isDev) {
     console.error(...args)
   }
@@ -41,7 +41,7 @@ export const safeError = (...args: any[]) => {
 /**
  * 安全的 console.info（仅在开发环境输出）
  */
-export const safeInfo = (...args: any[]) => {
+export const safeInfo = (...args: unknown[]) => {
   if (isDev) {
     console.info(...args)
   }

@@ -1,10 +1,10 @@
 package com.star.pivot.config;
 
 import com.star.pivot.framework.annotation.RateLimit;
-import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.ServiceException;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.LogUtils;
+import com.star.pivot.security.utils.SecurityContextUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +57,7 @@ public class RateLimitAspect {
 
             if (currentCount > maxRequests) {
                 log.warn("API限流触发: key={}, count={}, max={}", limitKey, currentCount, maxRequests);
-                throw new ServiceException(rateLimit.message(), 429);
+                throw new ServiceException(ErrorCode.RATE_LIMIT_EXCEEDED, rateLimit.message());
             }
 
             log.debug("API限流检查通过: key={}, count={}/{}", limitKey, currentCount, maxRequests);
@@ -79,20 +79,14 @@ public class RateLimitAspect {
             key = method.getDeclaringClass().getSimpleName() + ":" + method.getName();
         }
 
-        String dimensionKey;
-        switch (rateLimit.limitType()) {
-            case IP:
-                dimensionKey = "ip:" + getClientIp();
-                break;
-            case USER:
+        String dimensionKey = switch (rateLimit.limitType()) {
+            case IP -> "ip:" + getClientIp();
+            case USER -> {
                 Long userId = SecurityContextUtils.getUserId();
-                dimensionKey = "user:" + (userId != null ? userId : "anonymous");
-                break;
-            case GLOBAL:
-            default:
-                dimensionKey = "global";
-                break;
-        }
+                yield "user:" + (userId != null ? userId : "anonymous");
+            }
+            default -> "global";
+        };
 
         return RATE_LIMIT_KEY_PREFIX + key + ":" + dimensionKey;
     }
@@ -114,26 +108,26 @@ public class RateLimitAspect {
      */
     private long incrementAndGet(String key, long windowSeconds) {
         String script =
-            "local key = KEYS[1]\n" +
-            "local window = tonumber(ARGV[1])\n" +
-            "local nowMillis = tonumber(ARGV[2])\n" +
-            "local nowSeconds = math.floor(nowMillis / 1000)\n" +
-            "local cutoff = nowSeconds - window\n" +
-            "\n" +
-            "redis.call('ZREMRANGEBYSCORE', key, '-inf', cutoff)\n" +
-            "redis.call('ZADD', key, nowSeconds, nowMillis)\n" +
-            "redis.call('EXPIRE', key, window + 10)\n" +
-            "\n" +
-            "return redis.call('ZCARD', key)";
+                """
+                        local key = KEYS[1]
+                        local window = tonumber(ARGV[1])
+                        local nowMillis = tonumber(ARGV[2])
+                        local nowSeconds = math.floor(nowMillis / 1000)
+                        local cutoff = nowSeconds - window
+                        
+                        redis.call('ZREMRANGEBYSCORE', key, '-inf', cutoff)
+                        redis.call('ZADD', key, nowSeconds, nowMillis)
+                        redis.call('EXPIRE', key, window + 10)
+                        
+                        return redis.call('ZCARD', key)""";
 
         DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
         redisScript.setScriptText(script);
         redisScript.setResultType(Long.class);
 
         long currentTimeMillis = System.currentTimeMillis();
-        Long count = stringRedisTemplate.execute(redisScript, Collections.singletonList(key),
-            String.valueOf(windowSeconds), String.valueOf(currentTimeMillis));
 
-        return count != null ? count : 0L;
+        return stringRedisTemplate.execute(redisScript, Collections.singletonList(key),
+            String.valueOf(windowSeconds), String.valueOf(currentTimeMillis));
     }
 }

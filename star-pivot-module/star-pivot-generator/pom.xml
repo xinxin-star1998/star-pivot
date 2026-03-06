@@ -13,46 +13,35 @@
     <artifactId>star-pivot-generator</artifactId>
     <packaging>jar</packaging>
     <name>star-pivot-generator</name>
+    <description>代码生成器模块 - 已解耦，不依赖 system 模块</description>
     <dependencies>
-        <!-- 框架层：仅依赖 boot-starter，不直接引用 framework 内部子模块 -->
         <dependency>
             <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-framework-boot-starter</artifactId>
         </dependency>
-        <!-- MyBatis-Plus -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
         </dependency>
-        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
-        <!-- velocity代码生成使用模板 -->
         <dependency>
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity-engine-core</artifactId>
         </dependency>
-        <!-- 阿里数据库连接池 -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-3-starter</artifactId>
         </dependency>
-        <!-- 代码生成器 -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-generator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.star.pivot</groupId>
-            <artifactId>star-pivot-system</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
     </dependencies>
-
 </project>

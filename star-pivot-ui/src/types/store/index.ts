@@ -25,6 +25,7 @@
 
 import { MenuThemeEnum, SystemThemeEnum } from '@/enums/appEnum'
 import { LocationQueryRaw } from 'vue-router'
+import type { AppRouteRecord } from '@/types/router'
 
 // 系统主题样式（light | dark）
 export interface SystemThemeType {
@@ -134,10 +135,48 @@ export interface WorkTabState {
   cachedTabs: string[]
 }
 
+// 菜单项类型
+export interface MenuItem {
+  /** 菜单ID */
+  id: number | string
+  /** 菜单名称 */
+  name: string
+  /** 路由路径 */
+  path: string
+  /** 组件路径 */
+  component?: string
+  /** 重定向路径 */
+  redirect?: string
+  /** 菜单图标 */
+  icon?: string
+  /** 排序 */
+  sort?: number
+  /** 是否可见 */
+  visible?: boolean
+  /** 状态（0正常 1停用） */
+  status?: number
+  /** 权限标识 */
+  permission?: string
+  /** 菜单类型（M目录 C菜单 F按钮） */
+  menuType?: string
+  /** 父菜单ID */
+  parentId?: number | string
+  /** 子菜单 */
+  children?: MenuItem[]
+  /** 元数据 */
+  meta?: {
+    title?: string
+    icon?: string
+    noCache?: boolean
+    link?: string
+    [key: string]: unknown
+  }
+}
+
 // 菜单Store状态
 export interface MenuState {
   /** 菜单列表 */
-  menuList: any[]
+  menuList: AppRouteRecord[]
   /** 菜单是否已加载 */
   isLoaded: boolean
   /** 菜单是否折叠 */

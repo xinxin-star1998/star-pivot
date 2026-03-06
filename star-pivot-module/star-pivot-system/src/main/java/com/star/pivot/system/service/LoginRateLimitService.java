@@ -1,6 +1,7 @@
 package com.star.pivot.system.service;
 
 import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.utils.RedisCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,9 +77,9 @@ public class LoginRateLimitService {
         if (currentCount > ipMaxAttempts) {
             log.warn("IP {} 登录请求过于频繁，已触发限流（{}分钟内超过{}次）", ip, ipWindowMinutes, ipMaxAttempts);
             throw new ServiceException(
-                String.format("登录请求过于频繁，请%d分钟后再试", ipWindowMinutes), 
-                429
-            );
+                    ErrorCode.RATE_LIMIT_EXCEEDED,
+                    String.format("登录请求过于频繁，请%d分钟后再试", ipWindowMinutes)
+                        );
         }
         
         log.debug("IP {} 登录限流检查通过，当前计数: {}/{}", ip, currentCount, ipMaxAttempts);
@@ -106,9 +107,9 @@ public class LoginRateLimitService {
             log.warn("IP {} 用户 {} 登录请求过于频繁，已触发限流（{}分钟内超过{}次）", 
                 ip, username, ipUsernameWindowMinutes, ipUsernameMaxAttempts);
             throw new ServiceException(
-                String.format("登录请求过于频繁，请%d分钟后再试", ipUsernameWindowMinutes), 
-                429
-            );
+                    ErrorCode.RATE_LIMIT_EXCEEDED,
+                    String.format("登录请求过于频繁，请%d分钟后再试", ipUsernameWindowMinutes)
+                        );
         }
         
         log.debug("IP {} 用户 {} 登录限流检查通过，当前计数: {}/{}", 

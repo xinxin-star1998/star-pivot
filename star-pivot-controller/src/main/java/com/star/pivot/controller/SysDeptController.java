@@ -2,6 +2,8 @@ package com.star.pivot.controller;
 
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.system.domain.bo.DeptVO;
 import com.star.pivot.system.domain.dto.DeptDTO;
 import com.star.pivot.system.service.SysDeptService;
@@ -118,12 +120,19 @@ public class SysDeptController {
     @PreAuthorize("hasAuthority('system:dept:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        List<Long> deptIds = deleteRequest.getIds();
-        if (deptIds == null || deptIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> deptIds = validateIds(deleteRequest.getIds());
         boolean success = deptService.deleteDeptByIds(deptIds);
         return success ? Result.success("删除部门成功") : Result.error("删除部门失败");
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new ServiceException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }
 

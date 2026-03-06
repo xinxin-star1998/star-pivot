@@ -199,16 +199,16 @@ export const updatePaginationFromResponse = <T>(
 /**
  * 创建智能防抖函数 - 支持取消和立即执行
  */
-export const createSmartDebounce = <T extends (...args: any[]) => Promise<any>>(
+export const createSmartDebounce = <T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   delay: number
-): T & { cancel: () => void; flush: () => Promise<any> } => {
+): T & { cancel: () => void; flush: () => Promise<unknown> } => {
   let timeoutId: ReturnType<typeof setTimeout> | null = null
   let lastArgs: Parameters<T> | null = null
-  let lastResolve: ((value: any) => void) | null = null
-  let lastReject: ((reason: any) => void) | null = null
+  let lastResolve: ((value: unknown) => void) | null = null
+  let lastReject: ((reason: unknown) => void) | null = null
 
-  const debouncedFn = (...args: Parameters<T>): Promise<any> => {
+  const debouncedFn = (...args: Parameters<T>): Promise<unknown> => {
     return new Promise((resolve, reject) => {
       if (timeoutId) clearTimeout(timeoutId)
       lastArgs = args
@@ -260,7 +260,7 @@ export const createSmartDebounce = <T extends (...args: any[]) => Promise<any>>(
     return Promise.resolve()
   }
 
-  return debouncedFn as any
+  return debouncedFn as T & { cancel: () => void; flush: () => Promise<unknown> }
 }
 
 /**
@@ -271,7 +271,7 @@ export const createErrorHandler = (
   enableLog: boolean = false
 ) => {
   const logger = {
-    error: (message: string, ...args: any[]) => {
+    error: (message: string, ...args: unknown[]) => {
       if (enableLog) console.error(`[useTable] ${message}`, ...args)
     }
   }

@@ -1,6 +1,7 @@
 package com.star.pivot.system.service;
 
 import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.utils.RedisCache;
 import lombok.AllArgsConstructor;
@@ -82,9 +83,9 @@ public class AccountLockService {
             }
             
             throw new ServiceException(
-                String.format("账户已被锁定，请%d分钟后重试，或联系管理员解锁", remainingMinutes),
-                423 // 423 Locked
-            );
+                    ErrorCode.ACCOUNT_LOCKED,
+                    String.format("账户已被锁定，请%d分钟后重试，或联系管理员解锁", remainingMinutes)
+                        );
         }
     }
 

@@ -46,7 +46,7 @@ export interface SearchChangeParams {
 }
 
 // 表格列配置接口
-export interface ColumnOption<T = any> {
+export interface ColumnOption<T = Record<string, unknown>> {
   // 列类型
   type?: 'selection' | 'expand' | 'index' | 'globalIndex'
   // 列属性名
@@ -62,9 +62,9 @@ export interface ColumnOption<T = any> {
   // 是否可排序
   sortable?: boolean
   // 过滤器选项
-  filters?: any[]
+  filters?: Array<{ text: string; value: unknown }>
   // 过滤方法
-  filterMethod?: (value: any, row: any) => boolean
+  filterMethod?: (value: unknown, row: T) => boolean
   // 过滤器位置
   filterPlacement?: string
   // 是否禁用
@@ -74,7 +74,7 @@ export interface ColumnOption<T = any> {
   // 是否选中显示
   checked?: boolean
   // 自定义渲染函数
-  formatter?: (row: T) => any
+  formatter?: (row: T) => unknown
   // 插槽相关配置
   // 是否使用插槽渲染内容
   useSlot?: boolean
@@ -85,7 +85,7 @@ export interface ColumnOption<T = any> {
   // 表头插槽名称（默认为 `${prop}-header`）
   headerSlotName?: string
   // 其他属性
-  [key: string]: any
+  [key: string]: unknown
 }
 
 // 分页配置
@@ -119,7 +119,7 @@ export interface FormRule {
   // 正则表达式
   pattern?: RegExp
   // 自定义验证函数
-  validator?: (rule: any, value: any, callback: any) => void
+  validator?: (rule: FormRule, value: unknown, callback: (error?: Error | string) => void) => void
 }
 
 // 对话框配置

@@ -139,6 +139,18 @@
   // 选中的行
   const selectedRows = ref<ImportTableItem[]>([])
 
+  // 监听弹窗打开，自动加载数据
+  watch(
+    () => props.visible,
+    (newVal) => {
+      if (newVal) {
+        // 弹窗打开时重置分页并查询
+        pagination.current = 1
+        handleSearch()
+      }
+    }
+  )
+
   /**
    * 执行查询
    * 从后端加载可导入的数据表列表
@@ -244,8 +256,85 @@
 </script>
 
 <style scoped lang="scss">
+  :deep(.el-dialog) {
+    border-radius: 16px;
+    overflow: hidden;
+
+    .el-dialog__header {
+      padding: 20px 24px;
+      margin: 0;
+      background: linear-gradient(135deg, var(--el-color-primary-light-9) 0%, var(--el-color-primary-light-8) 100%);
+      border-bottom: 1px solid var(--art-card-border);
+
+      .el-dialog__title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--art-gray-900);
+      }
+    }
+
+    .el-dialog__body {
+      padding: 24px;
+    }
+
+    .el-dialog__footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--art-card-border);
+      background-color: var(--art-gray-50);
+    }
+  }
+
   .search-bar {
-    margin-bottom: 12px;
+    margin-bottom: 16px;
+    padding: 16px;
+    background-color: var(--art-gray-50);
+    border-radius: 8px;
+  }
+
+  :deep(.el-form-item__label) {
+    font-weight: 500;
+    color: var(--art-gray-700);
+  }
+
+  :deep(.el-input__wrapper) {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+    }
+  }
+
+  :deep(.el-button) {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  :deep(.el-table) {
+    border-radius: 8px;
+
+    .el-table__header-wrapper {
+      th {
+        background-color: var(--art-gray-100) !important;
+        font-weight: 600;
+        color: var(--art-gray-800);
+      }
+    }
+
+    .el-table__body-wrapper {
+      tr {
+        transition: all 0.2s ease;
+
+        &:hover > td {
+          background-color: var(--art-gray-50) !important;
+        }
+      }
+    }
   }
 
   .dialog-footer {

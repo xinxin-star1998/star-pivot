@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
   import { formatMenuTitle } from '@/utils/router'
-  import { deepClone, findInTree, safeError } from '@/utils'
+  import { deepClone, safeError } from '@/utils'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import { useAuth } from '@/hooks/core/useAuth'
@@ -134,17 +134,25 @@
   const rawMenuData = ref<SysMenu[]>([])
   // 存储菜单ID到原始path的映射
   const menuPathMap = ref<Map<number, string>>(new Map())
+  // 存储菜单ID到原始菜单项的映射（用于优化权限标识查找）
+  const menuCacheMap = ref<Map<number, SysMenu>>(new Map())
 
   /**
-   * 构建菜单路径映射
+   * 构建菜单路径映射和缓存映射
    * @param menuList 菜单列表
    */
   const buildMenuPathMap = (menuList: SysMenu[]): void => {
     menuPathMap.value.clear()
+    menuCacheMap.value.clear()
     const traverse = (menus: SysMenu[]): void => {
       menus.forEach((menu) => {
-        if (menu.menuId !== undefined && menu.path) {
-          menuPathMap.value.set(menu.menuId, menu.path)
+        if (menu.menuId !== undefined) {
+          // 缓存菜单ID到路径的映射
+          if (menu.path) {
+            menuPathMap.value.set(menu.menuId, menu.path)
+          }
+          // 缓存菜单ID到菜单项的映射（用于快速查找权限标识）
+          menuCacheMap.value.set(menu.menuId, menu)
         }
         if (menu.children && menu.children.length > 0) {
           traverse(menu.children)
@@ -163,16 +171,17 @@
   }
 
   /**
-   * 为路由记录添加权限标识
+   * 为路由记录添加权限标识（使用缓存优化，避免递归搜索）
    */
-  const addPermsToMenu = (menus: AppRouteRecord[], rawMenus: SysMenu[]): void => {
+  const addPermsToMenu = (menus: AppRouteRecord[]): void => {
     menus.forEach((menu) => {
-      const rawMenu = findMenuAndParentFromRawData(menu.id, rawMenus).menu
+      // 使用缓存的 Map 直接查找，避免递归遍历整棵树
+      const rawMenu = menu.id !== undefined ? menuCacheMap.value.get(menu.id) : undefined
       if (rawMenu?.perms) {
         menu.perms = rawMenu.perms
       }
-      if (menu.children?.length && rawMenu?.children) {
-        addPermsToMenu(menu.children, rawMenu.children)
+      if (menu.children?.length) {
+        addPermsToMenu(menu.children)
       }
     })
   }
@@ -194,8 +203,8 @@
       // 转换为路由记录格式
       const normalizedList = convertMenuToRouteRecord(sysMenuList)
 
-      // 添加权限标识
-      addPermsToMenu(normalizedList, sysMenuList)
+      // 添加权限标识（使用缓存优化）
+      addPermsToMenu(normalizedList)
       tableData.value = normalizedList
     } catch (error) {
       safeError('获取菜单列表失败:', error)
@@ -206,24 +215,18 @@
   }
 
   /**
-   * 从原始菜单数据中查找菜单项及其父ID
+   * 从缓存中查找菜单项及其父ID（使用缓存优化）
    * @param menuId 菜单ID
-   * @param menuList 菜单列表
    * @returns 菜单项和父ID的对象
    */
   const findMenuAndParentFromRawData = (
-    menuId: number | undefined,
-    menuList: SysMenu[]
+    menuId: number | undefined
   ): { menu: SysMenu | undefined; parentId: number | undefined } => {
     if (!menuId) return { menu: undefined, parentId: undefined }
 
-    const result = findInTree(
-      menuList,
-      (menu) => menu.menuId === menuId,
-      (menu) => menu.children,
-      undefined
-    )
-    return { menu: result.node, parentId: result.parentId }
+    // 使用缓存直接查找
+    const menu = menuCacheMap.value.get(menuId)
+    return { menu, parentId: menu?.parentId }
   }
 
   /**
@@ -599,8 +602,8 @@
    */
   const handleEditMenu = (row: AppRouteRecord): void => {
     dialogType.value = 'menu'
-    // 从原始菜单数据中查找parentId和原始path、component
-    const { menu: rawMenu, parentId } = findMenuAndParentFromRawData(row.id, rawMenuData.value)
+    // 从缓存中查找parentId和原始path、component
+    const { menu: rawMenu, parentId } = findMenuAndParentFromRawData(row.id)
 
     // 使用原始数据中的 path 和 component，而不是规范化后的
     editData.value = {
@@ -723,3 +726,58 @@
     })
   }
 </script>
+
+<style scoped lang="scss">
+  .menu-page {
+    padding: 16px;
+    background-color: var(--default-bg-color);
+  }
+
+  :deep(.art-table-card) {
+    border: 1px solid var(--art-card-border);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+    }
+  }
+
+  :deep(.el-table) {
+    border-radius: 8px;
+
+    .el-table__header-wrapper {
+      th {
+        background-color: var(--art-gray-100) !important;
+        font-weight: 600;
+        color: var(--art-gray-800);
+      }
+    }
+
+    .el-table__body-wrapper {
+      tr {
+        transition: all 0.2s ease;
+
+        &:hover > td {
+          background-color: var(--art-gray-50) !important;
+        }
+      }
+    }
+  }
+
+  :deep(.el-button) {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  :deep(.el-tag) {
+    border-radius: 6px;
+    font-weight: 500;
+  }
+</style>

@@ -4,4 +4,5 @@
 
 export * from './upgrade'
 export * from './console'
+export * from './logger'
 export { default as mittBus } from './mittBus'

@@ -1,34 +1,38 @@
 package com.star.pivot.quartz.task;
 
-import com.star.pivot.system.service.SysOperLogService;
+import com.star.pivot.framework.api.ModuleApiProvider;
+import com.star.pivot.framework.api.OperLogApi;
+import com.star.pivot.framework.event.OperLogCleanEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-/**
- * 定时清空操作日志表。
- * 在「定时任务」中配置调用目标：com.star.pivot.quartz.task.CleanOperLogTask.cleanOperLog()
- * 建议 cron：0 0 2 * * ?（每天凌晨 2 点执行）
- *
- * @author StarPivot
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class CleanOperLogTask {
 
-    private final SysOperLogService sysOperLogService;
+    private final ApplicationEventPublisher eventPublisher;
+    private final ModuleApiProvider moduleApiProvider;
 
-    /**
-     * 清空操作日志表（sys_oper_log）
-     */
     public void cleanOperLog() {
-        try {
-            boolean removed = sysOperLogService.remove(null);
-            log.info("定时清空操作日志执行完成, removed={}", removed);
-        } catch (Exception e) {
-            log.error("定时清空操作日志失败", e);
-            throw new RuntimeException("清空操作日志失败: " + e.getMessage());
-        }
+        log.info("开始执行清空操作日志任务");
+        eventPublisher.publishEvent(OperLogCleanEvent.cleanAll(this));
+        log.info("清空操作日志事件已发布");
+    }
+
+    public void cleanOperLogBeforeDays(int days) {
+        log.info("开始执行清理 {} 天前的操作日志任务", days);
+        eventPublisher.publishEvent(OperLogCleanEvent.cleanBeforeDays(this, days));
+        log.info("清理操作日志事件已发布");
+    }
+
+    public void cleanOperLogViaApi() {
+        log.info("通过 API 方式清空操作日志");
+        moduleApiProvider.getOperLogApi().ifPresentOrElse(
+                OperLogApi::cleanAll,
+                () -> log.warn("OperLogApi 未实现，跳过清空操作日志")
+        );
     }
 }

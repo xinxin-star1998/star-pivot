@@ -5,6 +5,8 @@ import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.system.domain.dto.*;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
@@ -19,7 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,11 +30,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/sys/role")
 @Tag(name = "角色管理", description = "角色的增删改查、权限分配、用户分配等接口")
+@RequiredArgsConstructor
 public class SysRoleController {
-    @Autowired
-    private SysRoleService sysRoleService;
-    @Autowired
-    private SysUserService sysUserService;
+    private final SysRoleService sysRoleService;
+    private final SysUserService sysUserService;
     /**
      * 角色分页列表接口
      * 
@@ -133,10 +134,7 @@ public class SysRoleController {
     @PreAuthorize("hasAuthority('system:role:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        List<Long> roleIds = deleteRequest.getIds();
-        if (roleIds == null || roleIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> roleIds = validateIds(deleteRequest.getIds());
         boolean success = sysRoleService.deleteRoleByIds(roleIds);
         return success ? Result.success("删除角色成功") : Result.error("删除角色失败");
     }
@@ -261,5 +259,15 @@ public class SysRoleController {
     public Result<?> cancelUser(@RequestBody UserRole userRole) {
         boolean success = sysRoleService.cancelUser(userRole);
         return success ? Result.success("取消授权成功") : Result.error("取消授权失败");
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new ServiceException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }

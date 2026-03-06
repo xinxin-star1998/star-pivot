@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.constants.GenConstants;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.generator.config.GenConfig;
 import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.bo.GenTableVO;
 import com.star.pivot.generator.domain.dto.GenTableQueryDTO;
@@ -52,6 +53,8 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
     private GenTableMapper genTableMapper;
     @Autowired
     private GenTableColumnMapper genTableColumnMapper;
+    @Autowired
+    private GenConfig genConfig;
     @Override
     public PageResponse<GenTableVO> selectGenTablePage(GenTableQueryDTO queryDTO) {
         Page<GenTable> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
@@ -382,7 +385,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             for (GenTable table : tableList)
             {
                 String tableName = table.getTableName();
-                GenUtils.initTable(table, operName);
+                GenUtils.initTable(table, operName, genConfig);
                 int row = genTableMapper.insertGenTable(table);
                 if (row > 0)
                 {

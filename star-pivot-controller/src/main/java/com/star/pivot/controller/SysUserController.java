@@ -1,14 +1,19 @@
 package com.star.pivot.controller;
 
 import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.ResetPasswordDTO;
 import com.star.pivot.system.domain.dto.UserDTO;
+import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.service.AccountLockService;
+import com.star.pivot.system.service.PermissionService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,10 +45,28 @@ public class SysUserController {
      */
     private final SysUserService sysUserService;
     private final AccountLockService accountLockService;
+    private final PermissionService permissionService;
 
-    public SysUserController(SysUserService sysUserService, AccountLockService accountLockService) {
+    public SysUserController(SysUserService sysUserService, AccountLockService accountLockService, PermissionService permissionService) {
         this.sysUserService = sysUserService;
         this.accountLockService = accountLockService;
+        this.permissionService = permissionService;
+    }
+
+    /**
+     * 判断当前用户是否是超级管理员
+     */
+    private boolean isSuperAdmin() {
+        Long currentUserId = SecurityContextUtils.getUserId();
+        if (currentUserId == null) {
+            return false;
+        }
+        // 超级管理员用户ID
+        if (AppConstants.ADMIN_USER_ID.equals(currentUserId)) {
+            return true;
+        }
+        // 拥有 admin 角色的用户
+        return permissionService.hasRole(AppConstants.ADMIN_ROLE_KEY);
     }
 
     /**
@@ -104,19 +127,33 @@ public class SysUserController {
 
     /**
      * 修改用户接口
-     * 
+     *
+     * <p>权限校验：只能修改自己的用户信息
+     *
      * @param userDTO 用户数据对象
      * @return 操作结果，成功或失败的响应
      */
     @Log(title = "用户管理", businessType = 2)
-    @Operation(summary = "修改用户", description = "更新用户信息，包括基本信息、角色、部门等")
+    @Operation(summary = "修改用户", description = "更新用户信息，只能修改自己的用户信息")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "修改成功"),
-            @ApiResponse(responseCode = "404", description = "用户不存在")
+            @ApiResponse(responseCode = "404", description = "用户不存在"),
+            @ApiResponse(responseCode = "403", description = "无权修改其他用户信息")
     })
-    @PreAuthorize("hasAuthority('system:user:edit')")
     @PostMapping("/update")
     public Result<?> updateUser(@RequestBody UserDTO userDTO) {
+        // 权限校验：只能修改自己的用户信息，超级管理员可以修改所有用户信息
+        Long currentUserId = SecurityContextUtils.getUserId();
+        if (currentUserId == null) {
+            return Result.error("用户未登录");
+        }
+
+        // 超级管理员可以修改所有用户信息
+        boolean isSuperAdmin = isSuperAdmin();
+        if (!isSuperAdmin && !currentUserId.equals(userDTO.getUserId())) {
+            return Result.error("只能修改自己的用户信息");
+        }
+
         boolean success = sysUserService.updateUser(userDTO);
         return success ? Result.success("修改用户成功") : Result.error("修改用户失败");
     }
@@ -133,10 +170,7 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        List<Long> userIds = deleteRequest.getIds();
-        if (userIds == null || userIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> userIds = validateIds(deleteRequest.getIds());
         
         // 不能删除自己
         Long currentUserId = SecurityContextUtils.getUserId();
@@ -223,6 +257,16 @@ public class SysUserController {
     public Result<?> importUsers(@RequestBody List<Map<String, Object>> rowList) {
         int successCount = sysUserService.importUsers(rowList);
         return Result.success("成功导入 " + successCount + " 个用户");
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new ServiceException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }
 

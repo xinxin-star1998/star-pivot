@@ -575,16 +575,26 @@
 <style scoped lang="scss">
   .api-performance-page {
     padding: 20px;
+    background-color: var(--default-bg-color);
   }
 
-  /* 卡片内容区使用 flex，便于内部滚动容器正确计算高度 */
-  .api-performance-page :deep(.art-table-card .el-card__body) {
+  :deep(.art-table-card) {
+    border: 1px solid var(--art-card-border);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+    }
+  }
+
+  :deep(.art-table-card .el-card__body) {
     display: flex;
     flex-direction: column;
     min-height: 0;
   }
 
-  /* 可上下滚动的区域：查询条件、统计卡片、Tab 表格 */
   .api-performance-scroll-wrap {
     flex: 1;
     min-height: 0;
@@ -599,6 +609,18 @@
 
   .query-form {
     margin-bottom: 20px;
+    padding: 16px;
+    background-color: var(--art-gray-50);
+    border-radius: 8px;
+  }
+
+  :deep(.el-card) {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+    }
   }
 
   .stat-item {
@@ -622,6 +644,77 @@
       &.text-warning {
         color: var(--el-color-warning);
       }
+    }
+  }
+
+  :deep(.el-tabs) {
+    .el-tabs__header {
+      margin-bottom: 16px;
+    }
+
+    .el-tabs__item {
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &.is-active {
+        color: var(--el-color-primary);
+      }
+
+      &:hover {
+        color: var(--el-color-primary-light-3);
+      }
+    }
+  }
+
+  :deep(.el-table) {
+    border-radius: 8px;
+
+    .el-table__header-wrapper {
+      th {
+        background-color: var(--art-gray-100) !important;
+        font-weight: 600;
+        color: var(--art-gray-800);
+      }
+    }
+
+    .el-table__body-wrapper {
+      tr {
+        transition: all 0.2s ease;
+
+        &:hover > td {
+          background-color: var(--art-gray-50) !important;
+        }
+      }
+    }
+  }
+
+  :deep(.el-button) {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  :deep(.el-tag) {
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  :deep(.el-form-item__label) {
+    font-weight: 500;
+    color: var(--art-gray-700);
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select .el-select__wrapper) {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
     }
   }
 
