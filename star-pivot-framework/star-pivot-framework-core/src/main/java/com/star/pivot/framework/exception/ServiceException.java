@@ -1,47 +1,37 @@
 package com.star.pivot.framework.exception;
 
-import lombok.Getter;
-
 import java.io.Serial;
 
-@Getter
-public final class ServiceException extends RuntimeException {
+/**
+ * 服务异常
+ * 用于服务层异常场景（不允许被继承）
+ */
+public final class ServiceException extends BaseException {
+
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private Integer code;
-    private String message;
-    private String detailMessage;
+    public ServiceException(ErrorCode errorCode) {
+        super(errorCode);
+    }
 
-    public ServiceException() {
+    public ServiceException(ErrorCode errorCode, String detailMessage) {
+        super(errorCode, detailMessage);
+    }
+
+    public ServiceException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode, cause);
+    }
+
+    public ServiceException(ErrorCode errorCode, String detailMessage, Throwable cause) {
+        super(errorCode, detailMessage, cause);
     }
 
     public ServiceException(String message) {
-        this.message = message;
+        super(message);
     }
 
-    public ServiceException(String message, Integer code) {
-        this.message = message;
-        this.code = code;
-    }
-
-    @Override
-    public String getMessage() {
-        return message;
-    }
-
-    public ServiceException setMessage(String message) {
-        this.message = message;
-        return this;
-    }
-
-    public ServiceException setCode(Integer code) {
-        this.code = code;
-        return this;
-    }
-
-    public ServiceException setDetailMessage(String detailMessage) {
-        this.detailMessage = detailMessage;
-        return this;
+    public ServiceException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

@@ -3,6 +3,8 @@ package com.star.pivot.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.system.domain.bo.DeptVO;
 import com.star.pivot.system.domain.dto.DeptDTO;
 import com.star.pivot.system.domain.entity.SysDept;
@@ -47,8 +49,9 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     @Transactional(readOnly = true)
     public DeptVO selectDeptById(Long deptId) {
         SysDept dept = this.getById(deptId);
-        if (dept == null || "2".equals(dept.getDelFlag())) {
-            throw new BusinessException("部门不存在");
+        AssertUtils.notNull(dept, ErrorCode.DEPT_NOT_FOUND);
+        if ("2".equals(dept.getDelFlag())) {
+            throw new BusinessException(ErrorCode.DEPT_NOT_FOUND);
         }
         DeptVO vo = new DeptVO();
         BeanUtils.copyProperties(dept, vo);
@@ -59,9 +62,8 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     @CacheEvict(cacheNames = "deptTree", allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean insertDept(DeptDTO deptDTO) {
-        // 检查部门名称是否唯一
         if (!checkDeptNameUnique(deptDTO.getDeptName(), deptDTO.getParentId(), null)) {
-            throw new BusinessException("部门名称已存在");
+            throw new BusinessException(ErrorCode.DEPT_NAME_EXISTS);
         }
 
         // 创建部门
@@ -97,18 +99,17 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     @Transactional(rollbackFor = Exception.class)
     public boolean updateDept(DeptDTO deptDTO) {
         SysDept dept = this.getById(deptDTO.getDeptId());
-        if (dept == null || "2".equals(dept.getDelFlag())) {
-            throw new BusinessException("部门不存在");
+        AssertUtils.notNull(dept, ErrorCode.DEPT_NOT_FOUND);
+        if ("2".equals(dept.getDelFlag())) {
+            throw new BusinessException(ErrorCode.DEPT_NOT_FOUND);
         }
 
-        // 不能将父部门设置为自己的子部门
         if (deptDTO.getParentId() != null && deptDTO.getParentId().equals(deptDTO.getDeptId())) {
-            throw new BusinessException("不能将父部门设置为自己的子部门");
+            throw new BusinessException(ErrorCode.DEPT_PARENT_ERROR);
         }
 
-        // 检查部门名称是否唯一
         if (!checkDeptNameUnique(deptDTO.getDeptName(), deptDTO.getParentId(), deptDTO.getDeptId())) {
-            throw new BusinessException("部门名称已存在");
+            throw new BusinessException(ErrorCode.DEPT_NAME_EXISTS);
         }
 
         // 如果修改了父部门，需要更新祖级列表
@@ -145,14 +146,12 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         String currentUser = SecurityContextUtils.getUsername();
         
         for (Long deptId : deptIds) {
-            // 检查是否有子部门
             if (hasChildDept(deptId)) {
-                throw new BusinessException("部门ID " + deptId + " 存在子部门，不允许删除");
+                throw new BusinessException(ErrorCode.DEPT_HAS_CHILDREN, "部门ID " + deptId + " 存在子部门，不允许删除");
             }
 
-            // 检查是否有用户
             if (hasUser(deptId)) {
-                throw new BusinessException("部门ID " + deptId + " 存在用户，不允许删除");
+                throw new BusinessException(ErrorCode.DEPT_HAS_USERS, "部门ID " + deptId + " 存在用户，不允许删除");
             }
 
             // 软删除

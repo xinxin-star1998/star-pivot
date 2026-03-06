@@ -3,93 +3,136 @@ package com.star.pivot.controller;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.MinioUtil;
 import com.star.pivot.framework.utils.OssUtil;
 import com.star.pivot.security.utils.SecurityContextUtils;
-import com.star.pivot.system.domain.entity.SysRole;
+import com.star.pivot.system.service.PermissionService;
 import com.star.pivot.system.service.SysUserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * 头像管理控制器
- * 
+ *
  * <p>安全说明：
  * <ul>
- *   <li>上传/删除头像需要校验：userId 必须与当前登录用户一致，或当前用户具备 system:user:edit 权限</li>
- *   <li>获取临时访问链接需要校验：filePath 必须属于当前用户，或当前用户具备 system:user:edit 权限</li>
+ *   <li>个人中心场景：用户只能查看和修改自己的头像</li>
+ *   <li>后台管理场景：拥有"用户管理"权限（system:user:list）的管理员，只能查看其他用户的头像，不可修改</li>
+ *   <li>超级管理员（admin角色）：可以查看和修改所有用户头像</li>
+ *   <li>不允许操作系统预置的超级管理员账号头像</li>
  * </ul>
  */
+@Slf4j
 @RestController
 @RequestMapping("/avatar")
+@RequiredArgsConstructor
 public class AvatarController {
 
-    @Autowired
-    private OssUtil ossUtil;
-    @Autowired
-    private MinioUtil minioUtil;
-    @Autowired
-    private SysUserService sysUserService;
+    private final OssUtil ossUtil;
+    private final MinioUtil minioUtil;
+    private final SysUserService sysUserService;
+    private final PermissionService permissionService;
 
     /**
-     * 判断指定用户是否为管理员角色
-     *
-     * @param userId 用户ID
-     * @return 如果用户拥有 admin 角色返回 true，否则返回 false
+     * 用户管理权限标识
      */
-    private boolean isAdminUser(Long userId) {
-        List<SysRole> roles = sysUserService.getRolesByUserId(userId);
-        if (roles == null || roles.isEmpty()) {
+    private static final String USER_MANAGE_PERMISSION = "system:user:list";
+
+    /**
+     * 判断当前用户是否是超级管理员
+     */
+    private boolean isSuperAdmin() {
+        Long currentUserId = SecurityContextUtils.getUserId();
+        if (currentUserId == null) {
             return false;
         }
-        return roles.stream().anyMatch(role -> AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
+        // 超级管理员用户ID
+        if (AppConstants.ADMIN_USER_ID.equals(currentUserId)) {
+            return true;
+        }
+        // 拥有 admin 角色的用户
+        return permissionService.hasRole(AppConstants.ADMIN_ROLE_KEY);
     }
 
     /**
-     * 检查当前用户是否有权限操作指定用户ID的资源
-     * 
-     * @param targetUserId 目标用户ID（字符串格式）
-     * @return 是否有权限
+     * 判断当前用户是否拥有用户管理权限
      */
-    private boolean hasPermissionToOperateUser(String targetUserId) {
-        // 获取当前登录用户ID
+    private boolean hasUserManagePermission() {
+        return permissionService.hasPermission(USER_MANAGE_PERMISSION);
+    }
+
+    /**
+     * 检查当前用户是否有权限查看指定用户ID的头像
+     *
+     * @param targetUserId 目标用户ID（字符串格式）
+     * @return 是否有权限查看
+     */
+    private boolean hasPermissionToViewUser(String targetUserId) {
         Long currentUserId = SecurityContextUtils.getUserId();
         if (currentUserId == null) {
             return false;
         }
 
-        // 解析目标用户ID
         final Long targetId;
         try {
             targetId = Long.parseLong(targetUserId);
         } catch (NumberFormatException e) {
-            // userId 格式错误，不允许操作
             return false;
         }
 
-        // 如果目标用户ID与当前用户ID一致，允许操作
+        // 自己的头像允许查看
         if (currentUserId.equals(targetId)) {
             return true;
         }
 
-        // 非管理员用户：只能操作自己的头像，不能操作任何其他用户
-        if (!isAdminUser(currentUserId)) {
+        // 拥有用户管理权限的管理员可以查看其他用户头像
+        if (!hasUserManagePermission()) {
             return false;
         }
 
-        // 管理员用户：不允许操作系统预置的超级管理员账号（除非是本人，上面已返回）
-        if (AppConstants.ADMIN_USER_ID.equals(targetId)) {
-            return false;
-        }
+        // 不允许查看超级管理员头像
+//        if (AppConstants.ADMIN_USER_ID.equals(targetId)) {
+//            return false;
+//        }
 
-        // 管理员可以操作其它非超级管理员用户的头像
         return true;
+    }
+
+    /**
+     * 检查当前用户是否有权限修改（上传/删除）指定用户ID的头像
+     * 注意：只有用户本人或超级管理员可以修改头像
+     *
+     * @param targetUserId 目标用户ID（字符串格式）
+     * @return 是否有权限修改
+     */
+    private boolean hasPermissionToModifyUser(String targetUserId) {
+        Long currentUserId = SecurityContextUtils.getUserId();
+        if (currentUserId == null) {
+            return false;
+        }
+
+        final Long targetId;
+        try {
+            targetId = Long.parseLong(targetUserId);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+
+        // 自己可以修改自己的头像
+        if (currentUserId.equals(targetId)) {
+            return true;
+        }
+
+        // 超级管理员可以修改所有头像
+        return isSuperAdmin();
     }
 
     /**
@@ -124,9 +167,9 @@ public class AvatarController {
 
     /**
      * 上传头像
-     * 
-     * <p>权限校验：userId 必须与当前登录用户一致，或当前用户具备 system:user:edit 权限
-     * 
+     *
+     * <p>权限校验：只能上传自己的头像（超级管理员可上传所有用户头像）
+     *
      * @param file 头像文件
      * @param userId 用户ID
      * @param usePresignedUrl 是否使用临时访问链接（可选，默认为false）
@@ -138,9 +181,21 @@ public class AvatarController {
             @RequestParam("userId") String userId,
             @RequestParam(value = "usePresignedUrl", defaultValue = "false") boolean usePresignedUrl) {
         try {
-            // 权限校验：只能上传自己的头像，或具备管理权限
-            if (!hasPermissionToOperateUser(userId)) {
-                throw new ServiceException("无权操作该用户的头像", 403);
+            // 文件大小验证（限制5MB）
+            if (file.getSize() > 5 * 1024 * 1024) {
+                throw new ServiceException(ErrorCode.PARAM_INVALID, "文件大小不能超过5MB");
+            }
+            
+            // 文件类型验证
+            String contentType = file.getContentType();
+            if (contentType == null || (!contentType.startsWith("image/") && 
+                !contentType.startsWith("application/octet-stream"))) {
+                throw new ServiceException(ErrorCode.PARAM_INVALID, "只允许上传图片文件");
+            }
+            
+            // 权限校验：只能上传自己的头像（超级管理员除外）
+            if (!hasPermissionToModifyUser(userId)) {
+                throw new ServiceException(ErrorCode.ACCESS_DENIED, "只能上传自己的头像");
             }
 
             Map<String, String> data = new HashMap<>();
@@ -163,16 +218,20 @@ public class AvatarController {
             return Result.success("上传成功", data);
         } catch (ServiceException e) {
             throw e;
+        } catch (IllegalArgumentException e) {
+            log.error("上传头像参数错误, userId={}", userId, e);
+            return Result.error("参数错误：" + e.getMessage());
         } catch (Exception e) {
+            log.error("上传头像失败, userId={}", userId, e);
             return Result.error("上传失败：" + e.getMessage());
         }
     }
     
     /**
      * 获取头像临时访问链接
-     * 
-     * <p>权限校验：filePath 必须属于当前用户，或当前用户具备 system:user:edit 权限
-     * 
+     *
+     * <p>权限校验：只能查看自己的头像，或拥有"用户管理"权限的管理员可查看其他用户头像
+     *
      * @param filePath 头像文件路径（格式：user/{userId}/avatar_xxx.xxx）
      * @return 临时访问链接
      */
@@ -183,12 +242,11 @@ public class AvatarController {
             // 从文件路径中提取用户ID
             String userId = extractUserIdFromPath(filePath);
             if (userId == null) {
-                throw new ServiceException("无效的文件路径格式", 400);
+                throw new ServiceException(ErrorCode.PARAM_INVALID, "无效的文件路径格式");
             }
 
-            // 权限校验：只能获取自己头像的临时链接，或具备管理权限
-            if (!hasPermissionToOperateUser(userId)) {
-                throw new ServiceException("无权访问该用户的头像", 403);
+            if (!hasPermissionToViewUser(userId)) {
+                throw new ServiceException(ErrorCode.ACCESS_DENIED, "无权查看该用户的头像");
             }
 
             String presignedUrl = ossUtil.getPresignedUrl(filePath);
@@ -204,16 +262,15 @@ public class AvatarController {
 
     /**
      * 删除头像
-     * 
-     * <p>权限校验：userId 必须与当前登录用户一致，或当前用户具备 system:user:edit 权限
+     *
+     * <p>权限校验：只能删除自己的头像（超级管理员可删除所有用户头像）
      */
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/delete")
     public Result<?> delete(@RequestParam("userId") String userId) {
         try {
-            // 权限校验：只能删除自己的头像，或具备管理权限
-            if (!hasPermissionToOperateUser(userId)) {
-                throw new ServiceException("无权删除该用户的头像", 403);
+            if (!hasPermissionToModifyUser(userId)) {
+                throw new ServiceException(ErrorCode.ACCESS_DENIED, "只能删除自己的头像");
             }
 
             ossUtil.deleteAvatar(userId);

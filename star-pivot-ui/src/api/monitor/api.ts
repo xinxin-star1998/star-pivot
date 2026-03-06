@@ -1,5 +1,5 @@
 import request from '@/utils/http'
-import type { ApiPerformance, HealthCheckReport, ApiPerformanceReqBo } from '@/types/api/monitor'
+import type { ApiPerformance, ApiPerformanceReqBo } from '@/types/api/monitor'
 
 /**
  * 获取API性能监控数据（按日期范围查询）
@@ -32,14 +32,7 @@ export function fetchGetHighestErrorRateApis(limit: number, startDate: string, e
   })
 }
 
-/**
- * 获取系统健康检查报告
- */
-export function fetchGetHealthCheck() {
-  return request.get<HealthCheckReport>({
-    url: '/api/monitor/health'
-  })
-}
+
 
 /**
  * 分页查询API性能监控数据

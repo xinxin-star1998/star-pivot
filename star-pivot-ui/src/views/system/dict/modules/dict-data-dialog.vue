@@ -318,4 +318,91 @@
   )
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+  :deep(.el-dialog) {
+    border-radius: 16px;
+    overflow: hidden;
+
+    .el-dialog__header {
+      padding: 20px 24px;
+      margin: 0;
+      background: linear-gradient(135deg, var(--el-color-primary-light-9) 0%, var(--el-color-primary-light-8) 100%);
+      border-bottom: 1px solid var(--art-card-border);
+
+      .el-dialog__title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--art-gray-900);
+      }
+    }
+
+    .el-dialog__body {
+      padding: 24px;
+    }
+
+    .el-dialog__footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--art-card-border);
+      background-color: var(--art-gray-50);
+    }
+  }
+
+  :deep(.el-form-item__label) {
+    font-weight: 500;
+    color: var(--art-gray-700);
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-textarea__inner) {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+    }
+  }
+
+  :deep(.el-input-number) {
+    width: 100%;
+
+    .el-input__wrapper {
+      border-radius: 8px;
+    }
+  }
+
+  :deep(.el-select) {
+    width: 100%;
+
+    .el-select__wrapper {
+      border-radius: 8px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+      }
+    }
+  }
+
+  :deep(.el-radio-group) {
+    .el-radio {
+      margin-right: 20px;
+    }
+  }
+
+  :deep(.el-button) {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    padding: 10px 24px;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+</style>

@@ -36,8 +36,8 @@ export function findInTree<T>(
   tree: T[],
   predicate: (node: T) => boolean,
   getChildren: (node: T) => T[] | undefined,
-  parentId?: any
-): { node: T | undefined; parentId: any } {
+  parentId?: unknown
+): { node: T | undefined; parentId: unknown } {
   for (const node of tree) {
     if (predicate(node)) {
       return { node, parentId }

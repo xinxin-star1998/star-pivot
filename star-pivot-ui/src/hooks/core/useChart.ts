@@ -53,6 +53,7 @@ import { echarts, type EChartsOption } from '@/plugins/echarts'
 import { storeToRefs } from 'pinia'
 import { useSettingStore } from '@/store/modules/setting'
 import { getCssVar } from '@/utils/ui'
+import { logger } from '@/utils/sys'
 import type { BaseChartProps, ChartThemeConfig, UseChartOptions } from '@/types/component/chart'
 
 // 图表主题配置
@@ -269,7 +270,7 @@ export function useChart(options: UseChartOptions = {}) {
   })
 
   // 获取统一的 tooltip 配置
-  const getTooltipStyle = (trigger: 'item' | 'axis' = 'axis', customOptions: any = {}) => ({
+  const getTooltipStyle = (trigger: 'item' | 'axis' = 'axis', customOptions: Partial<echarts.EChartsCoreOption> = {}) => ({
     trigger,
     backgroundColor: isDark.value ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
     borderColor: isDark.value ? '#333' : '#ddd',
@@ -283,7 +284,7 @@ export function useChart(options: UseChartOptions = {}) {
   // 获取统一的图例配置
   const getLegendStyle = (
     position: 'bottom' | 'top' | 'left' | 'right' = 'bottom',
-    customOptions: any = {}
+    customOptions: Partial<echarts.EChartsCoreOption> = {}
   ) => {
     const baseConfig = {
       textStyle: {
@@ -338,7 +339,7 @@ export function useChart(options: UseChartOptions = {}) {
   const getGridWithLegend = (
     showLegend: boolean,
     legendPosition: 'bottom' | 'top' | 'left' | 'right' = 'bottom',
-    baseGrid: any = {}
+    baseGrid: Partial<echarts.EChartsCoreOption['GridComponentOption']> = {}
   ) => {
     const defaultGrid = {
       top: 15,
@@ -406,7 +407,7 @@ export function useChart(options: UseChartOptions = {}) {
                   pendingOptions = null
                   cleanupIntersectionObserver()
                 } catch (error) {
-                  console.error('图表初始化失败:', error)
+                  logger.error('图表初始化失败:', error)
                 }
               }
             })
@@ -527,7 +528,7 @@ export function useChart(options: UseChartOptions = {}) {
         createIntersectionObserver()
       }
     } catch (error) {
-      console.error('图表初始化失败:', error)
+      logger.error('图表初始化失败:', error)
     }
   }
 
@@ -543,7 +544,7 @@ export function useChart(options: UseChartOptions = {}) {
       }
       chart.setOption(options)
     } catch (error) {
-      console.error('图表更新失败:', error)
+      logger.error('图表更新失败:', error)
     }
   }
 
@@ -553,7 +554,7 @@ export function useChart(options: UseChartOptions = {}) {
       try {
         chart.resize()
       } catch (error) {
-        console.error('图表resize失败:', error)
+        logger.error('图表resize失败:', error)
       }
     }
   }
@@ -566,7 +567,7 @@ export function useChart(options: UseChartOptions = {}) {
       try {
         chart.dispose()
       } catch (error) {
-        console.error('图表销毁失败:', error)
+        logger.error('图表销毁失败:', error)
       } finally {
         chart = null
       }
@@ -631,7 +632,7 @@ interface UseChartComponentOptions<T extends BaseChartProps> {
   /** 空数据检查函数 */
   checkEmpty?: () => boolean
   /** 自定义监听的响应式数据 */
-  watchSources?: (() => any)[]
+  watchSources?: (() => unknown)[]
   /** 自定义可视事件处理 */
   onVisible?: () => void
   /** useChart选项 */

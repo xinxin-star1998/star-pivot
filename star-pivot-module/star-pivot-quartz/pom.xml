@@ -14,7 +14,7 @@
     <artifactId>star-pivot-quartz</artifactId>
     <packaging>jar</packaging>
     <name>star-pivot-quartz</name>
-    <description>定时任务调度模块（Quartz）</description>
+    <description>定时任务调度模块（Quartz）- 已解耦，不依赖 system 模块</description>
 
     <dependencies>
         <dependency>
@@ -29,14 +29,9 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-quartz</artifactId>
         </dependency>
-        <!-- 框架层：仅依赖 boot-starter，不直接引用 framework 内部子模块 -->
         <dependency>
             <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-framework-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.star.pivot</groupId>
-            <artifactId>star-pivot-system</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

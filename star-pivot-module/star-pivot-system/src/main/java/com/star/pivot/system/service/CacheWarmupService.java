@@ -1,5 +1,6 @@
 package com.star.pivot.system.service;
 
+import com.star.pivot.dict.service.DictDataService;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.service.impl.SysMenuServiceImpl;
 import jakarta.annotation.PostConstruct;

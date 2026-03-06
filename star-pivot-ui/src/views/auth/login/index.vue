@@ -1,6 +1,6 @@
 <!-- 登录页面 -->
 <template>
-  <div class="flex w-full h-screen">
+  <div class="flex w-full h-screen" :class="isDark ? 'dark-bg' : 'light-bg'">
     <LoginLeftView />
 
     <div class="relative flex-1">
@@ -8,23 +8,36 @@
 
       <div class="auth-right-wrap">
         <div class="form">
-          <h3 class="title">{{ t('login.title') }}</h3>
-          <p class="sub-title">{{ t('login.subTitle') }}</p>
+          <div class="form-header">
+            <h3 class="title">{{ t('login.title') }}</h3>
+            <p class="sub-title">{{ t('login.subTitle') }}</p>
+          </div>
+          
           <ElForm
             ref="formRef"
             :model="formData"
             :rules="rules"
             :key="formKey"
             @keyup.enter="handleSubmit"
-            style="margin-top: 25px"
+            class="form-content"
           >
             <ElFormItem prop="username">
               <ElInput
                 class="custom-height"
                 :placeholder="t('login.placeholder.username')"
                 v-model.trim="formData.username"
-              />
+                clearable
+              >
+                <template #prefix>
+                  <ArtSvgIcon
+                    icon="ri:user-line"
+                    class="text-lg transition-colors"
+                    :class="isDark ? 'text-g-500' : 'text-g-400'"
+                  />
+                </template>
+              </ElInput>
             </ElFormItem>
+            
             <ElFormItem prop="password">
               <ElInput
                 class="custom-height"
@@ -33,74 +46,82 @@
                 type="password"
                 autocomplete="off"
                 show-password
-              />
+              >
+                <template #prefix>
+                  <ArtSvgIcon
+                    icon="ri:lock-line"
+                    class="text-lg transition-colors"
+                    :class="isDark ? 'text-g-500' : 'text-g-400'"
+                  />
+                </template>
+              </ElInput>
             </ElFormItem>
 
-            <!-- 验证码 -->
-            <div class="relative pb-5 mt-6">
-              <ElFormItem prop="captcha" :error="captchaError">
-                <div class="flex items-center">
-                  <ElInput
-                    v-model="formData.captcha"
-                    :placeholder="t('login.placeholder.captcha')"
-                    class="mr-2 custom-height"
-                    @keyup.enter="handleSubmit"
-                  />
-                  <div class="relative">
-                    <img
-                      v-if="captchaImage"
-                      :src="captchaImage"
-                      alt="验证码"
-                      class="h-10 w-32 cursor-pointer rounded border border-gray-300"
-                      @click="refreshCaptcha"
-                      :class="{ 'opacity-50': loadingCaptcha }"
+            <ElFormItem prop="captcha" :error="captchaError" class="captcha-item">
+              <div class="captcha-container">
+                <ElInput
+                  v-model="formData.captcha"
+                  :placeholder="t('login.placeholder.captcha')"
+                  class="captcha-input custom-height"
+                  @keyup.enter="handleSubmit"
+                  clearable
+                >
+                  <template #prefix>
+                    <ArtSvgIcon
+                      icon="ri:shield-check-line"
+                      class="text-lg transition-colors"
+                      :class="isDark ? 'text-g-500' : 'text-g-400'"
                     />
-                    <div
-                      v-else
-                      class="h-10 w-32 cursor-pointer rounded border border-gray-300 flex items-center justify-center bg-gray-50"
-                      @click="refreshCaptcha"
-                    >
-                      <span class="text-gray-400 text-sm">点击获取验证码</span>
-                    </div>
-                    <div
-                      v-if="loadingCaptcha"
-                      class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70"
-                    >
-                      <div
-                        class="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"
-                      ></div>
-                    </div>
+                  </template>
+                </ElInput>
+                <div class="captcha-image-wrapper">
+                  <img
+                    v-if="captchaImage"
+                    :src="captchaImage"
+                    alt="验证码"
+                    class="captcha-image"
+                    @click="refreshCaptcha"
+                    :class="{ 'opacity-50': loadingCaptcha }"
+                  />
+                  <div
+                    v-else
+                    class="captcha-placeholder"
+                    @click="refreshCaptcha"
+                  >
+                    <ArtSvgIcon icon="ri:refresh-line" class="text-lg" />
+                    <span>获取验证码</span>
+                  </div>
+                  <div v-if="loadingCaptcha" class="captcha-loading">
+                    <div class="loading-spinner"></div>
                   </div>
                 </div>
-              </ElFormItem>
+              </div>
+            </ElFormItem>
+
+            <div class="form-options">
+              <ElCheckbox v-model="formData.rememberPassword" class="remember-checkbox">
+                {{ t('login.rememberPwd') }}
+              </ElCheckbox>
+              <RouterLink class="forget-link" :to="{ name: 'ForgetPassword' }">
+                {{ t('login.forgetPwd') }}
+              </RouterLink>
             </div>
 
-            <div class="flex-cb mt-2 text-sm">
-              <ElCheckbox v-model="formData.rememberPassword">{{
-                t('login.rememberPwd')
-              }}</ElCheckbox>
-              <RouterLink class="text-theme" :to="{ name: 'ForgetPassword' }">{{
-                t('login.forgetPwd')
-              }}</RouterLink>
-            </div>
+            <ElButton
+              class="submit-btn custom-height"
+              type="primary"
+              @click="handleSubmit"
+              :loading="loading"
+              v-ripple
+            >
+              {{ t('login.btnText') }}
+            </ElButton>
 
-            <div style="margin-top: 30px">
-              <ElButton
-                class="w-full custom-height"
-                type="primary"
-                @click="handleSubmit"
-                :loading="loading"
-                v-ripple
-              >
-                {{ t('login.btnText') }}
-              </ElButton>
-            </div>
-
-            <div class="mt-5 text-sm text-gray-600">
-              <span>{{ t('login.noAccount') }}</span>
-              <RouterLink class="text-theme" :to="{ name: 'Register' }">{{
-                t('login.register')
-              }}</RouterLink>
+            <div class="form-footer">
+              <span class="footer-text">{{ t('login.noAccount') }}</span>
+              <RouterLink class="register-link" :to="{ name: 'Register' }">
+                {{ t('login.register') }}
+              </RouterLink>
             </div>
           </ElForm>
         </div>
@@ -112,6 +133,7 @@
 <script setup lang="ts">
   import AppConfig from '@/config'
   import { useUserStore } from '@/store/modules/user'
+  import { useSettingStore } from '@/store/modules/setting'
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
   import { fetchLogin, fetchCaptcha, fetchVerifyCaptcha } from '@/api/auth'
@@ -123,6 +145,8 @@
 
   const { t, locale } = useI18n()
   const formKey = ref(0)
+  const settingStore = useSettingStore()
+  const { isDark } = storeToRefs(settingStore)
 
   // 监听语言切换，重置表单
   watch(locale, () => {

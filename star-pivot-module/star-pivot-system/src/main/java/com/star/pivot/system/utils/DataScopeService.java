@@ -38,8 +38,8 @@ public class DataScopeService {
     private static final String SQL_ALL = "1=1";
     /** MyBatis 用户部门 ID 占位符，表别名使用 u */
     private static final String PLACEHOLDER_USER_DEPT_ID = "u.dept_id = #{param.userDeptId}";
-    /** MyBatis 创建人占位符（仅本人权限），表别名使用 u */
-    private static final String PLACEHOLDER_USER_ID = "u.create_by = #{param.userId}";
+    /** MyBatis 用户ID占位符（仅本人权限），表别名使用 u */
+    private static final String PLACEHOLDER_USER_ID = "u.user_id = #{param.userId}";
 
     /** 数据权限优先级：1(全部) > 2(自定义) > 3(本部门) > 4(本部门及以下) > 5(仅本人) */
     private static final Map<String, Integer> SCOPE_PRIORITY = Map.of(
@@ -93,11 +93,7 @@ public class DataScopeService {
 
         // 计算最终数据权限（取最高优先级）
         ScopeResult result = calculateDataScope(roleList, userDeptId);
-        // 仅本人但无 userId 时返回无数据，避免条件缺失导致数据泄露
-        if (AppConstants.DataScope.SELF.equals(result.scopeType) && userId == null) {
-            log.debug("数据权限：仅本人但 userId 为空，返回无数据");
-            return new DataScope(SQL_NONE, Collections.emptyList(), null, null);
-        }
+        // 构建 SQL 过滤条件
         String sqlFilter = buildSqlFilter(result.scopeType, userId, result.deptIds, userDeptId);
 
         log.debug("数据权限：userId={}, scopeType={}, deptIds={}, userDeptId={}", userId, result.scopeType, result.deptIds, userDeptId);

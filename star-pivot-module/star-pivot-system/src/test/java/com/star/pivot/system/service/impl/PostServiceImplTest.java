@@ -72,6 +72,7 @@ class PostServiceImplTest {
 
         @Test
         @DisplayName("分页查询岗位列表")
+        @SuppressWarnings("unchecked")
         void selectPostPage() {
             PostQueryDTO queryDTO = new PostQueryDTO();
             queryDTO.setPageNum(1);
@@ -126,6 +127,7 @@ class PostServiceImplTest {
 
         @Test
         @DisplayName("新增岗位 - 成功")
+        @SuppressWarnings("unchecked")
         void insertPost_Success() {
             when(postMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
             when(postMapper.insert(any(SysPost.class))).thenReturn(1);
@@ -135,6 +137,7 @@ class PostServiceImplTest {
 
         @Test
         @DisplayName("新增岗位 - 岗位编码已存在")
+        @SuppressWarnings("unchecked")
         void insertPost_CodeExists() {
             when(postMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
 
@@ -148,6 +151,7 @@ class PostServiceImplTest {
 
         @Test
         @DisplayName("更新岗位 - 成功")
+        @SuppressWarnings("unchecked")
         void updatePost_Success() {
             testPostDTO.setPostId(1L);
 
@@ -170,6 +174,7 @@ class PostServiceImplTest {
 
         @Test
         @DisplayName("更新岗位 - 岗位编码已被使用")
+        @SuppressWarnings("unchecked")
         void updatePost_CodeInUse() {
             testPostDTO.setPostId(1L);
 
@@ -186,6 +191,7 @@ class PostServiceImplTest {
 
         @Test
         @DisplayName("删除岗位 - 成功")
+        @SuppressWarnings("unchecked")
         void deletePostByIds_Success() {
             when(postMapper.selectById(1L)).thenReturn(testPost);
             when(userPostMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
@@ -200,6 +206,7 @@ class PostServiceImplTest {
 
         @Test
         @DisplayName("删除岗位 - 岗位已被使用")
+        @SuppressWarnings("unchecked")
         void deletePostByIds_PostInUse() {
             when(postMapper.selectById(1L)).thenReturn(testPost);
             when(userPostMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(3L);
@@ -226,6 +233,7 @@ class PostServiceImplTest {
 
         @Test
         @DisplayName("检查岗位编码唯一性 - 唯一")
+        @SuppressWarnings("unchecked")
         void checkPostCodeUnique_Unique() {
             when(postMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
 
@@ -236,6 +244,7 @@ class PostServiceImplTest {
 
         @Test
         @DisplayName("检查岗位编码唯一性 - 不唯一")
+        @SuppressWarnings("unchecked")
         void checkPostCodeUnique_NotUnique() {
             when(postMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
 
@@ -246,6 +255,7 @@ class PostServiceImplTest {
 
         @Test
         @DisplayName("检查岗位编码唯一性 - 排除自身")
+        @SuppressWarnings("unchecked")
         void checkPostCodeUnique_ExcludeSelf() {
             when(postMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(0L);
 

@@ -4,8 +4,11 @@ import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.system.domain.bo.LogininforReqBo;
 import com.star.pivot.system.domain.bo.LogininforVO;
+import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.service.SysLogininforService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,8 +17,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 登录日志控制器
@@ -66,8 +72,8 @@ public class SysLogininforController {
     })
     @PreAuthorize("hasAuthority('system:logininfor:query')")
     @GetMapping("/{infoId}")
-    public Result<LogininforVO> getLogininforById(@Parameter(description = "日志ID") @PathVariable("infoId") Long infoId) {
-        com.star.pivot.system.domain.entity.SysLogininfor logininfor = sysLogininforService.getById(infoId);
+    public Result<LogininforVO> getLogininforById(@Parameter(description = "日志ID") @PathVariable Long infoId) {
+        SysLogininfor logininfor = sysLogininforService.getById(infoId);
         if (logininfor == null) {
             return Result.error("登录日志不存在");
         }
@@ -90,10 +96,7 @@ public class SysLogininforController {
     @PreAuthorize("hasAuthority('system:logininfor:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        java.util.List<Long> infoIds = deleteRequest.getIds();
-        if (infoIds == null || infoIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> infoIds = validateIds(deleteRequest.getIds());
         boolean success = sysLogininforService.removeByIds(infoIds);
         return success ? Result.success("删除成功") : Result.error("删除失败");
     }
@@ -118,9 +121,20 @@ public class SysLogininforController {
     /**
      * 转换为VO
      */
-    private LogininforVO convertToVO(com.star.pivot.system.domain.entity.SysLogininfor logininfor) {
+    private LogininforVO convertToVO(SysLogininfor logininfor) {
         LogininforVO vo = new LogininforVO();
-        org.springframework.beans.BeanUtils.copyProperties(logininfor, vo);
-        return vo;
+        BeanUtils.copyProperties(logininfor, vo);
+       return vo;
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new ServiceException(
+                ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }

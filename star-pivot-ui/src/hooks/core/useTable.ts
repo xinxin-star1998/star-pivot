@@ -30,15 +30,16 @@ import {
   updatePaginationFromResponse
 } from '@utils/table/tableUtils'
 import { tableConfig } from '@utils/table/tableConfig'
+import { logger as sysLogger } from '@/utils/sys'
 
 // 类型推导工具类型
-type InferApiParams<T> = T extends (params: infer P) => any ? P : never
-type InferApiResponse<T> = T extends (params: any) => Promise<infer R> ? R : never
+type InferApiParams<T> = T extends (params: infer P) => Promise<unknown> ? P : never
+type InferApiResponse<T> = T extends (params: unknown) => Promise<infer R> ? R : never
 type InferRecordType<T> = T extends Api.Common.PaginatedResponse<infer U> ? U : never
 
 // 优化的配置接口 - 支持自动类型推导
 export interface UseTableConfig<
-  TApiFn extends (params: any) => Promise<any> = (params: any) => Promise<any>,
+  TApiFn extends (params: unknown) => Promise<unknown> = (params: unknown) => Promise<unknown>,
   TRecord = InferRecordType<InferApiResponse<TApiFn>>,
   TParams = InferApiParams<TApiFn>,
   TResponse = InferApiResponse<TApiFn>

@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>star-pivot-framework-boot-starter</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <name>star-pivot-framework-boot-starter</name>
     <description>StarPivot 框架启动聚合：引入 security + core（security 已传递 core/log/file/web），应用层依赖本模块 + 业务模块(system/generator/quartz)</description>
 
@@ -19,15 +19,6 @@
         <dependency>
             <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.star.pivot</groupId>
-            <artifactId>star-pivot-framework-core</artifactId>
-        </dependency>
-        <!-- 显式纳入 file，保证应用层 classpath 中 OssUtil 等版本稳定，应用只需依赖 boot-starter -->
-        <dependency>
-            <groupId>com.star.pivot</groupId>
-            <artifactId>star-pivot-framework-file</artifactId>
         </dependency>
     </dependencies>
 </project>

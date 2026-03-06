@@ -7,6 +7,8 @@
   import com.star.pivot.framework.domain.AppConstants;
   import com.star.pivot.framework.domain.PageResponse;
   import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.utils.AssertUtils;
   import com.star.pivot.security.utils.SecurityContextUtils;
   import com.star.pivot.system.domain.dto.RoleDTO;
   import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
@@ -91,7 +93,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         wrapper.eq(SysRole::getRoleKey, roleDTO.getRoleKey())
                 .eq(SysRole::getDelFlag, "0");
         if (this.count(wrapper) > 0) {
-            throw new BusinessException("角色权限字符串已存在");
+            throw new BusinessException(ErrorCode.ROLE_KEY_EXISTS);
         }
 
         // 创建角色
@@ -120,22 +122,21 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Transactional(rollbackFor = Exception.class)
     public boolean updateRole(RoleDTO roleDTO) {
         SysRole role = this.getById(roleDTO.getRoleId());
-        if (role == null || "2".equals(role.getDelFlag())) {
-            throw new BusinessException("角色不存在");
+        AssertUtils.notNull(role, ErrorCode.ROLE_NOT_FOUND);
+        if ("2".equals(role.getDelFlag())) {
+            throw new BusinessException(ErrorCode.ROLE_NOT_FOUND);
         }
 
-        // 检查角色权限字符串是否已被其他角色使用
         LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysRole::getRoleKey, roleDTO.getRoleKey())
                 .eq(SysRole::getDelFlag, "0")
                 .ne(SysRole::getRoleId, roleDTO.getRoleId());
         if (this.count(wrapper) > 0) {
-            throw new BusinessException("角色权限字符串已被使用");
+            throw new BusinessException(ErrorCode.ROLE_KEY_USED);
         }
 
-        // 不能修改超级管理员角色
         if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()) && !AppConstants.ADMIN_ROLE_KEY.equals(roleDTO.getRoleKey())) {
-            throw new BusinessException("不能修改超级管理员角色");
+            throw new BusinessException(ErrorCode.ROLE_ADMIN_PROTECTED);
         }
 
         // 更新角色信息
@@ -174,16 +175,14 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         for (Long roleId : roleIds) {
             SysRole role = this.getById(roleId);
             if (role != null && !"2".equals(role.getDelFlag())) {
-                // 不能删除超级管理员角色
                 if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey())) {
-                    throw new BusinessException("不能删除超级管理员角色");
+                    throw new BusinessException(ErrorCode.ROLE_ADMIN_PROTECTED);
                 }
-                // 检查是否有用户使用该角色
                 LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
                 wrapper.eq(UserRole::getRoleId, roleId);
                 long count = userRoleMapper.selectCount(wrapper);
                 if (count > 0) {
-                    throw new BusinessException("角色[" + role.getRoleName() + "]已被使用，不能删除");
+                    throw new BusinessException(ErrorCode.ROLE_USED, "角色[" + role.getRoleName() + "]已被使用，不能删除");
                 }
 
                 role.setDelFlag(AppConstants.DelFlag.DELETE);
@@ -200,13 +199,13 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @CacheEvict(cacheNames = "roleList", allEntries = true)
     public boolean changeRoleStatus(Long roleId, String status) {
         SysRole role = this.getById(roleId);
-        if (role == null || "2".equals(role.getDelFlag())) {
-            throw new BusinessException("角色不存在");
+        AssertUtils.notNull(role, ErrorCode.ROLE_NOT_FOUND);
+        if ("2".equals(role.getDelFlag())) {
+            throw new BusinessException(ErrorCode.ROLE_NOT_FOUND);
         }
 
-        // 不能停用超级管理员角色
         if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()) && "1".equals(status)) {
-            throw new BusinessException("不能停用超级管理员角色");
+            throw new BusinessException(ErrorCode.ROLE_ADMIN_PROTECTED);
         }
 
         role.setStatus(status);
@@ -226,14 +225,12 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Transactional(readOnly = true)
     public List<Long> selectDeptIdsByRoleId(Long roleId) {
         SysRole sysRole = sysRoleMapper.selectById(roleId);
-        if(sysRole == null){
-            throw new BusinessException("角色不存在");
-        }
+        AssertUtils.notNull(sysRole, ErrorCode.ROLE_NOT_FOUND);
         if ("2".equals(sysRole.getDelFlag())){
-            throw new BusinessException("角色已删除");
+            throw new BusinessException(ErrorCode.ROLE_DELETED);
         }
         if("1".equals(sysRole.getStatus())){
-            throw new BusinessException("角色已禁用，请联系管理员");
+            throw new BusinessException(ErrorCode.ROLE_DISABLED);
         }
         List<Long> deptIds;
         if(sysRole.getRoleKey().equals(AppConstants.ADMIN_ROLE_KEY)){

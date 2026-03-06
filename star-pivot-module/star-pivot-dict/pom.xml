@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.star.pivot</groupId>
+        <artifactId>star-pivot-module</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.star.pivot</groupId>
+    <artifactId>star-pivot-dict</artifactId>
+    <packaging>jar</packaging>
+    <name>star-pivot-dict</name>
+    <description>StarPivot 字典模块 - 提供字典类型和字典数据管理</description>
+
+    <dependencies>
+        <!-- SpringBoot AOP 起步依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+        </dependency>
+        <!-- 框架层 -->
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-boot-starter</artifactId>
+        </dependency>
+        <!-- 安全模块（获取当前用户） -->
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-security</artifactId>
+        </dependency>
+        <!-- Druid 数据库连接池 -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-3-starter</artifactId>
+        </dependency>
+        <!-- SpringDoc OpenAPI（Swagger） -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+        <!-- 测试依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

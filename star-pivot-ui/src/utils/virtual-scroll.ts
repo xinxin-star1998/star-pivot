@@ -34,7 +34,7 @@ export interface VirtualScrollResult {
   /** 可见区域的结束索引 */
   endIndex: number
   /** 渲染的数据列表（已截取） */
-  visibleData: any[]
+  visibleData: Record<string, unknown>[]
   /** 上方占位高度（px） */
   offsetY: number
   /** 总高度（px） */

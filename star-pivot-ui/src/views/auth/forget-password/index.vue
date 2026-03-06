@@ -7,20 +7,32 @@
 
       <div class="auth-right-wrap">
         <div class="form">
-          <h3 class="title">{{ t('forgetPassword.title') }}</h3>
-          <p class="sub-title">{{ t('forgetPassword.subTitle') }}</p>
-          <div class="mt-5">
-            <span class="input-label" v-if="showInputLabel">账号</span>
-            <ElInput
-              class="custom-height"
-              :placeholder="t('forgetPassword.placeholder')"
-              v-model.trim="username"
-            />
+          <div class="form-header">
+            <h3 class="title">{{ t('forgetPassword.title') }}</h3>
+            <p class="sub-title">{{ t('forgetPassword.subTitle') }}</p>
           </div>
+          
+          <div class="form-content">
+            <div class="input-group">
+              <span class="input-label" v-if="showInputLabel">账号</span>
+              <ElInput
+                class="custom-height"
+                :placeholder="t('forgetPassword.placeholder')"
+                v-model.trim="username"
+                clearable
+              >
+                <template #prefix>
+                  <ArtSvgIcon
+                    icon="ri:user-line"
+                    class="text-lg transition-colors"
+                    :class="isDark ? 'text-g-500' : 'text-g-400'"
+                  />
+                </template>
+              </ElInput>
+            </div>
 
-          <div style="margin-top: 15px">
             <ElButton
-              class="w-full custom-height"
+              class="submit-btn custom-height"
               type="primary"
               @click="register"
               :loading="loading"
@@ -28,10 +40,12 @@
             >
               {{ t('forgetPassword.submitBtnText') }}
             </ElButton>
-          </div>
 
-          <div style="margin-top: 15px">
-            <ElButton class="w-full custom-height" plain @click="toLogin">
+            <ElButton 
+              class="back-btn custom-height" 
+              plain 
+              @click="toLogin"
+            >
               {{ t('forgetPassword.backBtnText') }}
             </ElButton>
           </div>
@@ -43,11 +57,14 @@
 
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
+  import { useSettingStore } from '@/store/modules/setting'
 
   defineOptions({ name: 'ForgetPassword' })
 
   const { t } = useI18n()
   const router = useRouter()
+  const settingStore = useSettingStore()
+  const { isDark } = storeToRefs(settingStore)
   const showInputLabel = ref(false)
 
   const username = ref('')

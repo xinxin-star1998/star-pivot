@@ -13,12 +13,13 @@
     <artifactId>star-pivot-module</artifactId>
     <packaging>pom</packaging>
     <name>star-pivot-module</name>
-    <description>StarPivot 业务模块聚合（系统管理、代码生成等）</description>
+    <description>StarPivot 业务模块聚合（系统管理、代码生成、定时任务等）- 模块间已解耦</description>
 
-    <!-- 构建顺序：system、generator 先于 quartz（quartz 依赖 system）-->
     <modules>
         <module>star-pivot-system</module>
+        <module>star-pivot-dict</module>
         <module>star-pivot-generator</module>
         <module>star-pivot-quartz</module>
+        <module>star-pivot-monitor</module>
     </modules>
 </project>

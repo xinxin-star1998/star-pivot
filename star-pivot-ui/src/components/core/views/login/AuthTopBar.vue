@@ -146,4 +146,17 @@
   .color-picker-expandable:hover .palette-btn :deep(.art-svg-icon) {
     color: v-bind(color);
   }
+
+  /* 夜间模式图标颜色优化 */
+  :deep(.art-svg-icon) {
+    transition: color 0.3s ease;
+  }
+
+  .dark :deep(.art-svg-icon) {
+    color: #9ca3af;
+  }
+
+  .dark :deep(.art-svg-icon:hover) {
+    color: #d1d5db;
+  }
 </style>

@@ -1,7 +1,6 @@
 package com.star.pivot.framework.constants;
 
 import java.util.Locale;
-import io.jsonwebtoken.Claims;
 
 /**
  * 通用常量信息
@@ -30,8 +29,6 @@ public class Constants
     public static final String TOKEN = "token";
     public static final String TOKEN_PREFIX = "Bearer ";
     public static final String LOGIN_USER_KEY = "login_user_key";
-    public static final String JWT_USERID = "userid";
-    public static final String JWT_USERNAME = Claims.SUBJECT;
     public static final String JWT_AVATAR = "avatar";
     public static final String JWT_CREATED = "created";
     public static final String JWT_AUTHORITIES = "authorities";

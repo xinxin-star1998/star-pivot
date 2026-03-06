@@ -237,7 +237,11 @@
         <where>
             u.del_flag = '0' and u.status = '0'
             <if test="param.assignUserReqBo.roleId != null">
-                and u.user_id not in(select user_id from sys_user_role where role_id =#{param.assignUserReqBo.roleId} )
+                AND NOT EXISTS (
+                    SELECT 1 FROM sys_user_role ur2
+                    WHERE ur2.user_id = u.user_id
+                    AND ur2.role_id = #{param.assignUserReqBo.roleId}
+                )
             </if>
             <if test="param.assignUserReqBo.userName != null and param.assignUserReqBo.userName != ''">
                 and u.user_name like concat('%',#{param.assignUserReqBo.userName},'%')

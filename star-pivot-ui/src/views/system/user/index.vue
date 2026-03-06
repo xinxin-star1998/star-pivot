@@ -642,9 +642,14 @@
     width: 280px;
     overflow: hidden;
     background-color: var(--default-box-color);
-    border-radius: 8px;
+    border-radius: 12px;
     border: 1px solid var(--art-card-border);
-    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+    }
   }
 
   .dark .left-panel {
@@ -657,9 +662,14 @@
     flex-direction: column;
     overflow: hidden;
     background-color: var(--default-box-color);
-    border-radius: 8px;
+    border-radius: 12px;
     border: 1px solid var(--art-card-border);
-    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+    }
   }
 
   .dark .right-panel {
@@ -688,7 +698,7 @@
     gap: 12px;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px 12px;
+    padding: 16px 16px 12px;
   }
 
   .dept-search-box {
@@ -715,6 +725,12 @@
   :deep(.el-tree-node__content) {
     height: 36px;
     line-height: 36px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: var(--art-gray-100);
+    }
   }
 
   :deep(.el-tree-node__expand-icon) {
@@ -733,5 +749,57 @@
     flex-direction: column;
     border: none;
     box-shadow: none;
+  }
+
+  :deep(.el-table) {
+    border-radius: 8px;
+
+    .el-table__header-wrapper {
+      th {
+        background-color: var(--art-gray-100) !important;
+        font-weight: 600;
+        color: var(--art-gray-800);
+      }
+    }
+
+    .el-table__body-wrapper {
+      tr {
+        transition: all 0.2s ease;
+
+        &:hover > td {
+          background-color: var(--art-gray-50) !important;
+        }
+      }
+    }
+  }
+
+  :deep(.el-button) {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  :deep(.el-tag) {
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  .status-indicator {
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.5;
+    }
   }
 </style>

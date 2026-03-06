@@ -2,6 +2,8 @@ package com.star.pivot.controller;
 
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.exception.ServiceException;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.service.SysMenuService;
@@ -98,10 +100,7 @@ public class SysMenuController {
     @PreAuthorize("hasAuthority('system:menu:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        List<Long> menuIds = deleteRequest.getIds();
-        if (menuIds == null || menuIds.isEmpty()) {
-            return Result.error("删除ID不能为空");
-        }
+        List<Long> menuIds = validateIds(deleteRequest.getIds());
         boolean success = sysMenuService.deleteMenuByIds(menuIds);
         return success ? Result.success("删除菜单成功") : Result.error("删除菜单失败");
     }
@@ -136,5 +135,15 @@ public class SysMenuController {
     public Result<SysMenu> getById(@Parameter(description = "菜单ID") @PathVariable("menuId") Long menuId){
         SysMenu menu = sysMenuService.getById(menuId);
         return Result.success("查询成功",menu);
+    }
+
+    /**
+     * 验证ID列表非空
+     */
+    private List<Long> validateIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw new ServiceException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
+        }
+        return ids;
     }
 }

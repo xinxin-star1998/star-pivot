@@ -31,12 +31,12 @@
       ></div>
 
       <!-- 背景泡泡 -->
-      <div class="geo-element bg-bubble animate-scale-in" style="animation-delay: 0.5"></div>
+      <div class="geo-element bg-bubble animate-scale-in" style="animation-delay: 0.5s"></div>
 
       <!-- 太阳/月亮 -->
       <div
         class="geo-element circle-top-right animate-fade-in-down"
-        style="animation-delay: 0.5"
+        style="animation-delay: 0.5s"
         @click="themeAnimation"
       ></div>
 
@@ -104,18 +104,35 @@
     height: 100%;
     padding: 15px;
     overflow: hidden;
-    background-color: $bg-mix-light-9;
+    background: linear-gradient(135deg, $bg-mix-light-9 0%, color-mix(in srgb, $primary-light-8 50%, $main-bg) 100%);
+
+    // 添加背景纹理
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 40%);
+      pointer-events: none;
+    }
 
     .logo {
       position: relative;
       z-index: 100;
       display: flex;
       align-items: center;
+      animation: logoFadeIn 0.8s ease-out forwards;
 
       .title {
         margin-left: 10px;
         font-size: 20px;
-        font-weight: 400;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        background: linear-gradient(135deg, var(--art-gray-800), var(--art-gray-600));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
     }
 
@@ -125,7 +142,8 @@
       z-index: 10;
       width: 40%;
       margin: auto;
-      animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+        floatAnimation 6s ease-in-out infinite 0.6s;
     }
 
     .text-wrap {
@@ -136,15 +154,18 @@
       animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 
       h1 {
-        font-size: 24px;
-        font-weight: 400;
+        font-size: 26px;
+        font-weight: 500;
         color: var(--art-gray-900) !important;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
       }
 
       p {
         margin-top: 10px;
-        font-size: 14px;
+        font-size: 15px;
         color: var(--art-gray-600) !important;
+        line-height: 1.6;
       }
     }
 
@@ -276,6 +297,48 @@
         }
       }
 
+      @keyframes logoFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes floatAnimation {
+        0%, 100% {
+          transform: translateY(0);
+        }
+
+        50% {
+          transform: translateY(-15px);
+        }
+      }
+
+      @keyframes pulseGlow {
+        0%, 100% {
+          box-shadow: 0 0 20px rgba(var(--el-color-primary-rgb), 0.2);
+        }
+
+        50% {
+          box-shadow: 0 0 40px rgba(var(--el-color-primary-rgb), 0.4);
+        }
+      }
+
+      @keyframes rotateSlowly {
+        from {
+          transform: rotate(0deg);
+        }
+
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
       // 动画类
       .animate-fade-in-up {
         animation-name: fadeInUp;
@@ -323,6 +386,7 @@
         height: 42px;
         border: 2px solid $primary-light-8;
         border-radius: 50%;
+        animation: fadeInUp 0.8s ease-out forwards, pulseGlow 3s ease-in-out infinite 0.8s;
       }
 
       .square-rotated {
@@ -330,7 +394,9 @@
         left: 16%;
         width: 60px;
         height: 60px;
-        background-color: $bg-mix-light-8;
+        background: linear-gradient(135deg, $bg-mix-light-8, $bg-mix-light-7);
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 
         &.animate-fade-in-left {
           animation-name: fadeInLeftRotated;
@@ -342,8 +408,9 @@
         left: 30%;
         width: 18px;
         height: 18px;
-        background-color: $primary-light-8;
+        background: linear-gradient(135deg, $primary-light-8, $primary-light-7);
         border-radius: 50%;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       }
 
       // 太阳/月亮效果
@@ -354,9 +421,10 @@
         width: 50px;
         height: 50px;
         cursor: pointer;
-        background: $bg-mix-light-7;
+        background: linear-gradient(135deg, $bg-mix-light-7, $bg-mix-light-8);
         border-radius: 50%;
-        transition: all 0.3s;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 
         &::after {
           position: absolute;
@@ -365,15 +433,16 @@
           width: 100%;
           height: 100%;
           content: '';
-          background: linear-gradient(to right, #fcbb04, #fffc00);
+          background: linear-gradient(135deg, #fcbb04, #fffc00);
           border-radius: 50%;
           opacity: 0;
-          transition: all 0.5s;
+          transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
           transform: translate(-50%, -50%);
         }
 
         &:hover {
-          box-shadow: 0 0 36px #fffc00;
+          box-shadow: 0 0 40px rgba(255, 252, 0, 0.5);
+          transform: scale(1.1);
 
           &::after {
             opacity: 1;
@@ -386,7 +455,9 @@
         bottom: 10%;
         width: 50px;
         height: 50px;
-        background-color: $primary-light-8;
+        background: linear-gradient(135deg, $primary-light-8, $primary-light-9);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 
         &.animate-fade-in-right {
           animation-name: fadeInRightRotated;
@@ -399,16 +470,18 @@
         right: -120px;
         width: 360px;
         height: 360px;
-        background-color: $bg-mix-light-8;
+        background: linear-gradient(135deg, $bg-mix-light-8, $bg-mix-light-9);
         border-radius: 50%;
+        opacity: 0.6;
       }
 
       // 装饰点
       .dot {
         width: 14px;
         height: 14px;
-        background-color: $primary-light-7;
+        background: linear-gradient(135deg, $primary-light-7, $primary-light-8);
         border-radius: 50%;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
         &.dot-top-left {
           top: 140px;
@@ -423,7 +496,7 @@
         &.dot-center-right {
           top: 46%;
           right: 22%;
-          background-color: $primary-light-8;
+          background: linear-gradient(135deg, $primary-light-8, $primary-light-9);
         }
       }
 
@@ -439,8 +512,14 @@
         .square {
           position: absolute;
           display: block;
-          border-radius: 8px;
-          box-shadow: 0 8px 24px rgb(64 87 167 / 12%);
+          border-radius: 12px;
+          box-shadow: 0 12px 32px rgba(64, 87, 167, 0.15);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+          &:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 16px 40px rgba(64, 87, 167, 0.2);
+          }
 
           &.square-blue {
             top: 12px;
@@ -448,7 +527,8 @@
             z-index: 2;
             width: 50px;
             height: 50px;
-            background-color: rgb(from $primary-base r g b / 30%);
+            background: linear-gradient(135deg, rgb(from $primary-base r g b / 35%), rgb(from $primary-base r g b / 25%));
+            backdrop-filter: blur(4px);
           }
 
           &.square-pink {
@@ -457,7 +537,8 @@
             z-index: 1;
             width: 70px;
             height: 70px;
-            background-color: rgb(from $primary-base r g b / 15%);
+            background: linear-gradient(135deg, rgb(from $primary-base r g b / 18%), rgb(from $primary-base r g b / 12%));
+            backdrop-filter: blur(4px);
           }
 
           &.square-purple {
@@ -466,7 +547,8 @@
             z-index: 3;
             width: 32px;
             height: 32px;
-            background-color: rgb(from $primary-base r g b / 45%);
+            background: linear-gradient(135deg, rgb(from $primary-base r g b / 50%), rgb(from $primary-base r g b / 40%));
+            backdrop-filter: blur(4px);
           }
         }
 
@@ -476,13 +558,14 @@
           top: 86px;
           left: 72px;
           width: 80px;
-          height: 1px;
+          height: 2px;
           content: '';
           background: linear-gradient(90deg, var(--el-color-primary-light-6), transparent);
           opacity: 0;
           transform: rotate(50deg);
           animation: lineGrow 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
           animation-delay: 1.2s;
+          border-radius: 1px;
         }
       }
     }
@@ -516,18 +599,45 @@
 
   // 暗色主题
   .dark .login-left-view {
-    background-color: color-mix(in srgb, $primary-light-9 60%, #070707);
+    background:
+      radial-gradient(ellipse at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 100%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+      linear-gradient(135deg, color-mix(in srgb, $primary-light-9 60%, #070707) 0%, color-mix(in srgb, $primary-light-8 30%, #0a0a0a) 100%);
+
+    // 暗色背景纹理
+    &::before {
+      background-image:
+        radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 40%);
+    }
 
     @media only screen and (width <= 1180px) {
       background: transparent;
     }
 
+    .logo .title {
+      background: linear-gradient(135deg, var(--art-gray-200), var(--art-gray-400));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .text-wrap {
+      h1 {
+        color: var(--art-gray-100) !important;
+      }
+
+      p {
+        color: var(--art-gray-400) !important;
+      }
+    }
+
     .geometric-decorations {
       // 月亮效果
       .circle-top-right {
-        background-color: $bg-mix-light-8;
-        box-shadow: 0 0 25px #333 inset;
-        transition: all 0.3s ease-in-out 0.1s;
+        background: linear-gradient(135deg, $bg-mix-light-8, $bg-mix-light-9);
+        box-shadow: 0 0 25px #333 inset, 0 4px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
         rotate: -48deg;
 
         &::before {
@@ -537,14 +647,15 @@
           width: 50px;
           height: 50px;
           content: '';
-          background-color: $bg-mix-light-9;
+          background: linear-gradient(135deg, $bg-mix-light-9, #0a0a0a);
           border-radius: 50%;
-          transition: all 0.3s ease-in-out;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         &:hover {
-          background-color: transparent;
-          box-shadow: 0 40px 25px #ddd inset;
+          background: transparent;
+          box-shadow: 0 40px 25px #ddd inset, 0 0 30px rgba(255, 255, 255, 0.2);
+          transform: scale(1.1);
 
           &::before {
             left: 18px;
@@ -557,48 +668,62 @@
       }
 
       .bg-bubble {
-        background-color: $bg-mix-light-9;
+        background:
+          radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.2) 0%, transparent 60%),
+          linear-gradient(135deg, $bg-mix-light-9, color-mix(in srgb, $primary-light-8 40%, #0a0a0a));
+        opacity: 0.5;
       }
 
       // 其他元素颜色调整
       .square-rotated {
-        background-color: $bg-mix-light-9;
+        background: linear-gradient(135deg, $bg-mix-light-9, color-mix(in srgb, $primary-light-8 50%, #0a0a0a));
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
       }
 
       .circle-small,
       .dot {
-        background-color: $primary-light-8;
+        background: linear-gradient(135deg, $primary-light-8, $primary-light-9);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       }
 
       .square-bottom-right {
-        background-color: $primary-light-9;
+        background: linear-gradient(135deg, $primary-light-9, color-mix(in srgb, $primary-light-8 50%, #0a0a0a));
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
       }
 
       .dot.dot-top-right {
-        background-color: $primary-light-8;
+        background: linear-gradient(135deg, $primary-light-8, $primary-light-9);
+      }
+
+      .circle-outline {
+        border-color: $primary-light-7;
       }
     }
 
     // 方块组暗色调整
     .squares-group {
       .square {
-        box-shadow: none;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+
+        &:hover {
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+        }
 
         &.square-blue {
-          background-color: rgb(from $primary-base r g b / 18%);
+          background: linear-gradient(135deg, rgb(from $primary-base r g b / 22%), rgb(from $primary-base r g b / 15%));
         }
 
         &.square-pink {
-          background-color: rgb(from $primary-base r g b / 10%);
+          background: linear-gradient(135deg, rgb(from $primary-base r g b / 12%), rgb(from $primary-base r g b / 8%));
         }
 
         &.square-purple {
-          background-color: rgb(from $primary-base r g b / 20%);
+          background: linear-gradient(135deg, rgb(from $primary-base r g b / 28%), rgb(from $primary-base r g b / 20%));
         }
       }
 
       &::after {
-        background: linear-gradient(90deg, $primary-light-8, transparent);
+        background: linear-gradient(90deg, $primary-light-7, transparent);
       }
     }
   }
