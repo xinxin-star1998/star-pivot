@@ -1,12 +1,6 @@
 <template>
   <ElDialog v-model="visible" title="执行日志" width="800px" align-center>
-    <ElTable
-      v-loading="loading"
-      :data="logList"
-      border
-      max-height="400"
-      style="width: 100%"
-    >
+    <ElTable v-loading="loading" :data="logList" border max-height="400" style="width: 100%">
       <ElTableColumn prop="jobName" label="任务名称" width="120" />
       <ElTableColumn prop="jobGroup" label="任务组" width="80" />
       <ElTableColumn prop="status" label="状态" width="70">
@@ -108,13 +102,17 @@
 
 <style scoped lang="scss">
   :deep(.el-dialog) {
-    border-radius: 16px;
     overflow: hidden;
+    border-radius: 16px;
 
     .el-dialog__header {
       padding: 20px 24px;
       margin: 0;
-      background: linear-gradient(135deg, var(--el-color-primary-light-9) 0%, var(--el-color-primary-light-8) 100%);
+      background: linear-gradient(
+        135deg,
+        var(--el-color-primary-light-9) 0%,
+        var(--el-color-primary-light-8) 100%
+      );
       border-bottom: 1px solid var(--art-card-border);
 
       .el-dialog__title {
@@ -130,8 +128,8 @@
 
     .el-dialog__footer {
       padding: 16px 24px;
-      border-top: 1px solid var(--art-card-border);
       background-color: var(--art-gray-50);
+      border-top: 1px solid var(--art-card-border);
     }
   }
 
@@ -140,9 +138,9 @@
 
     .el-table__header-wrapper {
       th {
-        background-color: var(--art-gray-100) !important;
         font-weight: 600;
         color: var(--art-gray-800);
+        background-color: var(--art-gray-100) !important;
       }
     }
 
@@ -158,8 +156,8 @@
   }
 
   :deep(.el-tag) {
-    border-radius: 6px;
     font-weight: 500;
+    border-radius: 6px;
   }
 
   :deep(.el-pagination) {
@@ -167,8 +165,8 @@
   }
 
   :deep(.el-button) {
-    border-radius: 8px;
     font-weight: 500;
+    border-radius: 8px;
     transition: all 0.3s ease;
 
     &:hover {

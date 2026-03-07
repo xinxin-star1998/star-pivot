@@ -270,7 +270,10 @@ export function useChart(options: UseChartOptions = {}) {
   })
 
   // 获取统一的 tooltip 配置
-  const getTooltipStyle = (trigger: 'item' | 'axis' = 'axis', customOptions: Partial<echarts.EChartsCoreOption> = {}) => ({
+  const getTooltipStyle = (
+    trigger: 'item' | 'axis' = 'axis',
+    customOptions: Partial<echarts.EChartsCoreOption> = {}
+  ) => ({
     trigger,
     backgroundColor: isDark.value ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
     borderColor: isDark.value ? '#333' : '#ddd',

@@ -31,8 +31,8 @@ class Logger {
     }
   }
 
-  private sendToErrorMonitoring(args: unknown[]) {
-  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private sendToErrorMonitoring(args: unknown[]) {}
 }
 
 export const logger = new Logger()

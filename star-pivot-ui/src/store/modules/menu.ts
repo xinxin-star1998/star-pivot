@@ -83,7 +83,10 @@ export const useMenuStore = defineStore('menuStore', () => {
     for (const menu of menus) {
       if (menu.perms) {
         // perms 可能是逗号分隔的多个权限标识
-        const permsArray = menu.perms.split(',').map((p) => p.trim()).filter(Boolean)
+        const permsArray = menu.perms
+          .split(',')
+          .map((p) => p.trim())
+          .filter(Boolean)
         perms.push(...permsArray)
       }
       if (menu.children && menu.children.length > 0) {

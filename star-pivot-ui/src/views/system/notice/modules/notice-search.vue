@@ -54,7 +54,7 @@
     },
     {
       label: '公告内容',
-      key: 'noticeContent',
+      key: 'noticeContent'
     },
     {
       label: '公告状态',
@@ -66,7 +66,7 @@
         // 字典类型：sys_notice_status
         // options: 需要从字典服务获取
       }
-    },
+    }
   ])
 
   // 事件

@@ -204,10 +204,13 @@
           label: '前端模板',
           width: 120,
           formatter: (row: GenTableListItem) => {
-            const webTypeMap: Record<string, { text: string; type: 'success' | 'info' | 'warning' }> = {
+            const webTypeMap: Record<
+              string,
+              { text: string; type: 'success' | 'info' | 'warning' }
+            > = {
               'element-ui': { text: 'Element UI', type: 'info' },
               'element-plus': { text: 'Element Plus', type: 'success' },
-              'art-design-pro': { text: 'Art Design Pro', type: 'warning' },
+              'art-design-pro': { text: 'Art Design Pro', type: 'warning' }
             }
             const config = webTypeMap[row.tplWebType || ''] || {
               text: row.tplWebType || '-',
@@ -589,9 +592,9 @@
 
     .el-table__header-wrapper {
       th {
-        background-color: var(--art-gray-100) !important;
         font-weight: 600;
         color: var(--art-gray-800);
+        background-color: var(--art-gray-100) !important;
       }
     }
 
@@ -607,8 +610,8 @@
   }
 
   :deep(.el-button) {
-    border-radius: 8px;
     font-weight: 500;
+    border-radius: 8px;
     transition: all 0.3s ease;
 
     &:hover {
@@ -617,7 +620,7 @@
   }
 
   :deep(.el-tag) {
-    border-radius: 6px;
     font-weight: 500;
+    border-radius: 6px;
   }
 </style>

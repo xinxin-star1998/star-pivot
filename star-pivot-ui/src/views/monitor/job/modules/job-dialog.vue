@@ -5,10 +5,10 @@
     width="560px"
     align-center
   >
-    <ElForm 
-      ref="formRef" 
-      :model="formData" 
-      :rules="rules" 
+    <ElForm
+      ref="formRef"
+      :model="formData"
+      :rules="rules"
       label-width="120px"
       aria-label="定时任务表单"
     >
@@ -25,7 +25,9 @@
           :rows="2"
           placeholder="如：com.star.pivot.quartz.task.SampleTask.hello()"
         />
-        <div class="form-tip">格式：包名.类名.方法名()，仅允许白名单包：com.star.pivot.quartz.task</div>
+        <div class="form-tip"
+          >格式：包名.类名.方法名()，仅允许白名单包：com.star.pivot.quartz.task</div
+        >
       </ElFormItem>
       <ElFormItem label="Cron 表达式" prop="cronExpression">
         <ElInput v-model="formData.cronExpression" placeholder="如：0 0/5 * * * ? 表示每5分钟" />
@@ -63,12 +65,7 @@
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
-  import {
-    fetchAddJob,
-    fetchUpdateJob,
-    fetchJobById,
-    type SysJob
-  } from '@/api/monitor/job'
+  import { fetchAddJob, fetchUpdateJob, fetchJobById, type SysJob } from '@/api/monitor/job'
   import type { DialogType } from '@/types'
 
   interface Props {
@@ -159,13 +156,17 @@
 
 <style scoped lang="scss">
   :deep(.el-dialog) {
-    border-radius: 16px;
     overflow: hidden;
+    border-radius: 16px;
 
     .el-dialog__header {
       padding: 20px 24px;
       margin: 0;
-      background: linear-gradient(135deg, var(--el-color-primary-light-9) 0%, var(--el-color-primary-light-8) 100%);
+      background: linear-gradient(
+        135deg,
+        var(--el-color-primary-light-9) 0%,
+        var(--el-color-primary-light-8) 100%
+      );
       border-bottom: 1px solid var(--art-card-border);
 
       .el-dialog__title {
@@ -181,8 +182,8 @@
 
     .el-dialog__footer {
       padding: 16px 24px;
-      border-top: 1px solid var(--art-card-border);
       background-color: var(--art-gray-50);
+      border-top: 1px solid var(--art-card-border);
     }
   }
 
@@ -221,10 +222,10 @@
   }
 
   :deep(.el-button) {
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.3s ease;
     padding: 10px 24px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 
     &:hover {
       transform: translateY(-1px);
@@ -232,8 +233,8 @@
   }
 
   .form-tip {
+    margin-top: 4px;
     font-size: 12px;
     color: var(--el-text-color-secondary);
-    margin-top: 4px;
   }
 </style>

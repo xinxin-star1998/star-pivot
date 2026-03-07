@@ -12,7 +12,7 @@
             <h3 class="title">{{ t('login.title') }}</h3>
             <p class="sub-title">{{ t('login.subTitle') }}</p>
           </div>
-          
+
           <ElForm
             ref="formRef"
             :model="formData"
@@ -37,7 +37,7 @@
                 </template>
               </ElInput>
             </ElFormItem>
-            
+
             <ElFormItem prop="password">
               <ElInput
                 class="custom-height"
@@ -83,11 +83,7 @@
                     @click="refreshCaptcha"
                     :class="{ 'opacity-50': loadingCaptcha }"
                   />
-                  <div
-                    v-else
-                    class="captcha-placeholder"
-                    @click="refreshCaptcha"
-                  >
+                  <div v-else class="captcha-placeholder" @click="refreshCaptcha">
                     <ArtSvgIcon icon="ri:refresh-line" class="text-lg" />
                     <span>获取验证码</span>
                   </div>

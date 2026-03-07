@@ -7,8 +7,8 @@
 // 如果前端和后端在同一域名下，使用 /api/ 即可
 window.__APP_RUNTIME_CONFIG__.VITE_API_URL = '/api';
  */
-window.__APP_RUNTIME_CONFIG__ = window.__APP_RUNTIME_CONFIG__ || {};
+window.__APP_RUNTIME_CONFIG__ = window.__APP_RUNTIME_CONFIG__ || {}
 // window.__APP_RUNTIME_CONFIG__.VITE_API_URL = 'http://101.201.181.191:8080';
 // 生产环境：使用相对路径，让 Nginx 统一代理到后端
 // 如果前端和后端在同一域名下，使用 /api/ 即可
-window.__APP_RUNTIME_CONFIG__.VITE_API_URL = '/api';
+window.__APP_RUNTIME_CONFIG__.VITE_API_URL = '/api'

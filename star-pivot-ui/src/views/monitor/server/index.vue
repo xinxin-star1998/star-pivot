@@ -428,8 +428,8 @@
   }
 
   :deep(.el-button) {
-    border-radius: 8px;
     font-weight: 500;
+    border-radius: 8px;
     transition: all 0.3s ease;
 
     &:hover {
@@ -438,7 +438,7 @@
   }
 
   :deep(.el-tag) {
-    border-radius: 6px;
     font-weight: 500;
+    border-radius: 6px;
   }
 </style>

@@ -463,14 +463,14 @@
   .cache-list-panel,
   .cache-content-panel {
     display: flex;
-    width: 400px;
     flex-direction: column;
+    width: 400px;
   }
 
   .key-list-panel {
     display: flex;
-    width: 500px;
     flex-direction: column;
+    width: 500px;
   }
 
   .panel-card {
@@ -515,9 +515,9 @@
 
     .el-table__header-wrapper {
       th {
-        background-color: var(--art-gray-100) !important;
         font-weight: 600;
         color: var(--art-gray-800);
+        background-color: var(--art-gray-100) !important;
       }
     }
 
@@ -629,8 +629,8 @@
   }
 
   :deep(.el-button) {
-    border-radius: 8px;
     font-weight: 500;
+    border-radius: 8px;
     transition: all 0.3s ease;
 
     &:hover {

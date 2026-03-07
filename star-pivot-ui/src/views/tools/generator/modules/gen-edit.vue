@@ -411,9 +411,9 @@
 
     .el-table__header-wrapper {
       th {
-        background-color: var(--art-gray-100) !important;
         font-weight: 600;
         color: var(--art-gray-800);
+        background-color: var(--art-gray-100) !important;
       }
     }
 
@@ -442,16 +442,16 @@
   }
 
   .generator-edit-footer {
-    margin-top: 24px;
     padding: 16px;
+    margin-top: 24px;
     text-align: center;
     background-color: var(--art-gray-50);
     border-radius: 12px;
 
     .el-button {
       min-width: 100px;
-      border-radius: 8px;
       font-weight: 500;
+      border-radius: 8px;
       transition: all 0.3s ease;
 
       &:hover {

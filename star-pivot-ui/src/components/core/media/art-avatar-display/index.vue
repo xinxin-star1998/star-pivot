@@ -62,8 +62,7 @@
       displayUrl.value = ''
       return
     }
-    const isOssPermanent =
-      url.includes('aliyuncs.com') || url.includes('.oss-')
+    const isOssPermanent = url.includes('aliyuncs.com') || url.includes('.oss-')
     const filePath = extractFilePathFromUrl(url)
     if (isOssPermanent && filePath) {
       try {

@@ -257,7 +257,6 @@ export interface OnlineUserQueryParams {
   ipaddr?: string
 }
 
-
 /**
  * API性能监控数据
  */
@@ -291,8 +290,6 @@ export interface ApiPerformance {
   /** 更新时间 */
   updateTime?: string
 }
-
-
 
 /**
  * API性能监控查询参数

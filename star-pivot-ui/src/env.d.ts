@@ -33,7 +33,7 @@ declare module 'qrcode.vue' {
     renderAs?: RenderAs
   }
   import { DefineComponent } from 'vue'
-  const QrcodeVue: DefineComponent<QRCodeProps, {}, unknown>
+  const QrcodeVue: DefineComponent<QRCodeProps, object, unknown>
   export default QrcodeVue
 }
 
