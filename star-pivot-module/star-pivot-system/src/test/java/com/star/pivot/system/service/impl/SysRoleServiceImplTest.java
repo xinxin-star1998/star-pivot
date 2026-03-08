@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.system.domain.dto.RoleDTO;
 import com.star.pivot.system.domain.dto.RoleQueryDTO;
 import com.star.pivot.system.domain.entity.RoleMenu;
@@ -146,7 +146,7 @@ class SysRoleServiceImplTest {
         void insertRole_RoleKeyExists() {
             when(sysRoleMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
 
-            assertThrows(BusinessException.class, () -> sysRoleService.insertRole(testRoleDTO));
+            assertThrows(BizException.class, () -> sysRoleService.insertRole(testRoleDTO));
         }
     }
 
@@ -173,7 +173,7 @@ class SysRoleServiceImplTest {
 
             testRoleDTO.setRoleId(999L);
 
-            assertThrows(BusinessException.class, () -> sysRoleService.updateRole(testRoleDTO));
+            assertThrows(BizException.class, () -> sysRoleService.updateRole(testRoleDTO));
         }
     }
 
@@ -201,7 +201,7 @@ class SysRoleServiceImplTest {
 
             List<Long> roleIds = Arrays.asList(1L);
 
-            assertThrows(BusinessException.class, () -> sysRoleService.deleteRoleByIds(roleIds));
+            assertThrows(BizException.class, () -> sysRoleService.deleteRoleByIds(roleIds));
         }
 
         @Test
@@ -217,7 +217,7 @@ class SysRoleServiceImplTest {
 
             List<Long> roleIds = Arrays.asList(1L);
 
-            assertThrows(BusinessException.class, () -> sysRoleService.deleteRoleByIds(roleIds));
+            assertThrows(BizException.class, () -> sysRoleService.deleteRoleByIds(roleIds));
         }
     }
 
@@ -246,7 +246,7 @@ class SysRoleServiceImplTest {
 
             when(sysRoleMapper.selectById(1L)).thenReturn(adminRole);
 
-            assertThrows(BusinessException.class, () -> sysRoleService.changeRoleStatus(1L, "1"));
+            assertThrows(BizException.class, () -> sysRoleService.changeRoleStatus(1L, "1"));
         }
     }
 
@@ -272,7 +272,7 @@ class SysRoleServiceImplTest {
             testRole.setStatus("1");
             when(sysRoleMapper.selectById(1L)).thenReturn(testRole);
 
-            assertThrows(BusinessException.class, () -> sysRoleService.getMenuIdsByRoleId(1L));
+            assertThrows(BizException.class, () -> sysRoleService.getMenuIdsByRoleId(1L));
         }
     }
 }

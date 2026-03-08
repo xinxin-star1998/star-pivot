@@ -1,7 +1,7 @@
 package com.star.pivot.config;
 
 import com.star.pivot.framework.annotation.RateLimit;
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.LogUtils;
 import com.star.pivot.security.utils.SecurityContextUtils;
@@ -57,11 +57,11 @@ public class RateLimitAspect {
 
             if (currentCount > maxRequests) {
                 log.warn("API限流触发: key={}, count={}, max={}", limitKey, currentCount, maxRequests);
-                throw new ServiceException(ErrorCode.RATE_LIMIT_EXCEEDED, rateLimit.message());
+                throw new BizException(ErrorCode.RATE_LIMIT_EXCEEDED, rateLimit.message());
             }
 
             log.debug("API限流检查通过: key={}, count={}/{}", limitKey, currentCount, maxRequests);
-        } catch (ServiceException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("API限流检查异常，已放行: key={}, error={}", limitKey, e.getMessage());

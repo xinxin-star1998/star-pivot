@@ -13,7 +13,7 @@ import com.star.pivot.dict.mapper.DictDataMapper;
 import com.star.pivot.dict.mapper.DictTypeMapper;
 import com.star.pivot.dict.service.DictTypeService;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.security.utils.SecurityContextUtils;
@@ -77,7 +77,7 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
     @Transactional(rollbackFor = Exception.class)
     public boolean insertDictType(DictTypeDTO dictTypeDTO) {
         if (!checkDictTypeUnique(dictTypeDTO.getDictType(), null)) {
-            throw new BusinessException(ErrorCode.DICT_TYPE_NOT_FOUND, "字典类型已存在");
+            throw new BizException(ErrorCode.DICT_TYPE_NOT_FOUND, "字典类型已存在");
         }
 
         // 创建字典类型
@@ -99,7 +99,7 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
         AssertUtils.notNull(dictType, ErrorCode.DICT_TYPE_NOT_FOUND);
 
         if (!checkDictTypeUnique(dictTypeDTO.getDictType(), dictTypeDTO.getDictId())) {
-            throw new BusinessException(ErrorCode.DICT_TYPE_NOT_FOUND, "字典类型已被使用");
+            throw new BizException(ErrorCode.DICT_TYPE_NOT_FOUND, "字典类型已被使用");
         }
 
         if (!dictType.getDictType().equals(dictTypeDTO.getDictType())) {
@@ -136,7 +136,7 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
                 wrapper.eq(DictData::getDictType, dictType.getDictType());
                 long count = dictDataMapper.selectCount(wrapper);
                 if (count > 0) {
-                    throw new BusinessException("字典类型[" + dictType.getDictName() + "]存在字典数据，不能删除");
+                    throw new BizException("字典类型[" + dictType.getDictName() + "]存在字典数据，不能删除");
                 }
 
                 this.removeById(dictId);

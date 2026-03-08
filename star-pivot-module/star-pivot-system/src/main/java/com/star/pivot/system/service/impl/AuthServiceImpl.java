@@ -2,7 +2,7 @@ package com.star.pivot.system.service.impl;
 
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.exception.ErrorCode;
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.framework.utils.LogUtils;
 import com.star.pivot.security.utils.SecurityUtils;
@@ -97,7 +97,7 @@ public class AuthServiceImpl implements AuthService {
                 if (user == null) {
                     log.error("用户不存在: {}", request.getUsername());
                     recordLoginFailure(logininfor, "用户不存在");
-                    throw new ServiceException(ErrorCode.USER_NOT_FOUND);
+                    throw new BizException(ErrorCode.USER_NOT_FOUND);
                 }
             }
             
@@ -125,13 +125,13 @@ public class AuthServiceImpl implements AuthService {
             log.error("认证失败: {}", e.getMessage());
             accountLockService.recordLoginFailure(request.getUsername());
             recordLoginFailure(logininfor, "用户名或密码错误");
-            throw new ServiceException(ErrorCode.LOGIN_FAILED);
-        } catch (ServiceException e) {
+            throw new BizException(ErrorCode.LOGIN_FAILED);
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("登录异常: {}", e.getMessage(), e);
             recordLoginFailure(logininfor, "登录异常: " + (e.getMessage() != null ? LogUtils.truncateString(e.getMessage(), 255) : "未知错误"));
-            throw new ServiceException(ErrorCode.INTERNAL_ERROR, "登录失败");
+            throw new BizException(ErrorCode.INTERNAL_ERROR, "登录失败");
         }
     }
 
@@ -164,7 +164,7 @@ public class AuthServiceImpl implements AuthService {
 
         boolean success = userService.save(user);
         if (!success || user.getUserId() == null) {
-            throw new ServiceException(ErrorCode.INTERNAL_ERROR, "注册失败，请稍后重试");
+            throw new BizException(ErrorCode.INTERNAL_ERROR, "注册失败，请稍后重试");
         }
 
         // 为新用户分配默认角色（普通角色），使登录后可获取菜单权限
@@ -231,7 +231,7 @@ public class AuthServiceImpl implements AuthService {
         if (!captchaService.validateAndConsumeCaptchaProof(request.getCaptchaProof(), "login")) {
             recordLoginFailure(logininfor, "验证码错误或已失效");
             accountLockService.recordLoginFailure(request.getUsername());
-            throw new ServiceException(ErrorCode.CAPTCHA_ERROR, "验证码错误或已失效");
+            throw new BizException(ErrorCode.CAPTCHA_ERROR, "验证码错误或已失效");
         }
     }
 

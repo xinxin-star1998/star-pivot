@@ -2,7 +2,7 @@ package com.star.pivot.controller;
 
 import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.domain.Result;
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.bo.LoginResponse;
 import com.star.pivot.system.service.TokenService;
@@ -61,7 +61,7 @@ public class AuthTokenController {
         try {
             LoginResponse response = tokenService.refreshToken(username, refreshToken);
             return Result.success("令牌刷新成功", response);
-        } catch (ServiceException e) {
+        } catch (BizException e) {
             if (e.getErrorCode() == ErrorCode.UNAUTHORIZED) {
                 return Result.error(401, e.getMessage());
             }

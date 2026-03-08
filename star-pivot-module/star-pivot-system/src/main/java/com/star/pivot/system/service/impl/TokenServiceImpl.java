@@ -1,7 +1,7 @@
 package com.star.pivot.system.service.impl;
 
 import com.star.pivot.framework.exception.ErrorCode;
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.utils.LogUtils;
 import com.star.pivot.security.JwtBlackListManager;
 import com.star.pivot.security.JwtUtil;
@@ -46,7 +46,7 @@ public class TokenServiceImpl implements TokenService {
                                      String os,
                                      String loginLocation) {
         if (user == null || user.getUserId() == null) {
-            throw new ServiceException(ErrorCode.USER_NOT_FOUND, "用户不存在，无法生成令牌");
+            throw new BizException(ErrorCode.USER_NOT_FOUND, "用户不存在，无法生成令牌");
         }
 
         Map<String, Object> claims = new HashMap<>();
@@ -68,20 +68,20 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public LoginResponse refreshToken(String username, String refreshToken) {
         if (username == null || username.trim().isEmpty()) {
-            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "用户名不能为空");
+            throw new BizException(ErrorCode.PARAM_NOT_NULL, "用户名不能为空");
         }
         if (refreshToken == null || refreshToken.trim().isEmpty()) {
-            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "刷新令牌不能为空");
+            throw new BizException(ErrorCode.PARAM_NOT_NULL, "刷新令牌不能为空");
         }
 
         SysUser user = sysUserService.getUserByUsername(username);
         if (user == null) {
-            throw new ServiceException(ErrorCode.USER_NOT_FOUND, "用户不存在");
+            throw new BizException(ErrorCode.USER_NOT_FOUND, "用户不存在");
         }
 
         Long userId = user.getUserId();
         if (!refreshTokenManager.validateRefreshToken(userId, refreshToken)) {
-            throw new ServiceException(ErrorCode.UNAUTHORIZED, "刷新令牌无效或已过期，请重新登录");
+            throw new BizException(ErrorCode.UNAUTHORIZED, "刷新令牌无效或已过期，请重新登录");
         }
 
         RefreshTokenValue oldTokenValue = refreshTokenManager.getRefreshTokenValue(userId);

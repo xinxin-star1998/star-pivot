@@ -6,7 +6,7 @@
   import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
   import com.star.pivot.framework.domain.AppConstants;
   import com.star.pivot.framework.domain.PageResponse;
-  import com.star.pivot.framework.exception.BusinessException;
+  import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.AssertUtils;
   import com.star.pivot.security.utils.SecurityContextUtils;
@@ -94,7 +94,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         wrapper.eq(SysRole::getRoleKey, roleDTO.getRoleKey())
                 .eq(SysRole::getDelFlag, "0");
         if (this.count(wrapper) > 0) {
-            throw new BusinessException(ErrorCode.ROLE_KEY_EXISTS);
+            throw new BizException(ErrorCode.ROLE_KEY_EXISTS);
         }
 
         // 创建角色
@@ -125,7 +125,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         SysRole role = this.getById(roleDTO.getRoleId());
         AssertUtils.notNull(role, ErrorCode.ROLE_NOT_FOUND);
         if ("2".equals(role.getDelFlag())) {
-            throw new BusinessException(ErrorCode.ROLE_NOT_FOUND);
+            throw new BizException(ErrorCode.ROLE_NOT_FOUND);
         }
 
         LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
@@ -133,11 +133,11 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .eq(SysRole::getDelFlag, "0")
                 .ne(SysRole::getRoleId, roleDTO.getRoleId());
         if (this.count(wrapper) > 0) {
-            throw new BusinessException(ErrorCode.ROLE_KEY_USED);
+            throw new BizException(ErrorCode.ROLE_KEY_USED);
         }
 
         if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()) && !AppConstants.ADMIN_ROLE_KEY.equals(roleDTO.getRoleKey())) {
-            throw new BusinessException(ErrorCode.ROLE_ADMIN_PROTECTED);
+            throw new BizException(ErrorCode.ROLE_ADMIN_PROTECTED);
         }
 
         // 更新角色信息
@@ -188,7 +188,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 continue;
             }
             if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey())) {
-                throw new BusinessException(ErrorCode.ROLE_ADMIN_PROTECTED);
+                throw new BizException(ErrorCode.ROLE_ADMIN_PROTECTED);
             }
 
             // 批量检查角色是否被使用
@@ -196,7 +196,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             wrapper.eq(UserRole::getRoleId, role.getRoleId());
             long count = userRoleMapper.selectCount(wrapper);
             if (count > 0) {
-                throw new BusinessException(ErrorCode.ROLE_USED, "角色[" + role.getRoleName() + "]已被使用，不能删除");
+                throw new BizException(ErrorCode.ROLE_USED, "角色[" + role.getRoleName() + "]已被使用，不能删除");
             }
 
             role.setDelFlag(AppConstants.DelFlag.DELETE);
@@ -218,11 +218,11 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         SysRole role = this.getById(roleId);
         AssertUtils.notNull(role, ErrorCode.ROLE_NOT_FOUND);
         if ("2".equals(role.getDelFlag())) {
-            throw new BusinessException(ErrorCode.ROLE_NOT_FOUND);
+            throw new BizException(ErrorCode.ROLE_NOT_FOUND);
         }
 
         if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()) && "1".equals(status)) {
-            throw new BusinessException(ErrorCode.ROLE_ADMIN_PROTECTED);
+            throw new BizException(ErrorCode.ROLE_ADMIN_PROTECTED);
         }
 
         role.setStatus(status);
@@ -244,10 +244,10 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         SysRole sysRole = sysRoleMapper.selectById(roleId);
         AssertUtils.notNull(sysRole, ErrorCode.ROLE_NOT_FOUND);
         if ("2".equals(sysRole.getDelFlag())){
-            throw new BusinessException(ErrorCode.ROLE_DELETED);
+            throw new BizException(ErrorCode.ROLE_DELETED);
         }
         if("1".equals(sysRole.getStatus())){
-            throw new BusinessException(ErrorCode.ROLE_DISABLED);
+            throw new BizException(ErrorCode.ROLE_DISABLED);
         }
         List<Long> deptIds;
         if(sysRole.getRoleKey().equals(AppConstants.ADMIN_ROLE_KEY)){
@@ -268,13 +268,13 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     public List<Long> getMenuIdsByRoleId(Long roleId) {
         SysRole sysRole = sysRoleMapper.selectById(roleId);
         if(sysRole == null){
-            throw new BusinessException("角色不存在");
+            throw new BizException("角色不存在");
         }
         if ("2".equals(sysRole.getDelFlag())){
-            throw new BusinessException("角色已删除");
+            throw new BizException("角色已删除");
         }
         if("1".equals(sysRole.getStatus())){
-            throw new BusinessException("角色已禁用，请联系管理员");
+            throw new BizException("角色已禁用，请联系管理员");
         }
         List<Long> menuIds;
         if (AppConstants.ADMIN_ROLE_KEY.equals(sysRole.getRoleKey())) {
@@ -322,7 +322,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         //2.查询角色是否存在
         SysRole role = sysRoleMapper.selectById(roleId);
         if (role == null || AppConstants.DelFlag.DELETE.equals(role.getDelFlag())) {
-            throw new BusinessException("角色不存在");
+            throw new BizException("角色不存在");
         }
         // 2.1 若传入数据范围，更新角色的 data_scope 字段
         if (StringUtils.hasText(rolePermissionAssignDTO.getDataScope())) {

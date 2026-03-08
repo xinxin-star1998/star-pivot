@@ -7,6 +7,7 @@ import com.star.pivot.dict.service.DictDataService;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -131,7 +132,7 @@ public class DictDataController {
      */
     private List<Long> validateIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
-            throw new com.star.pivot.framework.exception.ServiceException(
+            throw new BizException(
                 ErrorCode.PARAM_INVALID, "删除ID不能为空");
         }
         return ids;

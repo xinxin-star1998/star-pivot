@@ -3,7 +3,7 @@ package com.star.pivot.system.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.system.domain.bo.PostVO;
 import com.star.pivot.system.domain.dto.PostDTO;
 import com.star.pivot.system.domain.dto.PostQueryDTO;
@@ -107,7 +107,7 @@ class PostServiceImplTest {
         void selectPostById_PostNotExists() {
             when(postMapper.selectById(999L)).thenReturn(null);
 
-            assertThrows(BusinessException.class, () -> postService.selectPostById(999L));
+            assertThrows(BizException.class, () -> postService.selectPostById(999L));
         }
 
         @Test
@@ -141,7 +141,7 @@ class PostServiceImplTest {
         void insertPost_CodeExists() {
             when(postMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
 
-            assertThrows(BusinessException.class, () -> postService.insertPost(testPostDTO));
+            assertThrows(BizException.class, () -> postService.insertPost(testPostDTO));
         }
     }
 
@@ -169,7 +169,7 @@ class PostServiceImplTest {
 
             when(postMapper.selectById(999L)).thenReturn(null);
 
-            assertThrows(BusinessException.class, () -> postService.updatePost(testPostDTO));
+            assertThrows(BizException.class, () -> postService.updatePost(testPostDTO));
         }
 
         @Test
@@ -181,7 +181,7 @@ class PostServiceImplTest {
             when(postMapper.selectById(1L)).thenReturn(testPost);
             when(postMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
 
-            assertThrows(BusinessException.class, () -> postService.updatePost(testPostDTO));
+            assertThrows(BizException.class, () -> postService.updatePost(testPostDTO));
         }
     }
 
@@ -213,7 +213,7 @@ class PostServiceImplTest {
 
             List<Long> postIds = Arrays.asList(1L);
 
-            assertThrows(BusinessException.class, () -> postService.deletePostByIds(postIds));
+            assertThrows(BizException.class, () -> postService.deletePostByIds(postIds));
         }
 
         @Test

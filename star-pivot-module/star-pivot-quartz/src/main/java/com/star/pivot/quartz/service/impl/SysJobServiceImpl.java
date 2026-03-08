@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.constants.Constants;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.quartz.domain.bo.SysJobLogVO;
 import com.star.pivot.quartz.domain.bo.SysJobVO;
 import com.star.pivot.quartz.domain.dto.SysJobDTO;
@@ -56,7 +56,7 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
     @Override
     public SysJobVO getJobById(Long jobId) {
         SysJob job = getById(jobId);
-        if (job == null) throw new BusinessException("任务不存在");
+        if (job == null) throw new BizException("任务不存在");
         return toVO(job);
     }
 
@@ -79,10 +79,10 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateJob(SysJobDTO dto) {
-        if (dto.getJobId() == null) throw new BusinessException("任务ID不能为空");
+        if (dto.getJobId() == null) throw new BizException("任务ID不能为空");
         validateInvokeTarget(dto.getInvokeTarget());
         SysJob exist = getById(dto.getJobId());
-        if (exist == null) throw new BusinessException("任务不存在");
+        if (exist == null) throw new BizException("任务不存在");
         unscheduleJob(exist);
         SysJob job = toEntity(dto);
         job.setJobId(dto.getJobId());
@@ -110,7 +110,7 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
     @Transactional(rollbackFor = Exception.class)
     public boolean changeStatus(Long jobId, String status) {
         SysJob job = getById(jobId);
-        if (job == null) throw new BusinessException("任务不存在");
+        if (job == null) throw new BizException("任务不存在");
         unscheduleJob(job);
         job.setStatus(status);
         job.setUpdateTime(LocalDateTime.now());
@@ -123,14 +123,14 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
     @Override
     public boolean runOnce(Long jobId) {
         SysJob job = getById(jobId);
-        if (job == null) throw new BusinessException("任务不存在");
+        if (job == null) throw new BizException("任务不存在");
         try {
             JobKey jobKey = JobKey.jobKey(JOB_KEY_PREFIX + jobId);
             if (!scheduler.checkExists(jobKey)) scheduleJob(job);
             scheduler.triggerJob(jobKey);
         } catch (SchedulerException e) {
             log.error("立即执行任务失败 jobId={}", jobId, e);
-            throw new BusinessException("立即执行失败：" + e.getMessage());
+            throw new BizException("立即执行失败：" + e.getMessage());
         }
         return true;
     }
@@ -207,7 +207,7 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
             scheduler.scheduleJob(jobDetail, trigger);
         } catch (SchedulerException e) {
             log.error("调度任务失败 jobId={}", job.getJobId(), e);
-            throw new BusinessException("调度失败：" + e.getMessage());
+            throw new BizException("调度失败：" + e.getMessage());
         }
     }
 
@@ -221,9 +221,9 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
     }
 
     private void validateInvokeTarget(String invokeTarget) {
-        if (invokeTarget == null || invokeTarget.isBlank()) throw new BusinessException("调用目标不能为空");
+        if (invokeTarget == null || invokeTarget.isBlank()) throw new BizException("调用目标不能为空");
         for (String s : Constants.JOB_ERROR_STR) {
-            if (invokeTarget.contains(s)) throw new BusinessException("调用目标包含违规字符");
+            if (invokeTarget.contains(s)) throw new BizException("调用目标包含违规字符");
         }
         boolean inWhitelist = false;
         for (String prefix : Constants.JOB_WHITELIST_STR) {
@@ -232,9 +232,9 @@ public class SysJobServiceImpl extends ServiceImpl<SysJobMapper, SysJob> impleme
                 break;
             }
         }
-        if (!inWhitelist) throw new BusinessException("调用目标不在白名单内，仅允许: " + String.join(", ", Constants.JOB_WHITELIST_STR));
+        if (!inWhitelist) throw new BizException("调用目标不在白名单内，仅允许: " + String.join(", ", Constants.JOB_WHITELIST_STR));
         if (!invokeTarget.matches("^[a-zA-Z0-9_]+(\\.[a-zA-Z0-9_]+)*\\.([a-zA-Z0-9_]+)\\(\\)$")) {
-            throw new BusinessException("调用目标格式错误，应为: 包名.类名.方法名()");
+            throw new BizException("调用目标格式错误，应为: 包名.类名.方法名()");
         }
     }
 

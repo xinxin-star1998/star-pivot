@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DataScope;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.security.utils.SecurityUtils;
@@ -154,12 +154,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser user = this.getById(userDTO.getUserId());
         AssertUtils.notNull(user, ErrorCode.USER_NOT_FOUND);
         if (AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
         }
 
         SysUser existUser = getUserByUsername(userDTO.getUserName());
         if (existUser != null && !existUser.getUserId().equals(userDTO.getUserId())) {
-            throw new BusinessException(ErrorCode.USER_USERNAME_USED);
+            throw new BizException(ErrorCode.USER_USERNAME_USED);
         }
 
         // 更新用户信息
@@ -209,7 +209,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser user = this.getById(userId);
         AssertUtils.notNull(user, ErrorCode.USER_NOT_FOUND);
         if (AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
         }
 
         user.setStatus(status);
@@ -225,7 +225,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser user = this.getById(userId);
         AssertUtils.notNull(user, ErrorCode.USER_NOT_FOUND);
         if (AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
         }
 
         user.setPassword(SecurityUtils.encryptPassword(password));
@@ -341,12 +341,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 if (success) {
                     successCount++;
                 }
-            } catch (BusinessException e) {
+            } catch (BizException e) {
                 // 业务异常直接抛出，让前端看到明确提示
                 throw e;
             } catch (Exception e) {
                 // 其他异常统一包装为业务异常，带上行号
-                throw new BusinessException("第 " + rowIndex + " 行导入失败：" + e.getMessage());
+                throw new BizException("第 " + rowIndex + " 行导入失败：" + e.getMessage());
             } finally {
                 rowIndex++;
             }
@@ -364,20 +364,20 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      */
     private UserDTO buildUserDTOFromRow(Map<String, Object> row, int rowIndex) {
         if (row == null || row.isEmpty()) {
-            throw new BusinessException(ErrorCode.USER_IMPORT_ROW_EMPTY, "第 " + rowIndex + " 行数据为空");
+            throw new BizException(ErrorCode.USER_IMPORT_ROW_EMPTY, "第 " + rowIndex + " 行数据为空");
         }
 
         UserDTO userDTO = new UserDTO();
 
         String userName = getStringCell(row, "用户账号");
         if (!StringUtils.hasText(userName)) {
-            throw new BusinessException(ErrorCode.USER_IMPORT_USERNAME_EMPTY, "第 " + rowIndex + " 行用户账号不能为空");
+            throw new BizException(ErrorCode.USER_IMPORT_USERNAME_EMPTY, "第 " + rowIndex + " 行用户账号不能为空");
         }
         userDTO.setUserName(userName.trim());
 
         String nickName = getStringCell(row, "用户昵称");
         if (!StringUtils.hasText(nickName)) {
-            throw new BusinessException(ErrorCode.USER_IMPORT_NICKNAME_EMPTY, "第 " + rowIndex + " 行用户昵称不能为空");
+            throw new BizException(ErrorCode.USER_IMPORT_NICKNAME_EMPTY, "第 " + rowIndex + " 行用户昵称不能为空");
         }
         userDTO.setNickName(nickName.trim());
 
@@ -422,7 +422,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             try {
                 userDTO.setDeptId(Long.parseLong(deptIdText.trim()));
             } catch (NumberFormatException e) {
-                throw new BusinessException(ErrorCode.USER_IMPORT_DEPT_FORMAT_ERROR, "第 " + rowIndex + " 行部门ID格式不正确，应为数字");
+                throw new BizException(ErrorCode.USER_IMPORT_DEPT_FORMAT_ERROR, "第 " + rowIndex + " 行部门ID格式不正确，应为数字");
             }
         }
 
@@ -505,7 +505,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             try {
                 UserDTO userDTO = buildUserDTOFromRow(row, rowIndex);
                 saveOrUpdateFromImport(userDTO, overwrite, rowIndex, result);
-            } catch (BusinessException e) {
+            } catch (BizException e) {
                 // 业务异常记录错误信息
                 result.setFailCount(result.getFailCount() + 1);
                 result.addError("第 " + rowIndex + " 行：" + e.getMessage());
