@@ -17,7 +17,7 @@ public class DefaultExceptionHandler implements ExceptionHandler<Exception> {
     }
     
     @Override
-    public Result handle(Exception exception) {
+    public Result<Void> handle(Exception exception) {
         if (exception instanceof DataAccessException) {
             log.error("数据库访问异常：", exception);
             return Result.error(ErrorCode.DATABASE_ERROR.getCode(), ErrorCode.DATABASE_ERROR.getMessage());

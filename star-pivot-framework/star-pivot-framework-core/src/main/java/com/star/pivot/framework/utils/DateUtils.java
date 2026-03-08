@@ -1,70 +1,97 @@
 package com.star.pivot.framework.utils;
 
 import java.lang.management.ManagementFactory;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import org.apache.commons.lang3.time.DateFormatUtils;
 
-public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
-    public static String YYYY = "yyyy";
-    public static String YYYY_MM = "yyyy-MM";
-    public static String YYYY_MM_DD = "yyyy-MM-dd";
-    public static String YYYYMMDDHHMMSS = "yyyyMMddHHmmss";
-    public static String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
+public final class DateUtils {
 
-    private static String[] parsePatterns = {
+    public static final String YYYY = "yyyy";
+    public static final String YYYY_MM = "yyyy-MM";
+    public static final String YYYY_MM_DD = "yyyy-MM-dd";
+    public static final String YYYYMMDDHHMMSS = "yyyyMMddHHmmss";
+    public static final String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
+
+    private static final String[] PARSE_PATTERNS = {
             "yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-MM",
             "yyyy/MM/dd", "yyyy/MM/dd HH:mm:ss", "yyyy/MM/dd HH:mm", "yyyy/MM",
             "yyyy.MM.dd", "yyyy.MM.dd HH:mm:ss", "yyyy.MM.dd HH:mm", "yyyy.MM"};
 
-    public static Date getNowDate() { return new Date(); }
+    private DateUtils() {
+    }
 
-    public static String getDate() { return dateTimeNow(YYYY_MM_DD); }
+    private static DateTimeFormatter getFormatter(String pattern) {
+        return DateTimeFormatter.ofPattern(pattern);
+    }
 
-    public static final String getTime() { return dateTimeNow(YYYY_MM_DD_HH_MM_SS); }
+    public static Date getNowDate() {
+        return new Date();
+    }
 
-    public static final String dateTimeNow() { return dateTimeNow(YYYYMMDDHHMMSS); }
+    public static String getDate() {
+        return dateTimeNow(YYYY_MM_DD);
+    }
 
-    public static final String dateTimeNow(final String format) {
+    public static String getTime() {
+        return dateTimeNow(YYYY_MM_DD_HH_MM_SS);
+    }
+
+    public static String dateTimeNow() {
+        return dateTimeNow(YYYYMMDDHHMMSS);
+    }
+
+    public static String dateTimeNow(String format) {
         return parseDateToStr(format, new Date());
     }
 
-    public static final String dateTime(final Date date) {
+    public static String dateTime(Date date) {
         return parseDateToStr(YYYY_MM_DD, date);
     }
 
-    public static final String parseDateToStr(final String format, final Date date) {
-        return new SimpleDateFormat(format).format(date);
+    public static String parseDateToStr(String format, Date date) {
+        DateTimeFormatter formatter = getFormatter(format);
+        return formatter.format(date.toInstant().atZone(ZoneId.systemDefault()));
     }
 
-    public static final Date dateTime(final String format, final String ts) {
-        try {
-            return new SimpleDateFormat(format).parse(ts);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+    public static Date dateTime(String format, String ts) {
+        DateTimeFormatter formatter = getFormatter(format);
+        LocalDateTime localDateTime = LocalDateTime.parse(ts, formatter);
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
-    public static final String datePath() {
-        return DateFormatUtils.format(new Date(), "yyyy/MM/dd");
+    public static String datePath() {
+        DateTimeFormatter formatter = getFormatter("yyyy/MM/dd");
+        return formatter.format(LocalDate.now());
     }
 
-    public static final String dateTime() {
-        return DateFormatUtils.format(new Date(), "yyyyMMdd");
+    public static String dateTimeNumeric() {
+        DateTimeFormatter formatter = getFormatter("yyyyMMdd");
+        return formatter.format(LocalDate.now());
     }
 
     public static Date parseDate(Object str) {
-        if (str == null) return null;
-        try {
-            return parseDate(str.toString(), parsePatterns);
-        } catch (ParseException e) {
+        if (str == null) {
             return null;
         }
+        String dateStr = str.toString();
+        for (String pattern : PARSE_PATTERNS) {
+            try {
+                DateTimeFormatter formatter = getFormatter(pattern);
+                if (pattern.contains("HH") || pattern.contains("mm") || pattern.contains("ss")) {
+                    LocalDateTime localDateTime = LocalDateTime.parse(dateStr, formatter);
+                    return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+                } else {
+                    LocalDate localDate = LocalDate.parse(dateStr, formatter);
+                    return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 
     public static Date getServerStartDate() {
@@ -76,9 +103,9 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
     }
 
     public static String timeDistance(Date endDate, Date startTime) {
-        long nd = 1000 * 24 * 60 * 60;
-        long nh = 1000 * 60 * 60;
-        long nm = 1000 * 60;
+        long nd = 1000 * 24 * 60 * 60L;
+        long nh = 1000 * 60 * 60L;
+        long nm = 1000 * 60L;
         long diff = endDate.getTime() - startTime.getTime();
         long day = diff / nd;
         long hour = diff % nd / nh;
@@ -91,6 +118,18 @@ public class DateUtils extends org.apache.commons.lang3.time.DateUtils {
     }
 
     public static Date toDate(LocalDate temporalAccessor) {
-        return toDate(LocalDateTime.of(temporalAccessor, LocalTime.of(0, 0, 0)));
+        return Date.from(temporalAccessor.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    }
+
+    public static LocalDateTime toLocalDateTime(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    public static LocalDate toLocalDate(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    public static Instant toInstant(Date date) {
+        return date.toInstant();
     }
 }

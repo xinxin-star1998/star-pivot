@@ -19,7 +19,7 @@ public class SecurityExceptionHandler implements ExceptionHandler<Exception> {
     }
     
     @Override
-    public Result handle(Exception exception) {
+    public Result<Void> handle(Exception exception) {
         if (exception instanceof AuthenticationException) {
             log.warn("认证异常：{}", exception.getMessage());
             return Result.error(ErrorCode.UNAUTHORIZED.getCode(), "认证失败，用户名或密码错误");

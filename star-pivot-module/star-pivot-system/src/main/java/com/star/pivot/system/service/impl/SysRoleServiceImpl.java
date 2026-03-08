@@ -28,9 +28,10 @@ import com.star.pivot.framework.utils.AssertUtils;
   import org.springframework.transaction.annotation.Transactional;
   import org.springframework.util.StringUtils;
 
-  import java.time.LocalDateTime;
-  import java.util.Collections;
-  import java.util.List;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * 角色信息表(SysRole)表服务实现类
@@ -171,26 +172,42 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         if (roleIds == null || roleIds.isEmpty()) {
             return false;
         }
-        
-        for (Long roleId : roleIds) {
-            SysRole role = this.getById(roleId);
-            if (role != null && !"2".equals(role.getDelFlag())) {
-                if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey())) {
-                    throw new BusinessException(ErrorCode.ROLE_ADMIN_PROTECTED);
-                }
-                LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
-                wrapper.eq(UserRole::getRoleId, roleId);
-                long count = userRoleMapper.selectCount(wrapper);
-                if (count > 0) {
-                    throw new BusinessException(ErrorCode.ROLE_USED, "角色[" + role.getRoleName() + "]已被使用，不能删除");
-                }
 
-                role.setDelFlag(AppConstants.DelFlag.DELETE);
-                String currentUser = SecurityContextUtils.getUsername();
-                role.setUpdateBy(currentUser);
-                role.setUpdateTime(LocalDateTime.now());
-                this.updateById(role);
+        // 批量查询角色信息
+        List<SysRole> roles = this.listByIds(roleIds);
+        if (roles.isEmpty()) {
+            return false;
+        }
+
+        String currentUser = SecurityContextUtils.getUsername();
+        LocalDateTime now = LocalDateTime.now();
+        List<SysRole> toUpdate = new ArrayList<>();
+
+        for (SysRole role : roles) {
+            if ("2".equals(role.getDelFlag())) {
+                continue;
             }
+            if (AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey())) {
+                throw new BusinessException(ErrorCode.ROLE_ADMIN_PROTECTED);
+            }
+
+            // 批量检查角色是否被使用
+            LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(UserRole::getRoleId, role.getRoleId());
+            long count = userRoleMapper.selectCount(wrapper);
+            if (count > 0) {
+                throw new BusinessException(ErrorCode.ROLE_USED, "角色[" + role.getRoleName() + "]已被使用，不能删除");
+            }
+
+            role.setDelFlag(AppConstants.DelFlag.DELETE);
+            role.setUpdateBy(currentUser);
+            role.setUpdateTime(now);
+            toUpdate.add(role);
+        }
+
+        // 批量更新
+        if (!toUpdate.isEmpty()) {
+            this.updateBatchById(toUpdate);
         }
         return true;
     }
@@ -273,12 +290,18 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     public boolean assignUser(UserRoleDTO userRoleDTO) {
+        if (userRoleDTO.getUserIds() == null || userRoleDTO.getUserIds().isEmpty()) {
+            return true;
+        }
+        // 批量插入用户角色关联，提升性能
+        List<UserRole> userRoles = new ArrayList<>(userRoleDTO.getUserIds().size());
         for (Long userId : userRoleDTO.getUserIds()) {
             UserRole userRole = new UserRole();
             userRole.setRoleId(userRoleDTO.getRoleId());
             userRole.setUserId(userId);
-            userRoleMapper.insert(userRole);
+            userRoles.add(userRole);
         }
+        userRoleMapper.insertBatchUserRoles(userRoles);
         return true;
     }
 
@@ -318,15 +341,13 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     /**
-     * 插入角色菜单关联
+     * 插入角色菜单关联（批量）
      */
     private void insertRoleMenus(Long roleId, List<Long> menuIds) {
-        for (Long menuId : menuIds) {
-            RoleMenu roleMenu = new RoleMenu();
-            roleMenu.setRoleId(roleId);
-            roleMenu.setMenuId(menuId);
-            roleMenuMapper.insert(roleMenu);
+        if (menuIds == null || menuIds.isEmpty()) {
+            return;
         }
+        roleMenuMapper.batchSave(roleId, menuIds);
     }
 }
 

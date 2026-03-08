@@ -29,3 +29,6 @@ export { useChart, useChartComponent, useChartOps } from './core/useChart'
 
 // 布局高度
 export { useLayoutHeight, useAutoLayoutHeight } from './core/useLayoutHeight'
+
+// 页面可见性检测
+export { usePageVisibility } from './core/usePageVisibility'

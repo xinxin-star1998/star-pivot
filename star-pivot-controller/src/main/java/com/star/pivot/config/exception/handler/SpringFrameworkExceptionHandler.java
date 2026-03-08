@@ -33,7 +33,7 @@ public class SpringFrameworkExceptionHandler implements ExceptionHandler<Excepti
     }
     
     @Override
-    public Result handle(Exception exception) {
+    public Result<Void> handle(Exception exception) {
         if (exception instanceof MethodArgumentNotValidException e) {
             String message = e.getBindingResult().getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)

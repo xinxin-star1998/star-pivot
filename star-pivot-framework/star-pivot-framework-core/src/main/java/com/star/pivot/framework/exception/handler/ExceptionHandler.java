@@ -6,7 +6,7 @@ public interface ExceptionHandler<T extends Exception> {
     
     boolean supports(Exception exception);
     
-    Result handle(T exception);
+    Result<Void> handle(T exception);
     
     default int getOrder() {
         return 100;

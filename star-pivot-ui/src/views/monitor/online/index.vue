@@ -91,9 +91,15 @@
   import { ElMessage, ElMessageBox } from 'element-plus'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import { usePageVisibility } from '@/hooks/core/usePageVisibility'
   import type { OnlineUser, OnlineUserQueryParams } from '@/types/api/monitor'
 
   defineOptions({ name: 'OnlineUser' })
+
+  // 页面可见性检测 - 页面不可见时暂停刷新
+  const { onPause, onResume } = usePageVisibility()
+  onPause(() => stopAutoRefresh())
+  onResume(() => startAutoRefresh())
 
   // 搜索栏显示状态
   const showSearchBar = ref(true)

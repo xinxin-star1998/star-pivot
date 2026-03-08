@@ -580,8 +580,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public List<Map<String, Object>> exportData(Map<String, Object> queryParams) {
         UserReqBo userReqBo = buildUserReqBoFromQueryParams(queryParams);
+        // 分批导出，每批 5000 条，防止 OOM
+        final int BATCH_SIZE = 5000;
         userReqBo.setPageNum(1);
-        userReqBo.setPageSize(100_000);
+        userReqBo.setPageSize(BATCH_SIZE);
         PageResponse<UserVO> pageResponse = this.pageList(userReqBo);
         List<UserVO> userList = pageResponse.getRows();
         if (userList == null) {

@@ -22,11 +22,11 @@ public class ExceptionHandlerRegistry {
     }
 
     @SuppressWarnings("unchecked")
-    public Optional<Result> handle(Exception exception) {
+    public Optional<Result<Void>> handle(Exception exception) {
         for (ExceptionHandler<?> handler : handlers) {
             if (handler.supports(exception)) {
                 try {
-                    Result result = ((ExceptionHandler<Exception>) handler).handle(exception);
+                    Result<Void> result = ((ExceptionHandler<Exception>) handler).handle(exception);
                     log.debug("异常被处理器 {} 处理: {}", 
                         handler.getClass().getSimpleName(), exception.getClass().getSimpleName());
                     return Optional.of(result);
