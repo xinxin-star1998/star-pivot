@@ -464,7 +464,7 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
   }
 
   // 智能防抖搜索函数
-  // @ts-ignore
+  // @ts-expect-error createSmartDebounce 返回类型与使用场景存在类型不匹配
   const debouncedGetDataByPage = createSmartDebounce(getDataByPage, debounceTime)
 
   // 重置搜索参数

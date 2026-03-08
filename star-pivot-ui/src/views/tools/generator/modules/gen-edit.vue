@@ -192,7 +192,10 @@
   import { fetchGetGenTableInfo, fetchEditSave } from '@/api/generator/gen-table'
   import { fetchGetDictTypeSelectList, type SysDictType } from '@/api/dict/type'
   import { fetchGetParentMenu } from '@/api/menu/menu'
-  import GenInfoForm from '@views/tools/generator/modules/genInfoForm.vue'
+
+  const GenInfoForm = defineAsyncComponent(
+    () => import('@views/tools/generator/modules/genInfoForm.vue')
+  )
 
   // 当前标签页
   const activeTab = ref<'base' | 'field' | 'gen'>('base')
