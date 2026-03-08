@@ -2,6 +2,7 @@ package com.star.pivot.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +15,13 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 /**
- * JWT 安全异常统一处理：未认证与权限不足均返回 JSON 格式 Result
- * <p>同时实现 AuthenticationEntryPoint（未登录）与 AccessDeniedHandler（无权限），减少重复代码
+ * JWT 安全异常统一处理
+ * <p>
+ * 处理 Spring Security 过滤器链中的异常（请求未到达 Controller 前）：
+ * <ul>
+ *   <li>{@link AuthenticationException} - 未认证访问</li>
+ *   <li>{@link AccessDeniedException} - 权限不足</li>
+ * </ul>
  */
 @Slf4j
 @Component
@@ -25,16 +31,18 @@ public class JwtSecurityExceptionHandler implements AuthenticationEntryPoint, Ac
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
-                         AuthenticationException authException) throws IOException{
-        log.error("未认证访问: {}", authException.getMessage());
-        writeJson(response, HttpServletResponse.SC_UNAUTHORIZED, Result.error(401, "未认证，请先登录"));
+                         AuthenticationException authException) throws IOException {
+        log.warn("未认证访问: {} {}", request.getMethod(), request.getRequestURI());
+        writeJson(response, HttpServletResponse.SC_UNAUTHORIZED, 
+            Result.error(ErrorCode.UNAUTHORIZED.getCode(), ErrorCode.UNAUTHORIZED.getMessage()));
     }
 
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
-        log.error("权限不足: {}", accessDeniedException.getMessage());
-        writeJson(response, HttpServletResponse.SC_FORBIDDEN, Result.error(403, "权限不足，拒绝访问"));
+        log.warn("权限不足: {} {}", request.getMethod(), request.getRequestURI());
+        writeJson(response, HttpServletResponse.SC_FORBIDDEN, 
+            Result.error(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage()));
     }
 
     private void writeJson(HttpServletResponse response, int status, Result<Void> result) throws IOException {

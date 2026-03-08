@@ -1,7 +1,7 @@
 package com.star.pivot.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.system.domain.bo.DeptVO;
 import com.star.pivot.system.domain.dto.DeptDTO;
 import com.star.pivot.system.domain.entity.SysDept;
@@ -128,7 +128,7 @@ class SysDeptServiceImplTest {
         void selectDeptById_DeptNotExists() {
             when(sysDeptMapper.selectById(999L)).thenReturn(null);
 
-            assertThrows(BusinessException.class, () -> sysDeptService.selectDeptById(999L));
+            assertThrows(BizException.class, () -> sysDeptService.selectDeptById(999L));
         }
     }
 
@@ -150,7 +150,7 @@ class SysDeptServiceImplTest {
         void insertDept_NameExists() {
             when(sysDeptMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(1L);
 
-            assertThrows(BusinessException.class, () -> sysDeptService.insertDept(testDeptDTO));
+            assertThrows(BizException.class, () -> sysDeptService.insertDept(testDeptDTO));
         }
     }
 
@@ -177,7 +177,7 @@ class SysDeptServiceImplTest {
             
             when(sysDeptMapper.selectById(999L)).thenReturn(null);
 
-            assertThrows(BusinessException.class, () -> sysDeptService.updateDept(testDeptDTO));
+            assertThrows(BizException.class, () -> sysDeptService.updateDept(testDeptDTO));
         }
 
         @Test
@@ -188,7 +188,7 @@ class SysDeptServiceImplTest {
             
             when(sysDeptMapper.selectById(1L)).thenReturn(testDept);
 
-            assertThrows(BusinessException.class, () -> sysDeptService.updateDept(testDeptDTO));
+            assertThrows(BizException.class, () -> sysDeptService.updateDept(testDeptDTO));
         }
     }
 
@@ -216,7 +216,7 @@ class SysDeptServiceImplTest {
 
             List<Long> deptIds = Arrays.asList(1L);
 
-            assertThrows(BusinessException.class, () -> sysDeptService.deleteDeptByIds(deptIds));
+            assertThrows(BizException.class, () -> sysDeptService.deleteDeptByIds(deptIds));
         }
 
         @Test
@@ -227,7 +227,7 @@ class SysDeptServiceImplTest {
 
             List<Long> deptIds = Arrays.asList(1L);
 
-            assertThrows(BusinessException.class, () -> sysDeptService.deleteDeptByIds(deptIds));
+            assertThrows(BizException.class, () -> sysDeptService.deleteDeptByIds(deptIds));
         }
     }
 

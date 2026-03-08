@@ -12,7 +12,7 @@
             <h3 class="title">{{ t('register.title') }}</h3>
             <p class="sub-title">{{ t('register.subTitle') }}</p>
           </div>
-          
+
           <ElForm
             class="form-content"
             ref="formRef"

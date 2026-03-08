@@ -5,7 +5,7 @@ import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.ErrorCode;
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.system.domain.bo.LogininforReqBo;
 import com.star.pivot.system.domain.bo.LogininforVO;
 import com.star.pivot.system.domain.entity.SysLogininfor;
@@ -132,7 +132,7 @@ public class SysLogininforController {
      */
     private List<Long> validateIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
-            throw new ServiceException(
+            throw new BizException(
                 ErrorCode.PARAM_INVALID, "删除ID不能为空");
         }
         return ids;

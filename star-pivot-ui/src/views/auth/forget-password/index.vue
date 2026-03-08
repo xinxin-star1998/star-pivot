@@ -11,7 +11,7 @@
             <h3 class="title">{{ t('forgetPassword.title') }}</h3>
             <p class="sub-title">{{ t('forgetPassword.subTitle') }}</p>
           </div>
-          
+
           <div class="form-content">
             <div class="input-group">
               <span class="input-label" v-if="showInputLabel">账号</span>
@@ -41,11 +41,7 @@
               {{ t('forgetPassword.submitBtnText') }}
             </ElButton>
 
-            <ElButton 
-              class="back-btn custom-height" 
-              plain 
-              @click="toLogin"
-            >
+            <ElButton class="back-btn custom-height" plain @click="toLogin">
               {{ t('forgetPassword.backBtnText') }}
             </ElButton>
           </div>

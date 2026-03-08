@@ -5,10 +5,10 @@
     width="40%"
     align-center
   >
-    <ElForm 
-      ref="formRef" 
-      :model="formData" 
-      :rules="rules" 
+    <ElForm
+      ref="formRef"
+      :model="formData"
+      :rules="rules"
       label-width="80px"
       aria-label="用户信息表单"
     >
@@ -399,13 +399,17 @@
 
 <style scoped lang="scss">
   :deep(.el-dialog) {
-    border-radius: 16px;
     overflow: hidden;
+    border-radius: 16px;
 
     .el-dialog__header {
       padding: 20px 24px;
       margin: 0;
-      background: linear-gradient(135deg, var(--el-color-primary-light-9) 0%, var(--el-color-primary-light-8) 100%);
+      background: linear-gradient(
+        135deg,
+        var(--el-color-primary-light-9) 0%,
+        var(--el-color-primary-light-8) 100%
+      );
       border-bottom: 1px solid var(--art-card-border);
 
       .el-dialog__title {
@@ -416,15 +420,15 @@
     }
 
     .el-dialog__body {
-      padding: 24px;
       max-height: 60vh;
+      padding: 24px;
       overflow-y: auto;
     }
 
     .el-dialog__footer {
       padding: 16px 24px;
-      border-top: 1px solid var(--art-card-border);
       background-color: var(--art-gray-50);
+      border-top: 1px solid var(--art-card-border);
     }
   }
 
@@ -467,10 +471,10 @@
   }
 
   :deep(.el-button) {
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.3s ease;
     padding: 10px 24px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 
     &:hover {
       transform: translateY(-1px);
@@ -479,7 +483,7 @@
 
   .dialog-footer {
     display: flex;
-    justify-content: flex-end;
     gap: 12px;
+    justify-content: flex-end;
   }
 </style>

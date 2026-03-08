@@ -3,7 +3,9 @@
     <div class="art-card-header">
       <div class="title">
         <h4>待办事项</h4>
-        <p>待处理<span class="text-danger">{{ pendingCount }}</span></p>
+        <p
+          >待处理<span class="text-danger">{{ pendingCount }}</span></p
+        >
       </div>
     </div>
 

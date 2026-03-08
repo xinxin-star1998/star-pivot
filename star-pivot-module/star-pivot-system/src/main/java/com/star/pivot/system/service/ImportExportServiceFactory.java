@@ -1,6 +1,6 @@
 package com.star.pivot.system.service;
 
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -49,12 +49,12 @@ public class ImportExportServiceFactory {
      */
     public ImportExportService getService(String businessType) {
         if (businessType == null || businessType.trim().isEmpty()) {
-            throw new BusinessException("业务类型不能为空");
+            throw new BizException("业务类型不能为空");
         }
 
         ImportExportService service = serviceMap.get(businessType.toLowerCase());
         if (service == null) {
-            throw new BusinessException("未找到业务类型为 [" + businessType + "] 的导入导出服务");
+            throw new BizException("未找到业务类型为 [" + businessType + "] 的导入导出服务");
         }
 
         return service;

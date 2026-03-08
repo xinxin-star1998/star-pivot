@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.system.domain.bo.PostBo;
@@ -83,7 +83,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
     @Transactional(rollbackFor = Exception.class)
     public boolean insertPost(PostDTO postDTO) {
         if (!checkPostCodeUnique(postDTO.getPostCode(), null)) {
-            throw new BusinessException(ErrorCode.POST_CODE_EXISTS);
+            throw new BizException(ErrorCode.POST_CODE_EXISTS);
         }
 
         // 创建岗位
@@ -107,7 +107,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
         AssertUtils.notNull(post, ErrorCode.POST_NOT_FOUND);
 
         if (!checkPostCodeUnique(postDTO.getPostCode(), postDTO.getPostId())) {
-            throw new BusinessException(ErrorCode.POST_CODE_USED);
+            throw new BizException(ErrorCode.POST_CODE_USED);
         }
 
         // 更新岗位信息
@@ -134,7 +134,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, SysPost> implements
                 wrapper.eq(UserPost::getPostId, postId);
                 long count = userPostMapper.selectCount(wrapper);
                 if (count > 0) {
-                    throw new BusinessException(ErrorCode.POST_USED, "岗位[" + post.getPostName() + "]已被使用，不能删除");
+                    throw new BizException(ErrorCode.POST_USED, "岗位[" + post.getPostName() + "]已被使用，不能删除");
                 }
                 
                 this.removeById(postId);

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.domain.AppConstants;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.RoleMenu;
@@ -108,7 +108,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
                 menuDTO.getMenuName(), menuDTO.getParentId(), menuDTO.getMenuType());
         
         if (!checkMenuNameUnique(menuDTO.getMenuName(), menuDTO.getParentId(), null)) {
-            throw new BusinessException(ErrorCode.MENU_NAME_EXISTS);
+            throw new BizException(ErrorCode.MENU_NAME_EXISTS);
         }
 
         // 创建菜单
@@ -145,17 +145,17 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         SysMenu menu = this.getById(menuDTO.getMenuId());
         if (menu == null) {
             log.warn("菜单不存在: menuId={}", menuDTO.getMenuId());
-            throw new BusinessException(ErrorCode.MENU_NOT_FOUND);
+            throw new BizException(ErrorCode.MENU_NOT_FOUND);
         }
 
         if (menuDTO.getParentId() != null && menuDTO.getParentId().equals(menuDTO.getMenuId())) {
             log.warn("不能将父菜单设置为自己的子菜单: menuId={}", menuDTO.getMenuId());
-            throw new BusinessException(ErrorCode.MENU_PARENT_ERROR);
+            throw new BizException(ErrorCode.MENU_PARENT_ERROR);
         }
 
         if (!checkMenuNameUnique(menuDTO.getMenuName(), menuDTO.getParentId(), menuDTO.getMenuId())) {
             log.warn("菜单名称已存在: menuName={}, parentId={}", menuDTO.getMenuName(), menuDTO.getParentId());
-            throw new BusinessException(ErrorCode.MENU_NAME_EXISTS);
+            throw new BizException(ErrorCode.MENU_NAME_EXISTS);
         }
 
         // 更新菜单信息
@@ -192,7 +192,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             long count = this.count(wrapper);
             if (count > 0) {
                 log.warn("存在子菜单，不允许删除: menuId={}, 子菜单数量={}", menuId, count);
-                throw new BusinessException(ErrorCode.MENU_HAS_CHILDREN, "菜单ID " + menuId + " 存在子菜单，不允许删除");
+                throw new BizException(ErrorCode.MENU_HAS_CHILDREN, "菜单ID " + menuId + " 存在子菜单，不允许删除");
             }
 
             LambdaQueryWrapper<RoleMenu> roleMenuWrapper = new LambdaQueryWrapper<>();
@@ -200,7 +200,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             long roleMenuCount = roleMenuMapper.selectCount(roleMenuWrapper);
             if (roleMenuCount > 0) {
                 log.warn("菜单已被角色使用，不允许删除: menuId={}, 使用角色数量={}", menuId, roleMenuCount);
-                throw new BusinessException(ErrorCode.MENU_USED_BY_ROLE, "菜单ID " + menuId + " 已被角色使用，不允许删除");
+                throw new BizException(ErrorCode.MENU_USED_BY_ROLE, "菜单ID " + menuId + " 已被角色使用，不允许删除");
             }
         }
         

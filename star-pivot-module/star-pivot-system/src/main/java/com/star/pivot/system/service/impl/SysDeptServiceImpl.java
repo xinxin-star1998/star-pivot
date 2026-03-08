@@ -2,7 +2,7 @@ package com.star.pivot.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.system.domain.bo.DeptVO;
@@ -51,7 +51,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         SysDept dept = this.getById(deptId);
         AssertUtils.notNull(dept, ErrorCode.DEPT_NOT_FOUND);
         if ("2".equals(dept.getDelFlag())) {
-            throw new BusinessException(ErrorCode.DEPT_NOT_FOUND);
+            throw new BizException(ErrorCode.DEPT_NOT_FOUND);
         }
         DeptVO vo = new DeptVO();
         BeanUtils.copyProperties(dept, vo);
@@ -63,7 +63,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     @Transactional(rollbackFor = Exception.class)
     public boolean insertDept(DeptDTO deptDTO) {
         if (!checkDeptNameUnique(deptDTO.getDeptName(), deptDTO.getParentId(), null)) {
-            throw new BusinessException(ErrorCode.DEPT_NAME_EXISTS);
+            throw new BizException(ErrorCode.DEPT_NAME_EXISTS);
         }
 
         // 创建部门
@@ -101,15 +101,15 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         SysDept dept = this.getById(deptDTO.getDeptId());
         AssertUtils.notNull(dept, ErrorCode.DEPT_NOT_FOUND);
         if ("2".equals(dept.getDelFlag())) {
-            throw new BusinessException(ErrorCode.DEPT_NOT_FOUND);
+            throw new BizException(ErrorCode.DEPT_NOT_FOUND);
         }
 
         if (deptDTO.getParentId() != null && deptDTO.getParentId().equals(deptDTO.getDeptId())) {
-            throw new BusinessException(ErrorCode.DEPT_PARENT_ERROR);
+            throw new BizException(ErrorCode.DEPT_PARENT_ERROR);
         }
 
         if (!checkDeptNameUnique(deptDTO.getDeptName(), deptDTO.getParentId(), deptDTO.getDeptId())) {
-            throw new BusinessException(ErrorCode.DEPT_NAME_EXISTS);
+            throw new BizException(ErrorCode.DEPT_NAME_EXISTS);
         }
 
         // 如果修改了父部门，需要更新祖级列表
@@ -147,11 +147,11 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         
         for (Long deptId : deptIds) {
             if (hasChildDept(deptId)) {
-                throw new BusinessException(ErrorCode.DEPT_HAS_CHILDREN, "部门ID " + deptId + " 存在子部门，不允许删除");
+                throw new BizException(ErrorCode.DEPT_HAS_CHILDREN, "部门ID " + deptId + " 存在子部门，不允许删除");
             }
 
             if (hasUser(deptId)) {
-                throw new BusinessException(ErrorCode.DEPT_HAS_USERS, "部门ID " + deptId + " 存在用户，不允许删除");
+                throw new BizException(ErrorCode.DEPT_HAS_USERS, "部门ID " + deptId + " 存在用户，不允许删除");
             }
 
             // 软删除

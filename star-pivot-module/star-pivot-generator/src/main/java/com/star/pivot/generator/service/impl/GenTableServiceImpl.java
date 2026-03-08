@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.constants.GenConstants;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.generator.config.GenConfig;
 import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.bo.GenTableVO;
@@ -158,7 +158,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             generatorCode(tableName, zip);
         } catch (IOException e) {
             log.error("生成代码压缩包失败，表名: {}", tableName, e);
-            throw new ServiceException("生成代码失败：" + e.getMessage());
+            throw new BizException("生成代码失败：" + e.getMessage());
         }
         return outputStream.toByteArray();
     }
@@ -175,7 +175,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         GenTable table = genTableMapper.selectGenTableByName(tableName);
         if (StringUtils.isNull(table))
         {
-            throw new ServiceException("生成代码失败，代码生成表不存在");
+            throw new BizException("生成代码失败，代码生成表不存在");
         }
         // 设置主子表信息
         setSubTable(table);
@@ -203,7 +203,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
                 }
                 catch (IOException e)
                 {
-                    throw new ServiceException("渲染模板失败，表名：" + table.getTableName());
+                    throw new BizException("渲染模板失败，表名：" + table.getTableName());
                 }
             }
         }
@@ -220,19 +220,19 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         GenTable table = genTableMapper.selectGenTableByName(tableName);
         if (StringUtils.isNull(table))
         {
-            throw new ServiceException("同步数据失败，代码生成表不存在");
+            throw new BizException("同步数据失败，代码生成表不存在");
         }
         List<GenTableColumn> tableColumns = table.getColumns();
         if (StringUtils.isEmpty(tableColumns))
         {
-            throw new ServiceException("同步数据失败，代码生成表字段列表为空");
+            throw new BizException("同步数据失败，代码生成表字段列表为空");
         }
         Map<String, GenTableColumn> tableColumnMap = tableColumns.stream().collect(Collectors.toMap(GenTableColumn::getColumnName, Function.identity()));
 
         List<GenTableColumn> dbTableColumns = genTableColumnMapper.selectDbTableColumnsByName(tableName);
         if (StringUtils.isEmpty(dbTableColumns))
         {
-            throw new ServiceException("同步数据失败，原表结构不存在");
+            throw new BizException("同步数据失败，原表结构不存在");
         }
         List<String> dbTableColumnNames = dbTableColumns.stream().map(GenTableColumn::getColumnName).toList();
 
@@ -286,7 +286,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             }
         } catch (IOException e) {
             log.error("批量生成代码压缩包失败", e);
-            throw new ServiceException("批量生成代码失败");
+            throw new BizException("批量生成代码失败");
         }
         return outputStream.toByteArray();
     }
@@ -300,7 +300,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         GenTable table = genTableMapper.selectGenTableByName(tableName);
         if (StringUtils.isNull(table))
         {
-            throw new ServiceException("生成代码失败，代码生成表不存在");
+            throw new BizException("生成代码失败，代码生成表不存在");
         }
         // 设置主子表信息
         setSubTable(table);
@@ -401,7 +401,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         }
         catch (Exception e)
         {
-            throw new ServiceException("导入失败：" + e.getMessage());
+            throw new BizException("导入失败：" + e.getMessage());
         }
     }
 
@@ -440,26 +440,26 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             JSONObject paramsObj = JSON.parseObject(options);
             if (StringUtils.isEmpty(paramsObj.getString(GenConstants.TREE_CODE)))
             {
-                throw new ServiceException("树编码字段不能为空");
+                throw new BizException("树编码字段不能为空");
             }
             else if (StringUtils.isEmpty(paramsObj.getString(GenConstants.TREE_PARENT_CODE)))
             {
-                throw new ServiceException("树父编码字段不能为空");
+                throw new BizException("树父编码字段不能为空");
             }
             else if (StringUtils.isEmpty(paramsObj.getString(GenConstants.TREE_NAME)))
             {
-                throw new ServiceException("树名称字段不能为空");
+                throw new BizException("树名称字段不能为空");
             }
         }
         else if (GenConstants.TPL_SUB.equals(genTable.getTplCategory()))
         {
             if (StringUtils.isEmpty(genTable.getSubTableName()))
             {
-                throw new ServiceException("关联子表的表名不能为空");
+                throw new BizException("关联子表的表名不能为空");
             }
             else if (StringUtils.isEmpty(genTable.getSubTableFkName()))
             {
-                throw new ServiceException("子表关联的外键名不能为空");
+                throw new BizException("子表关联的外键名不能为空");
             }
         }
     }
@@ -481,7 +481,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         List<GenTableColumn> columns = table.getColumns();
         if (StringUtils.isEmpty(columns))
         {
-            throw new ServiceException("表字段列表不能为空，表名：" + table.getTableName());
+            throw new BizException("表字段列表不能为空，表名：" + table.getTableName());
         }
         for (GenTableColumn column : columns)
         {

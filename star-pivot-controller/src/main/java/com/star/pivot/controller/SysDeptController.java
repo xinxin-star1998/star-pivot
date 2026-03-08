@@ -3,7 +3,7 @@ package com.star.pivot.controller;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.ErrorCode;
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.system.domain.bo.DeptVO;
 import com.star.pivot.system.domain.dto.DeptDTO;
 import com.star.pivot.system.service.SysDeptService;
@@ -130,7 +130,7 @@ public class SysDeptController {
      */
     private List<Long> validateIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
-            throw new ServiceException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
+            throw new BizException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
         }
         return ids;
     }

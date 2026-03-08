@@ -5,7 +5,10 @@
       <div class="w-112 mr-5 max-md:w-full max-md:mr-0">
         <div class="art-card-sm relative p-0 overflow-hidden">
           <div class="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600">
-            <img class="absolute top-0 left-0 w-full h-full object-cover opacity-80" :src="bgImage" />
+            <img
+              class="absolute top-0 left-0 w-full h-full object-cover opacity-80"
+              :src="bgImage"
+            />
             <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/30"></div>
           </div>
           <div class="relative px-6 pb-8 -mt-16 text-center">
@@ -199,11 +202,7 @@
                 </ElInput>
               </ElFormItem>
               <ElFormItem label="邮箱" class="flex-1">
-                <ElInput
-                  v-model="form.email"
-                  :disabled="true"
-                  class="transition-all duration-300"
-                >
+                <ElInput v-model="form.email" :disabled="true" class="transition-all duration-300">
                   <template #prefix>
                     <ArtSvgIcon
                       icon="ri:mail-line"
@@ -259,15 +258,11 @@
 
 <script setup lang="ts">
   import { useUserStore } from '@/store/modules/user'
-  import {
-    fetchGetUserById,
-    fetchGetAvatarPresignedUrl
-  } from '@/api/user/user'
+  import { fetchGetUserById, fetchGetAvatarPresignedUrl } from '@/api/user/user'
   import { fetchGetUserInfo } from '@/api/auth'
   import defaultAvatarImg from '@imgs/user/avatar.webp'
   import bgImageImg from '@imgs/user/bg.webp'
   import { useSettingStore } from '@/store/modules/setting'
-  import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
 
   defineOptions({ name: 'UserCenter' })
 
@@ -446,11 +441,11 @@
 
 <style scoped lang="scss">
   :deep(.art-card-sm) {
+    overflow: hidden;
     border: 1px solid var(--art-card-border);
     border-radius: 16px;
     box-shadow: 0 4px 16px 0 rgb(0 0 0 / 8%);
     transition: all 0.3s ease;
-    overflow: hidden;
 
     &:hover {
       box-shadow: 0 8px 24px 0 rgb(0 0 0 / 12%);
@@ -484,8 +479,8 @@
   }
 
   :deep(.el-button) {
-    border-radius: 8px;
     font-weight: 500;
+    border-radius: 8px;
     transition: all 0.3s ease;
 
     &:hover {

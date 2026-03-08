@@ -42,9 +42,6 @@ import { useUserStore } from '@/store/modules/user'
 import { useMenuStore } from '@/store/modules/menu'
 import { setWorktab } from '@/utils/navigation'
 import { setPageTitle } from '@/utils/router'
-import { useCommon } from '@/hooks/core/useCommon'
-import { useWorktabStore } from '@/store/modules/worktab'
-import { safeLog } from '@/utils'
 import { handleLoginStatus, handleRootPathRedirect, isStaticRoute } from './authGuard'
 import {
   setupRouteRegistry,
@@ -52,7 +49,6 @@ import {
   closeLoading,
   getRouteInitFailed,
   getPendingLoading,
-  resetRouteInitState,
   resetPendingLoading,
   resetRouterState
 } from './dynamicRouteGuard'
@@ -123,7 +119,9 @@ async function handleRouteGuard(
   // 注意：若目标为静态路由（如 /403、/500），则不触发菜单加载，避免菜单为空时跳转 403 后再次进入本逻辑导致一直转圈
   const menuStore = useMenuStore()
   const needReloadMenu =
-    userStore.isLogin && !isStaticRoute(to.path) && (!menuStore.menuList.length || !menuStore.getHomePath())
+    userStore.isLogin &&
+    !isStaticRoute(to.path) &&
+    (!menuStore.menuList.length || !menuStore.getHomePath())
 
   if (needReloadMenu) {
     await handleDynamicRoutes(to, next, router)

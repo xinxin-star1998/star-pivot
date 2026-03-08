@@ -169,6 +169,7 @@
 <script setup lang="ts">
   import { Refresh, Link } from '@element-plus/icons-vue'
   import { fetchGetDruidMonitorInfo } from '@/api/monitor/druid'
+  import { usePageVisibility } from '@/hooks/core/usePageVisibility'
   import type { DruidMonitorInfo } from '@/types/api/monitor'
   import { router } from '@/router'
 
@@ -180,6 +181,11 @@
   const showSlowSqlList = ref(false) // 是否显示慢SQL列表
   const slowSqlThreshold = ref(5000) // 慢SQL阈值（毫秒）
   let refreshTimer: number | null = null
+
+  // 页面可见性检测 - 页面不可见时暂停刷新
+  const { onPause, onResume } = usePageVisibility()
+  onPause(() => stopAutoRefresh())
+  onResume(() => startAutoRefresh())
 
   // 格式化百分比
   const formatPercent = (value: number) => {
@@ -351,9 +357,9 @@
 
     .el-table__header-wrapper {
       th {
-        background-color: var(--art-gray-100) !important;
         font-weight: 600;
         color: var(--art-gray-800);
+        background-color: var(--art-gray-100) !important;
       }
     }
 
@@ -369,8 +375,8 @@
   }
 
   :deep(.el-button) {
-    border-radius: 8px;
     font-weight: 500;
+    border-radius: 8px;
     transition: all 0.3s ease;
 
     &:hover {
@@ -383,8 +389,8 @@
   }
 
   :deep(.el-tag) {
-    border-radius: 6px;
     font-weight: 500;
+    border-radius: 6px;
   }
 
   .text-success {

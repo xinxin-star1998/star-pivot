@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.monitor.domain.bo.ApiPerformanceReqBo;
 import com.star.pivot.monitor.domain.vo.DruidMonitorVO;
@@ -165,7 +165,7 @@ public class MonitorServiceImpl implements MonitorService {
             serverInfo.setDisk(diskInfo);
         } catch (Exception e) {
             log.error("获取服务器信息失败", e);
-            throw new ServiceException(ErrorCode.INTERNAL_ERROR, "获取服务器信息失败: " + e.getMessage());
+            throw new BizException(ErrorCode.INTERNAL_ERROR, "获取服务器信息失败: " + e.getMessage());
         }
 
         return serverInfo;
@@ -781,7 +781,7 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<RedisCacheVO> getCacheList() {
         if (redisTemplate == null) {
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
+            throw new BizException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         try {
@@ -815,7 +815,7 @@ public class MonitorServiceImpl implements MonitorService {
             return cacheList;
         } catch (Exception e) {
             log.error("获取缓存列表失败", e);
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "获取缓存列表失败: " + e.getMessage());
+            throw new BizException(ErrorCode.REDIS_ERROR, "获取缓存列表失败: " + e.getMessage());
         }
     }
 
@@ -843,11 +843,11 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public List<RedisCacheVO.CacheKeyInfo> getCacheKeys(String cacheName) {
         if (redisTemplate == null) {
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
+            throw new BizException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         if (cacheName == null || cacheName.trim().isEmpty()) {
-            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "缓存名称不能为空");
+            throw new BizException(ErrorCode.PARAM_NOT_NULL, "缓存名称不能为空");
         }
 
         try {
@@ -893,18 +893,18 @@ public class MonitorServiceImpl implements MonitorService {
             return keyInfoList;
         } catch (Exception e) {
             log.error("获取缓存键列表失败，cacheName: {}", cacheName, e);
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "获取缓存键列表失败: " + e.getMessage());
+            throw new BizException(ErrorCode.REDIS_ERROR, "获取缓存键列表失败: " + e.getMessage());
         }
     }
 
     @Override
     public RedisCacheVO.CacheContentInfo getCacheContent(String cacheName, String key) {
         if (redisTemplate == null) {
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
+            throw new BizException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         if (key == null || key.trim().isEmpty()) {
-            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "缓存键名不能为空");
+            throw new BizException(ErrorCode.PARAM_NOT_NULL, "缓存键名不能为空");
         }
 
         try {
@@ -942,11 +942,11 @@ public class MonitorServiceImpl implements MonitorService {
             contentInfo.setContent(content);
 
             return contentInfo;
-        } catch (ServiceException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("获取缓存内容失败，cacheName: {}, key: {}", cacheName, key, e);
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "获取缓存内容失败: " + e.getMessage());
+            throw new BizException(ErrorCode.REDIS_ERROR, "获取缓存内容失败: " + e.getMessage());
         }
     }
 
@@ -1156,11 +1156,11 @@ public class MonitorServiceImpl implements MonitorService {
     @Override
     public long deleteCache(String cacheName) {
         if (redisTemplate == null) {
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
+            throw new BizException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         if (cacheName == null || cacheName.trim().isEmpty()) {
-            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "缓存名称不能为空");
+            throw new BizException(ErrorCode.PARAM_NOT_NULL, "缓存名称不能为空");
         }
 
         try {
@@ -1174,18 +1174,18 @@ public class MonitorServiceImpl implements MonitorService {
             return deletedCount != null ? deletedCount : 0L;
         } catch (Exception e) {
             log.error("删除缓存失败，cacheName: {}", cacheName, e);
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "删除缓存失败: " + e.getMessage());
+            throw new BizException(ErrorCode.REDIS_ERROR, "删除缓存失败: " + e.getMessage());
         }
     }
 
     @Override
     public boolean deleteCacheKey(String cacheName, String key) {
         if (redisTemplate == null) {
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
+            throw new BizException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         if (key == null || key.trim().isEmpty()) {
-            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "缓存键名不能为空");
+            throw new BizException(ErrorCode.PARAM_NOT_NULL, "缓存键名不能为空");
         }
 
         try {
@@ -1193,14 +1193,14 @@ public class MonitorServiceImpl implements MonitorService {
             return Boolean.TRUE.equals(deleted);
         } catch (Exception e) {
             log.error("删除缓存键失败，cacheName: {}, key: {}", cacheName, key, e);
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "删除缓存键失败: " + e.getMessage());
+            throw new BizException(ErrorCode.REDIS_ERROR, "删除缓存键失败: " + e.getMessage());
         }
     }
 
     @Override
     public boolean clearAllCache() {
         if (redisTemplate == null) {
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
+            throw new BizException(ErrorCode.REDIS_ERROR, "Redis 未配置或未启用");
         }
 
         try {
@@ -1213,7 +1213,7 @@ public class MonitorServiceImpl implements MonitorService {
             return true;
         } catch (Exception e) {
             log.error("清空所有缓存失败", e);
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "清空所有缓存失败: " + e.getMessage());
+            throw new BizException(ErrorCode.REDIS_ERROR, "清空所有缓存失败: " + e.getMessage());
         }
     }
 

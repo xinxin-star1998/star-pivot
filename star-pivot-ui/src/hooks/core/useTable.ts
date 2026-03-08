@@ -30,7 +30,6 @@ import {
   updatePaginationFromResponse
 } from '@utils/table/tableUtils'
 import { tableConfig } from '@utils/table/tableConfig'
-import { logger as sysLogger } from '@/utils/sys'
 
 // 类型推导工具类型
 type InferApiParams<T> = T extends (params: infer P) => Promise<unknown> ? P : never
@@ -465,6 +464,7 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
   }
 
   // 智能防抖搜索函数
+  // @ts-ignore
   const debouncedGetDataByPage = createSmartDebounce(getDataByPage, debounceTime)
 
   // 重置搜索参数

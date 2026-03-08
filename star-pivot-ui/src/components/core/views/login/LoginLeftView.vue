@@ -104,17 +104,21 @@
     height: 100%;
     padding: 15px;
     overflow: hidden;
-    background: linear-gradient(135deg, $bg-mix-light-9 0%, color-mix(in srgb, $primary-light-8 50%, $main-bg) 100%);
+    background: linear-gradient(
+      135deg,
+      $bg-mix-light-9 0%,
+      color-mix(in srgb, $primary-light-8 50%, $main-bg) 100%
+    );
 
     // 添加背景纹理
     &::before {
-      content: '';
       position: absolute;
       inset: 0;
-      background-image: 
-        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 40%);
       pointer-events: none;
+      content: '';
+      background-image:
+        radial-gradient(circle at 20% 80%, rgb(255 255 255 / 10%) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgb(255 255 255 / 8%) 0%, transparent 40%);
     }
 
     .logo {
@@ -142,7 +146,8 @@
       z-index: 10;
       width: 40%;
       margin: auto;
-      animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+      animation:
+        slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
         floatAnimation 6s ease-in-out infinite 0.6s;
     }
 
@@ -154,18 +159,18 @@
       animation: slideInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 
       h1 {
+        margin-bottom: 12px;
         font-size: 26px;
         font-weight: 500;
         color: var(--art-gray-900) !important;
         letter-spacing: 1px;
-        margin-bottom: 12px;
       }
 
       p {
         margin-top: 10px;
         font-size: 15px;
-        color: var(--art-gray-600) !important;
         line-height: 1.6;
+        color: var(--art-gray-600) !important;
       }
     }
 
@@ -185,11 +190,17 @@
 
           @if $direction == 'up' {
             transform: translateY(30px) rotate($rotation);
-          } @else if $direction == 'down' {
+          }
+
+ @else if $direction == 'down' {
             transform: translateY(-30px) rotate($rotation);
-          } @else if $direction == 'left' {
+          }
+
+ @else if $direction == 'left' {
             transform: translateX(-30px) rotate($rotation);
-          } @else if $direction == 'right' {
+          }
+
+ @else if $direction == 'right' {
             transform: translateX(30px) rotate($rotation);
           }
         }
@@ -199,7 +210,9 @@
 
           @if $direction == 'up' or $direction == 'down' {
             transform: translateY(0) rotate($rotation);
-          } @else {
+          }
+
+ @else {
             transform: translateX(0) rotate($rotation);
           }
         }
@@ -310,7 +323,8 @@
       }
 
       @keyframes floatAnimation {
-        0%, 100% {
+        0%,
+        100% {
           transform: translateY(0);
         }
 
@@ -320,7 +334,8 @@
       }
 
       @keyframes pulseGlow {
-        0%, 100% {
+        0%,
+        100% {
           box-shadow: 0 0 20px rgba(var(--el-color-primary-rgb), 0.2);
         }
 
@@ -386,7 +401,9 @@
         height: 42px;
         border: 2px solid $primary-light-8;
         border-radius: 50%;
-        animation: fadeInUp 0.8s ease-out forwards, pulseGlow 3s ease-in-out infinite 0.8s;
+        animation:
+          fadeInUp 0.8s ease-out forwards,
+          pulseGlow 3s ease-in-out infinite 0.8s;
       }
 
       .square-rotated {
@@ -396,7 +413,7 @@
         height: 60px;
         background: linear-gradient(135deg, $bg-mix-light-8, $bg-mix-light-7);
         border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 6%);
 
         &.animate-fade-in-left {
           animation-name: fadeInLeftRotated;
@@ -410,7 +427,7 @@
         height: 18px;
         background: linear-gradient(135deg, $primary-light-8, $primary-light-7);
         border-radius: 50%;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 12px rgb(0 0 0 / 8%);
       }
 
       // 太阳/月亮效果
@@ -423,8 +440,8 @@
         cursor: pointer;
         background: linear-gradient(135deg, $bg-mix-light-7, $bg-mix-light-8);
         border-radius: 50%;
+        box-shadow: 0 4px 20px rgb(0 0 0 / 10%);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 
         &::after {
           position: absolute;
@@ -441,7 +458,7 @@
         }
 
         &:hover {
-          box-shadow: 0 0 40px rgba(255, 252, 0, 0.5);
+          box-shadow: 0 0 40px rgb(255 252 0 / 50%);
           transform: scale(1.1);
 
           &::after {
@@ -457,7 +474,7 @@
         height: 50px;
         background: linear-gradient(135deg, $primary-light-8, $primary-light-9);
         border-radius: 10px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 6%);
 
         &.animate-fade-in-right {
           animation-name: fadeInRightRotated;
@@ -481,7 +498,7 @@
         height: 14px;
         background: linear-gradient(135deg, $primary-light-7, $primary-light-8);
         border-radius: 50%;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
 
         &.dot-top-left {
           top: 140px;
@@ -513,12 +530,14 @@
           position: absolute;
           display: block;
           border-radius: 12px;
-          box-shadow: 0 12px 32px rgba(64, 87, 167, 0.15);
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          box-shadow: 0 12px 32px rgb(64 87 167 / 15%);
+          transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
 
           &:hover {
+            box-shadow: 0 16px 40px rgb(64 87 167 / 20%);
             transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 16px 40px rgba(64, 87, 167, 0.2);
           }
 
           &.square-blue {
@@ -527,7 +546,11 @@
             z-index: 2;
             width: 50px;
             height: 50px;
-            background: linear-gradient(135deg, rgb(from $primary-base r g b / 35%), rgb(from $primary-base r g b / 25%));
+            background: linear-gradient(
+              135deg,
+              rgb(from $primary-base r g b / 35%),
+              rgb(from $primary-base r g b / 25%)
+            );
             backdrop-filter: blur(4px);
           }
 
@@ -537,7 +560,11 @@
             z-index: 1;
             width: 70px;
             height: 70px;
-            background: linear-gradient(135deg, rgb(from $primary-base r g b / 18%), rgb(from $primary-base r g b / 12%));
+            background: linear-gradient(
+              135deg,
+              rgb(from $primary-base r g b / 18%),
+              rgb(from $primary-base r g b / 12%)
+            );
             backdrop-filter: blur(4px);
           }
 
@@ -547,7 +574,11 @@
             z-index: 3;
             width: 32px;
             height: 32px;
-            background: linear-gradient(135deg, rgb(from $primary-base r g b / 50%), rgb(from $primary-base r g b / 40%));
+            background: linear-gradient(
+              135deg,
+              rgb(from $primary-base r g b / 50%),
+              rgb(from $primary-base r g b / 40%)
+            );
             backdrop-filter: blur(4px);
           }
         }
@@ -561,11 +592,11 @@
           height: 2px;
           content: '';
           background: linear-gradient(90deg, var(--el-color-primary-light-6), transparent);
+          border-radius: 1px;
           opacity: 0;
           transform: rotate(50deg);
           animation: lineGrow 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
           animation-delay: 1.2s;
-          border-radius: 1px;
         }
       }
     }
@@ -600,15 +631,19 @@
   // 暗色主题
   .dark .login-left-view {
     background:
-      radial-gradient(ellipse at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at 100% 100%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-      linear-gradient(135deg, color-mix(in srgb, $primary-light-9 60%, #070707) 0%, color-mix(in srgb, $primary-light-8 30%, #0a0a0a) 100%);
+      radial-gradient(ellipse at 0% 0%, rgb(99 102 241 / 15%) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 100%, rgb(139 92 246 / 10%) 0%, transparent 50%),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, $primary-light-9 60%, #070707) 0%,
+        color-mix(in srgb, $primary-light-8 30%, #0a0a0a) 100%
+      );
 
     // 暗色背景纹理
     &::before {
       background-image:
-        radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.03) 0%, transparent 40%);
+        radial-gradient(circle at 20% 80%, rgb(99 102 241 / 5%) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgb(139 92 246 / 3%) 0%, transparent 40%);
     }
 
     @media only screen and (width <= 1180px) {
@@ -636,7 +671,9 @@
       // 月亮效果
       .circle-top-right {
         background: linear-gradient(135deg, $bg-mix-light-8, $bg-mix-light-9);
-        box-shadow: 0 0 25px #333 inset, 0 4px 20px rgba(0, 0, 0, 0.3);
+        box-shadow:
+          0 0 25px #333 inset,
+          0 4px 20px rgb(0 0 0 / 30%);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
         rotate: -48deg;
 
@@ -654,7 +691,9 @@
 
         &:hover {
           background: transparent;
-          box-shadow: 0 40px 25px #ddd inset, 0 0 30px rgba(255, 255, 255, 0.2);
+          box-shadow:
+            0 40px 25px #ddd inset,
+            0 0 30px rgb(255 255 255 / 20%);
           transform: scale(1.1);
 
           &::before {
@@ -669,26 +708,38 @@
 
       .bg-bubble {
         background:
-          radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.2) 0%, transparent 60%),
-          linear-gradient(135deg, $bg-mix-light-9, color-mix(in srgb, $primary-light-8 40%, #0a0a0a));
+          radial-gradient(circle at 30% 30%, rgb(99 102 241 / 20%) 0%, transparent 60%),
+          linear-gradient(
+            135deg,
+            $bg-mix-light-9,
+            color-mix(in srgb, $primary-light-8 40%, #0a0a0a)
+          );
         opacity: 0.5;
       }
 
       // 其他元素颜色调整
       .square-rotated {
-        background: linear-gradient(135deg, $bg-mix-light-9, color-mix(in srgb, $primary-light-8 50%, #0a0a0a));
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        background: linear-gradient(
+          135deg,
+          $bg-mix-light-9,
+          color-mix(in srgb, $primary-light-8 50%, #0a0a0a)
+        );
+        box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
       }
 
       .circle-small,
       .dot {
         background: linear-gradient(135deg, $primary-light-8, $primary-light-9);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
       }
 
       .square-bottom-right {
-        background: linear-gradient(135deg, $primary-light-9, color-mix(in srgb, $primary-light-8 50%, #0a0a0a));
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        background: linear-gradient(
+          135deg,
+          $primary-light-9,
+          color-mix(in srgb, $primary-light-8 50%, #0a0a0a)
+        );
+        box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
       }
 
       .dot.dot-top-right {
@@ -703,22 +754,34 @@
     // 方块组暗色调整
     .squares-group {
       .square {
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 12px 32px rgb(0 0 0 / 40%);
 
         &:hover {
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 16px 40px rgb(0 0 0 / 50%);
         }
 
         &.square-blue {
-          background: linear-gradient(135deg, rgb(from $primary-base r g b / 22%), rgb(from $primary-base r g b / 15%));
+          background: linear-gradient(
+            135deg,
+            rgb(from $primary-base r g b / 22%),
+            rgb(from $primary-base r g b / 15%)
+          );
         }
 
         &.square-pink {
-          background: linear-gradient(135deg, rgb(from $primary-base r g b / 12%), rgb(from $primary-base r g b / 8%));
+          background: linear-gradient(
+            135deg,
+            rgb(from $primary-base r g b / 12%),
+            rgb(from $primary-base r g b / 8%)
+          );
         }
 
         &.square-purple {
-          background: linear-gradient(135deg, rgb(from $primary-base r g b / 28%), rgb(from $primary-base r g b / 20%));
+          background: linear-gradient(
+            135deg,
+            rgb(from $primary-base r g b / 28%),
+            rgb(from $primary-base r g b / 20%)
+          );
         }
       }
 

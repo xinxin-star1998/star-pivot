@@ -1,6 +1,6 @@
 package com.star.pivot.framework.sql;
 
-import com.star.pivot.framework.exception.UtilException;
+import com.star.pivot.framework.exception.BizException;
 import org.apache.commons.lang3.StringUtils;
 
 public class SqlUtil
@@ -11,10 +11,10 @@ public class SqlUtil
 
     public static String escapeOrderBySql(String value) {
         if (StringUtils.isNotEmpty(value) && !isValidOrderBySql(value)) {
-            throw new UtilException("参数不符合规范，不能进行查询");
+            throw new BizException("参数不符合规范，不能进行查询");
         }
         if (StringUtils.length(value) > ORDER_BY_MAX_LENGTH) {
-            throw new UtilException("参数已超过最大限制，不能进行查询");
+            throw new BizException("参数已超过最大限制，不能进行查询");
         }
         return value;
     }
@@ -30,7 +30,7 @@ public class SqlUtil
         String[] sqlKeywords = StringUtils.split(SQL_REGEX, "\\|");
         for (String sqlKeyword : sqlKeywords) {
             if (StringUtils.indexOfIgnoreCase(value, sqlKeyword) > -1) {
-                throw new UtilException("参数存在SQL注入风险");
+                throw new BizException("参数存在SQL注入风险");
             }
         }
     }

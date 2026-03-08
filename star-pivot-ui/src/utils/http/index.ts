@@ -205,8 +205,8 @@ axiosInstance.interceptors.response.use(
 
     // JSON 响应类型，进行常规处理
     const data = response.data as BaseResponse
-    const { code, msg, message } = data
-    const messageText = msg || message || $t('httpMsg.requestFailed')
+    const { code, message } = data
+    const messageText = message || $t('httpMsg.requestFailed')
     if (code === ApiStatus.success) return response
 
     // 业务层返回 401（HTTP 状态码可能是 200，但业务 code 是 401）

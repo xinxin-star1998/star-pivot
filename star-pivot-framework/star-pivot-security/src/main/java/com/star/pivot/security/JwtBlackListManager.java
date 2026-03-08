@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -16,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  * <p>性能优化：使用 SHA-256 哈希值作为 Redis key，而不是完整的 token 字符串
  * <ul>
  *   <li>减少 Redis 存储空间占用（JWT token 通常很长，200+ 字符）</li>
- *   <li>哈希值固定长度（64 字符），便于 Redis 内存管理</li>
+ *   <li>SHA-256 哈希值固定长度（64 字符），比 MD5（32字符）更安全</li>
  *   <li>同时存储原始 token 的 hash 值用于验证，防止哈希碰撞</li>
  * </ul>
  */
@@ -28,6 +29,30 @@ public class JwtBlackListManager {
     private final RedisTemplate<String, Object> redisTemplate;
     
     private static final String BLACKLIST_PREFIX = "jwt:logout:";
+
+    /**
+     * 使用 SHA-256 计算字符串的哈希值
+     * 
+     * @param input 输入字符串
+     * @return SHA-256 哈希值（64字符十六进制字符串）
+     */
+    private String sha256Hex(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 算法不可用", e);
+        }
+    }
 
     /**
      * 将JWT令牌加入黑名单
@@ -45,16 +70,12 @@ public class JwtBlackListManager {
         }
         
         try {
-            // 使用 SHA-256 哈希值作为 key，减少存储空间
-            String tokenHash = DigestUtils.md5DigestAsHex(token.getBytes(StandardCharsets.UTF_8));
+            String tokenHash = sha256Hex(token);
             String key = BLACKLIST_PREFIX + tokenHash;
             
-            // 存储 token 的 hash 值用于验证（防止哈希碰撞）
-            // 使用 token 的前16个字符作为验证值，既节省空间又能有效验证
             String tokenPrefix = token.length() > 16 ? token.substring(0, 16) : token;
-            String verificationHash = DigestUtils.md5DigestAsHex(tokenPrefix.getBytes(StandardCharsets.UTF_8));
+            String verificationHash = sha256Hex(tokenPrefix);
             
-            // 将验证哈希值存储为 value，用于后续验证
             redisTemplate.opsForValue().set(key, verificationHash, expiration, TimeUnit.MILLISECONDS);
             
             log.debug("Token已加入黑名单，hash: {}...", tokenHash.substring(0, Math.min(8, tokenHash.length())));
@@ -78,25 +99,20 @@ public class JwtBlackListManager {
         }
         
         try {
-            // 计算 token 的哈希值
-            String tokenHash = DigestUtils.md5DigestAsHex(token.getBytes(StandardCharsets.UTF_8));
+            String tokenHash = sha256Hex(token);
             String key = BLACKLIST_PREFIX + tokenHash;
             
-            // 检查 key 是否存在
             Object storedValue = redisTemplate.opsForValue().get(key);
             if (storedValue == null) {
                 return false;
             }
             
-            // 验证存储的哈希值是否匹配（防止哈希碰撞）
             String tokenPrefix = token.length() > 16 ? token.substring(0, 16) : token;
-            String expectedVerificationHash = DigestUtils.md5DigestAsHex(tokenPrefix.getBytes(StandardCharsets.UTF_8));
+            String expectedVerificationHash = sha256Hex(tokenPrefix);
             
-            // 如果验证哈希值匹配，说明确实是这个 token
             return expectedVerificationHash.equals(storedValue.toString());
         } catch (Exception e) {
             log.error("检查token黑名单失败", e);
-            // 发生异常时，为了安全起见，返回 true（拒绝访问）
             return true;
         }
     }
@@ -112,7 +128,7 @@ public class JwtBlackListManager {
         }
         
         try {
-            String tokenHash = DigestUtils.md5DigestAsHex(token.getBytes(StandardCharsets.UTF_8));
+            String tokenHash = sha256Hex(token);
             String key = BLACKLIST_PREFIX + tokenHash;
             redisTemplate.delete(key);
             log.debug("Token已从黑名单移除，hash: {}...", tokenHash.substring(0, Math.min(8, tokenHash.length())));

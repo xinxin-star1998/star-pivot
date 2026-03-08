@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,7 +81,7 @@ public class ${ClassName}ServiceImpl extends ServiceImpl<${ClassName}Mapper, ${C
     {
         ${ClassName} ${className} = this.getById(${pkColumn.javaField});
         if (${className} == null) {
-            throw new BusinessException("${functionName}不存在");
+            throw new BizException("${functionName}不存在");
         }
         return convertToVO(${className});
     }
@@ -121,7 +121,7 @@ public class ${ClassName}ServiceImpl extends ServiceImpl<${ClassName}Mapper, ${C
     {
         ${ClassName} ${className} = this.getById(${className}DTO.get${pkColumn.capJavaField}());
         if (${className} == null) {
-            throw new BusinessException("${functionName}不存在");
+            throw new BizException("${functionName}不存在");
         }
         
         BeanUtils.copyProperties(${className}DTO, ${className}, "${pkColumn.javaField}");

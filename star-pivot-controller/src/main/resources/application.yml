@@ -1,14 +1,8 @@
-# =============================================================================
-# StarPivot 主配置（公共部分）
-# =============================================================================
-# 激活环境：spring.profiles.active=dev|test|prod|local
-# 启动覆盖：--spring.profiles.active=dev 或环境变量 SPRING_PROFILES_ACTIVE
-
 spring:
   application:
     name: star-pivot
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   servlet:
     multipart:
       max-file-size: 10MB
@@ -23,8 +17,8 @@ spring:
     druid:
       initial-size: 5
       min-idle: 5
-      max-active: 20
-      max-wait: 60000
+      max-active: 50
+      max-wait: 30000
       validation-query: SELECT 1
       validation-query-timeout: 3
       test-while-idle: true

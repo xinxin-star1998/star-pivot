@@ -2,7 +2,7 @@ package com.star.pivot.controller;
 
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.Result;
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.MinioUtil;
 import com.star.pivot.framework.utils.OssUtil;
@@ -183,19 +183,19 @@ public class AvatarController {
         try {
             // 文件大小验证（限制5MB）
             if (file.getSize() > 5 * 1024 * 1024) {
-                throw new ServiceException(ErrorCode.PARAM_INVALID, "文件大小不能超过5MB");
+                throw new BizException(ErrorCode.PARAM_INVALID, "文件大小不能超过5MB");
             }
             
             // 文件类型验证
             String contentType = file.getContentType();
             if (contentType == null || (!contentType.startsWith("image/") && 
                 !contentType.startsWith("application/octet-stream"))) {
-                throw new ServiceException(ErrorCode.PARAM_INVALID, "只允许上传图片文件");
+                throw new BizException(ErrorCode.PARAM_INVALID, "只允许上传图片文件");
             }
             
             // 权限校验：只能上传自己的头像（超级管理员除外）
             if (!hasPermissionToModifyUser(userId)) {
-                throw new ServiceException(ErrorCode.ACCESS_DENIED, "只能上传自己的头像");
+                throw new BizException(ErrorCode.ACCESS_DENIED, "只能上传自己的头像");
             }
 
             Map<String, String> data = new HashMap<>();
@@ -216,7 +216,7 @@ public class AvatarController {
             }
             
             return Result.success("上传成功", data);
-        } catch (ServiceException e) {
+        } catch (BizException e) {
             throw e;
         } catch (IllegalArgumentException e) {
             log.error("上传头像参数错误, userId={}", userId, e);
@@ -242,18 +242,18 @@ public class AvatarController {
             // 从文件路径中提取用户ID
             String userId = extractUserIdFromPath(filePath);
             if (userId == null) {
-                throw new ServiceException(ErrorCode.PARAM_INVALID, "无效的文件路径格式");
+                throw new BizException(ErrorCode.PARAM_INVALID, "无效的文件路径格式");
             }
 
             if (!hasPermissionToViewUser(userId)) {
-                throw new ServiceException(ErrorCode.ACCESS_DENIED, "无权查看该用户的头像");
+                throw new BizException(ErrorCode.ACCESS_DENIED, "无权查看该用户的头像");
             }
 
             String presignedUrl = ossUtil.getPresignedUrl(filePath);
             Map<String, String> data = new HashMap<>();
             data.put("presignedUrl", presignedUrl);
             return Result.success("获取成功", data);
-        } catch (ServiceException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             return Result.error("获取失败：" + e.getMessage());
@@ -270,12 +270,12 @@ public class AvatarController {
     public Result<?> delete(@RequestParam("userId") String userId) {
         try {
             if (!hasPermissionToModifyUser(userId)) {
-                throw new ServiceException(ErrorCode.ACCESS_DENIED, "只能删除自己的头像");
+                throw new BizException(ErrorCode.ACCESS_DENIED, "只能删除自己的头像");
             }
 
             ossUtil.deleteAvatar(userId);
             return Result.success("删除成功");
-        } catch (ServiceException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             return Result.error("删除失败：" + e.getMessage());

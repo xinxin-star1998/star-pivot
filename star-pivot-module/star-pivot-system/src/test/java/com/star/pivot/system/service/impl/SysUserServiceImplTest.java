@@ -2,7 +2,7 @@ package com.star.pivot.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.star.pivot.framework.domain.AppConstants;
-import com.star.pivot.framework.exception.BusinessException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.system.assembler.UserVOAssembler;
 import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.SysRole;
@@ -132,7 +132,7 @@ class SysUserServiceImplTest {
         void addUser_UsernameExists() {
             when(sysUserMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(testUser);
 
-            assertThrows(BusinessException.class, () -> sysUserService.addUser(testUserDTO));
+            assertThrows(BizException.class, () -> sysUserService.addUser(testUserDTO));
         }
     }
 

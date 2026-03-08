@@ -3,10 +3,14 @@ package com.star.pivot.framework.exception;
 import java.io.Serial;
 
 /**
- * 服务异常
- * 用于服务层异常场景（不允许被继承）
+ * 服务异常（已废弃，请使用 {@link BizException}）
+ * <p>
+ * 此类保留仅为向后兼容，实际是 {@link BizException} 的别名。
+ * 
+ * @deprecated 请使用 {@link BizException} 替代
  */
-public final class ServiceException extends BaseException {
+@Deprecated(since = "1.0", forRemoval = true)
+public final class ServiceException extends BizException {
 
     @Serial
     private static final long serialVersionUID = 1L;

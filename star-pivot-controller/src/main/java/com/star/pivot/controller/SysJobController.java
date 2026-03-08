@@ -4,7 +4,7 @@ import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.ErrorCode;
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.quartz.domain.bo.SysJobLogVO;
 import com.star.pivot.quartz.domain.bo.SysJobVO;
 import com.star.pivot.quartz.domain.dto.SysJobCommonDto;
@@ -109,7 +109,7 @@ public class SysJobController {
      */
     private List<Long> validateIds(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
-            throw new ServiceException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
+            throw new BizException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
         }
         return ids;
     }

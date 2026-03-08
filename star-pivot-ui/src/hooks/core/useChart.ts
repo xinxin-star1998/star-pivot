@@ -270,7 +270,10 @@ export function useChart(options: UseChartOptions = {}) {
   })
 
   // 获取统一的 tooltip 配置
-  const getTooltipStyle = (trigger: 'item' | 'axis' = 'axis', customOptions: Partial<echarts.EChartsCoreOption> = {}) => ({
+  const getTooltipStyle = (
+    trigger: 'item' | 'axis' = 'axis',
+    customOptions: Partial<echarts.EChartsCoreOption> = {}
+  ) => ({
     trigger,
     backgroundColor: isDark.value ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
     borderColor: isDark.value ? '#333' : '#ddd',
@@ -633,6 +636,8 @@ interface UseChartComponentOptions<T extends BaseChartProps> {
   checkEmpty?: () => boolean
   /** 自定义监听的响应式数据 */
   watchSources?: (() => unknown)[]
+  /** 是否深度监听 watchSources，默认 false（性能优化） */
+  watchDeep?: boolean
   /** 自定义可视事件处理 */
   onVisible?: () => void
   /** useChart选项 */
@@ -645,6 +650,7 @@ export function useChartComponent<T extends BaseChartProps>(options: UseChartCom
     generateOptions,
     checkEmpty,
     watchSources = [],
+    watchDeep = false,
     onVisible,
     chartOptions = {}
   } = options
@@ -690,9 +696,9 @@ export function useChartComponent<T extends BaseChartProps>(options: UseChartCom
 
   // 设置数据监听
   const setupWatchers = () => {
-    // 监听自定义数据源
+    // 监听自定义数据源（默认浅层监听，需要深度监听时传入 watchDeep: true）
     if (watchSources.length > 0) {
-      const stopHandle = watch(watchSources, updateChart, { deep: true })
+      const stopHandle = watch(watchSources, updateChart, { deep: watchDeep })
       stopHandles.push(stopHandle)
     }
 

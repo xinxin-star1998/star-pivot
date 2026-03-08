@@ -1,6 +1,6 @@
 package com.star.pivot.system.service.impl;
 
-import com.star.pivot.framework.exception.ServiceException;
+import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
@@ -126,7 +126,7 @@ public class CaptchaServiceImpl implements CaptchaService {
             log.debug("验证码已存储到Redis，key: {}, scene: {}", key, scene);
         } catch (Exception e) {
             log.error("存储验证码到Redis失败，key: {}, error: {}", key, e.getMessage(), e);
-            throw new ServiceException(ErrorCode.CAPTCHA_GENERATE_ERROR, "验证码生成失败，请检查Redis连接: " + e.getMessage());
+            throw new BizException(ErrorCode.CAPTCHA_GENERATE_ERROR, "验证码生成失败，请检查Redis连接: " + e.getMessage());
         }
 
         // 生成验证码图片并转成 Base64 DataURL
@@ -142,7 +142,7 @@ public class CaptchaServiceImpl implements CaptchaService {
     @Override
     public CaptchaVerifyResponse verifyCaptcha(CaptchaVerifyRequest request) {
         if (request == null || request.getCaptchaToken() == null || request.getCode() == null) {
-            throw new ServiceException(ErrorCode.PARAM_NOT_NULL, "验证码参数不完整");
+            throw new BizException(ErrorCode.PARAM_NOT_NULL, "验证码参数不完整");
         }
 
         String key = buildCaptchaTokenKey(request.getCaptchaToken());
@@ -153,17 +153,17 @@ public class CaptchaServiceImpl implements CaptchaService {
             state = redisCache.getCacheObject(key);
         } catch (Exception e) {
             log.error("从Redis获取验证码状态失败，key: {}, error: {}", key, e.getMessage(), e);
-            throw new ServiceException(ErrorCode.REDIS_ERROR, "验证码校验失败，请检查Redis连接: " + e.getMessage());
+            throw new BizException(ErrorCode.REDIS_ERROR, "验证码校验失败，请检查Redis连接: " + e.getMessage());
         }
         
         if (state == null) {
             log.warn("验证码已失效，key: {}, token: {}", key, request.getCaptchaToken());
-            throw new ServiceException(ErrorCode.CAPTCHA_EXPIRED);
+            throw new BizException(ErrorCode.CAPTCHA_EXPIRED);
         }
 
         if (state.getAttempts() >= state.getMaxAttempts()) {
             redisCache.deleteObject(key);
-            throw new ServiceException(ErrorCode.CAPTCHA_TOO_MANY_ATTEMPTS);
+            throw new BizException(ErrorCode.CAPTCHA_TOO_MANY_ATTEMPTS);
         }
 
         String normalizedInputCode = request.getCode().toLowerCase();
@@ -178,7 +178,7 @@ public class CaptchaServiceImpl implements CaptchaService {
             } else {
                 redisCache.setCacheObject(key, state, CAPTCHA_EXPIRE_SECONDS, TimeUnit.SECONDS);
             }
-            throw new ServiceException(ErrorCode.CAPTCHA_ERROR);
+            throw new BizException(ErrorCode.CAPTCHA_ERROR);
         }
 
         // 校验成功，删除验证码 token 状态（一次性）
@@ -273,9 +273,9 @@ public class CaptchaServiceImpl implements CaptchaService {
             g.dispose();
             String hint = getThrowableMessage(t);
             if (hint.contains("Font") || hint.contains("fontconfig") || hint.contains("Fontconfig")) {
-                throw new ServiceException(ErrorCode.CAPTCHA_GENERATE_ERROR, "验证码生成失败：服务器未安装字体。请在 ECS 上安装 fontconfig 与字体包，例如：yum install -y fontconfig dejavu-sans-fonts 或 apt-get install -y fontconfig fonts-dejavu-core");
+                throw new BizException(ErrorCode.CAPTCHA_GENERATE_ERROR, "验证码生成失败：服务器未安装字体。请在 ECS 上安装 fontconfig 与字体包，例如：yum install -y fontconfig dejavu-sans-fonts 或 apt-get install -y fontconfig fonts-dejavu-core");
             }
-            throw new ServiceException(ErrorCode.CAPTCHA_GENERATE_ERROR, "验证码生成失败: " + hint);
+            throw new BizException(ErrorCode.CAPTCHA_GENERATE_ERROR, "验证码生成失败: " + hint);
         }
 
         // 绘制干扰点
@@ -299,7 +299,7 @@ public class CaptchaServiceImpl implements CaptchaService {
             return "data:image/jpeg;base64," + base64;
         } catch (IOException e) {
             log.error("验证码图片编码失败", e);
-            throw new ServiceException(ErrorCode.CAPTCHA_GENERATE_ERROR);
+            throw new BizException(ErrorCode.CAPTCHA_GENERATE_ERROR);
         }
     }
 
@@ -332,7 +332,7 @@ public class CaptchaServiceImpl implements CaptchaService {
             return Base64.getEncoder().encodeToString(hash);
         } catch (NoSuchAlgorithmException e) {
             log.error("SHA-256 算法不可用", e);
-            throw new ServiceException(ErrorCode.CAPTCHA_GENERATE_ERROR, "验证码服务异常");
+            throw new BizException(ErrorCode.CAPTCHA_GENERATE_ERROR, "验证码服务异常");
         }
     }
 }

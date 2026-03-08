@@ -150,6 +150,7 @@
 <script setup lang="ts">
   import { Refresh } from '@element-plus/icons-vue'
   import { fetchGetServerInfo } from '@/api/monitor/server'
+  import { usePageVisibility } from '@/hooks/core/usePageVisibility'
   import type { ServerInfo } from '@/types/api/monitor'
 
   defineOptions({ name: 'ServerMonitor' })
@@ -157,6 +158,11 @@
   const loading = ref(false)
   const serverInfo = ref<ServerInfo | null>(null)
   let refreshTimer: number | null = null
+
+  // 页面可见性检测 - 页面不可见时暂停刷新
+  const { onPause, onResume } = usePageVisibility()
+  onPause(() => stopAutoRefresh())
+  onResume(() => startAutoRefresh())
 
   // 格式化百分比
   const formatPercent = (value: number) => {
@@ -428,8 +434,8 @@
   }
 
   :deep(.el-button) {
-    border-radius: 8px;
     font-weight: 500;
+    border-radius: 8px;
     transition: all 0.3s ease;
 
     &:hover {
@@ -438,7 +444,7 @@
   }
 
   :deep(.el-tag) {
-    border-radius: 6px;
     font-weight: 500;
+    border-radius: 6px;
   }
 </style>

@@ -1,7 +1,6 @@
 package com.star.pivot.framework.utils;
 
-import com.star.pivot.framework.exception.ServiceException;
-import com.star.pivot.framework.exception.UtilException;
+import com.star.pivot.framework.exception.BizException;
 import io.minio.*;
 import io.minio.errors.MinioException;
 import io.minio.Result;
@@ -39,7 +38,7 @@ public class MinioUtil {
     /**
      * 获取 MinIO 客户端（每次获取新实例，MinIO客户端为无状态设计，无需单例）
      */
-    private MinioClient getMinioClient() throws UtilException {
+    private MinioClient getMinioClient() throws BizException {
         try {
             return MinioClient.builder()
                     .endpoint(minioProperties.getEndpoint())
@@ -47,14 +46,14 @@ public class MinioUtil {
                     .build();
         } catch (Exception e) {
             log.error("创建MinIO客户端失败：{}", e.getMessage(), e);
-            throw new UtilException("创建MinIO客户端失败：" + e.getMessage(), e);
+            throw new BizException("创建MinIO客户端失败：" + e.getMessage(), e);
         }
     }
 
     /**
      * 确保存储桶存在，不存在则创建
      */
-    private void ensureBucketExists() throws UtilException {
+    private void ensureBucketExists() throws BizException {
         try {
             MinioClient minioClient = getMinioClient();
             String bucketName = minioProperties.getBucketName();
@@ -67,7 +66,7 @@ public class MinioUtil {
             }
         } catch (Exception e) {
             log.error("确认MinIO存储桶存在性失败：{}", e.getMessage(), e);
-            throw new UtilException("确认MinIO存储桶存在性失败：" + e.getMessage(), e);
+            throw new BizException("确认MinIO存储桶存在性失败：" + e.getMessage(), e);
         }
     }
 
@@ -79,13 +78,13 @@ public class MinioUtil {
      * @return 头像在MinIO中的完整对象路径（如：avatar/1001.png）
      * @throws UtilException 校验失败/上传失败时抛出异常
      */
-    public String uploadAvatar(MultipartFile file, String userId) throws UtilException {
+    public String uploadAvatar(MultipartFile file, String userId) throws BizException {
         // 1. 基础非空校验
         if (file == null || file.isEmpty()) {
-            throw new UtilException("上传的头像文件不能为空");
+            throw new BizException("上传的头像文件不能为空");
         }
         if (!StringUtils.hasText(userId)) {
-            throw new UtilException("用户ID不能为空，无法上传头像");
+            throw new BizException("用户ID不能为空，无法上传头像");
         }
 
         // 2. 头像专属校验：大小+文件类型
@@ -127,13 +126,13 @@ public class MinioUtil {
             }
             log.info("用户[{}]头像上传成功，MinIO对象路径：{}", userId, objectName);
             return objectName;
-        } catch (ServiceException e) {
+        } catch (BizException e) {
             log.error("MinIO上传头像失败，用户ID：{}，错误码：{}，错误信息：{}",
                     userId, e.getCode(), e.getMessage(), e);
-            throw new UtilException("头像上传至MinIO失败：" + e.getMessage(), e);
+            throw new BizException("头像上传至MinIO失败：" + e.getMessage(), e);
         } catch (Exception e) {
             log.error("MinIO上传头像失败，用户ID：{}，错误信息：{}", userId, e.getMessage(), e);
-            throw new UtilException("头像上传至MinIO失败：" + e.getMessage(), e);
+            throw new BizException("头像上传至MinIO失败：" + e.getMessage(), e);
         }
     }
 
@@ -144,7 +143,7 @@ public class MinioUtil {
      * @param userId 用户ID
      * @return 完整永久访问URL（如：<a href="http://127.0.0.1:9000/bucket/avatar/1001_8f2e3d4c.png">...</a>）
      */
-    public String uploadAvatarWithUrl(MultipartFile file, String userId) throws UtilException {
+    public String uploadAvatarWithUrl(MultipartFile file, String userId) throws BizException {
         String objectName = uploadAvatar(file, userId);
         return buildPermanentUrl(objectName);
     }
@@ -156,7 +155,7 @@ public class MinioUtil {
      * @param userId 用户ID
      * @return 7天有效期的预签名访问URL
      */
-    public String uploadAvatarWithPresignedUrl(MultipartFile file, String userId) throws UtilException {
+    public String uploadAvatarWithPresignedUrl(MultipartFile file, String userId) throws BizException {
         String objectName = uploadAvatar(file, userId);
         return getPresignedUrl(objectName);
     }
@@ -167,9 +166,9 @@ public class MinioUtil {
      * @param objectName 自定义MinIO对象路径（如：file/2026/02/test.txt）
      * @return MinIO对象路径
      */
-    public String uploadFile(MultipartFile file, String objectName) throws UtilException {
+    public String uploadFile(MultipartFile file, String objectName) throws BizException {
         if (file == null || file.isEmpty() || !StringUtils.hasText(objectName)) {
-            throw new UtilException("文件或对象路径不能为空");
+            throw new BizException("文件或对象路径不能为空");
         }
         ensureBucketExists();
         MinioClient minioClient = getMinioClient();
@@ -185,16 +184,16 @@ public class MinioUtil {
             return objectName;
         } catch (Exception e) {
             log.error("MinIO上传普通文件失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new UtilException("文件上传失败：" + e.getMessage(), e);
+            throw new BizException("文件上传失败：" + e.getMessage(), e);
         }
     }
 
     /**
      * 上传文件流（通用方法，适用于非MultipartFile的流场景）
      */
-    public String uploadFile(InputStream inputStream, long size, String contentType, String objectName) throws UtilException {
+    public String uploadFile(InputStream inputStream, long size, String contentType, String objectName) throws BizException {
         if (inputStream == null || size <= 0 || !StringUtils.hasText(contentType) || !StringUtils.hasText(objectName)) {
-            throw new UtilException("流、大小、类型、路径均不能为空");
+            throw new BizException("流、大小、类型、路径均不能为空");
         }
         ensureBucketExists();
         MinioClient minioClient = getMinioClient();
@@ -210,10 +209,10 @@ public class MinioUtil {
             return objectName;
         } catch (MinioException e) {
             log.error("MinIO上传文件流失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new UtilException("文件流上传失败：" + e.getMessage(), e);
+            throw new BizException("文件流上传失败：" + e.getMessage(), e);
         } catch (Exception e) {
             log.error("MinIO上传文件流失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new UtilException("文件流上传失败：" + e.getMessage(), e);
+            throw new BizException("文件流上传失败：" + e.getMessage(), e);
         } finally {
             // 关闭传入的流，防止资源泄漏
             try {
@@ -227,7 +226,7 @@ public class MinioUtil {
     /**
      * 下载文件：返回文件输入流（使用后需手动关闭流）
      */
-    public InputStream downloadFile(String objectName) throws UtilException {
+    public InputStream downloadFile(String objectName) throws BizException {
         checkObjectname(objectName);
         MinioClient minioClient = getMinioClient();
         try {
@@ -239,10 +238,10 @@ public class MinioUtil {
             return minioClient.getObject(getObjectArgs);
         } catch (MinioException e) {
             log.error("MinIO下载文件失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new UtilException("文件下载失败：" + e.getMessage(), e);
+            throw new BizException("文件下载失败：" + e.getMessage(), e);
         } catch (Exception e) {
             log.error("MinIO下载文件失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new UtilException("文件下载失败：" + e.getMessage(), e);
+            throw new BizException("文件下载失败：" + e.getMessage(), e);
         }
     }
 
@@ -250,9 +249,9 @@ public class MinioUtil {
      * 删除用户头像（与 OssUtil 一致：按 userId 删除 avatar/ 下该用户所有文件）
      * @param userId 用户ID
      */
-    public void deleteAvatar(String userId) throws UtilException {
+    public void deleteAvatar(String userId) throws BizException {
         if (!StringUtils.hasText(userId)) {
-            throw new UtilException("用户ID不能为空");
+            throw new BizException("用户ID不能为空");
         }
         String prefix = "avatar/" + userId;
         MinioClient minioClient = getMinioClient();
@@ -273,14 +272,14 @@ public class MinioUtil {
             }
         } catch (Exception e) {
             log.error("MinIO删除用户头像失败，用户ID：{}，错误信息：{}", userId, e.getMessage(), e);
-            throw new UtilException("删除用户头像失败：" + e.getMessage(), e);
+            throw new BizException("删除用户头像失败：" + e.getMessage(), e);
         }
     }
 
     /**
      * 删除文件（适配头像删除：直接传入 uploadAvatar 返回的路径即可）
      */
-    public void deleteFile(String objectName) throws UtilException {
+    public void deleteFile(String objectName) throws BizException {
         checkObjectname(objectName);
         // 先检查文件是否存在，避免删除不存在的文件抛异常
         if (!fileExists(objectName)) {
@@ -297,10 +296,10 @@ public class MinioUtil {
             log.info("MinIO文件删除成功，对象路径：{}", objectName);
         } catch (MinioException e) {
             log.error("MinIO删除文件失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new UtilException("文件删除失败：" + e.getMessage(), e);
+            throw new BizException("文件删除失败：" + e.getMessage(), e);
         } catch (Exception e) {
             log.error("MinIO删除文件失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new UtilException("文件删除失败：" + e.getMessage(), e);
+            throw new BizException("文件删除失败：" + e.getMessage(), e);
         }
     }
 
@@ -328,7 +327,7 @@ public class MinioUtil {
     /**
      * 获取文件元信息
      */
-    public StatObjectResponse getFileStat(String objectName) throws UtilException {
+    public StatObjectResponse getFileStat(String objectName) throws BizException {
         checkObjectname(objectName);
         MinioClient minioClient = getMinioClient();
         try {
@@ -339,17 +338,17 @@ public class MinioUtil {
             return minioClient.statObject(statObjectArgs);
         } catch (MinioException e) {
             log.error("MinIO获取文件信息失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new UtilException("获取文件信息失败：" + e.getMessage(), e);
+            throw new BizException("获取文件信息失败：" + e.getMessage(), e);
         } catch (Exception e) {
             log.error("MinIO获取文件信息失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new UtilException("获取文件信息失败：" + e.getMessage(), e);
+            throw new BizException("获取文件信息失败：" + e.getMessage(), e);
         }
     }
 
     /**
      * 生成文件预签名临时访问链接（私有桶专用，默认7天有效期）
      */
-    public String getPresignedUrl(String objectName) throws UtilException {
+    public String getPresignedUrl(String objectName) throws BizException {
         try {
             checkObjectname(objectName);
             MinioClient minioClient = getMinioClient();
@@ -364,7 +363,7 @@ public class MinioUtil {
             return presignedUrl;
         } catch (Exception e) {
             log.error("MinIO生成预签名URL失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new UtilException("生成临时访问链接失败：" + e.getMessage(), e);
+            throw new BizException("生成临时访问链接失败：" + e.getMessage(), e);
         }
     }
 
@@ -372,10 +371,10 @@ public class MinioUtil {
     /**
      * 校验头像文件的合法性：大小+文件类型
      */
-    private void checkAvatarFileValid(MultipartFile file) throws UtilException {
+    private void checkAvatarFileValid(MultipartFile file) throws BizException {
         // 校验大小
         if (file.getSize() > AVATAR_MAX_SIZE) {
-            throw new UtilException("头像文件大小不能超过2MB");
+            throw new BizException("头像文件大小不能超过2MB");
         }
         // 校验类型
         String contentType = file.getContentType();
@@ -387,7 +386,7 @@ public class MinioUtil {
             }
         }
         if (!isAllowed) {
-            throw new UtilException("头像仅支持JPG、PNG、GIF、WEBP格式");
+            throw new BizException("头像仅支持JPG、PNG、GIF、WEBP格式");
         }
     }
 
@@ -429,9 +428,9 @@ public class MinioUtil {
     /**
      * 校验对象路径是否为空
      */
-    private void checkObjectname(String objectName) throws UtilException {
+    private void checkObjectname(String objectName) throws BizException {
         if (!StringUtils.hasText(objectName)) {
-            throw new UtilException("MinIO对象路径不能为空");
+            throw new BizException("MinIO对象路径不能为空");
         }
     }
 }
