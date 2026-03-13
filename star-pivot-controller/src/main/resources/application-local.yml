@@ -54,12 +54,17 @@ logging:
     org.springframework.security: ${SECURITY_LOG_LEVEL:debug}
     org.apache.ibatis: ${SQL_LOG_LEVEL:DEBUG}
 # -----------------------------------------------------------------------------
-# MinIO 配置（可选，如需使用 MinIO 替换 OSS）
+# MinIO 配置（本地开发环境使用 MinIO）
 # -----------------------------------------------------------------------------
+file-storage:
+  type: minio
+
 minio:
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
   access-key: ${MINIO_ACCESS_KEY:admin}
   secret-key: ${MINIO_SECRET_KEY:admin123456}
+  bucket-name: ${MINIO_BUCKET_NAME:star-pivot-avatar}
+  url-prefix: ${MINIO_URL_PREFIX:http://localhost:9000/star-pivot-avatar}
 
 # StarPivot 统一配置
 star-pivot:
