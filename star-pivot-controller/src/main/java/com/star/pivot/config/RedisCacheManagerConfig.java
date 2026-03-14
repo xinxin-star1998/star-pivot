@@ -11,19 +11,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter.TtlFunction;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Redis CacheManager 配置类
- *
  * 职责：配置 Spring Cache 的 CacheManager
  *
  * @author xinxin
@@ -73,81 +73,84 @@ public class RedisCacheManagerConfig {
      *   <li>dictData: 字典数据缓存，过期时间 1 小时</li>
      * </ul>
      *
+     * <p>动态 TTL 策略：使用 TtlFunction 实现每个缓存项独立的随机过期时间，
+     * 有效防止缓存雪崩问题
+     *
      * @param connectionFactory Redis 连接工厂
      * @return CacheManager 实例
      */
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        // 创建 ObjectMapper，与 RedisTemplate 保持一致
         ObjectMapper om = createObjectMapper();
         GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(om);
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
 
-        // 默认缓存配置：使用 JSON 序列化，过期时间 1 小时
-        // 添加缓存 key 前缀 "cache:"，避免与旧数据冲突
-        // 注意：允许缓存空值以防止缓存穿透
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .prefixCacheNameWith("cache:")
-                .entryTtl(Duration.ofHours(1))
+                .entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30)))
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(stringSerializer))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer));
 
-        // 为不同的缓存名称配置不同的过期时间（添加随机时间防止缓存雪崩）
-        // 注意：这里的随机时间在配置类初始化时生成，不同缓存名称会有不同的随机偏移
-        // 虽然不能做到每个缓存项都有不同的过期时间，但不同缓存类型之间的时间差可以缓解缓存雪崩
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
-        java.util.Random random = new java.util.Random();
 
-        // 用户权限缓存：30 分钟 + 随机0-10分钟
-        // 允许缓存空值以防止缓存穿透攻击
         cacheConfigurations.put("userPermissions",
-                defaultConfig.entryTtl(Duration.ofMinutes(30).plusMinutes(random.nextInt(10))));
+                defaultConfig.entryTtl(createDynamicTtl(Duration.ofMinutes(30), Duration.ofMinutes(10))));
 
-        // 菜单树缓存：1 小时 + 随机0-30分钟
         cacheConfigurations.put("menuTree",
-                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
+                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
 
-        // 字典数据缓存：1 小时 + 随机0-30分钟
         cacheConfigurations.put("dictData",
-                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
+                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
 
-        // 字典类型缓存：1 小时 + 随机0-30分钟
         cacheConfigurations.put("dictType",
-                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
+                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
 
-        // 部门树缓存：1 小时 + 随机0-30分钟
         cacheConfigurations.put("deptTree",
-                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
+                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
 
-        // 岗位列表缓存：1 小时 + 随机0-30分钟
         cacheConfigurations.put("postList",
-                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
+                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
 
-        // 角色列表缓存：1 小时 + 随机0-30分钟
         cacheConfigurations.put("roleList",
-                defaultConfig.entryTtl(Duration.ofHours(1).plusMinutes(random.nextInt(30))));
+                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
 
-        // 系统配置缓存：2 小时 + 随机0-60分钟
         cacheConfigurations.put("sysConfig",
-                defaultConfig.entryTtl(Duration.ofHours(2).plusMinutes(random.nextInt(60))));
+                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(2), Duration.ofHours(1))));
 
-        // 验证码缓存：5 分钟
         cacheConfigurations.put("captcha",
                 defaultConfig.entryTtl(Duration.ofMinutes(5)));
 
-        // 登录失败次数缓存：10 分钟
         cacheConfigurations.put("loginFailCount",
                 defaultConfig.entryTtl(Duration.ofMinutes(10)));
 
-        // API限流缓存：1 分钟
         cacheConfigurations.put("rateLimit",
                 defaultConfig.entryTtl(Duration.ofMinutes(1)));
 
-        // 创建 RedisCacheManager
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
                 .withInitialCacheConfigurations(cacheConfigurations)
-                .transactionAware() // 支持事务
+                .transactionAware()
                 .build();
+    }
+
+    /**
+     * 创建动态 TTL 函数
+     *
+     * <p>为每个缓存项生成独立的随机过期时间，有效防止缓存雪崩
+     *
+     * <p>原理：当大量缓存在同一时间过期时，会导致大量请求同时打到数据库，
+     * 通过为每个缓存项添加随机偏移，使过期时间分散，避免集中过期
+     *
+     * @param baseTtl 基础过期时间
+     * @param maxJitter 最大随机偏移时间（抖动范围）
+     * @return TtlFunction 实例
+     */
+    private TtlFunction createDynamicTtl(Duration baseTtl, Duration maxJitter) {
+        return (key, value) -> {
+            long baseSeconds = baseTtl.toSeconds();
+            long jitterSeconds = maxJitter.toSeconds();
+            long randomJitter = ThreadLocalRandom.current().nextLong(jitterSeconds + 1);
+            return Duration.ofSeconds(baseSeconds + randomJitter);
+        };
     }
 }

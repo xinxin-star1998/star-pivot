@@ -45,7 +45,10 @@
   import { safeError } from '@/utils'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTableColumns } from '@/hooks/core/useTableColumns'
-  import DictTypeDialog from '@views/system/dict/modules/dict-type-dialog.vue'
+
+  const DictTypeDialog = defineAsyncComponent(
+    () => import('@views/system/dict/modules/dict-type-dialog.vue')
+  )
   import {
     fetchGetDictTypeList,
     fetchAddDictType,

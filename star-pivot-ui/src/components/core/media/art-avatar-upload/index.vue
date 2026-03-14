@@ -87,13 +87,13 @@
   watch(
     () => props.modelValue,
     (newVal) => {
-      // OSS 私有桶永久地址直接赋给 imageUrl 会 403，先不展示，等 presigned 再展示
-      const isOssPermanentUrl =
+      // OSS/MinIO 私有桶永久地址直接赋给 imageUrl 会 403，先不展示，等 presigned 再展示
+      const isPrivateBucketUrl =
         props.usePresignedUrl &&
         newVal &&
-        (newVal.includes('aliyuncs.com') || newVal.includes('.oss-'))
+        (newVal.includes('aliyuncs.com') || newVal.includes('.oss-') || newVal.includes('localhost') || newVal.includes('127.0.0.1'))
       const filePath = newVal ? extractFilePathFromUrl(newVal) : null
-      if (isOssPermanentUrl && filePath) {
+      if (isPrivateBucketUrl && filePath) {
         imageUrl.value = ''
         getPresignedUrlForExistingAvatar(filePath)
       } else {
@@ -109,8 +109,8 @@
       const url = imageUrl.value
       if (!newVal || !url || !url.includes('/')) return
       const filePath = extractFilePathFromUrl(url)
-      const isOssUrl = url.includes('aliyuncs.com') || url.includes('.oss-')
-      if (filePath && isOssUrl) {
+      const isPrivateBucketUrl = url.includes('aliyuncs.com') || url.includes('.oss-') || url.includes('localhost') || url.includes('127.0.0.1')
+      if (filePath && isPrivateBucketUrl) {
         imageUrl.value = ''
         getPresignedUrlForExistingAvatar(filePath)
       }

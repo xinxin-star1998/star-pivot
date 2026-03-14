@@ -48,6 +48,12 @@
       if (hostname.includes('.oss-') || hostname.includes('.aliyuncs.com')) {
         return pathname
       }
+      if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+        if (parts.length > 1) {
+          return parts.slice(1).join('/')
+        }
+        return pathname
+      }
       if (parts.length > 1) {
         return parts.slice(1).join('/')
       }
@@ -63,8 +69,9 @@
       return
     }
     const isOssPermanent = url.includes('aliyuncs.com') || url.includes('.oss-')
+    const isMinioPermanent = url.includes('localhost') || url.includes('127.0.0.1')
     const filePath = extractFilePathFromUrl(url)
-    if (isOssPermanent && filePath) {
+    if ((isOssPermanent || isMinioPermanent) && filePath) {
       try {
         const response = (await fetchGetAvatarPresignedUrl(filePath)) as any
         const presigned = response?.presignedUrl ?? response?.data?.presignedUrl

@@ -21,13 +21,19 @@
 </template>
 
 <script setup lang="ts">
-  import ArtSidebarMenu from '@/components/core/layouts/art-menus/art-sidebar-menu/index.vue'
-  import ArtHeaderBar from '@/components/core/layouts/art-header-bar/index.vue'
-  import ArtPageContent from '@/components/core/layouts/art-page-content/index.vue'
-  import ArtGlobalComponent from '@/components/core/layouts/art-global-component/index.vue'
+  const ArtSidebarMenu = defineAsyncComponent(
+    () => import('@/components/core/layouts/art-menus/art-sidebar-menu/index.vue')
+  )
+  const ArtHeaderBar = defineAsyncComponent(
+    () => import('@/components/core/layouts/art-header-bar/index.vue')
+  )
+  const ArtPageContent = defineAsyncComponent(
+    () => import('@/components/core/layouts/art-page-content/index.vue')
+  )
+  const ArtGlobalComponent = defineAsyncComponent(
+    () => import('@/components/core/layouts/art-global-component/index.vue')
+  )
 
-  // Layout 组件不应该接收任何外部属性（class、style等）
-  // 这些属性应该只应用到实际的页面组件上
   defineOptions({ name: 'AppLayout', inheritAttrs: false })
 </script>
 

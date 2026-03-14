@@ -970,10 +970,32 @@ public class MonitorServiceImpl implements MonitorService {
 
             switch (type.toLowerCase()) {
                 case "string":
-                    // String 类型
-                    Object stringValue = redisTemplate.opsForValue().get(key);
-                    if (stringValue != null) {
-                        return formatObjectValue(stringValue, objectMapper);
+                    // String 类型 - 先尝试反序列化，失败则使用原始字节
+                    try {
+                        Object stringValue = redisTemplate.opsForValue().get(key);
+                        if (stringValue != null) {
+                            return formatObjectValue(stringValue, objectMapper);
+                        }
+                    } catch (Exception e) {
+                        // 反序列化失败，尝试获取原始字节
+                        log.debug("反序列化失败，尝试获取原始字节，key: {}, error: {}", key, e.getMessage());
+                    }
+                    // 如果反序列化失败，尝试获取原始字节
+                    try {
+                        byte[] rawBytes = redisTemplate.execute((RedisCallback<byte[]>) connection -> connection.get(key.getBytes()));
+                        if (rawBytes != null) {
+                            String rawString = new String(rawBytes, "UTF-8");
+                            // 尝试格式化 JSON
+                            try {
+                                Object jsonValue = objectMapper.readValue(rawString, Object.class);
+                                return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonValue);
+                            } catch (Exception e) {
+                                // 不是有效的 JSON，直接返回原始字符串
+                                return rawString;
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.debug("获取原始字节失败，key: {}", key, e);
                     }
                     return "(空值)";
 

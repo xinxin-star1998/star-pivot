@@ -58,7 +58,8 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { useRoute, useRouter } from 'vue-router'
-  import AddUser from '@views/system/role/modules/add-user.vue'
+
+  const AddUser = defineAsyncComponent(() => import('@views/system/role/modules/add-user.vue'))
 
   defineOptions({ name: 'AssignUser' })
 
