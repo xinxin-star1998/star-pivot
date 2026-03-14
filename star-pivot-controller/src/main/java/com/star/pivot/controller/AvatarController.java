@@ -4,14 +4,12 @@ import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
-import com.star.pivot.framework.utils.MinioUtil;
-import com.star.pivot.framework.utils.OssUtil;
+import com.star.pivot.framework.storage.FileStorageService;
 import com.star.pivot.security.utils.SecurityContextUtils;
 import com.star.pivot.system.service.PermissionService;
 import com.star.pivot.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,8 +34,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AvatarController {
 
-    private final OssUtil ossUtil;
-    private final MinioUtil minioUtil;
+    private final FileStorageService fileStorageService;
     private final SysUserService sysUserService;
     private final PermissionService permissionService;
 
@@ -201,16 +198,12 @@ public class AvatarController {
             Map<String, String> data = new HashMap<>();
             
             if (usePresignedUrl) {
-                // 私有桶场景：上传一次，返回永久 URL（存库）与预签名 URL（前端展示用，避免 403）
-                String objectName = ossUtil.uploadAvatar(file, userId);
-                String avatarUrl = ossUtil.getPermanentUrl(objectName);
-                String presignedUrl = ossUtil.getPresignedUrl(objectName);
-                data.put("avatarUrl", avatarUrl);
-                data.put("presignedUrl", presignedUrl);
+                Map<String, String> uploadResult = fileStorageService.uploadAvatarWithFullInfo(file, userId);
+                data.put("avatarUrl", uploadResult.get("avatarUrl"));
+                data.put("presignedUrl", uploadResult.get("presignedUrl"));
                 data.put("isPresigned", "true");
             } else {
-                // 使用完整访问URL（公共读桶场景）
-                String avatarUrl = ossUtil.uploadAvatarWithUrl(file, userId);
+                String avatarUrl = fileStorageService.uploadAvatarWithUrl(file, userId);
                 data.put("avatarUrl", avatarUrl);
                 data.put("isPresigned", "false");
             }
@@ -239,7 +232,6 @@ public class AvatarController {
     public Result<Map<String, String>> getPresignedUrl(
             @RequestParam("filePath") String filePath) {
         try {
-            // 从文件路径中提取用户ID
             String userId = extractUserIdFromPath(filePath);
             if (userId == null) {
                 throw new BizException(ErrorCode.PARAM_INVALID, "无效的文件路径格式");
@@ -249,7 +241,7 @@ public class AvatarController {
                 throw new BizException(ErrorCode.ACCESS_DENIED, "无权查看该用户的头像");
             }
 
-            String presignedUrl = ossUtil.getPresignedUrl(filePath);
+            String presignedUrl = fileStorageService.getPresignedUrl(filePath);
             Map<String, String> data = new HashMap<>();
             data.put("presignedUrl", presignedUrl);
             return Result.success("获取成功", data);
@@ -273,7 +265,7 @@ public class AvatarController {
                 throw new BizException(ErrorCode.ACCESS_DENIED, "只能删除自己的头像");
             }
 
-            ossUtil.deleteAvatar(userId);
+            fileStorageService.deleteAvatar(userId);
             return Result.success("删除成功");
         } catch (BizException e) {
             throw e;

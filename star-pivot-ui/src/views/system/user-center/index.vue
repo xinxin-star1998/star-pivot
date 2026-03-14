@@ -273,6 +273,11 @@
       const u = new URL(url)
       let path = u.pathname.replace(/^\//, '')
       if (u.hostname.includes('.oss-') || u.hostname.includes('aliyuncs.com')) return path || null
+      if (u.hostname.includes('localhost') || u.hostname.includes('127.0.0.1')) {
+        const parts = path.split('/')
+        if (parts.length > 1) return parts.slice(1).join('/')
+        return path || null
+      }
       const parts = path.split('/')
       if (parts.length > 1) return parts.slice(1).join('/')
       return path || null
@@ -336,7 +341,8 @@
     }
     const path = extractAvatarPathFromUrl(avatar)
     const isOssUrl = avatar.includes('aliyuncs.com') || avatar.includes('.oss-')
-    if (path && isOssUrl) {
+    const isMinioUrl = avatar.includes('localhost') || avatar.includes('127.0.0.1')
+    if (path && (isOssUrl || isMinioUrl)) {
       try {
         const res = (await fetchGetAvatarPresignedUrl(path)) as any
         const presigned = res?.presignedUrl ?? res?.data?.presignedUrl

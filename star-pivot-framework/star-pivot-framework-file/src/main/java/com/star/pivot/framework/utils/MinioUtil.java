@@ -97,24 +97,7 @@ public class MinioUtil {
 
         MinioClient minioClient = getMinioClient();
         try {
-            // 4. 先删除该用户的旧头像（若存在）
-            String prefix = "avatar/" + userId;
-            ListObjectsArgs listArgs = ListObjectsArgs.builder()
-                    .bucket(minioProperties.getBucketName())
-                    .prefix(prefix)
-                    .build();
-            for (Result<Item> result : minioClient.listObjects(listArgs)) {
-                Item item = result.get();
-                if (item != null && item.objectName() != null) {
-                    minioClient.removeObject(RemoveObjectArgs.builder()
-                            .bucket(minioProperties.getBucketName())
-                            .object(item.objectName())
-                            .build());
-                    log.debug("已删除用户[{}]旧头像：{}", userId, item.objectName());
-                }
-            }
-
-            // 5. 上传新文件
+            // 4. 先上传新文件（先传后删，避免上传失败时丢失旧头像）
             try (InputStream inputStream = file.getInputStream()) {
                 PutObjectArgs putObjectArgs = PutObjectArgs.builder()
                         .bucket(minioProperties.getBucketName())
@@ -124,6 +107,24 @@ public class MinioUtil {
                         .build();
                 minioClient.putObject(putObjectArgs);
             }
+
+            // 5. 上传成功后，删除该用户的旧头像（若存在）
+            String prefix = "avatar/" + userId;
+            ListObjectsArgs listArgs = ListObjectsArgs.builder()
+                    .bucket(minioProperties.getBucketName())
+                    .prefix(prefix)
+                    .build();
+            for (Result<Item> result : minioClient.listObjects(listArgs)) {
+                Item item = result.get();
+                if (item != null && item.objectName() != null && !item.objectName().equals(objectName)) {
+                    minioClient.removeObject(RemoveObjectArgs.builder()
+                            .bucket(minioProperties.getBucketName())
+                            .object(item.objectName())
+                            .build());
+                    log.debug("已删除用户[{}]旧头像：{}", userId, item.objectName());
+                }
+            }
+
             log.info("用户[{}]头像上传成功，MinIO对象路径：{}", userId, objectName);
             return objectName;
         } catch (BizException e) {
@@ -145,7 +146,7 @@ public class MinioUtil {
      */
     public String uploadAvatarWithUrl(MultipartFile file, String userId) throws BizException {
         String objectName = uploadAvatar(file, userId);
-        return buildPermanentUrl(objectName);
+        return getPermanentUrl(objectName);
     }
 
     /**
@@ -409,8 +410,8 @@ public class MinioUtil {
 
     /**
      * 构造文件永久访问URL（与 OssUtil 一致：优先 urlPrefix，否则 endpoint/bucket/objectName）
-     */
-    private String buildPermanentUrl(String objectName) {
+      */
+    public String getPermanentUrl(String objectName) {
         String urlPrefix = minioProperties.getUrlPrefix();
         if (StringUtils.hasText(urlPrefix)) {
             String prefix = urlPrefix.endsWith("/") ? urlPrefix.substring(0, urlPrefix.length() - 1) : urlPrefix;

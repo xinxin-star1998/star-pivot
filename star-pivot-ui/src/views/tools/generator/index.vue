@@ -89,9 +89,16 @@
     fetchBatchGenerateCode
   } from '@/api/generator/gen-table'
   import FileSaver from 'file-saver'
-  import genAddDialog from '@views/tools/generator/modules/gen-add-dialog.vue'
-  import ImportDialog from '@views/tools/generator/modules/ImportDialog.vue'
-  import PreviewDialog from '@views/tools/generator/modules/PreviewDialog.vue'
+
+  const genAddDialog = defineAsyncComponent(
+    () => import('@views/tools/generator/modules/gen-add-dialog.vue')
+  )
+  const ImportDialog = defineAsyncComponent(
+    () => import('@views/tools/generator/modules/ImportDialog.vue')
+  )
+  const PreviewDialog = defineAsyncComponent(
+    () => import('@views/tools/generator/modules/PreviewDialog.vue')
+  )
   import { DialogType } from '@/types'
 
   defineOptions({ name: 'Generator' })
