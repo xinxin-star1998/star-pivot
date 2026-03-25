@@ -137,12 +137,9 @@ login:
     failure-record-expire-minutes: 10
 
 # -----------------------------------------------------------------------------
-# StarPivot 统一配置（JWT 刷新 / 缓存 / 监控）
+# StarPivot：缓存 TTL（秒）与监控；JWT 见上方 jwt.*
 # -----------------------------------------------------------------------------
 star-pivot:
-  jwt:
-    expiration: ${JWT_EXPIRATION:86400000}
-    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
   cache:
     menu-tree-ttl: 3600
     dict-data-ttl: 3600

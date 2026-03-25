@@ -1,4 +1,4 @@
-package com.star.pivot.controller;
+package com.star.pivot.controller.system;
 
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.Result;

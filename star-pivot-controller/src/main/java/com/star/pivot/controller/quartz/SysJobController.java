@@ -1,4 +1,4 @@
-package com.star.pivot.controller;
+package com.star.pivot.controller.quartz;
 
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;

@@ -1,4 +1,4 @@
-package com.star.pivot.controller;
+package com.star.pivot.controller.system;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.star.pivot.framework.domain.AppConstants;

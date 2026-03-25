@@ -1,4 +1,4 @@
-package com.star.pivot.controller;
+package com.star.pivot.controller.auth;
 
 import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.domain.Result;

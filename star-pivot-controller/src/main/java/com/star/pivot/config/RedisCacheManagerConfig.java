@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +30,10 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author xinxin
  */
 @Configuration
+@RequiredArgsConstructor
 public class RedisCacheManagerConfig {
+
+    private final StarPivotProperties starPivotProperties;
 
     /**
      * 创建配置好的 ObjectMapper
@@ -66,12 +70,8 @@ public class RedisCacheManagerConfig {
      *
      * <p>支持 @Cacheable、@CacheEvict 等注解使用 Redis 作为缓存存储
      *
-     * <p>缓存配置说明：
-     * <ul>
-     *   <li>userPermissions: 用户权限缓存，过期时间 30 分钟</li>
-     *   <li>menuTree: 菜单树缓存，过期时间 1 小时</li>
-     *   <li>dictData: 字典数据缓存，过期时间 1 小时</li>
-     * </ul>
+     * <p>菜单树、字典、权限等缓存的基础 TTL 来自 {@code star-pivot.cache.*}（秒），
+     * 并在其基础上加随机抖动以降低缓存雪崩风险。
      *
      * <p>动态 TTL 策略：使用 TtlFunction 实现每个缓存项独立的随机过期时间，
      * 有效防止缓存雪崩问题
@@ -81,38 +81,40 @@ public class RedisCacheManagerConfig {
      */
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        StarPivotProperties.Cache cache = starPivotProperties.getCache();
+        long menuSec = Math.max(1L, cache.getMenuTreeTtl());
+        long dictSec = Math.max(1L, cache.getDictDataTtl());
+        long permSec = Math.max(1L, cache.getUserPermissionsTtl());
+
         ObjectMapper om = createObjectMapper();
         GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(om);
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
 
+        TtlFunction menuLikeTtl = dynamicTtlFromBaseSeconds(menuSec, 2);
+        TtlFunction dictLikeTtl = dynamicTtlFromBaseSeconds(dictSec, 2);
+        TtlFunction permTtl = dynamicTtlFromBaseSeconds(permSec, 3);
+
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .prefixCacheNameWith("cache:")
-                .entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30)))
+                .entryTtl(menuLikeTtl)
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(stringSerializer))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer));
 
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
 
-        cacheConfigurations.put("userPermissions",
-                defaultConfig.entryTtl(createDynamicTtl(Duration.ofMinutes(30), Duration.ofMinutes(10))));
+        cacheConfigurations.put("userPermissions", defaultConfig.entryTtl(permTtl));
 
-        cacheConfigurations.put("menuTree",
-                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
+        cacheConfigurations.put("menuTree", defaultConfig.entryTtl(menuLikeTtl));
 
-        cacheConfigurations.put("dictData",
-                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
+        cacheConfigurations.put("dictData", defaultConfig.entryTtl(dictLikeTtl));
 
-        cacheConfigurations.put("dictType",
-                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
+        cacheConfigurations.put("dictType", defaultConfig.entryTtl(dictLikeTtl));
 
-        cacheConfigurations.put("deptTree",
-                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
+        cacheConfigurations.put("deptTree", defaultConfig.entryTtl(menuLikeTtl));
 
-        cacheConfigurations.put("postList",
-                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
+        cacheConfigurations.put("postList", defaultConfig.entryTtl(menuLikeTtl));
 
-        cacheConfigurations.put("roleList",
-                defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(1), Duration.ofMinutes(30))));
+        cacheConfigurations.put("roleList", defaultConfig.entryTtl(menuLikeTtl));
 
         cacheConfigurations.put("sysConfig",
                 defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(2), Duration.ofHours(1))));
@@ -152,5 +154,13 @@ public class RedisCacheManagerConfig {
             long randomJitter = ThreadLocalRandom.current().nextLong(jitterSeconds + 1);
             return Duration.ofSeconds(baseSeconds + randomJitter);
         };
+    }
+
+    /**
+     * @param jitterDivisor 抖动上限为 {@code baseSeconds / jitterDivisor}（至少 60 秒），与原硬编码比例一致：树类为一半、权限为三分之一
+     */
+    private TtlFunction dynamicTtlFromBaseSeconds(long baseSeconds, int jitterDivisor) {
+        long jitterSec = Math.max(60L, baseSeconds / jitterDivisor);
+        return createDynamicTtl(Duration.ofSeconds(baseSeconds), Duration.ofSeconds(jitterSec));
     }
 }
