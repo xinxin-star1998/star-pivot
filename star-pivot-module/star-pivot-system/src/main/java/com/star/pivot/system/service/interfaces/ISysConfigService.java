@@ -11,7 +11,7 @@ import com.star.pivot.system.domain.entity.SysConfig;
  * 参数配置Service接口
  *
  * @author admin
- * @date 2026-03-31
+ * @since 2026-03-31
  */
 public interface ISysConfigService extends IService<SysConfig> {
     /**

@@ -6,7 +6,7 @@ import lombok.Data;
  * 参数配置DTO
  *
  * @author admin
- * @date 2026-03-31
+ * @since 2026-03-31
  */
 @Data
 public class SysConfigDTO {

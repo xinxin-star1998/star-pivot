@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Param;
  * 参数配置Mapper接口
  *
  * @author admin
- * @date 2026-03-31
+ * @since 2026-03-31
  */
 @Mapper
 public interface SysConfigMapper extends BaseMapper<SysConfig> {

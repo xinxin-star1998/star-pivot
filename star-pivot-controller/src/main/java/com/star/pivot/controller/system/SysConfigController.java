@@ -5,6 +5,7 @@ import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.annotation.NoResponseWrapper;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
@@ -33,7 +34,7 @@ import java.util.List;
  * 参数配置控制器
  *
  * @author admin
- * @date 2026-03-31
+ * @since 2026-03-31
  */
 @Slf4j
 @RestController
@@ -61,7 +62,7 @@ public class SysConfigController {
      * @param queryDTO 查询参数
      * @return excel 文件字节流
      */
-    @Log(title = "参数配置", businessType = 0)
+    @Log(title = "参数配置", businessType = AppConstants.BusinessType.EXPORT)
     @PreAuthorize("hasAuthority('system:config:export')")
     @NoResponseWrapper
     @PostMapping("/export")

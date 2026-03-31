@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.star.pivot.framework.domain.BaseEntity;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 
@@ -12,8 +13,9 @@ import java.io.Serial;
  * 参数配置实体类 sys_config
  *
  * @author admin
- * @date 2026-03-31
+ * @since 2026-03-31
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 @TableName("sys_config")
 public class SysConfig extends BaseEntity {
