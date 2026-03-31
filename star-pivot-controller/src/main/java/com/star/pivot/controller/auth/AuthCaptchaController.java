@@ -4,7 +4,7 @@ import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
 import com.star.pivot.system.domain.bo.CaptchaVerifyResponse;
-import com.star.pivot.system.service.CaptchaService;
+import com.star.pivot.system.service.interfaces.CaptchaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

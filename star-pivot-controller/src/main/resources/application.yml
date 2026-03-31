@@ -144,10 +144,6 @@ star-pivot:
     menu-tree-ttl: 3600
     dict-data-ttl: 3600
     user-permissions-ttl: 1800
-  monitor:
-    api-performance-enabled: true
-    slow-api-threshold-ms: 1000
-    sample-rate: 0.1
 
 # -----------------------------------------------------------------------------
 # Actuator

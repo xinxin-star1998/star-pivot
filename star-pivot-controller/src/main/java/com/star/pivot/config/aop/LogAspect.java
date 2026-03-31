@@ -7,7 +7,7 @@ import com.star.pivot.system.domain.entity.SysDept;
 import com.star.pivot.system.domain.entity.SysOperLog;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.mapper.SysDeptMapper;
-import com.star.pivot.system.service.SysOperLogService;
+import com.star.pivot.system.service.interfaces.SysOperLogService;
 import com.star.pivot.system.utils.LoginUser;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;

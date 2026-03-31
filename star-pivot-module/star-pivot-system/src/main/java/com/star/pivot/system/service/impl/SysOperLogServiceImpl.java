@@ -9,7 +9,7 @@ import com.star.pivot.system.domain.bo.OperLogReqBo;
 import com.star.pivot.system.domain.bo.OperLogVO;
 import com.star.pivot.system.domain.entity.SysOperLog;
 import com.star.pivot.system.mapper.SysOperLogMapper;
-import com.star.pivot.system.service.SysOperLogService;
+import com.star.pivot.system.service.interfaces.SysOperLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Async;

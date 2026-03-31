@@ -15,7 +15,7 @@ import com.star.pivot.dict.service.DictTypeService;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
-import com.star.pivot.framework.utils.AssertUtils;
+import com.star.pivot.framework.utils.validation.AssertUtils;
 import com.star.pivot.security.context.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;

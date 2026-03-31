@@ -1,10 +1,8 @@
 package com.star.pivot.monitor.config;
 
-import com.star.pivot.monitor.config.properties.MonitorProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
 
 /**
@@ -16,7 +14,6 @@ import org.springframework.context.annotation.ComponentScan;
 @Slf4j
 @AutoConfiguration
 @ComponentScan(basePackages = "com.star.pivot.monitor")
-@EnableConfigurationProperties(MonitorProperties.class)
 @ConditionalOnProperty(prefix = "star-pivot.monitor", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class MonitorAutoConfiguration {
 

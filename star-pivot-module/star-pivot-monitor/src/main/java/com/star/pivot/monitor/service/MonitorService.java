@@ -1,15 +1,11 @@
 package com.star.pivot.monitor.service;
 
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.monitor.domain.bo.ApiPerformanceReqBo;
 import com.star.pivot.monitor.domain.vo.DruidMonitorVO;
 
 import com.star.pivot.monitor.domain.vo.OnlineUserVO;
 import com.star.pivot.monitor.domain.vo.RedisCacheVO;
 import com.star.pivot.monitor.domain.vo.ServerInfoVO;
-import com.star.pivot.monitor.domain.entity.SysMonitorApiPerformance;
-
-import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -122,31 +118,4 @@ public interface MonitorService {
      */
     boolean clearAllCache();
 
-    /**
-     * 分页查询API性能监控数据
-     *
-     * @param reqBo 查询参数
-     * @return 分页结果
-     */
-    PageResponse<SysMonitorApiPerformance> getApiPerformancePageList(ApiPerformanceReqBo reqBo);
-
-    /**
-     * 获取最慢的API接口（Top N）
-     *
-     * @param limit     查询数量限制
-     * @param startDate 开始日期
-     * @param endDate   结束日期
-     * @return API性能数据列表
-     */
-    List<SysMonitorApiPerformance> getSlowestApis(Integer limit, LocalDate startDate, LocalDate endDate);
-
-    /**
-     * 获取错误率最高的API接口（Top N）
-     *
-     * @param limit     查询数量限制
-     * @param startDate 开始日期
-     * @param endDate   结束日期
-     * @return API性能数据列表
-     */
-    List<SysMonitorApiPerformance> getHighestErrorRateApis(Integer limit, LocalDate startDate, LocalDate endDate);
 }

@@ -5,7 +5,7 @@ import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.bo.LoginResponse;
-import com.star.pivot.system.service.TokenService;
+import com.star.pivot.system.service.interfaces.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

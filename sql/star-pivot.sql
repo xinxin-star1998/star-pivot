@@ -646,7 +646,6 @@ INSERT INTO `sys_menu` VALUES (97, 'Druid监控', 95, 2, 'druid', '/monitor/drui
 INSERT INTO `sys_menu` VALUES (98, 'Redis缓存', 95, 3, 'redis', '/monitor/redis/index', NULL, 'RedisMonitor', 1, 0, 'C', '0', '0', 'monitor:redis:query', 'ri:database-line', 'admin', '2026-01-25 18:00:43', 'admin', '2026-03-01 13:37:51', 'Redis缓存监控');
 INSERT INTO `sys_menu` VALUES (99, '在线用户', 95, 4, 'online', '/monitor/online/index', NULL, 'OnlineUser', 1, 0, 'C', '0', '0', 'monitor:online:query', 'ri:user-line', 'admin', '2026-01-25 18:00:43', 'admin', '2026-01-25 18:32:45', '在线用户监控');
 INSERT INTO `sys_menu` VALUES (100, '强制下线', 99, 5, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:online:force-logout', '', 'admin', '2026-01-25 18:00:43', 'admin', '2026-01-25 18:30:55', '强制用户下线');
-INSERT INTO `sys_menu` VALUES (107, 'API性能监控', 95, 7, 'api', '/monitor/api', NULL, 'ApiPerformance', 1, 1, 'C', '0', '0', 'monitor:api:query', 'tabler:api', 'admin', '2026-01-25 20:54:00', 'admin', '2026-02-06 20:06:52', '');
 INSERT INTO `sys_menu` VALUES (114, '删除缓存', 98, 1, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:cache:remove', '#', 'admin', '2026-01-25 22:19:38', '', NULL, 'monitor:cache:remove');
 INSERT INTO `sys_menu` VALUES (115, '清空缓存', 98, 2, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:cache:clear', '#', 'admin', '2026-01-25 22:20:00', '', NULL, '清空缓存');
 INSERT INTO `sys_menu` VALUES (117, '缓存列表', 98, 3, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:cache:query', '#', 'admin', '2026-01-27 18:21:55', '', NULL, '缓存列表');
@@ -661,36 +660,6 @@ INSERT INTO `sys_menu` VALUES (125, '任务查询', 124, 1, '', '', NULL, '', 1,
 INSERT INTO `sys_menu` VALUES (126, '任务新增', 124, 2, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:job:add', '#', 'admin', '2026-02-06 20:01:06', '', NULL, '');
 INSERT INTO `sys_menu` VALUES (127, '任务修改', 124, 3, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:job:edit', '#', 'admin', '2026-02-06 20:01:06', '', NULL, '');
 INSERT INTO `sys_menu` VALUES (128, '任务删除', 124, 4, '', '', NULL, '', 1, 1, 'F', '0', '0', 'monitor:job:delete', '#', 'admin', '2026-02-06 20:01:06', '', NULL, '');
-
--- ----------------------------
--- Table structure for sys_monitor_api_performance
--- ----------------------------
-DROP TABLE IF EXISTS `sys_monitor_api_performance`;
-CREATE TABLE `sys_monitor_api_performance`  (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `api_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '接口路径',
-  `api_method` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '请求方法（GET, POST等）',
-  `request_count` bigint(20) NULL DEFAULT 0 COMMENT '请求次数',
-  `success_count` bigint(20) NULL DEFAULT 0 COMMENT '成功次数',
-  `error_count` bigint(20) NULL DEFAULT 0 COMMENT '错误次数',
-  `response_time_total` bigint(20) NULL DEFAULT 0 COMMENT '总响应时间（毫秒）',
-  `response_time_max` bigint(20) NULL DEFAULT 0 COMMENT '最大响应时间（毫秒）',
-  `response_time_min` bigint(20) NULL DEFAULT 0 COMMENT '最小响应时间（毫秒）',
-  `response_time_avg` decimal(20, 2) NULL DEFAULT NULL COMMENT '平均响应时间（毫秒）',
-  `stat_date` date NOT NULL COMMENT '统计日期',
-  `stat_hour` tinyint(4) NULL DEFAULT NULL COMMENT '统计小时（0-23，用于按小时统计）',
-  `create_time` datetime(0) NULL DEFAULT CURRENT_TIMESTAMP(0) COMMENT '创建时间',
-  `update_time` datetime(0) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(0) COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_api_stat`(`api_path`, `api_method`, `stat_date`, `stat_hour`) USING BTREE,
-  INDEX `idx_stat_date`(`stat_date`) USING BTREE,
-  INDEX `idx_response_time_avg`(`response_time_avg`) USING BTREE,
-  INDEX `idx_error_count`(`error_count`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'API接口性能监控表' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of sys_monitor_api_performance
--- ----------------------------
 
 -- ----------------------------
 -- Table structure for sys_monitor_slow_sql

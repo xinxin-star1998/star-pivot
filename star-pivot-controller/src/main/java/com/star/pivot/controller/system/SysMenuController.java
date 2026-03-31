@@ -6,7 +6,7 @@ import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
-import com.star.pivot.system.service.SysMenuService;
+import com.star.pivot.system.service.interfaces.SysMenuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -9,7 +9,7 @@ import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.system.domain.bo.OperLogReqBo;
 import com.star.pivot.system.domain.bo.OperLogVO;
 import com.star.pivot.system.domain.entity.SysOperLog;
-import com.star.pivot.system.service.SysOperLogService;
+import com.star.pivot.system.service.interfaces.SysOperLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

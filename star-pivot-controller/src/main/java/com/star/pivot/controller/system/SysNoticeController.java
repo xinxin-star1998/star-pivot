@@ -5,7 +5,7 @@ import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.exception.BizException;
-import com.star.pivot.system.service.ISysNoticeService;
+import com.star.pivot.system.service.interfaces.ISysNoticeService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

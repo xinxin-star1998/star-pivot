@@ -5,7 +5,7 @@ import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
 import com.star.pivot.system.domain.bo.CaptchaVerifyResponse;
-import com.star.pivot.system.service.CaptchaService;
+import com.star.pivot.system.service.interfaces.CaptchaService;
 import com.star.pivot.system.utils.RedisCache;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

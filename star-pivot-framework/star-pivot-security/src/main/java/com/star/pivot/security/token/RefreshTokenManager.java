@@ -2,12 +2,16 @@ package com.star.pivot.security.token;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
 import java.time.Duration;
 import java.util.Date;
 import java.util.UUID;
@@ -20,6 +24,7 @@ public class RefreshTokenManager {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private static final String REFRESH_TOKEN_PREFIX = "jwt:refresh:user:";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Value("${jwt.refresh-expiration:604800000}")
     private long refreshTokenExpiration;
@@ -64,9 +69,8 @@ public class RefreshTokenManager {
         }
         String key = buildKey(userId);
         try {
-            Object stored = redisTemplate.opsForValue().get(key);
-            if (stored instanceof RefreshTokenValue) {
-                RefreshTokenValue value = (RefreshTokenValue) stored;
+            RefreshTokenValue value = readRefreshTokenValueCompat(key);
+            if (value != null) {
                 value.setLastAccessTime(new Date());
                 Long expire = redisTemplate.getExpire(key, TimeUnit.MILLISECONDS);
                 if (expire != null && expire > 0) {
@@ -86,12 +90,11 @@ public class RefreshTokenManager {
         }
 
         String key = buildKey(userId);
-        Object stored = redisTemplate.opsForValue().get(key);
-        if (!(stored instanceof RefreshTokenValue)) {
+        RefreshTokenValue value = readRefreshTokenValueCompat(key);
+        if (value == null) {
             return false;
         }
 
-        RefreshTokenValue value = (RefreshTokenValue) stored;
         String rawHash = DigestUtils.md5DigestAsHex(rawToken.getBytes(StandardCharsets.UTF_8));
         return rawHash.equals(value.getTokenHash());
     }
@@ -126,11 +129,99 @@ public class RefreshTokenManager {
             return null;
         }
         String key = buildKey(userId);
-        Object stored = redisTemplate.opsForValue().get(key);
-        if (stored instanceof RefreshTokenValue) {
-            return (RefreshTokenValue) stored;
+        return readRefreshTokenValueCompat(key);
+    }
+
+    private RefreshTokenValue readRefreshTokenValueCompat(String key) {
+        try {
+            Object stored = redisTemplate.opsForValue().get(key);
+            if (stored instanceof RefreshTokenValue) {
+                return (RefreshTokenValue) stored;
+            }
+            if (stored != null) {
+                log.warn("刷新令牌类型不匹配，key={}, actualType={}", key, stored.getClass().getName());
+            }
+        } catch (Exception e) {
+            log.debug("标准反序列化失败，尝试兼容读取，key={}, error={}", key, e.getMessage());
         }
-        return null;
+
+        RefreshTokenValue legacyValue = readLegacyRefreshTokenValue(key);
+        if (legacyValue == null) {
+            return null;
+        }
+
+        // 兼容读取成功后回写为新类型，避免下次重复走兼容路径
+        try {
+            Long expire = redisTemplate.getExpire(key, TimeUnit.MILLISECONDS);
+            if (expire != null && expire > 0) {
+                redisTemplate.opsForValue().set(key, legacyValue, expire, TimeUnit.MILLISECONDS);
+            } else {
+                redisTemplate.opsForValue().set(key, legacyValue);
+            }
+        } catch (Exception e) {
+            log.debug("兼容数据回写失败，key={}, error={}", key, e.getMessage());
+        }
+        return legacyValue;
+    }
+
+    private RefreshTokenValue readLegacyRefreshTokenValue(String key) {
+        try {
+            byte[] rawBytes = redisTemplate.execute(
+                    (RedisCallback<byte[]>) connection -> connection.get(key.getBytes(StandardCharsets.UTF_8)));
+            if (rawBytes == null || rawBytes.length == 0) {
+                return null;
+            }
+
+            JsonNode root = OBJECT_MAPPER.readTree(rawBytes);
+            JsonNode payload = root;
+            if (root.isArray() && root.size() > 1) {
+                payload = root.get(1);
+            }
+            if (payload == null || !payload.isObject()) {
+                return null;
+            }
+
+            RefreshTokenValue value = new RefreshTokenValue();
+            value.setTokenHash(getText(payload, "tokenHash"));
+            value.setIpaddr(getText(payload, "ipaddr"));
+            value.setBrowser(getText(payload, "browser"));
+            value.setOs(getText(payload, "os"));
+            value.setLoginLocation(getText(payload, "loginLocation"));
+            value.setIssuedAt(parseLegacyDate(payload.get("issuedAt")));
+            value.setLastAccessTime(parseLegacyDate(payload.get("lastAccessTime")));
+            return value;
+        } catch (Exception e) {
+            log.debug("兼容读取旧刷新令牌失败，key={}, error={}", key, e.getMessage());
+            return null;
+        }
+    }
+
+    private String getText(JsonNode node, String fieldName) {
+        JsonNode field = node.get(fieldName);
+        if (field == null || field.isNull()) {
+            return null;
+        }
+        return field.asText(null);
+    }
+
+    private Date parseLegacyDate(JsonNode dateNode) {
+        if (dateNode == null || dateNode.isNull()) {
+            return null;
+        }
+        String rawText;
+        if (dateNode.isArray() && dateNode.size() > 1) {
+            rawText = dateNode.get(1).asText(null);
+        } else {
+            rawText = dateNode.asText(null);
+        }
+        if (rawText == null || rawText.isEmpty()) {
+            return null;
+        }
+        try {
+            return Date.from(OffsetDateTime.parse(rawText).toInstant());
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     private String buildKey(Long userId) {

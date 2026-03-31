@@ -3,7 +3,7 @@ package com.star.pivot.quartz.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.star.pivot.framework.constants.Constants;
+import com.star.pivot.common.constant.Constants;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.quartz.domain.bo.SysJobLogVO;

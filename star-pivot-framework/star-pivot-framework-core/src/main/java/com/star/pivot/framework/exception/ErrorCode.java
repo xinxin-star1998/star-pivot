@@ -81,7 +81,24 @@ public enum ErrorCode {
     POST_CODE_USED(5002, "岗位编码已被使用"),
     POST_USED(5003, "岗位已被使用，不能删除"),
 
-    DICT_TYPE_NOT_FOUND(6001, "字典类型不存在");
+    DICT_TYPE_NOT_FOUND(6001, "字典类型不存在"),
+
+    // 验证相关错误
+    PARAM_OUT_OF_RANGE(6002, "参数超出允许范围"),
+    PARAM_TOO_LONG(6003, "参数长度超出限制"),
+    PARAM_TOO_SHORT(6004, "参数长度不足"),
+    INVALID_FORMAT(6005, "参数格式不正确"),
+
+    // 文件相关错误
+    FILE_SIZE_EXCEEDED(7001, "文件大小超出限制"),
+    FILE_TYPE_NOT_ALLOWED(7002, "文件类型不被允许"),
+    FILE_NAME_INVALID(7003, "文件名包含非法字符"),
+    FILE_NOT_READABLE(7004, "文件无法读取"),
+
+    // 网络相关错误
+    NETWORK_TIMEOUT(8001, "网络请求超时"),
+    NETWORK_CONNECTION_FAILED(8002, "网络连接失败"),
+    API_CALL_FAILED(8003, "API调用失败");
 
     private final int code;
     private final String message;

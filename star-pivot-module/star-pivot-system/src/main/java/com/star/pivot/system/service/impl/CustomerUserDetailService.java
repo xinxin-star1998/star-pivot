@@ -6,7 +6,7 @@ import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.mapper.SysMenuMapper;
 import com.star.pivot.system.mapper.SysRoleMapper;
-import com.star.pivot.system.service.SysUserService;
+import com.star.pivot.system.service.interfaces.SysUserService;
 import com.star.pivot.system.utils.LoginUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -9,7 +9,7 @@ import com.star.pivot.system.domain.bo.PostBo;
 import com.star.pivot.system.domain.bo.PostVO;
 import com.star.pivot.system.domain.dto.PostDTO;
 import com.star.pivot.system.domain.dto.PostQueryDTO;
-import com.star.pivot.system.service.PostService;
+import com.star.pivot.system.service.interfaces.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

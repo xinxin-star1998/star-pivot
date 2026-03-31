@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.entity.*;
 import com.star.pivot.system.mapper.*;
-import com.star.pivot.system.service.AccountLockService;
+import com.star.pivot.system.service.interfaces.AccountLockService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

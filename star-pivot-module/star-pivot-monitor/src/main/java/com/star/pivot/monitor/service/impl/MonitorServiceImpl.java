@@ -2,30 +2,21 @@ package com.star.pivot.monitor.service.impl;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.stat.DruidStatManagerFacade;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
-import com.star.pivot.monitor.domain.bo.ApiPerformanceReqBo;
 import com.star.pivot.monitor.domain.vo.DruidMonitorVO;
 
 import com.star.pivot.monitor.domain.vo.OnlineUserVO;
 import com.star.pivot.monitor.domain.vo.RedisCacheVO;
 import com.star.pivot.monitor.domain.vo.ServerInfoVO;
-import com.star.pivot.monitor.domain.entity.SysMonitorApiPerformance;
-
-import com.star.pivot.monitor.mapper.SysMonitorApiPerformanceMapper;
 import com.star.pivot.monitor.service.MonitorService;
 import com.star.pivot.security.token.RefreshTokenManager;
 import com.star.pivot.security.token.RefreshTokenManager.RefreshTokenValue;
 import com.star.pivot.system.domain.entity.SysUser;
-import com.star.pivot.system.service.OnlineUserService;
-import com.star.pivot.system.service.SysDeptService;
-import com.star.pivot.system.service.SysUserService;
-import com.star.pivot.system.service.TokenService;
+import com.star.pivot.system.service.interfaces.SysDeptService;
+import com.star.pivot.system.service.interfaces.SysUserService;
+import com.star.pivot.system.service.interfaces.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.DataType;
@@ -35,7 +26,6 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
 import oshi.hardware.GlobalMemory;
@@ -49,13 +39,10 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.RuntimeMXBean;
 import java.net.InetAddress;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static com.star.pivot.framework.utils.LogUtils.truncateString;
@@ -86,13 +73,7 @@ public class MonitorServiceImpl implements MonitorService {
     private RefreshTokenManager refreshTokenManager;
 
     @Autowired(required = false)
-    private OnlineUserService onlineUserService;
-
-    @Autowired(required = false)
     private TokenService tokenService;
-
-    @Autowired(required = false)
-    private SysMonitorApiPerformanceMapper apiPerformanceMapper;
 
     private static final SystemInfo SYSTEM_INFO = new SystemInfo();
     private static final HardwareAbstractionLayer HAL = SYSTEM_INFO.getHardware();
@@ -111,6 +92,17 @@ public class MonitorServiceImpl implements MonitorService {
     private static final Map<String, Object> cpuInfoCache = new ConcurrentHashMap<>();
     private static final String CACHE_KEY_CPU_INFO = "cpu_info";
     private static final String CACHE_KEY_CPU_TIMESTAMP = "cpu_timestamp";
+
+    /** 缓存内容预览最大长度（字符数，UTF‑8 截断前） */
+    private static final int CACHE_CONTENT_MAX_LENGTH = 5000;
+
+    /** 缓存查看专用 ObjectMapper（懒加载，避免频繁 new） */
+    private volatile ObjectMapper cacheViewObjectMapper;
+
+    /** Redis 能力缓存（避免每次请求都探测） */
+    private volatile RedisCapabilities redisCapabilities;
+    private static final long REDIS_CAPABILITY_CACHE_MS = 60_000L;
+    private final AtomicBoolean clusterScanWarningLogged = new AtomicBoolean(false);
 
     // Redis 键前缀常量
     private static final String REDIS_KEY_PREFIX_JWT_REFRESH_USER = "jwt:refresh:user";
@@ -204,6 +196,9 @@ public class MonitorServiceImpl implements MonitorService {
         long iowait = ticks[CentralProcessor.TickType.IOWAIT.getIndex()] - prevTicks[CentralProcessor.TickType.IOWAIT.getIndex()];
         long idle = ticks[CentralProcessor.TickType.IDLE.getIndex()] - prevTicks[CentralProcessor.TickType.IDLE.getIndex()];
         long totalCpu = user + nice + cSys + idle + iowait + irq + softirq + steal;
+        if (totalCpu <= 0) {
+            totalCpu = 1;
+        }
 
         ServerInfoVO.CpuInfo cpuInfo = new ServerInfoVO.CpuInfo();
         cpuInfo.setCpuNum(processor.getLogicalProcessorCount());
@@ -247,6 +242,12 @@ public class MonitorServiceImpl implements MonitorService {
 
         long totalMemory = memoryMXBean.getHeapMemoryUsage().getMax();
         long usedMemory = memoryMXBean.getHeapMemoryUsage().getUsed();
+        if (totalMemory <= 0) {
+            totalMemory = memoryMXBean.getHeapMemoryUsage().getCommitted();
+        }
+        if (totalMemory <= 0) {
+            totalMemory = 1;
+        }
         long freeMemory = totalMemory - usedMemory;
 
         ServerInfoVO.JvmInfo jvmInfo = new ServerInfoVO.JvmInfo();
@@ -487,6 +488,11 @@ public class MonitorServiceImpl implements MonitorService {
         Set<String> keys = new HashSet<>();
         if (redisTemplate == null) {
             return keys;
+        }
+
+        RedisCapabilities capabilities = getRedisCapabilities();
+        if (capabilities.clusterMode && clusterScanWarningLogged.compareAndSet(false, true)) {
+            log.warn("Redis 当前为集群模式，SCAN 结果可能为局部视图，pattern: {}", pattern);
         }
 
         try {
@@ -914,7 +920,7 @@ public class MonitorServiceImpl implements MonitorService {
 
             // 检查键是否存在
             Boolean exists = redisTemplate.hasKey(key);
-            if (!exists) {
+            if (!Boolean.TRUE.equals(exists)) {
                 contentInfo.setType("none");
                 contentInfo.setTtl(-2L);
                 contentInfo.setContent("(键不存在)");
@@ -963,10 +969,7 @@ public class MonitorServiceImpl implements MonitorService {
         }
 
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            // 配置 ObjectMapper，允许未知属性，忽略反序列化错误
-            objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+            ObjectMapper objectMapper = getOrCreateCacheViewObjectMapper();
 
             switch (type.toLowerCase()) {
                 case "string":
@@ -974,7 +977,7 @@ public class MonitorServiceImpl implements MonitorService {
                     try {
                         Object stringValue = redisTemplate.opsForValue().get(key);
                         if (stringValue != null) {
-                            return formatObjectValue(stringValue, objectMapper);
+                            return truncateString(formatObjectValue(stringValue, objectMapper), CACHE_CONTENT_MAX_LENGTH);
                         }
                     } catch (Exception e) {
                         // 反序列化失败，尝试获取原始字节
@@ -982,16 +985,18 @@ public class MonitorServiceImpl implements MonitorService {
                     }
                     // 如果反序列化失败，尝试获取原始字节
                     try {
-                        byte[] rawBytes = redisTemplate.execute((RedisCallback<byte[]>) connection -> connection.get(key.getBytes()));
+                        byte[] rawBytes = redisTemplate.execute((RedisCallback<byte[]>) connection ->
+                            connection.stringCommands().get(key.getBytes()));
                         if (rawBytes != null) {
                             String rawString = new String(rawBytes, "UTF-8");
                             // 尝试格式化 JSON
                             try {
                                 Object jsonValue = objectMapper.readValue(rawString, Object.class);
-                                return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonValue);
+                                String pretty = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonValue);
+                                return truncateString(pretty, CACHE_CONTENT_MAX_LENGTH);
                             } catch (Exception e) {
                                 // 不是有效的 JSON，直接返回原始字符串
-                                return rawString;
+                                return truncateString(rawString, CACHE_CONTENT_MAX_LENGTH);
                             }
                         }
                     } catch (Exception e) {
@@ -1003,7 +1008,7 @@ public class MonitorServiceImpl implements MonitorService {
                     // Hash 类型
                     Map<Object, Object> hashValue = redisTemplate.opsForHash().entries(key);
                     if (!hashValue.isEmpty()) {
-                        return formatObjectValue(hashValue, objectMapper);
+                        return truncateString(formatObjectValue(hashValue, objectMapper), CACHE_CONTENT_MAX_LENGTH);
                     }
                     return "(空哈希)";
 
@@ -1011,7 +1016,7 @@ public class MonitorServiceImpl implements MonitorService {
                     // List 类型
                     List<Object> listValue = redisTemplate.opsForList().range(key, 0, -1);
                     if (listValue != null && !listValue.isEmpty()) {
-                        return formatObjectValue(listValue, objectMapper);
+                        return truncateString(formatObjectValue(listValue, objectMapper), CACHE_CONTENT_MAX_LENGTH);
                     }
                     return "(空列表)";
 
@@ -1019,21 +1024,24 @@ public class MonitorServiceImpl implements MonitorService {
                     // Set 类型
                     Set<Object> setValue = redisTemplate.opsForSet().members(key);
                     if (setValue != null && !setValue.isEmpty()) {
-                        return formatObjectValue(setValue, objectMapper);
+                        return truncateString(formatObjectValue(setValue, objectMapper), CACHE_CONTENT_MAX_LENGTH);
                     }
                     return "(空集合)";
 
                 case "zset":
-                    // Sorted Set 类型
-                    Set<Object> zsetValue = redisTemplate.opsForZSet().range(key, 0, -1);
-                    if (zsetValue != null && !zsetValue.isEmpty()) {
-                        // 获取带分数的有序集合
-                        Map<String, Double> zsetWithScore = new LinkedHashMap<>();
-                        for (Object member : zsetValue) {
-                            Double score = redisTemplate.opsForZSet().score(key, member);
-                            zsetWithScore.put(member.toString(), score != null ? score : 0.0);
+                    // Sorted Set 类型：一次性取出成员及分数，避免二次网络往返
+                    Set<org.springframework.data.redis.core.ZSetOperations.TypedTuple<Object>> zsetWithScores =
+                        redisTemplate.opsForZSet().rangeWithScores(key, 0, -1);
+                    if (zsetWithScores != null && !zsetWithScores.isEmpty()) {
+                        Map<String, Double> zsetMap = new LinkedHashMap<>();
+                        for (org.springframework.data.redis.core.ZSetOperations.TypedTuple<Object> tuple : zsetWithScores) {
+                            Object member = tuple.getValue();
+                            Double score = tuple.getScore();
+                            if (member != null) {
+                                zsetMap.put(member.toString(), score != null ? score : 0.0);
+                            }
                         }
-                        return formatObjectValue(zsetWithScore, objectMapper);
+                        return truncateString(formatObjectValue(zsetMap, objectMapper), CACHE_CONTENT_MAX_LENGTH);
                     }
                     return "(空有序集合)";
 
@@ -1042,7 +1050,7 @@ public class MonitorServiceImpl implements MonitorService {
                     try {
                         Object value = redisTemplate.opsForValue().get(key);
                         if (value != null) {
-                            return formatObjectValue(value, objectMapper);
+                            return truncateString(formatObjectValue(value, objectMapper), CACHE_CONTENT_MAX_LENGTH);
                         }
                     } catch (Exception e) {
                         log.debug("尝试获取未知类型键值失败，key: {}, type: {}", key, type, e);
@@ -1175,6 +1183,25 @@ public class MonitorServiceImpl implements MonitorService {
                   .replace("\t", "\\t");
     }
 
+    /**
+     * 懒加载并缓存用于缓存内容查看的 ObjectMapper，避免频繁创建实例
+     */
+    private ObjectMapper getOrCreateCacheViewObjectMapper() {
+        ObjectMapper local = cacheViewObjectMapper;
+        if (local != null) {
+            return local;
+        }
+        synchronized (this) {
+            if (cacheViewObjectMapper == null) {
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+                cacheViewObjectMapper = mapper;
+            }
+            return cacheViewObjectMapper;
+        }
+    }
+
     @Override
     public long deleteCache(String cacheName) {
         if (redisTemplate == null) {
@@ -1226,9 +1253,25 @@ public class MonitorServiceImpl implements MonitorService {
         }
 
         try {
+            RedisCapabilities capabilities = getRedisCapabilities();
+            if (capabilities.supportAsyncFlush) {
+                try {
+                    redisTemplate.execute((RedisCallback<Object>) connection -> {
+                        RedisServerCommands serverCommands = connection.serverCommands();
+                        serverCommands.flushDb(RedisServerCommands.FlushOption.ASYNC);
+                        return null;
+                    });
+                    log.info("Redis 当前数据库已成功清空（FLUSHDB ASYNC）");
+                    return true;
+                } catch (Exception asyncEx) {
+                    log.warn("FLUSHDB ASYNC 执行失败，自动降级为同步 FLUSHDB，原因: {}", asyncEx.getMessage());
+                    refreshRedisCapabilities(false);
+                }
+            }
+
             redisTemplate.execute((RedisCallback<Object>) connection -> {
                 RedisServerCommands serverCommands = connection.serverCommands();
-                serverCommands.flushDb(RedisServerCommands.FlushOption.ASYNC);
+                serverCommands.flushDb();
                 return null;
             });
             log.info("Redis 当前数据库已成功清空（FLUSHDB）");
@@ -1239,109 +1282,98 @@ public class MonitorServiceImpl implements MonitorService {
         }
     }
 
-    @Override
-    public PageResponse<SysMonitorApiPerformance> getApiPerformancePageList(ApiPerformanceReqBo reqBo) {
-        PageResponse<SysMonitorApiPerformance> pageResponse = new PageResponse<>();
-
-        if (apiPerformanceMapper == null) {
-            log.warn("ApiPerformanceMapper 未配置，无法查询API性能数据");
-            pageResponse.setTotal(0L);
-            pageResponse.setRows(new ArrayList<>());
-            pageResponse.setPageNum(1L);
-            pageResponse.setPageSize(10L);
-            pageResponse.setPageCount(0L);
-            return pageResponse;
+    private RedisCapabilities getRedisCapabilities() {
+        RedisCapabilities local = redisCapabilities;
+        long now = System.currentTimeMillis();
+        if (local != null && now - local.detectedAt <= REDIS_CAPABILITY_CACHE_MS) {
+            return local;
         }
-
-        // 构建查询条件
-        LambdaQueryWrapper<SysMonitorApiPerformance> queryWrapper = new LambdaQueryWrapper<>();
-
-        // 接口路径（模糊查询）
-        if (StringUtils.hasText(reqBo.getApiPath())) {
-            queryWrapper.like(SysMonitorApiPerformance::getApiPath, reqBo.getApiPath());
-        }
-
-        // 请求方法
-        if (StringUtils.hasText(reqBo.getApiMethod())) {
-            queryWrapper.eq(SysMonitorApiPerformance::getApiMethod, reqBo.getApiMethod());
-        }
-
-        // 日期范围
-        if (reqBo.getStartDate() != null) {
-            queryWrapper.ge(SysMonitorApiPerformance::getStatDate, reqBo.getStartDate());
-        }
-        if (reqBo.getEndDate() != null) {
-            queryWrapper.le(SysMonitorApiPerformance::getStatDate, reqBo.getEndDate());
-        }
-
-        // 排序
-        if (StringUtils.hasText(reqBo.getOrderBy())) {
-            String orderBy = reqBo.getOrderBy();
-            boolean isAsc = "asc".equalsIgnoreCase(reqBo.getOrderDirection());
-
-            switch (orderBy.toLowerCase()) {
-                case "responsetimeavg":
-                    if (isAsc) {
-                        queryWrapper.orderByAsc(SysMonitorApiPerformance::getResponseTimeAvg);
-                    } else {
-                        queryWrapper.orderByDesc(SysMonitorApiPerformance::getResponseTimeAvg);
-                    }
-                    break;
-                case "errorcount":
-                    if (isAsc) {
-                        queryWrapper.orderByAsc(SysMonitorApiPerformance::getErrorCount);
-                    } else {
-                        queryWrapper.orderByDesc(SysMonitorApiPerformance::getErrorCount);
-                    }
-                    break;
-                case "requestcount":
-                    if (isAsc) {
-                        queryWrapper.orderByAsc(SysMonitorApiPerformance::getRequestCount);
-                    } else {
-                        queryWrapper.orderByDesc(SysMonitorApiPerformance::getRequestCount);
-                    }
-                    break;
-                default:
-                    // 默认按平均响应时间倒序
-                    queryWrapper.orderByDesc(SysMonitorApiPerformance::getResponseTimeAvg);
-                    break;
+        synchronized (this) {
+            local = redisCapabilities;
+            now = System.currentTimeMillis();
+            if (local != null && now - local.detectedAt <= REDIS_CAPABILITY_CACHE_MS) {
+                return local;
             }
-        } else {
-            // 默认按平均响应时间倒序
-            queryWrapper.orderByDesc(SysMonitorApiPerformance::getResponseTimeAvg);
+            RedisCapabilities detected = detectRedisCapabilities();
+            redisCapabilities = detected;
+            return detected;
         }
-
-        // 分页查询
-        Page<SysMonitorApiPerformance> page = new Page<>(reqBo.getPageNum(), reqBo.getPageSize());
-        IPage<SysMonitorApiPerformance> pageList = apiPerformanceMapper.selectPage(page, queryWrapper);
-
-        // 设置分页结果
-        pageResponse.setTotal(pageList.getTotal());
-        pageResponse.setRows(pageList.getRecords());
-        pageResponse.setPageNum(pageList.getCurrent());
-        pageResponse.setPageSize(pageList.getSize());
-        pageResponse.setPageCount(pageList.getPages());
-
-        return pageResponse;
     }
 
-    @Override
-    public List<SysMonitorApiPerformance> getSlowestApis(Integer limit, LocalDate startDate, LocalDate endDate) {
-        if (apiPerformanceMapper == null) {
-            log.warn("ApiPerformanceMapper 未配置，无法查询最慢API");
-            return new ArrayList<>();
-        }
-
-        return apiPerformanceMapper.selectSlowestApis(limit, startDate, endDate);
+    private void refreshRedisCapabilities(boolean supportAsyncFlush) {
+        RedisCapabilities current = getRedisCapabilities();
+        redisCapabilities = new RedisCapabilities(
+            current.version,
+            current.clusterMode,
+            supportAsyncFlush,
+            System.currentTimeMillis()
+        );
     }
 
-    @Override
-    public List<SysMonitorApiPerformance> getHighestErrorRateApis(Integer limit, LocalDate startDate, LocalDate endDate) {
-        if (apiPerformanceMapper == null) {
-            log.warn("ApiPerformanceMapper 未配置，无法查询错误率最高的API");
-            return new ArrayList<>();
+    private RedisCapabilities detectRedisCapabilities() {
+        String version = "unknown";
+        boolean clusterMode = false;
+
+        try {
+            Properties serverInfo = redisTemplate.execute((RedisCallback<Properties>) connection ->
+                connection.serverCommands().info("server"));
+            if (serverInfo != null) {
+                Object versionVal = serverInfo.get("redis_version");
+                if (versionVal != null) {
+                    version = String.valueOf(versionVal);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("获取 Redis 版本信息失败，使用默认兼容策略", e);
         }
 
-        return apiPerformanceMapper.selectHighestErrorRateApis(limit, startDate, endDate);
+        try {
+            Properties clusterInfo = redisTemplate.execute((RedisCallback<Properties>) connection ->
+                connection.serverCommands().info("cluster"));
+            if (clusterInfo != null) {
+                Object enabled = clusterInfo.get("cluster_enabled");
+                clusterMode = "1".equals(String.valueOf(enabled));
+            }
+        } catch (Exception e) {
+            log.debug("获取 Redis 集群信息失败，按非集群处理", e);
+        }
+
+        // Redis 4.0+ 支持 FLUSHDB ASYNC；未知版本按支持处理，运行时失败会自动降级
+        boolean supportAsyncFlush = isVersionAtLeast(version, 4);
+        if ("unknown".equals(version)) {
+            supportAsyncFlush = true;
+        }
+
+        log.info("Redis 能力探测完成，version={}, clusterMode={}, supportAsyncFlush={}",
+            version, clusterMode, supportAsyncFlush);
+        return new RedisCapabilities(version, clusterMode, supportAsyncFlush, System.currentTimeMillis());
     }
+
+    private boolean isVersionAtLeast(String version, int major) {
+        if (version == null || version.isBlank() || "unknown".equals(version)) {
+            return false;
+        }
+        try {
+            String[] parts = version.split("\\.");
+            int majorVersion = Integer.parseInt(parts[0]);
+            return majorVersion >= major;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static class RedisCapabilities {
+        private final String version;
+        private final boolean clusterMode;
+        private final boolean supportAsyncFlush;
+        private final long detectedAt;
+
+        private RedisCapabilities(String version, boolean clusterMode, boolean supportAsyncFlush, long detectedAt) {
+            this.version = version;
+            this.clusterMode = clusterMode;
+            this.supportAsyncFlush = supportAsyncFlush;
+            this.detectedAt = detectedAt;
+        }
+    }
+
 }

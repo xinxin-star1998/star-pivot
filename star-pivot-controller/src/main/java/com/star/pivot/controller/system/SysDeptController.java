@@ -6,7 +6,7 @@ import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.system.domain.bo.DeptVO;
 import com.star.pivot.system.domain.dto.DeptDTO;
-import com.star.pivot.system.service.SysDeptService;
+import com.star.pivot.system.service.interfaces.SysDeptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

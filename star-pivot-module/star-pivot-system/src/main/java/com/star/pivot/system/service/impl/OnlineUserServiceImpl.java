@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.system.domain.bo.OnlineUserVO;
 import com.star.pivot.system.domain.entity.SysOnlineUser;
 import com.star.pivot.system.mapper.SysOnlineUserMapper;
-import com.star.pivot.system.service.OnlineUserService;
+import com.star.pivot.system.service.interfaces.OnlineUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

@@ -11,7 +11,7 @@ import com.star.pivot.generator.domain.entity.GenTableColumn;
 import org.apache.velocity.VelocityContext;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.star.pivot.framework.utils.DateUtils;
+import com.star.pivot.framework.utils.date.DateUtils;
 /**
  * 模板处理工具类
  * 

@@ -4,6 +4,7 @@ import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.BaseException;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.utils.string.StringUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -141,7 +143,28 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Result<Void>> handleException(Exception e) {
-        log.error("未处理的异常：", e);
+        log.error("系统未处理的异常：", e);
+
+        // 根据异常类型进行分类处理
+        if (e instanceof NullPointerException) {
+            log.error("空指针异常：", e);
+            return ResponseEntity.badRequest()
+                .body(Result.error(ErrorCode.CLIENT_ERROR.getCode(), "请求参数错误"));
+        } else if (e instanceof ClassCastException) {
+            log.error("类型转换异常：", e);
+            return ResponseEntity.badRequest()
+                .body(Result.error(ErrorCode.CLIENT_ERROR.getCode(), "数据类型不匹配"));
+        } else if (e instanceof IllegalArgumentException) {
+            log.warn("参数非法异常：{}", e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(Result.error(ErrorCode.CLIENT_ERROR.getCode(), e.getMessage()));
+        } else if (e instanceof NoSuchElementException) {
+            log.warn("元素不存在异常：", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Result.error(ErrorCode.NOT_FOUND.getCode(), "请求的资源不存在"));
+        }
+
+        // 其他未处理异常
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(Result.error(ErrorCode.INTERNAL_ERROR.getCode(), "系统内部错误"));
     }
@@ -157,5 +180,25 @@ public class GlobalExceptionHandler {
             return HttpStatus.BAD_REQUEST;
         }
         return HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+
+    /**
+     * 记录异常详情到日志
+     */
+    private void logException(Exception e, String message) {
+        if (log.isDebugEnabled()) {
+            log.debug("异常详情: {}", e.getMessage(), e);
+        }
+        log.error("异常: {}", message, e);
+    }
+
+    /**
+     * 构建详细的错误信息
+     */
+    private String buildDetailMessage(String defaultMessage, String customMessage) {
+        if (StringUtils.isNotBlank(customMessage)) {
+            return customMessage;
+        }
+        return defaultMessage;
     }
 }

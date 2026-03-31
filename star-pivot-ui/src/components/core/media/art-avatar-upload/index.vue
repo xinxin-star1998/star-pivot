@@ -91,7 +91,10 @@
       const isPrivateBucketUrl =
         props.usePresignedUrl &&
         newVal &&
-        (newVal.includes('aliyuncs.com') || newVal.includes('.oss-') || newVal.includes('localhost') || newVal.includes('127.0.0.1'))
+        (newVal.includes('aliyuncs.com') ||
+          newVal.includes('.oss-') ||
+          newVal.includes('localhost') ||
+          newVal.includes('127.0.0.1'))
       const filePath = newVal ? extractFilePathFromUrl(newVal) : null
       if (isPrivateBucketUrl && filePath) {
         imageUrl.value = ''
@@ -109,7 +112,11 @@
       const url = imageUrl.value
       if (!newVal || !url || !url.includes('/')) return
       const filePath = extractFilePathFromUrl(url)
-      const isPrivateBucketUrl = url.includes('aliyuncs.com') || url.includes('.oss-') || url.includes('localhost') || url.includes('127.0.0.1')
+      const isPrivateBucketUrl =
+        url.includes('aliyuncs.com') ||
+        url.includes('.oss-') ||
+        url.includes('localhost') ||
+        url.includes('127.0.0.1')
       if (filePath && isPrivateBucketUrl) {
         imageUrl.value = ''
         getPresignedUrlForExistingAvatar(filePath)

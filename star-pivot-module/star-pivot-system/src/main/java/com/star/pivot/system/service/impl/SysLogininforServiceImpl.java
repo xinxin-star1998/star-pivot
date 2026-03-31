@@ -9,7 +9,7 @@ import com.star.pivot.system.domain.bo.LogininforReqBo;
 import com.star.pivot.system.domain.bo.LogininforVO;
 import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.mapper.SysLogininforMapper;
-import com.star.pivot.system.service.SysLogininforService;
+import com.star.pivot.system.service.interfaces.SysLogininforService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Async;

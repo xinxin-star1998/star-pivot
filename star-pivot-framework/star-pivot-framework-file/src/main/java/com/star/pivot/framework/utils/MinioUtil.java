@@ -1,7 +1,15 @@
 package com.star.pivot.framework.utils;
 
 import com.star.pivot.framework.exception.BizException;
-import io.minio.*;
+import io.minio.MinioClient;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.PutObjectArgs;
+import io.minio.ListObjectsArgs;
+import io.minio.RemoveObjectArgs;
+import io.minio.StatObjectArgs;
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.GetObjectArgs;
 import io.minio.errors.MinioException;
 import io.minio.Result;
 import io.minio.messages.Item;
@@ -76,7 +84,7 @@ public class MinioUtil {
      * @param file 头像文件(MultipartFile)
      * @param userId 用户ID
      * @return 头像在MinIO中的完整对象路径（如：avatar/1001.png）
-     * @throws UtilException 校验失败/上传失败时抛出异常
+     * @throws BizException 校验失败/上传失败时抛出异常
      */
     public String uploadAvatar(MultipartFile file, String userId) throws BizException {
         // 1. 基础非空校验
@@ -208,9 +216,6 @@ public class MinioUtil {
             minioClient.putObject(putObjectArgs);
             log.info("文件流上传成功，MinIO对象路径：{}", objectName);
             return objectName;
-        } catch (MinioException e) {
-            log.error("MinIO上传文件流失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
-            throw new BizException("文件流上传失败：" + e.getMessage(), e);
         } catch (Exception e) {
             log.error("MinIO上传文件流失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);
             throw new BizException("文件流上传失败：" + e.getMessage(), e);
@@ -328,7 +333,7 @@ public class MinioUtil {
     /**
      * 获取文件元信息
      */
-    public StatObjectResponse getFileStat(String objectName) throws BizException {
+    public Object getFileStat(String objectName) throws BizException {
         checkObjectname(objectName);
         MinioClient minioClient = getMinioClient();
         try {

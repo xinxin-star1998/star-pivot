@@ -16,22 +16,6 @@ management:
     tags:
       application: ${spring.application.name}
 
-# 监控模块配置
-star-pivot:
-  monitor:
-    # 是否启用API性能监控
-    api-performance-enabled: true
-    # 采样率：只记录10%的请求（高频接口）
-    sample-rate: 0.1
-    # 慢接口阈值：只记录响应时间超过1秒的接口（毫秒）
-    slow-api-threshold-ms: 1000
-    # 批量写入队列大小
-    queue-size: 1000
-    # 批量写入批次大小
-    batch-size: 100
-    # 批量写入间隔（秒）
-    batch-interval: 5
-
 # Druid 监控配置
 spring:
   datasource:

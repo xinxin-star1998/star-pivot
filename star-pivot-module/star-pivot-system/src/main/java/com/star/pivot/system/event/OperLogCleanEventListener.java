@@ -3,7 +3,7 @@ package com.star.pivot.system.event;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.star.pivot.framework.event.OperLogCleanEvent;
 import com.star.pivot.system.domain.entity.SysOperLog;
-import com.star.pivot.system.service.SysOperLogService;
+import com.star.pivot.system.service.interfaces.SysOperLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
