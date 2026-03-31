@@ -15,7 +15,7 @@ import ${packageName}.domain.dto.${subClassName}DTO;
  * ${functionName}Service接口
  * 
  * @author ${author}
- * @date ${datetime}
+ * @since ${datetime}
  */
 public interface I${ClassName}Service extends IService<${ClassName}>
 {

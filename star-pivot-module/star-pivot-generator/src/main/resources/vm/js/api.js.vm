@@ -6,7 +6,7 @@ import request from '@/utils/http'
 export interface ${BusinessName} {
   ${pkColumn.javaField}?: number
 #foreach ($column in $columns)
-#if(!$table.isSuperColumn($column.javaField))
+    #if(!$table.isSuperColumn($column.javaField) && !$column.pk)
   $column.javaField?: $column.javaType
 #end
 #end

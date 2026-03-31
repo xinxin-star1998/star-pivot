@@ -6,7 +6,7 @@ import lombok.Data;
  * ${functionName}查询DTO
  * 
  * @author ${author}
- * @date ${datetime}
+ * @since ${datetime}
  */
 @Data
 public class ${ClassName}QueryDTO {

@@ -28,7 +28,7 @@ import ${packageName}.domain.dto.${ClassName}DTO;
  * ${functionName}控制器
  * 
  * @author ${author}
- * @date ${datetime}
+ * @since ${datetime}
  */
 @Slf4j
 @RestController

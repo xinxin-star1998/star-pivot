@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
  * ${functionName}VO
  * 
  * @author ${author}
- * @date ${datetime}
+ * @since ${datetime}
  */
 @Data
 public class ${ClassName}VO {
@@ -28,7 +28,7 @@ public class ${ClassName}VO {
     private ${pkColumn.javaType} ${pkColumn.javaField};
 
 #foreach ($column in $columns)
-#if(!$table.isSuperColumn($column.javaField))
+    #if(!$table.isSuperColumn($column.javaField) && !$column.pk)
     /**
      * $column.columnComment
      */

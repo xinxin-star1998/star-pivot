@@ -13,7 +13,7 @@ import com.star.pivot.framework.domain.TreeEntity;
  * ${functionName}实体类 ${tableName}
  * 
  * @author ${author}
- * @date ${datetime}
+ * @since ${datetime}
  */
 @Data
 #if($table.crud || $table.sub)

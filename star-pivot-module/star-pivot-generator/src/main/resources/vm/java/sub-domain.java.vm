@@ -9,7 +9,7 @@ import lombok.Data;
  * ${subTable.functionName}实体类 ${subTableName}
  * 
  * @author ${author}
- * @date ${datetime}
+ * @since ${datetime}
  */
 @Data
 public class ${subClassName} extends BaseEntity
