@@ -15,7 +15,7 @@ import com.star.pivot.system.mapper.SysMenuMapper;
 import com.star.pivot.system.service.SysMenuService;
 import com.star.pivot.system.service.SysUserService;
 import com.star.pivot.system.service.UserPermissionCacheService;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;

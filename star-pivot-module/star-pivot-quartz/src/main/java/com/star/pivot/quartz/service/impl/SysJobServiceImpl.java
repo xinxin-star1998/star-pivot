@@ -17,7 +17,7 @@ import com.star.pivot.quartz.execution.QuartzJobExecution;
 import com.star.pivot.quartz.mapper.SysJobLogMapper;
 import com.star.pivot.quartz.mapper.SysJobMapper;
 import com.star.pivot.quartz.service.ISysJobService;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;

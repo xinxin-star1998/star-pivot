@@ -15,7 +15,7 @@ import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.service.AccountLockService;
 import com.star.pivot.system.service.PermissionService;
 import com.star.pivot.system.service.SysUserService;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityContextUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

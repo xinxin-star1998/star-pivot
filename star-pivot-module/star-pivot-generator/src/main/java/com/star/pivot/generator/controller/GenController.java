@@ -16,7 +16,7 @@ import com.star.pivot.generator.domain.entity.GenTableColumn;
 import com.star.pivot.generator.service.GenTableColumnService;
 import com.star.pivot.generator.service.GenTableService;
 import com.star.pivot.generator.utils.Convert;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityContextUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -19,8 +19,8 @@ import com.star.pivot.monitor.domain.entity.SysMonitorApiPerformance;
 
 import com.star.pivot.monitor.mapper.SysMonitorApiPerformanceMapper;
 import com.star.pivot.monitor.service.MonitorService;
-import com.star.pivot.security.RefreshTokenManager;
-import com.star.pivot.security.RefreshTokenManager.RefreshTokenValue;
+import com.star.pivot.security.token.RefreshTokenManager;
+import com.star.pivot.security.token.RefreshTokenManager.RefreshTokenValue;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.OnlineUserService;
 import com.star.pivot.system.service.SysDeptService;

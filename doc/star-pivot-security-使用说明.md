@@ -30,7 +30,7 @@ cors:
 ```java
 package com.star.pivot.xxx;
 
-import com.star.pivot.security.PermitAllPathProvider;
+import com.star.pivot.security.extension.PermitAllPathProvider;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -58,7 +58,7 @@ public class DemoPermitAllPathProvider implements PermitAllPathProvider {
 ```java
 package com.star.pivot.xxx;
 
-import com.star.pivot.security.HttpSecurityCustomizer;
+import com.star.pivot.security.extension.HttpSecurityCustomizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.stereotype.Component;
 

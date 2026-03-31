@@ -18,7 +18,7 @@ import com.star.pivot.system.domain.entity.UserPost;
 import com.star.pivot.system.mapper.PostMapper;
 import com.star.pivot.system.mapper.UserPostMapper;
 import com.star.pivot.system.service.PostService;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;

@@ -11,7 +11,7 @@ import com.star.pivot.system.mapper.RoleDeptMapper;
 import com.star.pivot.system.mapper.SysDeptMapper;
 import com.star.pivot.system.mapper.SysRoleMapper;
 import com.star.pivot.system.mapper.SysUserMapper;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityContextUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

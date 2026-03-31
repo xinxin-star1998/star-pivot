@@ -9,7 +9,7 @@
   import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.AssertUtils;
-  import com.star.pivot.security.utils.SecurityContextUtils;
+  import com.star.pivot.security.context.SecurityContextUtils;
   import com.star.pivot.system.domain.dto.RoleDTO;
   import com.star.pivot.system.domain.dto.RolePermissionAssignDTO;
   import com.star.pivot.system.domain.dto.RoleQueryDTO;

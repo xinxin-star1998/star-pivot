@@ -12,7 +12,7 @@ import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.mapper.SysDeptMapper;
 import com.star.pivot.system.mapper.SysUserMapper;
 import com.star.pivot.system.service.SysDeptService;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;

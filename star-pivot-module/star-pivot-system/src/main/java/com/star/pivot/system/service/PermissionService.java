@@ -1,6 +1,6 @@
 package com.star.pivot.system.service;
 
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityContextUtils;
 import com.star.pivot.system.domain.entity.SysRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

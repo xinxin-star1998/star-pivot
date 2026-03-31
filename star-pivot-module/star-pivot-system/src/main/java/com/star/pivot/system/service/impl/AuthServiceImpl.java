@@ -5,7 +5,7 @@ import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.utils.AssertUtils;
 import com.star.pivot.framework.utils.LogUtils;
-import com.star.pivot.security.utils.SecurityUtils;
+import com.star.pivot.security.context.SecurityUtils;
 import com.star.pivot.system.domain.bo.LoginRequest;
 import com.star.pivot.system.domain.bo.LoginResponse;
 import com.star.pivot.system.domain.bo.RegisterRequest;

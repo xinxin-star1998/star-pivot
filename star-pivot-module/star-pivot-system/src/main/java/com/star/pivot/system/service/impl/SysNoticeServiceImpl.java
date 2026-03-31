@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.AssertUtils;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityContextUtils;
 import com.star.pivot.system.domain.bo.SysNoticeVO;
 import com.star.pivot.system.domain.dto.SysNoticeDTO;
 import com.star.pivot.system.domain.dto.SysNoticeQueryDTO;

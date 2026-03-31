@@ -5,7 +5,7 @@ import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.storage.FileStorageService;
-import com.star.pivot.security.utils.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityContextUtils;
 import com.star.pivot.system.service.PermissionService;
 import com.star.pivot.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
