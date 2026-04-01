@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>star-pivot-framework-boot-starter</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <name>star-pivot-framework-boot-starter</name>
     <description>StarPivot 框架启动聚合：引入 security + core（security 已传递 core/log/file/web），应用层依赖本模块 + 业务模块(system/generator/quartz)</description>
 
