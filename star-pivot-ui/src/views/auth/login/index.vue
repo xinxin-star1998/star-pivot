@@ -127,17 +127,17 @@
 </template>
 
 <script setup lang="ts">
-  import AppConfig from '@/config'
-  import { useUserStore } from '@/store/modules/user'
-  import { useSettingStore } from '@/store/modules/setting'
-  import { useI18n } from 'vue-i18n'
-  import { HttpError } from '@/utils/http/error'
-  import { fetchLogin, fetchCaptcha, fetchVerifyCaptcha } from '@/api/auth'
-  import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
-  import { useCommon } from '@/hooks'
-  import { useRoute, useRouter } from 'vue-router'
+import AppConfig from '@/config'
+import {useUserStore} from '@/store/modules/user'
+import {useSettingStore} from '@/store/modules/setting'
+import {useI18n} from 'vue-i18n'
+import {HttpError} from '@/utils/http/error'
+import {fetchCaptcha, fetchLogin, fetchVerifyCaptcha} from '@/api/auth'
+import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
+import {useCommon} from '@/hooks'
+import {useRoute, useRouter} from 'vue-router'
 
-  defineOptions({ name: 'Login' })
+defineOptions({ name: 'Login' })
 
   const { t, locale } = useI18n()
   const formKey = ref(0)
@@ -155,12 +155,13 @@
 
   const systemName = AppConfig.systemInfo.name
   const formRef = ref<FormInstance>()
+  const LOGIN_INFO_STORAGE_KEY = 'login-info'
 
   const formData = reactive({
     username: '',
     password: '',
-    // 默认不勾选记住密码，由用户主动选择
-    rememberPassword: false,
+    // 默认勾选记住密码
+    rememberPassword: true,
     /** 当前验证码 token，由服务端生成 */
     captchaToken: '',
     captcha: ''
@@ -309,36 +310,42 @@
     }
   }
 
-  // 从本地存储读取保存的登录信息（仅账号信息，不再保存密码）
+  // 从本地存储读取保存的登录信息（账号+密码）
   const loadSavedLoginInfo = () => {
     try {
-      const savedInfo = localStorage.getItem('login-info')
+      const savedInfo = localStorage.getItem(LOGIN_INFO_STORAGE_KEY)
       if (savedInfo) {
-        const parsedInfo = JSON.parse(savedInfo)
+        const parsedInfo = JSON.parse(savedInfo) as {
+          username?: string
+          password?: string
+          rememberPassword?: boolean
+        }
         if (parsedInfo.username) {
           formData.username = parsedInfo.username
         }
-        // 兼容老数据：如果曾经存过密码，这里直接忽略密码字段
-        formData.rememberPassword =
-          parsedInfo.rememberPassword !== undefined ? parsedInfo.rememberPassword : true
+        if (parsedInfo.password) {
+          formData.password = parsedInfo.password
+        }
+        formData.rememberPassword = parsedInfo.rememberPassword === true
       }
     } catch (error) {
       console.error('Failed to load saved login info:', error)
     }
   }
 
-  // 保存登录信息到本地存储（仅账号和勾选状态，不保存密码）
+  // 保存登录信息到本地存储（账号+密码+勾选状态）
   const saveLoginInfo = () => {
     try {
       if (formData.rememberPassword) {
         const loginInfo = {
           username: formData.username,
+          password: formData.password,
           rememberPassword: formData.rememberPassword
         }
-        localStorage.setItem('login-info', JSON.stringify(loginInfo))
+        localStorage.setItem(LOGIN_INFO_STORAGE_KEY, JSON.stringify(loginInfo))
       } else {
         // 如果用户取消记住密码，清除本地存储中的登录信息
-        localStorage.removeItem('login-info')
+        localStorage.removeItem(LOGIN_INFO_STORAGE_KEY)
       }
     } catch (error) {
       console.error('Failed to save login info:', error)

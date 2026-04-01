@@ -1,4 +1,10 @@
 /// <reference types="vite/client" />
+import 'vue'
+
+declare module '*.vue' {
+  const component: import('vue').DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>
+  export default component
+}
 
 declare module 'nprogress'
 
@@ -9,9 +15,8 @@ declare module 'vue-img-cutter'
 declare module 'file-saver'
 
 declare module '@wangeditor/editor-for-vue' {
-  import type { DefineComponent } from 'vue'
-  export const Editor: DefineComponent<unknown, unknown, unknown>
-  export const Toolbar: DefineComponent<unknown, unknown, unknown>
+  export const Editor: import('vue').DefineComponent<unknown, unknown, unknown>
+  export const Toolbar: import('vue').DefineComponent<unknown, unknown, unknown>
 }
 
 declare module 'qrcode.vue' {
@@ -32,8 +37,8 @@ declare module 'qrcode.vue' {
     foreground?: string
     renderAs?: RenderAs
   }
-  import { DefineComponent } from 'vue'
-  const QrcodeVue: DefineComponent<QRCodeProps, object, unknown>
+
+  const QrcodeVue: import('vue').DefineComponent<QRCodeProps, object, unknown>
   export default QrcodeVue
 }
 
@@ -45,14 +50,12 @@ declare module '@element-plus/icons-vue'
 // 项目已安装 dayjs，但可能缺少类型声明或 TS 未正确推断，这里做兜底声明
 declare module 'dayjs'
 
-// 全局变量声明
-declare const __APP_VERSION__: string // 版本号
-
 // 运行时配置（部署后通过 public/config.js 注入，无需重新打包即可修改 API 地址）
 interface AppRuntimeConfig {
   VITE_API_URL?: string
 }
 declare global {
+  const __APP_VERSION__: string
   interface Window {
     __APP_RUNTIME_CONFIG__?: AppRuntimeConfig
   }
@@ -63,16 +66,4 @@ declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
     $t: (key: string) => string
   }
-}
-
-// 确保 Vue 类型可以从 'vue' 模块正确导入
-// 这些类型在 Vue 3.5+ 中应该可以从 'vue' 导入，但 vue-tsc 可能需要额外的类型声明
-declare module 'vue' {
-  export type {
-    App,
-    Directive,
-    DirectiveBinding,
-    DefineComponent,
-    ComponentPublicInstance
-  } from 'vue'
 }

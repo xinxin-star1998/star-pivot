@@ -8,9 +8,13 @@
     "jsx": "preserve",
     "sourceMap": true,
     "resolveJsonModule": true,
+    "allowArbitraryExtensions": true,
     "esModuleInterop": true,
     "lib": ["esnext", "dom", "es2015"],
-    "types": ["vite/client", "node", "element-plus/global"],
+    "types": [
+      "vite/client",
+      "node"
+    ],
     "noEmit": true,
     "skipLibCheck": true,
     "baseUrl": ".",

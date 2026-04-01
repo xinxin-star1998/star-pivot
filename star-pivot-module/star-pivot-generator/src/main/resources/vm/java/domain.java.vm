@@ -3,6 +3,9 @@ package ${packageName}.domain.entity;
 #foreach ($import in $importList)
 import ${import};
 #end
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import com.star.pivot.framework.domain.BaseEntity;
 #if($table.tree)
@@ -16,6 +19,7 @@ import com.star.pivot.framework.domain.TreeEntity;
  * @since ${datetime}
  */
 @Data
+@TableName("${tableName}" )
 #if($table.crud || $table.sub)
 public class ${ClassName} extends BaseEntity
 #elseif($table.tree)
@@ -29,6 +33,9 @@ public class ${ClassName} extends TreeEntity
     /**
      * $column.columnComment
      */
+    #if($column.pk)
+    @TableId(value = "$column.columnName" , type = IdType.AUTO)
+    #end
     private $column.javaType $column.javaField;
 
 #end

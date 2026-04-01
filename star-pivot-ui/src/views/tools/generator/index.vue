@@ -5,6 +5,8 @@
     <ArtSearchBar
       v-model="searchForm"
       :items="formItems"
+      :span="6"
+      label-width="84px"
       :showExpand="false"
       @reset="handleReset"
       @search="handleSearch"
@@ -71,26 +73,27 @@
 </template>
 
 <script setup lang="ts">
-  import { useRouter } from 'vue-router'
-  import { useTable } from '@/hooks/core/useTable'
-  import { useAuth } from '@/hooks/core/useAuth'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import { ElMessage, ElMessageBox, ElTag, ElButton, ElSpace } from 'element-plus'
-  import {
-    fetchGetGenTableList,
-    fetchDeleteTable,
-    fetchSyncDatabase,
-    fetchGenerateCode,
-    fetchGenCode,
-    fetchBatchGenerateCode
-  } from '@/api/generator/gen-table'
-  import FileSaver from 'file-saver'
+import {useRouter} from 'vue-router'
+import {useTable} from '@/hooks/core/useTable'
+import {useAuth} from '@/hooks/core/useAuth'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+import {ElButton, ElMessage, ElMessageBox, ElSpace, ElTag} from 'element-plus'
+import {
+  fetchBatchGenerateCode,
+  fetchDeleteTable,
+  fetchGenCode,
+  fetchGenerateCode,
+  fetchGetGenTableList,
+  fetchSyncDatabase
+} from '@/api/generator/gen-table'
+import FileSaver from 'file-saver'
+import {DialogType} from '@/types'
 
-  const genAddDialog = defineAsyncComponent(
+const genAddDialog = defineAsyncComponent(
     () => import('@views/tools/generator/modules/gen-add-dialog.vue')
   )
   const ImportDialog = defineAsyncComponent(
@@ -99,9 +102,8 @@
   const PreviewDialog = defineAsyncComponent(
     () => import('@views/tools/generator/modules/PreviewDialog.vue')
   )
-  import { DialogType } from '@/types'
 
-  defineOptions({ name: 'Generator' })
+defineOptions({ name: 'Generator' })
 
   // 权限检查
   const { hasAuth } = useAuth()
@@ -312,10 +314,10 @@
 
   /**
    * 搜索处理
-   * @param params 参数
+   * ArtSearchBar 的 search 事件不携带参数，这里直接使用 v-model 的 searchForm
    */
-  const handleSearch = (params: Record<string, any>) => {
-    Object.assign(searchParams, params)
+  const handleSearch = () => {
+    Object.assign(searchParams, searchForm.value)
     getData()
   }
 
@@ -385,7 +387,8 @@
   const handleDelete = async (tableId: number): Promise<void> => {
     try {
       // 查找对应的表信息用于提示
-      const table = data.value?.find((item: GenTableListItem) => item.tableId === tableId)
+      const tableList = (data.value ?? []) as GenTableListItem[]
+      const table = tableList.find((item) => item.tableId === tableId)
       const tableName = table?.tableName || '该表'
 
       await ElMessageBox.confirm(`确定要删除表"${tableName}"吗？此操作不可恢复！`, '删除确认', {
@@ -629,5 +632,16 @@
   :deep(.el-tag) {
     font-weight: 500;
     border-radius: 6px;
+  }
+
+  /* 统一搜索输入框宽度，并让操作按钮与输入项基线对齐 */
+  :deep(.art-search-bar .el-form-item__content > .el-input) {
+    width: 100%;
+  }
+
+  :deep(.art-search-bar .action-column .action-buttons-wrapper) {
+    min-height: 32px;
+    margin-bottom: 0;
+    align-items: center;
   }
 </style>

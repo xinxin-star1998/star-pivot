@@ -2,6 +2,7 @@ package ${packageName}.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 #if($table.crud || $table.sub)
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -29,7 +30,7 @@ public interface ${ClassName}Mapper extends BaseMapper<${ClassName}>
      * @param queryDTO 查询条件
      * @return 分页结果
      */
-    IPage<${ClassName}> selectPageList(Page<${ClassName}> page, ${ClassName}QueryDTO queryDTO);
+    IPage<${ClassName}> selectPageList(Page<${ClassName}> page, @Param("queryDTO" ) ${ClassName}QueryDTO queryDTO);
 #end
 #if($table.sub)
 
