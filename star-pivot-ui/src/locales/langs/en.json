@@ -184,6 +184,19 @@
     "hasAccount": "Already have an account?",
     "toLogin": "To login"
   },
+  "privacyPolicyPage": {
+    "title": "Privacy Policy",
+    "updateTime": "Last updated: 2026-04-01",
+    "section1Title": "1. Information We Collect",
+    "section1Text": "During registration and service usage, we collect account, sign-in, and necessary device information for account creation, identity verification, and security protection.",
+    "section2Title": "2. How We Use Information",
+    "section2Text": "We use your personal information only to provide product features, improve service quality, ensure system security, and comply with legal obligations.",
+    "section3Title": "3. Storage and Protection",
+    "section3Text": "We apply access control, transmission encryption, and audit logging to protect your information from unauthorized access, disclosure, or tampering.",
+    "section4Title": "4. Your Rights",
+    "section4Text": "You have the right to access, correct, delete your personal information, or withdraw consent. To exercise these rights, please contact your administrator or platform support.",
+    "backToRegister": "Back to Register"
+  },
   "lockScreen": {
     "pwdError": "Password error",
     "lock": {
@@ -217,6 +230,9 @@
     },
     "forgetPassword": {
       "title": "Forget Password"
+    },
+    "privacyPolicy": {
+      "title": "Privacy Policy"
     },
     "outside": {
       "title": "Outside"

@@ -103,7 +103,7 @@ const genAddDialog = defineAsyncComponent(
     () => import('@views/tools/generator/modules/PreviewDialog.vue')
   )
 
-defineOptions({ name: 'Generator' })
+defineOptions({name: 'Generator'})
 
   // 权限检查
   const { hasAuth } = useAuth()

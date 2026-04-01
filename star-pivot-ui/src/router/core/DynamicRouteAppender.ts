@@ -21,8 +21,8 @@
  * @author Art Design Pro Team
  */
 
-import type { AppRouteRecord } from '@/types/router'
-import { useMenuStore } from '@/store/modules/menu'
+import type {AppRouteRecord} from '@/types/router'
+import {useMenuStore} from '@/store/modules/menu'
 
 /**
  * 前端动态路由追加器
@@ -45,6 +45,9 @@ export class DynamicRouteAppender {
 
     // 追加分配用户路由
     this.appendAssignUserRoute(menuList)
+
+    // 追加代码生成编辑页路由
+    this.appendGenEditRoute(menuList)
 
     // 追加 Druid 监控 iframe 路由
     this.appendDruidIframeRoute(menuList)
@@ -301,6 +304,43 @@ export class DynamicRouteAppender {
   }
 
   /**
+   * 追加「代码生成编辑页」路由（数据库不存菜单）
+   * @param menuList 菜单列表
+   */
+  static appendGenEditRoute(menuList: AppRouteRecord[]): void {
+    const existsGenEdit = menuList.some(
+        (route: AppRouteRecord) => route.name === 'GenEdit' || route.path?.includes('/tool/gen/edit')
+    )
+
+    if (!existsGenEdit) {
+      const genEditRoute: AppRouteRecord = {
+        // 编辑页路径，带上动态参数 tableId
+        path: '/tool/gen/edit/:tableId',
+        name: 'GenEdit',
+        // 对应视图文件 src/views/tools/generator/modules/gen-edit.vue
+        component: '/tools/generator/modules/gen-edit',
+        meta: {
+          title: '修改生成配置',
+          // 不在菜单树中显示，只通过代码生成列表页跳转进入
+          isHide: true,
+          // 指定父级菜单路径，用于面包屑、高亮等
+          parentPath: '/tool/gen',
+          keepAlive: true,
+          isHideTab: true
+        },
+        menuType: 'C',
+        status: '0',
+        orderNum: 1002
+      }
+
+      menuList.push(genEditRoute)
+      if (import.meta.env.DEV) {
+        console.log('[DynamicRouteAppender] 已动态追加代码生成编辑页路由')
+      }
+    }
+  }
+
+  /**
    * 追加「Druid 监控」iframe 路由（数据库不存菜单）
    * 将 Druid 原生监控页面通过 iframe 方式集成到动态路由中
    * <p>
@@ -343,7 +383,7 @@ export class DynamicRouteAppender {
         },
         menuType: 'C',
         status: '0',
-        orderNum: 1002
+        orderNum: 1003
       }
 
       menuList.push(druidIframeRoute)

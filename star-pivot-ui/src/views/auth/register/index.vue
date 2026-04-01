@@ -20,12 +20,14 @@
             :rules="rules"
             label-position="top"
             :key="formKey"
+            autocomplete="off"
           >
             <ElFormItem prop="username">
               <ElInput
                 class="custom-height"
                 v-model.trim="formData.username"
                 :placeholder="t('register.placeholder.username')"
+                autocomplete="off"
                 clearable
               >
                 <template #prefix>
@@ -44,7 +46,7 @@
                 v-model.trim="formData.password"
                 :placeholder="t('register.placeholder.password')"
                 type="password"
-                autocomplete="off"
+                autocomplete="new-password"
                 show-password
               >
                 <template #prefix>
@@ -63,7 +65,7 @@
                 v-model.trim="formData.confirmPassword"
                 :placeholder="t('register.placeholder.confirmPassword')"
                 type="password"
-                autocomplete="off"
+                autocomplete="new-password"
                 @keyup.enter="register"
                 show-password
               >
@@ -110,12 +112,12 @@
 </template>
 
 <script setup lang="ts">
-  import { useI18n } from 'vue-i18n'
-  import type { FormInstance, FormRules } from 'element-plus'
-  import { fetchRegister } from '@/api/auth'
-  import { useSettingStore } from '@/store/modules/setting'
+import {useI18n} from 'vue-i18n'
+import type {FormInstance, FormRules} from 'element-plus'
+import {fetchRegister} from '@/api/auth'
+import {useSettingStore} from '@/store/modules/setting'
 
-  defineOptions({ name: 'Register' })
+defineOptions({name: 'Register'})
 
   const settingStore = useSettingStore()
   const { isDark } = storeToRefs(settingStore)

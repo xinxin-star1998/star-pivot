@@ -1,4 +1,4 @@
-import { AppRouteRecordRaw } from '@/utils/router'
+import {AppRouteRecordRaw} from '@/utils/router'
 
 /**
  * 静态路由配置（不需要权限就能访问的路由）
@@ -35,6 +35,12 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     name: 'ForgetPassword',
     component: () => import('@views/auth/forget-password/index.vue'),
     meta: { title: 'menus.forgetPassword.title', isHideTab: true }
+  },
+  {
+    path: '/privacy-policy',
+    name: 'PrivacyPolicy',
+    component: () => import('@views/auth/privacy-policy/index.vue'),
+    meta: {title: 'menus.privacyPolicy.title', isHideTab: true}
   },
   {
     path: '/403',
@@ -80,22 +86,22 @@ export const staticRoutes: AppRouteRecordRaw[] = [
         meta: { title: 'iframe' }
       }
     ]
-  },
-  // 代码生成编辑页（静态路由，避免依赖菜单权限）
-  {
-    path: '/tool/gen',
-    component: () => import('@views/index/index.vue'),
-    name: 'GenToolLayout',
-    meta: { title: '代码生成', isHideTab: true },
-    children: [
-      {
-        path: '/tool/gen/edit/:tableId',
-        name: 'GenEdit',
-        component: () => import('@views/tools/generator/modules/gen-edit.vue'),
-        meta: { title: '修改生成配置', isHideTab: true }
-      }
-    ]
   }
+  // 代码生成编辑页（静态路由，避免依赖菜单权限）
+  // {
+  //   path: '/tool/gen',
+  //   component: () => import('@views/index/index.vue'),
+  //   name: 'GenToolLayout',
+  //   meta: { title: '代码生成', isHideTab: true },
+  //   children: [
+  //     {
+  //       path: '/tool/gen/edit/:tableId',
+  //       name: 'GenEdit',
+  //       component: () => import('@views/tools/generator/modules/gen-edit.vue'),
+  //       meta: { title: '修改生成配置', isHideTab: true }
+  //     }
+  //   ]
+  // }
   // 字典数据页面路由
   // {
   //   path: '/data',
