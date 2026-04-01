@@ -14,39 +14,42 @@ import { formatMenuTitle } from '@/utils'
 
 export class MenuProcessor {
   /**
-   * 获取菜单数据（从后端获取）
+   * 获取菜单数据（同时返回原始菜单与转换后的路由菜单）
    */
-  async getMenuList(): Promise<AppRouteRecord[]> {
+  async getMenuListWithRaw(): Promise<{ rawMenuList: SysMenu[]; menuList: AppRouteRecord[] }> {
     try {
-      // 从后端获取菜单数据
-      const sysMenuList = await fetchGetMenuList()
+        const rawMenuList = await fetchGetMenuList()
 
-      // 检查返回数据
-      if (!sysMenuList || !Array.isArray(sysMenuList)) {
-        console.error('[MenuProcessor] 后端返回的菜单数据格式错误:', sysMenuList)
+        if (!rawMenuList || !Array.isArray(rawMenuList)) {
+            console.error('[MenuProcessor] 后端返回的菜单数据格式错误:', rawMenuList)
         throw new Error('后端返回的菜单数据格式错误，期望数组类型')
       }
 
       if (import.meta.env.DEV) {
-        console.log('[MenuProcessor] 获取到菜单数据:', sysMenuList)
+          console.log('[MenuProcessor] 获取到菜单数据:', rawMenuList)
       }
 
-      // 将后端 SysMenu 转换为前端 AppRouteRecord
-      const convertedList = this.convertSysMenuToRouteRecord(sysMenuList)
-
-      // 过滤空菜单项
+        const convertedList = this.convertSysMenuToRouteRecord(rawMenuList)
       const menuList = this.filterEmptyMenus(convertedList)
-
-      // 在规范化路径之前，验证原始路径配置
       this.validateMenuPaths(menuList)
 
-      // 规范化路径（将相对路径转换为完整路径）
-      return this.normalizeMenuPaths(menuList)
+        return {
+            rawMenuList,
+            menuList: this.normalizeMenuPaths(menuList)
+        }
     } catch (error) {
       console.error('[MenuProcessor] 获取菜单数据失败:', error)
       throw error
     }
   }
+
+    /**
+     * 获取菜单数据（从后端获取）
+     */
+    async getMenuList(): Promise<AppRouteRecord[]> {
+        const {menuList} = await this.getMenuListWithRaw()
+        return menuList
+    }
 
   /**
    * 将 SysMenu 数组转换为 AppRouteRecord 数组（公共方法）

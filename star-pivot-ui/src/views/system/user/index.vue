@@ -5,11 +5,44 @@
 <!-- useTable 文档：https://www.artd.pro/docs/zh/guide/hooks/use-table.html -->
 <template>
   <div class="user-page art-full-height">
-    <div class="user-layout">
+    <div :class="{ 'is-left-collapsed': deptPanelCollapsed }" class="user-layout">
       <!-- 左侧部门树 -->
-      <div class="left-panel">
+      <div :class="{ collapsed: deptPanelCollapsed }" class="left-panel">
         <ElCard shadow="never" class="department-tree-card">
           <div class="department-tree-header">
+            <div class="dept-title-row">
+              <div class="dept-title">
+                <el-icon class="dept-title-icon">
+                  <OfficeBuilding/>
+                </el-icon>
+                <span>组织机构</span>
+              </div>
+              <div class="dept-tools">
+                <ElButton
+                    :aria-label="deptTreeExpandAll ? '收起部门树' : '展开部门树'"
+                    class="dept-tool-btn"
+                    text
+                    @click="toggleDeptTreeExpand"
+                >
+                  <el-icon :class="{ 'is-collapsed': !deptTreeExpandAll }" class="dept-arrow-icon"
+                  >
+                    <ArrowDown
+                    />
+                  </el-icon>
+                </ElButton>
+                <ElButton
+                    :loading="deptLoading"
+                    aria-label="刷新部门树"
+                    class="dept-tool-btn"
+                    text
+                    @click="handleRefreshDeptTree"
+                >
+                  <el-icon>
+                    <RefreshRight/>
+                  </el-icon>
+                </ElButton>
+              </div>
+            </div>
             <div class="dept-search-box">
               <ElInput
                 v-model="deptSearchText"
@@ -23,21 +56,15 @@
                 </template>
               </ElInput>
             </div>
-            <ElButton
-              type="primary"
-              size="small"
-              :plain="selectedDeptId !== undefined"
-              @click="showAllUsers"
-              v-ripple
-            >
-              显示全部
-            </ElButton>
           </div>
           <div class="department-tree-wrapper">
             <ElTree
+                :key="deptTreeRenderKey"
               :data="deptTree"
               :props="deptTreeProps"
-              :default-expand-all="false"
+                :default-expand-all="deptTreeExpandAll"
+                :expand-on-click-node="false"
+                node-key="deptId"
               :default-checked-keys="selectedDeptId ? [selectedDeptId] : []"
               :filter-node-method="filterDeptNode"
               ref="deptTreeRef"
@@ -51,6 +78,24 @@
             </ElTree>
           </div>
         </ElCard>
+        <ElTooltip
+            :content="deptPanelCollapsed ? '展开' : '收起'"
+            :show-arrow="true"
+            effect="dark"
+            placement="right"
+            popper-class="panel-toggle-tooltip"
+        >
+          <ElButton
+              :aria-label="deptPanelCollapsed ? '展开部门树面板' : '收起部门树面板'"
+              class="panel-toggle-btn"
+              text
+              @click="toggleDeptPanel"
+          >
+            <el-icon class="panel-toggle-icon">
+              <component :is="deptPanelCollapsed ? DArrowRight : DArrowLeft"/>
+            </el-icon>
+          </ElButton>
+        </ElTooltip>
       </div>
 
       <!-- 右侧用户列表 -->
@@ -159,7 +204,14 @@
     ElButton,
     ElIcon
   } from 'element-plus'
-  import { Search } from '@element-plus/icons-vue'
+  import {
+    ArrowDown,
+    DArrowLeft,
+    DArrowRight,
+    OfficeBuilding,
+    RefreshRight,
+    Search
+  } from '@element-plus/icons-vue'
   import { DialogType } from '@/types'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
@@ -204,6 +256,9 @@
   const deptLoading = ref(false)
   const selectedDeptId = ref<number | undefined>(undefined)
   const deptTreeRef = ref()
+  const deptTreeExpandAll = ref(true)
+  const deptTreeRenderKey = ref(0)
+  const deptPanelCollapsed = ref(false)
 
   // 部门树配置
   const deptTreeProps = {
@@ -241,17 +296,26 @@
     }
   }
 
+  // 展开/收起部门树
+  const toggleDeptTreeExpand = () => {
+    deptTreeExpandAll.value = !deptTreeExpandAll.value
+    deptTreeRenderKey.value += 1
+  }
+
+  // 刷新部门树
+  const handleRefreshDeptTree = async () => {
+    await getDeptTree()
+  }
+
+  // 收起/展开左侧部门面板
+  const toggleDeptPanel = () => {
+    deptPanelCollapsed.value = !deptPanelCollapsed.value
+  }
+
   // 处理部门选择
   const handleDeptSelect = (deptId: number | undefined) => {
     selectedDeptId.value = deptId
     searchForm.value.deptId = deptId
-    handleSearch(searchForm.value)
-  }
-
-  // 显示全部用户
-  const showAllUsers = () => {
-    selectedDeptId.value = undefined
-    searchForm.value.deptId = undefined
     handleSearch(searchForm.value)
   }
 
@@ -289,7 +353,8 @@
           label: '用户信息',
           width: 300,
           formatter: (row) => {
-            const avatarUrl = row.avatar || ''
+            const user = row as UserListItem
+            const avatarUrl = user.avatar || ''
             const hasAvatar = !!avatarUrl && avatarUrl !== ''
 
             return h('div', { class: 'user-info flex-c items-center' }, [
@@ -328,7 +393,7 @@
                             color: 'var(--art-gray-900)'
                           }
                         },
-                        row.userName || '未知用户'
+                          user.userName || '未知用户'
                       ),
                       h('span', {
                         class: 'status-indicator',
@@ -337,7 +402,7 @@
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: row.status === '0' ? '#67C23A' : '#909399'
+                          backgroundColor: user.status === '0' ? '#67C23A' : '#909399'
                         }
                       })
                     ]
@@ -353,7 +418,7 @@
                         color: 'var(--art-gray-500)'
                       }
                     },
-                    row.email || '无邮箱'
+                      user.email || '无邮箱'
                   )
                 ]
               )
@@ -365,32 +430,35 @@
           label: '性别',
           sortable: true,
           formatter: (row) => {
+            const user = row as UserListItem
             // 性别映射：0男 1女 2未知
             const sexMap: Record<string, string> = {
               '0': '男',
               '1': '女',
               '2': '未知'
             }
-            return sexMap[row.sex] || row.sex || '未知'
+            return sexMap[user.sex] || user.sex || '未知'
           }
         },
         {
           prop: 'phonenumber',
           label: '手机号',
           formatter: (row) => {
-            return row.phonenumber || '未知'
+            const user = row as UserListItem
+            return user.phonenumber || '未知'
           }
         },
         {
           prop: 'status',
           label: '状态',
           formatter: (row) => {
+            const user = row as UserListItem
             return h(ElSwitch, {
-              modelValue: row.status === '0',
+              modelValue: user.status === '0',
               activeValue: true,
               inactiveValue: false,
               onChange: (value: string | number | boolean) => {
-                handleStatusChange(row, value === true)
+                handleStatusChange(user, value === true)
               }
             })
           }
@@ -406,6 +474,7 @@
           width: 180,
           fixed: 'right', // 固定列
           formatter: (row) => {
+            const user = row as UserListItem
             const actions: any[] = []
 
             // 编辑用户按钮权限：system:user:edit
@@ -413,17 +482,17 @@
               actions.push(
                 h(ArtButtonTable, {
                   type: 'edit',
-                  onClick: () => showDialog('edit', row)
+                  onClick: () => showDialog('edit', user)
                 })
               )
 
               // 解锁账户按钮（管理员操作）- 只在账户被锁定时显示
-              if (row.isLocked === true) {
+              if (user.isLocked === true) {
                 actions.push(
                   h(ArtButtonTable, {
                     icon: 'ri:lock-unlock-line',
                     iconClass: 'bg-warning/12 text-warning',
-                    onClick: () => unlockUser(row)
+                    onClick: () => unlockUser(user)
                   })
                 )
               }
@@ -434,7 +503,7 @@
               actions.push(
                 h(ArtButtonTable, {
                   type: 'delete',
-                  onClick: () => deleteUser(row)
+                  onClick: () => deleteUser(user)
                 })
               )
             }
@@ -625,35 +694,89 @@
 
 <style lang="scss" scoped>
   .user-page {
-    padding: 16px;
+    --panel-radius: 12px;
+    --panel-border: 1px solid var(--art-card-border);
+    --panel-shadow: 0 4px 14px rgb(15 23 42 / 6%);
+    --panel-shadow-hover: 0 8px 20px rgb(15 23 42 / 10%);
+  }
+
+  .user-page {
+    padding: 0;
     background-color: var(--default-bg-color);
   }
 
   .user-layout {
+    position: relative;
     display: flex;
-    gap: 16px;
+    gap: 0;
     height: 100%;
     overflow: hidden;
   }
 
   .left-panel {
+    position: relative;
     display: flex;
     flex-direction: column;
     width: 280px;
-    overflow: hidden;
+    min-width: 280px;
+    overflow: visible;
     background-color: var(--default-box-color);
-    border: 1px solid var(--art-card-border);
-    border-radius: 12px;
-    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
-    transition: all 0.3s ease;
+    border: var(--panel-border);
+    border-radius: var(--panel-radius);
+    box-shadow: var(--panel-shadow);
+    transition: width 0.22s ease,
+    min-width 0.22s ease,
+    opacity 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  }
 
-    &:hover {
-      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
-    }
+  .left-panel:hover {
+    box-shadow: var(--panel-shadow-hover);
+  }
+
+  .left-panel.collapsed {
+    width: 0;
+    min-width: 0;
+    border: none;
+  }
+
+  .left-panel.collapsed .department-tree-card {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .dark .left-panel {
     box-shadow: none;
+  }
+
+  .panel-toggle-btn {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    z-index: 3;
+    width: 22px;
+    height: 40px;
+    padding: 0;
+    color: #409eff;
+    border: var(--panel-border);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    background: #ecf5ff;
+    transform: translateY(-50%);
+    transition: left 0.22s ease,
+    color 0.2s ease,
+    background-color 0.2s ease;
+  }
+
+  .panel-toggle-btn:hover {
+    color: #66b1ff;
+    background: #d9ecff;
+    transform: none;
+  }
+
+  .panel-toggle-icon {
+    font-size: 14px;
   }
 
   .right-panel {
@@ -662,13 +785,13 @@
     flex-direction: column;
     overflow: hidden;
     background-color: var(--default-box-color);
-    border: 1px solid var(--art-card-border);
-    border-radius: 12px;
-    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
-    transition: all 0.3s ease;
+    border: var(--panel-border);
+    border-radius: var(--panel-radius);
+    box-shadow: var(--panel-shadow);
+    transition: box-shadow 0.25s ease;
 
     &:hover {
-      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+      box-shadow: var(--panel-shadow-hover);
     }
   }
 
@@ -684,21 +807,74 @@
     box-shadow: none;
   }
 
-  .card-header {
-    padding: 12px 16px;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--art-gray-900);
-    border-bottom: 1px solid var(--default-border);
+  :deep(.department-tree-card > .el-card__body) {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
   }
 
   .department-tree-header {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
+    padding: 10px 10px 8px;
+    border-bottom: var(--panel-border);
+    background: linear-gradient(180deg, rgb(64 158 255 / 6%) 0%, transparent 100%);
+  }
+
+  .dept-title-row {
+    display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 16px 12px;
+    width: 100%;
+    padding-bottom: 2px;
+  }
+
+  .dept-title {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--art-gray-800);
+  }
+
+  .dept-title-icon {
+    font-size: 13px;
+    color: var(--art-gray-500);
+  }
+
+  .dept-tools {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .dept-tool-btn {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    color: var(--art-gray-500);
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+
+    &:hover {
+      color: var(--art-gray-700);
+      background: var(--art-gray-100);
+      transform: none;
+    }
+  }
+
+  .dept-arrow-icon {
+    font-size: 14px;
+    transition: transform 0.2s ease;
+  }
+
+  .dept-arrow-icon.is-collapsed {
+    transform: rotate(-90deg);
   }
 
   .dept-search-box {
@@ -709,11 +885,29 @@
     width: 100%;
   }
 
+  .dept-search-box :deep(.el-input__wrapper) {
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px var(--art-card-border);
+  }
+
+  .dept-search-box :deep(.el-input__wrapper:hover) {
+    box-shadow: inset 0 0 0 1px var(--art-gray-400);
+  }
+
   .department-tree-wrapper {
     flex: 1;
-    padding: 0 16px 16px;
+    padding: 6px 8px 8px;
     overflow-y: auto;
     background-color: var(--default-box-color);
+  }
+
+  .department-tree-wrapper::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .department-tree-wrapper::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgb(148 163 184 / 45%);
   }
 
   :deep(.el-tree) {
@@ -723,14 +917,20 @@
   }
 
   :deep(.el-tree-node__content) {
-    height: 36px;
-    line-height: 36px;
+    height: 32px;
+    line-height: 32px;
+    padding-right: 8px;
     border-radius: 6px;
     transition: all 0.2s ease;
 
     &:hover {
       background-color: var(--art-gray-100);
     }
+  }
+
+  :deep(.el-tree-node.is-current > .el-tree-node__content) {
+    color: var(--art-primary);
+    background-color: rgb(64 158 255 / 12%);
   }
 
   :deep(.el-tree-node__expand-icon) {
@@ -753,6 +953,7 @@
 
   :deep(.el-table) {
     border-radius: 8px;
+    border: 1px solid var(--art-card-border);
 
     .el-table__header-wrapper {
       th {
@@ -781,6 +982,13 @@
     &:hover {
       transform: translateY(-1px);
     }
+  }
+
+  :deep(.panel-toggle-tooltip) {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1;
   }
 
   :deep(.el-tag) {

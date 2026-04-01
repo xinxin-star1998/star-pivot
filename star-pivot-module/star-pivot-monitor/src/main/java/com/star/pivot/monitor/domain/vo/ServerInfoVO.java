@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 服务器信息 VO
@@ -130,6 +131,21 @@ public class ServerInfoVO implements Serializable {
         private Long runTime;
 
         /**
+         * Java 安装路径
+         */
+        private String home;
+
+        /**
+         * 项目路径
+         */
+        private String userDir;
+
+        /**
+         * JVM 运行参数
+         */
+        private String inputArgs;
+
+        /**
          * JVM 最大可用内存（MB）
          */
         private Long max;
@@ -203,6 +219,52 @@ public class ServerInfoVO implements Serializable {
 
         /**
          * 磁盘使用率
+         */
+        private Double usage;
+
+        /**
+         * 磁盘分区明细
+         */
+        private List<DiskStoreInfo> stores;
+    }
+
+    /**
+     * 磁盘分区明细
+     */
+    @Data
+    public static class DiskStoreInfo implements Serializable {
+        /**
+         * 挂载目录（如 /、/boot）
+         */
+        private String mount;
+
+        /**
+         * 文件系统（如 ext4）
+         */
+        private String fileSystem;
+
+        /**
+         * 磁盘类型/设备（如 /dev/nvme0n1p2）
+         */
+        private String typeName;
+
+        /**
+         * 总大小（GB）
+         */
+        private Double totalGb;
+
+        /**
+         * 可用大小（GB）
+         */
+        private Double usableGb;
+
+        /**
+         * 已用大小（GB）
+         */
+        private Double usedGb;
+
+        /**
+         * 已用百分比
          */
         private Double usage;
     }

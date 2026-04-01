@@ -10,7 +10,7 @@
     />
     <div class="ml-1">
       <h3 class="mt-5 text-lg font-medium">用户概述</h3>
-      <p class="mt-1 text-sm">比上周 <span class="text-success font-medium">+23%</span></p>
+      <p class="mt-1 text-sm">近 12 个月新增用户趋势</p>
       <p class="mt-1 text-sm">我们为您创建了多个选项，可将它们组合在一起并定制为像素完美的页面</p>
     </div>
     <div class="flex-b mt-2">
@@ -23,25 +23,33 @@
 </template>
 
 <script setup lang="ts">
+import type {DashboardTrendData} from '@/types/api/dashboard'
+
   interface UserStatItem {
     name: string
     num: string
   }
 
-  // 最近9个月
-  const xAxisLabels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月']
+const props = withDefaults(
+    defineProps<{
+      trendData: DashboardTrendData
+    }>(),
+    {
+      trendData: () => ({xAxisData: [], data: []})
+    }
+)
 
-  // 每月活跃用户数
-  const chartData = [160, 100, 150, 80, 190, 100, 175, 120, 160]
+const xAxisLabels = computed(() => props.trendData.xAxisData)
+const chartData = computed(() => props.trendData.data)
 
   /**
    * 用户统计数据列表
    * 包含总用户量、总访问量、日访问量和周同比等关键指标
    */
   const list: UserStatItem[] = [
-    { name: '总用户量', num: '32k' },
-    { name: '总访问量', num: '128k' },
-    { name: '日访问量', num: '1.2k' },
-    { name: '周同比', num: '+5%' }
+    {name: '统计维度', num: '新增用户'},
+    {name: '周期', num: '近12个月'},
+    {name: '数据来源', num: 'sys_user'},
+    {name: '状态', num: '实时'}
   ]
 </script>

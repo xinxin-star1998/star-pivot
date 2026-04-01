@@ -34,42 +34,32 @@
     complete: boolean
   }
 
-  /**
-   * 待办事项列表
-   * 记录每日工作任务及完成状态
-   */
-  const list = reactive<TodoItem[]>([
+  const props = withDefaults(
+      defineProps<{
+        todoList: TodoItem[]
+      }>(),
     {
-      username: '查看今天工作内容',
-      date: '上午 09:30',
-      complete: true
-    },
-    {
-      username: '回复邮件',
-      date: '上午 10:30',
-      complete: true
-    },
-    {
-      username: '工作汇报整理',
-      date: '上午 11:00',
-      complete: true
-    },
-    {
-      username: '产品需求会议',
-      date: '下午 02:00',
-      complete: false
-    },
-    {
-      username: '整理会议内容',
-      date: '下午 03:30',
-      complete: false
-    },
-    {
-      username: '明天工作计划',
-      date: '下午 06:30',
-      complete: false
+      todoList: () => []
     }
-  ])
+  )
+
+  const list = reactive<TodoItem[]>([])
+
+  watch(
+      () => props.todoList,
+      (value) => {
+        list.splice(
+            0,
+            list.length,
+            ...value.map((item) => ({
+              username: item.username,
+              date: item.date,
+              complete: item.complete
+            }))
+        )
+    },
+      {immediate: true}
+  )
 
   const pendingCount = computed(() => list.filter((item) => !item.complete).length)
 </script>

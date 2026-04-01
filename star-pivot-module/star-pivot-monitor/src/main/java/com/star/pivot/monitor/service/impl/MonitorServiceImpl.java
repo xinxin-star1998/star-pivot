@@ -35,6 +35,8 @@ import oshi.software.os.OSFileStore;
 import oshi.software.os.OperatingSystem;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.RuntimeMXBean;
@@ -83,7 +85,6 @@ public class MonitorServiceImpl implements MonitorService {
     private static final int BYTES_TO_KB = 1024;
     private static final int KB_TO_MB = 1024;
     private static final int MB_TO_GB = 1024;
-    private static final int CPU_SAMPLE_INTERVAL_MS = 1000;
     private static final double PERCENTAGE_BASE = 100.0;
     private static final int SCAN_COUNT = 100; // SCAN 每次扫描的 key 数量
     private static final int CPU_CACHE_SECONDS = 2; // CPU 信息缓存时间（秒）
@@ -92,6 +93,8 @@ public class MonitorServiceImpl implements MonitorService {
     private static final Map<String, Object> cpuInfoCache = new ConcurrentHashMap<>();
     private static final String CACHE_KEY_CPU_INFO = "cpu_info";
     private static final String CACHE_KEY_CPU_TIMESTAMP = "cpu_timestamp";
+    private final Object cpuTicksLock = new Object();
+    private volatile long[] previousCpuTicks = HAL.getProcessor().getSystemCpuLoadTicks();
 
     /** 缓存内容预览最大长度（字符数，UTF‑8 截断前） */
     private static final int CACHE_CONTENT_MAX_LENGTH = 5000;
@@ -177,15 +180,15 @@ public class MonitorServiceImpl implements MonitorService {
             }
         }
 
-        // 缓存失效或不存在，重新计算
+        // 缓存失效或不存在，重新计算（无阻塞采样，避免线程 sleep）
         CentralProcessor processor = HAL.getProcessor();
-        long[] prevTicks = processor.getSystemCpuLoadTicks();
-        try {
-            Thread.sleep(CPU_SAMPLE_INTERVAL_MS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        long[] prevTicks;
+        long[] ticks;
+        synchronized (cpuTicksLock) {
+            prevTicks = previousCpuTicks;
+            ticks = processor.getSystemCpuLoadTicks();
+            previousCpuTicks = ticks;
         }
-        long[] ticks = processor.getSystemCpuLoadTicks();
 
         long nice = ticks[CentralProcessor.TickType.NICE.getIndex()] - prevTicks[CentralProcessor.TickType.NICE.getIndex()];
         long irq = ticks[CentralProcessor.TickType.IRQ.getIndex()] - prevTicks[CentralProcessor.TickType.IRQ.getIndex()];
@@ -255,6 +258,9 @@ public class MonitorServiceImpl implements MonitorService {
         jvmInfo.setVersion(runtimeMXBean.getVmVersion());
         jvmInfo.setStartTime(runtimeMXBean.getStartTime());
         jvmInfo.setRunTime(runtimeMXBean.getUptime());
+        jvmInfo.setHome(System.getProperty("java.home" , "" ));
+        jvmInfo.setUserDir(System.getProperty("user.dir" , "" ));
+        jvmInfo.setInputArgs(String.join(" " , runtimeMXBean.getInputArguments()));
         jvmInfo.setMax(totalMemory / BYTES_TO_KB / KB_TO_MB); // 转换为 MB
         jvmInfo.setTotal(memoryMXBean.getHeapMemoryUsage().getCommitted() / BYTES_TO_KB / KB_TO_MB);
         jvmInfo.setUsed(usedMemory / BYTES_TO_KB / KB_TO_MB);
@@ -295,10 +301,25 @@ public class MonitorServiceImpl implements MonitorService {
 
         long total = 0;
         long free = 0;
+        List<ServerInfoVO.DiskStoreInfo> stores = new ArrayList<>();
 
         for (OSFileStore store : fileStores) {
-            total += store.getTotalSpace();
-            free += store.getFreeSpace();
+            long storeTotal = store.getTotalSpace();
+            long storeUsable = store.getUsableSpace();
+            long storeUsed = Math.max(storeTotal - storeUsable, 0L);
+
+            total += storeTotal;
+            free += storeUsable;
+
+            ServerInfoVO.DiskStoreInfo storeInfo = new ServerInfoVO.DiskStoreInfo();
+            storeInfo.setMount(store.getMount());
+            storeInfo.setFileSystem(store.getType());
+            storeInfo.setTypeName(store.getName());
+            storeInfo.setTotalGb(toGb(storeTotal));
+            storeInfo.setUsableGb(toGb(storeUsable));
+            storeInfo.setUsedGb(toGb(storeUsed));
+            storeInfo.setUsage(storeTotal > 0 ? round2(PERCENTAGE_BASE * storeUsed / storeTotal) : 0.0);
+            stores.add(storeInfo);
         }
 
         long used = total - free;
@@ -308,8 +329,18 @@ public class MonitorServiceImpl implements MonitorService {
         diskInfo.setUsed(used / BYTES_TO_KB / KB_TO_MB / MB_TO_GB);
         diskInfo.setFree(free / BYTES_TO_KB / KB_TO_MB / MB_TO_GB);
         diskInfo.setUsage(total > 0 ? PERCENTAGE_BASE * used / total : 0.0);
+        diskInfo.setStores(stores);
 
         return diskInfo;
+    }
+
+    private Double toGb(long bytes) {
+        double gb = bytes / 1024.0 / 1024.0 / 1024.0;
+        return round2(gb);
+    }
+
+    private Double round2(double value) {
+        return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 
     @Override

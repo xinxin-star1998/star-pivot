@@ -49,7 +49,7 @@ import { StorageConfig } from '@/utils/storage/storage-config'
  * - 部分 store 内又额外声明了 persist.key（如 user/worktab），为兼容两种情况都做清理
  */
 function clearAuthRelatedPersistedStorage() {
-  const storeIds = ['userStore', 'worktabStore', 'user', 'worktab']
+    const storeIds = ['userStore', 'worktabStore', 'menuStore', 'user', 'worktab', 'menu']
   storeIds.forEach((id) => {
     try {
       localStorage.removeItem(StorageConfig.generateStorageKey(id))
@@ -169,8 +169,10 @@ export const useUserStore = defineStore(
         const menuStore = useMenuStore()
         menuStore.removeAllDynamicRoutes()
         menuStore.setMenuList([])
+          menuStore.setRawMenuList([])
         menuStore.clearRemoveRouteFns()
         menuStore.setHomePath('')
+          menuStore.clearMenuCacheMeta()
       } catch {
         // ignore
       }

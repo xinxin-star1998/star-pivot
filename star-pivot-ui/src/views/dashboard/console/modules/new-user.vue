@@ -71,76 +71,53 @@
     avatar: string
   }
 
+  interface NewUserRawItem {
+    username: string
+    province: string
+    sex: number
+    percentage: number
+  }
+
   const ANIMATION_DELAY = 100
 
   const radio2 = ref('本月')
 
-  /**
-   * 新用户表格数据
-   * 包含用户基本信息和完成进度
-   */
-  const tableData = reactive<UserTableItem[]>([
+  const props = withDefaults(
+      defineProps<{
+        userList: NewUserRawItem[]
+      }>(),
     {
-      username: '中小鱼',
-      province: '北京',
-      sex: 0,
-      age: 22,
-      percentage: 60,
-      pro: 0,
-      color: 'var(--art-primary)',
-      avatar: avatar1
-    },
-    {
-      username: '何小荷',
-      province: '深圳',
-      sex: 1,
-      age: 21,
-      percentage: 20,
-      pro: 0,
-      color: 'var(--art-secondary)',
-      avatar: avatar2
-    },
-    {
-      username: '誶誶淰',
-      province: '上海',
-      sex: 1,
-      age: 23,
-      percentage: 60,
-      pro: 0,
-      color: 'var(--art-warning)',
-      avatar: avatar3
-    },
-    {
-      username: '发呆草',
-      province: '长沙',
-      sex: 0,
-      age: 28,
-      percentage: 50,
-      pro: 0,
-      color: 'var(--art-info)',
-      avatar: avatar4
-    },
-    {
-      username: '甜筒',
-      province: '浙江',
-      sex: 1,
-      age: 26,
-      percentage: 70,
-      pro: 0,
-      color: 'var(--art-error)',
-      avatar: avatar5
-    },
-    {
-      username: '冷月呆呆',
-      province: '湖北',
-      sex: 1,
-      age: 25,
-      percentage: 90,
-      pro: 0,
-      color: 'var(--art-success)',
-      avatar: avatar6
+      userList: () => []
     }
-  ])
+  )
+
+  const avatars = [avatar1, avatar2, avatar3, avatar4, avatar5, avatar6]
+  const colors = [
+    'var(--art-primary)',
+    'var(--art-secondary)',
+    'var(--art-warning)',
+    'var(--art-info)',
+    'var(--art-error)',
+    'var(--art-success)'
+  ]
+
+  const tableData = reactive<UserTableItem[]>([])
+
+  const rebuildTableData = () => {
+    tableData.splice(0, tableData.length)
+    props.userList.forEach((item, index) => {
+      tableData.push({
+        username: item.username,
+        province: item.province || '--',
+        sex: item.sex === 1 ? 1 : 0,
+        age: 0,
+        percentage: item.percentage ?? 0,
+        pro: 0,
+        color: colors[index % colors.length],
+        avatar: avatars[index % avatars.length]
+      })
+    })
+  }
 
   /**
    * 添加进度条动画效果
@@ -157,6 +134,15 @@
   onMounted(() => {
     addAnimation()
   })
+
+  watch(
+      () => props.userList,
+      () => {
+        rebuildTableData()
+        addAnimation()
+      },
+      {immediate: true}
+  )
 </script>
 
 <style lang="scss" scoped>

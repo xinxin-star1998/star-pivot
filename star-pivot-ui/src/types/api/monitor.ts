@@ -57,6 +57,12 @@ export interface JvmInfo {
   startTime: number
   /** JVM 运行时长（毫秒） */
   runTime: number
+  /** Java 安装路径 */
+  home: string
+  /** 项目路径 */
+  userDir: string
+  /** JVM 运行参数 */
+  inputArgs: string
   /** JVM 最大可用内存（MB） */
   max: number
   /** JVM 已分配内存（MB） */
@@ -94,6 +100,28 @@ export interface DiskInfo {
   /** 磁盘剩余容量（GB） */
   free: number
   /** 磁盘使用率 */
+  usage: number
+  /** 磁盘分区明细 */
+  stores?: DiskStoreInfo[]
+}
+
+/**
+ * 磁盘分区明细
+ */
+export interface DiskStoreInfo {
+  /** 挂载目录 */
+  mount: string
+  /** 文件系统 */
+  fileSystem: string
+  /** 磁盘类型/设备 */
+  typeName: string
+  /** 总大小（GB） */
+  totalGb: number
+  /** 可用大小（GB） */
+  usableGb: number
+  /** 已用大小（GB） */
+  usedGb: number
+  /** 已用百分比 */
   usage: number
 }
 

@@ -4,7 +4,6 @@ import { useWorktabStore } from '@/store/modules/worktab'
 import { loadingService } from '@/utils/ui'
 import { useCommon } from '@/hooks/core/useCommon'
 import { fetchGetUserInfo } from '@/api/auth'
-import { fetchGetMenuList } from '@/api/menu/menu'
 import { ApiStatus } from '@/utils/http/status'
 import { isHttpError } from '@/utils/http/error'
 import { safeLog, safeWarn } from '@/utils'
@@ -75,6 +74,55 @@ export function closeLoading(): void {
 }
 
 /**
+ * 从缓存菜单快速恢复动态路由（刷新后的首次进入）
+ * 返回 true 表示已接管导航流程并调用 next
+ */
+export function tryRestoreRoutesFromCache(
+    to: RouteLocationNormalized,
+    next: NavigationGuardNext,
+    router: Router
+): boolean {
+    const menuStore = useMenuStore()
+    const cachedMenuList = menuStore.menuList
+    const userStore = useUserStore()
+    const currentUserId = userStore.info?.user?.userId
+
+    if (!cachedMenuList.length || !menuStore.isMenuCacheValid(currentUserId)) {
+        return false
+    }
+
+    // 已注册时无需恢复
+    if (routeRegistry?.isRegistered()) {
+        return false
+    }
+
+    try {
+        safeLog('[RouteGuard] 检测到缓存菜单，开始快速恢复动态路由...')
+        routeRegistry?.register(cachedMenuList)
+        menuStore.clearRemoveRouteFns()
+        menuStore.addRemoveRouteFns(routeRegistry?.getRemoveRouteFns() || [])
+
+        const {homePath} = useCommon()
+        const {path: validatedPath, hasPermission} = RoutePermissionValidator.validatePath(
+            to.path,
+            cachedMenuList,
+            homePath.value || menuStore.getHomePath() || '/'
+        )
+
+        next({
+            path: hasPermission ? to.path : validatedPath,
+            query: hasPermission ? to.query : undefined,
+            hash: hasPermission ? to.hash : undefined,
+            replace: true
+        })
+        return true
+    } catch (error) {
+        console.error('[RouteGuard] 从缓存恢复动态路由失败:', error)
+        return false
+    }
+}
+
+/**
  * 处理动态路由注册与菜单初始化
  */
 export async function handleDynamicRoutes(
@@ -87,20 +135,19 @@ export async function handleDynamicRoutes(
   loadingService.showLoading()
 
   try {
-    // 1. 获取用户信息
-    safeLog('[RouteGuard] 开始获取用户信息...')
-    await fetchUserInfo()
-    safeLog('[RouteGuard] 用户信息获取成功')
-
-    // 2. 获取菜单数据
-    safeLog('[RouteGuard] 开始获取菜单数据...')
-    const menuList = await menuProcessor.getMenuList()
-    safeLog('[RouteGuard] 菜单数据获取成功，菜单数量:', menuList.length)
+      // 1. 并发获取用户信息与菜单数据，缩短首次路由初始化耗时
+      safeLog('[RouteGuard] 开始并发获取用户信息与菜单数据...')
+      const [{rawMenuList, menuList}] = await Promise.all([
+          menuProcessor.getMenuListWithRaw(),
+          fetchUserInfo()
+      ])
+      safeLog('[RouteGuard] 用户信息与菜单数据获取成功，菜单数量:', menuList.length)
 
     // 2.1 保存原始菜单数据到 store（在追加动态路由之前，以便权限获取）
     const menuStore = useMenuStore()
-    const rawMenus = await fetchGetMenuList()
-    menuStore.setRawMenuList(rawMenus || [])
+      menuStore.setRawMenuList(rawMenuList || [])
+      const currentUserId = useUserStore().info?.user?.userId
+      menuStore.markMenuCache(currentUserId)
 
     // 2.2 仪表盘和工作台无论动态菜单有无都要加载：若后端菜单为空，先追加前端固定路由
     if (menuList.length === 0) {
@@ -229,6 +276,7 @@ export function resetRouterState(delay: number): void {
     menuStore.setRawMenuList([])
     menuStore.clearRemoveRouteFns()
     menuStore.setHomePath('')
+      menuStore.clearMenuCacheMeta()
 
     // 重置路由初始化状态，允许重新登录后再次初始化
     resetRouteInitState()

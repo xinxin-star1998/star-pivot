@@ -46,6 +46,7 @@ import { handleLoginStatus, handleRootPathRedirect, isStaticRoute } from './auth
 import {
   setupRouteRegistry,
   handleDynamicRoutes,
+    tryRestoreRoutesFromCache,
   closeLoading,
   getRouteInitFailed,
   getPendingLoading,
@@ -118,10 +119,17 @@ async function handleRouteGuard(
   // 这种情况可能发生在：页面回退、刷新、或菜单数据被意外清空时
   // 注意：若目标为静态路由（如 /403、/500），则不触发菜单加载，避免菜单为空时跳转 403 后再次进入本逻辑导致一直转圈
   const menuStore = useMenuStore()
+    const currentUserId = userStore.info?.user?.userId
+    const menuCacheValid = menuStore.isMenuCacheValid(currentUserId)
   const needReloadMenu =
     userStore.isLogin &&
     !isStaticRoute(to.path) &&
-    (!menuStore.menuList.length || !menuStore.getHomePath())
+      (!menuStore.menuList.length || !menuStore.getHomePath() || !menuCacheValid)
+
+    // 3.1 刷新场景：菜单已持久化但内存路由丢失时，优先从缓存快速恢复
+    if (userStore.isLogin && !isStaticRoute(to.path) && tryRestoreRoutesFromCache(to, next, router)) {
+        return
+    }
 
   if (needReloadMenu) {
     await handleDynamicRoutes(to, next, router)
