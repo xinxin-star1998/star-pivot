@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import 'vue'
+import type {Directive} from 'vue'
 
 declare module '*.vue' {
   const component: import('vue').DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>
@@ -65,5 +66,12 @@ declare global {
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
     $t: (key: string) => string
+  }
+
+  interface GlobalDirectives {
+    ripple: Directive<
+        HTMLElement,
+        import('@/directives/business/ripple').RippleOptions | undefined
+    >
   }
 }
