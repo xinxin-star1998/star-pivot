@@ -88,6 +88,11 @@ public class MonitorServiceImpl implements MonitorService {
     private static final double PERCENTAGE_BASE = 100.0;
     private static final int SCAN_COUNT = 100; // SCAN 每次扫描的 key 数量
     private static final int CPU_CACHE_SECONDS = 2; // CPU 信息缓存时间（秒）
+    private static final Set<String> VIRTUAL_FS_TYPES = Set.of(
+            "tmpfs" , "devtmpfs" , "overlay" , "squashfs" , "proc" , "sysfs" , "cgroup" , "cgroup2" ,
+            "nsfs" , "tracefs" , "debugfs" , "securityfs" , "pstore" , "mqueue" , "hugetlbfs" ,
+            "rpc_pipefs" , "configfs" , "fusectl" , "autofs"
+    );
 
     // CPU 信息缓存
     private static final Map<String, Object> cpuInfoCache = new ConcurrentHashMap<>();
@@ -297,14 +302,35 @@ public class MonitorServiceImpl implements MonitorService {
      */
     private ServerInfoVO.DiskInfo getDiskInfo() {
         FileSystem fileSystem = OS.getFileSystem();
-        List<OSFileStore> fileStores = fileSystem.getFileStores();
+        // Linux 下 getFileStores() 可能只返回较少挂载点，优先获取完整列表
+        List<OSFileStore> fileStores = fileSystem.getFileStores(false);
+        if (fileStores == null || fileStores.isEmpty()) {
+            fileStores = fileSystem.getFileStores();
+        }
 
         long total = 0;
         long free = 0;
         List<ServerInfoVO.DiskStoreInfo> stores = new ArrayList<>();
+        Set<String> seenMounts = new HashSet<>();
 
         for (OSFileStore store : fileStores) {
+            String mount = store.getMount();
+            if (mount == null || mount.isBlank()) {
+                continue;
+            }
+            if (!isKeyPartition(store, mount)) {
+                continue;
+            }
+            // 去重：同一挂载点只保留一条，避免重复显示
+            if (!seenMounts.add(mount)) {
+                continue;
+            }
+
             long storeTotal = store.getTotalSpace();
+            // 跳过无容量或异常挂载点
+            if (storeTotal <= 0) {
+                continue;
+            }
             long storeUsable = store.getUsableSpace();
             long storeUsed = Math.max(storeTotal - storeUsable, 0L);
 
@@ -312,7 +338,7 @@ public class MonitorServiceImpl implements MonitorService {
             free += storeUsable;
 
             ServerInfoVO.DiskStoreInfo storeInfo = new ServerInfoVO.DiskStoreInfo();
-            storeInfo.setMount(store.getMount());
+            storeInfo.setMount(mount);
             storeInfo.setFileSystem(store.getType());
             storeInfo.setTypeName(store.getName());
             storeInfo.setTotalGb(toGb(storeTotal));
@@ -321,6 +347,8 @@ public class MonitorServiceImpl implements MonitorService {
             storeInfo.setUsage(storeTotal > 0 ? round2(PERCENTAGE_BASE * storeUsed / storeTotal) : 0.0);
             stores.add(storeInfo);
         }
+
+        stores.sort(Comparator.comparing(ServerInfoVO.DiskStoreInfo::getMount));
 
         long used = total - free;
 
@@ -332,6 +360,47 @@ public class MonitorServiceImpl implements MonitorService {
         diskInfo.setStores(stores);
 
         return diskInfo;
+    }
+
+    private boolean isKeyPartition(OSFileStore store, String mount) {
+        String fsType = Optional.ofNullable(store.getType()).orElse("" ).toLowerCase(Locale.ROOT);
+        String name = Optional.ofNullable(store.getName()).orElse("" ).toLowerCase(Locale.ROOT);
+        String lowerMount = mount.toLowerCase(Locale.ROOT);
+
+        // Windows 盘符（如 C:\、D:\）直接保留，避免本地环境无磁盘显示
+        if (mount.matches("^[a-zA-Z]:\\\\.*" )) {
+            return true;
+        }
+        // 其他非 Unix 风格挂载（如网络卷）默认保留
+        if (!mount.startsWith("/" )) {
+            return true;
+        }
+
+        // 过滤虚拟文件系统和临时挂载
+        if (VIRTUAL_FS_TYPES.contains(fsType)) {
+            return false;
+        }
+        if (lowerMount.startsWith("/proc" )
+                || lowerMount.startsWith("/sys" )
+                || lowerMount.startsWith("/run" )
+                || lowerMount.startsWith("/dev" )
+                || lowerMount.startsWith("/snap" )) {
+            return false;
+        }
+
+        // 保留核心业务分区和常见 Linux 关键目录
+        return "/".equals(mount)
+                || mount.startsWith("/boot" )
+                || mount.startsWith("/home" )
+                || mount.startsWith("/var" )
+                || mount.startsWith("/opt" )
+                || mount.startsWith("/srv" )
+                || mount.startsWith("/usr" )
+                || mount.startsWith("/data" )
+                || mount.startsWith("/mnt" )
+                || mount.startsWith("/disk" )
+                || mount.startsWith("/volume" )
+                || name.startsWith("/dev/" );
     }
 
     private Double toGb(long bytes) {

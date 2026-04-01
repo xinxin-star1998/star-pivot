@@ -330,21 +330,21 @@ const handleSelectionChange = (selection: Config[]): void => {
 <style lang="scss" scoped>
 .config-page {
   padding: 16px;
-  background: linear-gradient(180deg, #f7f9fc 0%, #f3f6fb 100%);
+  background-color: var(--default-bg-color);
 }
 
 .search-panel {
   padding: 14px 16px 2px;
   margin-bottom: 12px;
-  background-color: #fff;
-  border: 1px solid #e9edf5;
+  background-color: var(--el-bg-color);
+  border: 1px solid var(--art-card-border);
   border-radius: 12px;
   box-shadow: 0 8px 20px rgb(15 23 42 / 4%);
 }
 
 .config-table-card {
   overflow: hidden;
-  border: 1px solid #e9edf5;
+  border: 1px solid var(--art-card-border);
   border-radius: 12px;
   box-shadow: 0 10px 24px rgb(15 23 42 / 5%);
 }
@@ -363,8 +363,8 @@ const handleSelectionChange = (selection: Config[]): void => {
 
 .config-table {
   :deep(.el-table) {
-    --el-table-header-bg-color: #f8faff;
-    --el-table-row-hover-bg-color: #f5f9ff;
+    --el-table-header-bg-color: var(--art-gray-100);
+    --el-table-row-hover-bg-color: var(--art-gray-50);
   }
 
   :deep(.el-table th.el-table__cell) {
