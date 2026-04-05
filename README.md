@@ -1,5 +1,25 @@
 StarPivot 是基于 Spring Boot + Vue 3 的前后端分离 RBAC 管理与数据分析系统。下列内容聚焦架构、关键配置与快速上手。
 
+## 目录
+
+- [1. 项目概览](#1-项目概览)
+- [2. 模块说明](#2-模块说明)
+- [3. 架构图与流程图](#3-架构图与流程图)
+- [4. 技术与依赖管理](#4-技术与依赖管理)
+- [5. 快速开始](#5-快速开始)
+- [6. 认证与授权（Spring Security + JWT）](#6-认证与授权spring-security--jwt)
+- [7. 缓存策略](#7-缓存策略)
+- [8. 菜单 / 路由 / 权限映射](#8-菜单--路由--权限映射)
+- [9. 路由与前端约定](#9-路由与前端约定)
+- [10. 主要功能模块](#10-主要功能模块)
+- [11. 配置要点](#11-配置要点)
+- [12. 项目结构](#12-项目结构)
+- [13. API 接口说明](#13-api-接口说明)
+- [14. 部署与运维建议](#14-部署与运维建议)
+- [15. 常见问题排查](#15-常见问题排查)
+- [16. 常用路径速览](#16-常用路径速览)
+- [17. 技术文档](#17-技术文档)
+
 ---
 
 ## 1. 项目概览
@@ -305,11 +325,13 @@ flowchart LR
 
 ## 5. 快速开始
 
-> **首次构建说明**：依赖版本由 `star-pivot-dependencies` BOM 统一管理，**首次构建或清理后构建时，请先安装 BOM**，再编译启动模块：
-> ```bash
-> mvn install -f star-pivot-dependencies/pom.xml
-> ```
-> 然后再执行下文「后端启动」中的 `mvn -pl star-pivot-controller -am clean install`。
+> **构建说明**：依赖版本由 `star-pivot-dependencies` BOM 统一管理。
+> - **推荐**：在仓库根目录执行 `mvn clean install`，按模块顺序完整构建（含 BOM），一般无需额外步骤。
+> - **若只构建部分模块**（例如仅 `mvn -pl star-pivot-controller -am ...`），反应堆可能不包含 BOM 模块，需**先安装 BOM** 再编译：
+    >   ```bash
+>   mvn install -f star-pivot-dependencies/pom.xml
+>   ```
+    >   然后再执行下文「后端启动」中的 `mvn -pl star-pivot-controller -am clean install`。
 
 ### 环境要求
 - **后端**：JDK 17+、Maven 3.6+、MySQL 5.7+ / 8.0+、Redis 5.0+、MinIO（可选，用于文件上传）
@@ -327,7 +349,12 @@ mysql -u root -p star-pivot < sql/star-pivot.sql
 ```
 
 ### 后端启动
-1. **配置数据库和 Redis**：编辑 `star-pivot-controller/src/main/resources/application.yml`
+
+1. **Profile 与配置文件**：默认 `spring.profiles.active` 为 `local`（见根目录 `application.yml`）。本地开发请优先改 *
+   *`star-pivot-controller/src/main/resources/application-local.yml`**；也可用环境变量覆盖（如 `DB_URL`、`DB_USERNAME`、
+   `REDIS_HOST`、`JWT_SECRET` 等），无需改文件。
+
+2. **配置数据库和 Redis**（示例，实际以 `application-local.yml` 为准）：
    ```yaml
    spring:
      datasource:
@@ -341,14 +368,10 @@ mysql -u root -p star-pivot < sql/star-pivot.sql
          password: # 如有密码请填写
    ```
 
-2. **配置 JWT 密钥**（生产环境建议使用环境变量）：
-   ```yaml
-   jwt:
-     secret: ${JWT_SECRET:your-secret-key-here}
-     expiration: 86400000 # 24小时，单位：毫秒
-   ```
+3. **配置 JWT**：`jwt.expiration` 在 `application.yml`；**`jwt.secret` 在 `application-local.yml`**（或对应环境的
+   profile）。生产环境务必通过 **`JWT_SECRET`** 环境变量注入强随机密钥，勿使用仓库中的开发默认值。
 
-3. **启动应用**：
+4. **启动应用**：
    ```bash
    # 编译并安装依赖
    mvn -pl star-pivot-controller -am clean install
@@ -356,10 +379,10 @@ mysql -u root -p star-pivot < sql/star-pivot.sql
    # 启动应用
    mvn -pl star-pivot-controller spring-boot:run
    ```
-   
-   或使用 IDE 直接运行 `StarPivotApplication.java`
 
-4. 应用默认运行在 `http://localhost:8080`，context-path 为 `/api`
+   或使用 IDE 直接运行 `com.star.pivot.StarPivotApplication`
+
+5. 应用默认运行在 `http://localhost:8080`，context-path 为 `/api`
 
 ### 前端启动
 1. **进入前端目录**：
@@ -374,9 +397,9 @@ mysql -u root -p star-pivot < sql/star-pivot.sql
    npm install
    ```
 
-3. **配置环境变量**（如需要）：
-   - 复制 `.env.example` 为 `.env`（如果存在）
-   - 配置后端 API 地址（通常在 `vite.config.ts` 中配置代理）
+3. **环境变量**：
+    - 可参考根目录 `star-pivot-ui/.env.example`，按环境使用 `.env.development` / `.env.production`（或本地复制为 `.env`）
+    - 开发环境后端地址与代理见 `star-pivot-ui/vite.config.ts`
 
 4. **启动开发服务器**：
    ```bash
@@ -448,9 +471,14 @@ mysql -u root -p star-pivot < sql/star-pivot.sql
 
 ### 后端配置
 - **接口前缀**：`server.servlet.context-path: /api`，外部调用统一 `/api/**`，Spring Security 内部匹配不含 context-path（如 `/auth/login`）
+- **OpenAPI / Swagger UI**：见下方 [17. 技术文档](#17-技术文档)（注意文档地址需带 `/api` 前缀）
+- **Actuator**：已暴露 `health`、`info`、`metrics`（例如 `GET /api/actuator/health`，具体以当前配置为准）
+- **Druid 监控**：`application.yml` 中 `stat-view-servlet` 开启时，控制台路径为 `/api/druid/*`（默认用户名/密码见配置，生产务必修改）
 - **CORS 配置**：`cors.allowed-origins`，生产环境建议配置具体域名，开发环境可使用 `*`
 - **Redis**：用于缓存与 JWT 黑名单，需确保连接信息正确
-- **MinIO**（可选）：用于文件上传，配置 `minio.endpoint`、`minio.access-key`、`minio.secret-key`、`minio.bucket-name`。如需使用 MinIO，请确保已在配置文件中正确配置，并添加相应依赖。
+- **文件存储**：`file-storage.type` 可选 `oss` 或 `minio`（默认 `oss`）；MinIO 与 OSS 的 endpoint、密钥、bucket 等见
+  `application.yml` 中 `minio.*` / `oss.*`
+- **登录保护**：`login.rate-limit`（按 IP / IP+用户名限流）、`login.account-lock`（连续失败锁定），详见 `application.yml`
 - **MyBatis-Plus**：逻辑删除字段 `deleted`，自动填充创建/更新时间
 - **日志级别**：可通过环境变量 `LOG_LEVEL`、`SQL_LOG_LEVEL` 控制
 
@@ -611,15 +639,37 @@ star-pivot-ui/
 
 ## 17. 技术文档
 
-- **架构图与流程图**：查看 [doc/架构图与流程图.md](doc/架构图与流程图.md)（含 RBAC 模型、前端路由与菜单加载、缓存流程等）
-- **前端详细文档**：查看 `star-pivot-ui/README.md` 和 `star-pivot-ui/readed.md`
-- **数据库设计**：查看 `sql/star-pivot.sql`
-- **API 文档**：项目集成了 SpringDoc OpenAPI (Swagger UI)，提供了完整的 API 文档支持：
-  - **Swagger UI**: 访问 `http://localhost:8080/swagger-ui.html` 查看交互式 API 文档
-  - **API 文档地址**: `http://localhost:8080/v3/api-docs` 提供 JSON 格式的 OpenAPI 规范
-  - **Knife4j 增强版**: 如果配置了 Knife4j，访问 `http://localhost:8080/doc.html` 可获得更丰富的功能
+### 仓库内文档索引（`doc/`）
 
-API 文档默认在开发环境下开放，生产环境中可通过配置 `security.swagger-permit-all=false` 关闭访问。
+| 文档                                                             | 说明                     |
+|----------------------------------------------------------------|------------------------|
+| [架构图与流程图.md](doc/架构图与流程图.md)                                   | 分层架构、RBAC、前端路由与菜单、缓存等  |
+| [star-pivot-security-使用说明.md](doc/star-pivot-security-使用说明.md) | 安全模块用法                 |
+| [权限编码与数据权限规范.md](doc/权限编码与数据权限规范.md)                           | 权限命名与数据权限约定            |
+| [权限控制可放宽说明.md](doc/权限控制可放宽说明.md)                               | 权限策略调整说明               |
+| [通用导入导出使用说明.md](doc/通用导入导出使用说明.md)                             | 导入导出接口与权限              |
+| [用户头像功能前后端逻辑文档.md](doc/用户头像功能前后端逻辑文档.md)                       | 头像上传流程                 |
+| [项目依赖引用梳理.md](doc/项目依赖引用梳理.md)                                 | 模块与依赖关系梳理              |
+| [阿里云ECS部署说明.md](doc/阿里云ECS部署说明.md)                             | 云上部署参考                 |
+| [centos7安装环境.md](doc/centos7安装环境.md)                           | CentOS 7 环境准备          |
+| [企业级审批管理.md](doc/企业级审批管理.md)                                   | 审批相关设计/规划（若持续演进请以代码为准） |
+
+### 其他参考
+
+- **前端**：`star-pivot-ui/README.md`、`star-pivot-ui/readed.md`
+- **数据库脚本**：`sql/star-pivot.sql`
+
+### OpenAPI（SpringDoc）
+
+后端配置了 `server.servlet.context-path: /api`，文档与 UI 均在 **context-path 之下**：
+
+- **Swagger UI**：`http://localhost:8080/api/swagger-ui.html`
+- **OpenAPI JSON**：`http://localhost:8080/api/v3/api-docs`
+
+非生产环境默认允许匿名访问文档；生产环境可通过 `security.swagger-permit-all=false` 收紧（见 `StarPivotSecurityProperties`
+说明）。
+
+> 当前仓库以 **SpringDoc** 提供 API 文档；若需要 Knife4j 等增强 UI，需自行引入依赖并配置，本 README 不再假定已集成。
 
 ---
 
