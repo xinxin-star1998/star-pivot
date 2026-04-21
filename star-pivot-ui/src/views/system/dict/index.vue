@@ -127,12 +127,10 @@
   }
   // 新增：字典类型点击事件处理函数
   const handleDictTypeClick = (row: SysDictType) => {
-    // 跳转到字典数据明细页，使用动态路由参数
+    // 与路由 path `/system/dict/data/:dictType` 及 dict-data 页中 route.params.dictType 一致
     router.push({
       name: 'DictData',
-      params: {
-        dictType: row.dictType
-      }
+      params: { dictType: row.dictType }
     })
   }
   // 表格列配置

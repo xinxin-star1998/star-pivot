@@ -20,6 +20,26 @@ public class RouterVo
     private String name;
 
     /**
+     * 菜单ID（供前端权限与菜单树衍生数据使用）
+     */
+    private Long menuId;
+
+    /**
+     * 权限标识（与菜单表一致，逗号分隔）
+     */
+    private String perms;
+
+    /**
+     * 菜单类型（M目录 C菜单 F按钮）
+     */
+    private String menuType;
+
+    /**
+     * 是否为外链（0是 iframe/外链 1否），与 sys_menu.is_frame 一致
+     */
+    private Integer isFrame;
+
+    /**
      * 路由地址
      */
     private String path;

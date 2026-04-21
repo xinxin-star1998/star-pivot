@@ -28,8 +28,39 @@ export interface SysMenu {
   children?: SysMenu[]
 }
 
+/** 后端 RouterController 返回的动态路由节点（与 RouterVo 对齐） */
+export interface DynamicRouteVo {
+  menuId?: number
+  name?: string
+  path?: string
+  hidden?: boolean
+  redirect?: string
+  component?: string
+  query?: string
+  alwaysShow?: boolean
+  perms?: string
+  menuType?: string
+  isFrame?: number
+  meta?: {
+    title?: string
+    icon?: string
+    noCache?: boolean
+    link?: string
+  }
+  children?: DynamicRouteVo[]
+}
+
 /**
- * 获取当前用户菜单列表（从后端获取，已与路由接口合并至 /router）
+ * 获取当前用户动态路由（后端菜单树转 RouterVo，用于前端注册路由）
+ */
+export function fetchGetDynamicRoutes() {
+  return request.get<DynamicRouteVo[]>({
+    url: '/api/router/dynamic-routes'
+  })
+}
+
+/**
+ * 获取当前用户菜单树（SysMenu，菜单管理等场景仍可直接调用）
  */
 export function fetchGetMenuList() {
   return request.get<SysMenu[]>({

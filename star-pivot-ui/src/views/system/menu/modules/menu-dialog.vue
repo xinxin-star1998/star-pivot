@@ -163,7 +163,15 @@
     return undefined
   }
 
-  // 路径验证函数
+  /** 路由地址是否为 http(s) 外链（与 MenuProcessor 判定一致） */
+  const isHttpExternalPath = (p: string) => p.startsWith('http://') || p.startsWith('https://')
+
+  /** 是否视为顶级菜单（无上级或上级为 0） */
+  const isTopLevelMenu = () => !form.parentId || form.parentId === 0
+  /** isFrame是否选中 */
+  const isFrameChecked = () => form.isFrame === 0
+
+  // 路径验证函数（是否外链由 isFrame 决定：选中则按 http(s) 外链规则，否则按站内路径规则）
   const validatePath = (rule: any, value: string, callback: any) => {
     if (!value && form.menuType === 'C') {
       callback(new Error('菜单类型必须填写路由地址'))
@@ -175,12 +183,23 @@
         callback(new Error('路由地址不能包含特殊字符 < > " \''))
         return
       }
-      // 一级菜单必须以 / 开头
-      if (!form.parentId && !value.startsWith('/')) {
-        callback(new Error('一级菜单的路由地址必须以 / 开头'))
+      if (isFrameChecked()) {
+        if (!isHttpExternalPath(value)) {
+          callback(new Error('外链菜单：路由地址请以 http:// 或 https:// 开头的完整地址'))
+          return
+        }
+        callback()
         return
       }
-      // 二级及以下菜单不能以 / 开头（除非是外链）
+      // 站内：一级须以 / 开头或完整 http(s)（未勾选外链时仍允许按路径识别为外链地址）
+      if (isTopLevelMenu() && !value.startsWith('/') && !isHttpExternalPath(value)) {
+        callback(
+          new Error(
+            '一级菜单：站内路由请以 / 开头；若需外链请先勾选「是否外链」或填写 http(s):// 地址'
+          )
+        )
+        return
+      }
       if (form.parentId && value.startsWith('/') && !value.startsWith('http')) {
         callback(new Error('二级及以下菜单的路由地址不能以 / 开头'))
         return
@@ -191,7 +210,11 @@
 
   // 组件路径验证函数
   const validateComponent = (rule: any, value: string, callback: any) => {
-    if (form.menuType === 'C' && !value) {
+    const pathTrim = (form.path || '').trim()
+    const externalByPath = isHttpExternalPath(pathTrim)
+    const externalMenu = isFrameChecked() || externalByPath
+    // 外链（勾选或地址为 http(s)）无需组件
+    if (form.menuType === 'C' && !value && !externalMenu) {
       callback(new Error('菜单类型必须填写组件路径'))
       return
     }
@@ -297,6 +320,13 @@
 
     // 目录（M）和菜单（C）类型
     const switchSpan = width.value < 640 ? 12 : 6
+    // 读取 isFrame 以建立依赖：外链选中时路由地址提示外链填写规则
+    const externalFrame = isFrameChecked()
+
+    const pathTooltipInternal =
+      '一级菜单：以 / 开头的绝对路径（如 /dashboard）\n二级及以下：相对路径（如 console、user）'
+    const pathTooltipExternal =
+      '外链菜单：请填写完整地址，必须以 http:// 或 https:// 开头（如 https://www.example.com）'
 
     return [
       ...baseItems,
@@ -309,11 +339,15 @@
       {
         label: createLabelTooltip(
           '路由地址',
-          '一级菜单：以 / 开头的绝对路径（如 /dashboard）\n二级及以下：相对路径（如 console、user）'
+          externalFrame ? pathTooltipExternal : pathTooltipInternal
         ),
         key: 'path',
         type: 'input',
-        props: { placeholder: '如：/dashboard 或 console' }
+        props: {
+          placeholder: externalFrame
+            ? '如：https://www.example.com/path'
+            : '如：/dashboard 或 console'
+        }
       },
       {
         label: createLabelTooltip(
@@ -587,7 +621,7 @@
       // 优先使用原始数据
       form.menuName = rawMenu?.menuName || row.meta?.title || row.title || row.menuName || ''
       form.perms = rawMenu?.perms || row.meta?.authMark || row.authMark || row.perms || ''
-      form.parentId = rawMenu?.parentId || row.parentId || undefined
+      form.parentId = rawMenu?.parentId ?? row.parentId ?? undefined
       form.orderNum = rawMenu?.orderNum || row.meta?.orderNum || row.orderNum || 1
       form.remark = rawMenu?.remark || row.remark || ''
       return
@@ -596,7 +630,7 @@
     // 目录或菜单类型 - 优先使用原始数据
     form.menuId = row.id || undefined
     form.menuName = rawMenu?.menuName || formatMenuTitle(row.meta?.title || row.menuName || '')
-    form.parentId = rawMenu?.parentId || row.parentId || undefined
+    form.parentId = rawMenu?.parentId ?? row.parentId ?? undefined
     form.orderNum = rawMenu?.orderNum || row.meta?.orderNum || row.orderNum || 1
     form.path = rawMenu?.path || row.path || ''
     form.component = rawMenu?.component || row.component || ''
@@ -736,19 +770,29 @@
   )
 
   /**
-   * 监听菜单类型变化，更新验证规则
+   * 监听菜单类型变化，清除校验状态（规则内已读 form.menuType / form.isFrame）
    */
   watch(
     () => form.menuType,
     () => {
-      // 验证规则已经在 rules 中定义，这里只需要确保触发验证
       nextTick(() => {
-        if (formRef.value) {
-          formRef.value.clearValidate()
-        }
+        formRef.value?.ref?.clearValidate()
       })
     },
     { immediate: true }
+  )
+
+  /** 是否外链切换时，路由/组件规则不同，立即按新规则重验 */
+  watch(
+    () => form.isFrame,
+    () => {
+      nextTick(() => {
+        const elForm = formRef.value?.ref
+        if (!elForm) return
+        elForm.clearValidate(['path', 'component'])
+        elForm.validateField(['path', 'component']).catch(() => {})
+      })
+    }
   )
   onMounted(async () => {
     await loadParentMenuOptions()

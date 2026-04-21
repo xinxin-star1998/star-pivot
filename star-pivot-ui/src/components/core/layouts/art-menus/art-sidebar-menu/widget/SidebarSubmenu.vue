@@ -1,6 +1,6 @@
 <template>
   <template v-for="(item, index) in filteredMenuItems" :key="getUniqueKey(item, index)">
-    <ElSubMenu v-if="hasChildren(item)" :index="item.path || item.meta.title" :level="level">
+    <ElSubMenu v-if="hasChildren(item)" :index="getElMenuIndex(item, index)" :level="level">
       <template #title>
         <div class="menu-icon flex-cc">
           <ArtSvgIcon
@@ -26,7 +26,7 @@
 
     <ElMenuItem
       v-else
-      :index="isExternalLink(item) ? undefined : item.path || item.meta.title"
+      :index="getElMenuIndex(item, index)"
       :level-item="level + 1"
       @click="goPage(item)"
     >
@@ -172,6 +172,21 @@
    */
   const isExternalLink = (item: AppRouteRecord): boolean => {
     return !!(item.meta.link && !item.meta.isIframe)
+  }
+
+  /**
+   * Element Plus 要求 ElSubMenu / ElMenuItem 的 index 始终为字符串。
+   * 外部链接没有站内 path 时原先传 undefined 会触发运行时错误。
+   */
+  const getElMenuIndex = (item: AppRouteRecord, siblingIndex: number): string => {
+    if (isExternalLink(item) && item.meta.link) {
+      return item.meta.link
+    }
+    const base = item.path || item.meta.title
+    if (base) {
+      return String(base)
+    }
+    return `menu-${props.level}-${siblingIndex}`
   }
 
   /**

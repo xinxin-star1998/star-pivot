@@ -76,7 +76,7 @@ public class RouterController {
      * </p>
      *
      * @param authentication Spring Security 认证对象
-     * @return 动态路由列表，无法解析用户时返回空列表
+     * @return 动态路由列表（统一 Result 包装），无法解析用户或菜单为空时 data 为空列表
      */
     @Operation(summary = "获取动态路由", description = "根据当前用户权限获取动态路由列表，用于前端路由配置")
     @ApiResponses({
@@ -84,12 +84,12 @@ public class RouterController {
     })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/dynamic-routes")
-    public List<RouterVo> getDynamicRoutes(Authentication authentication) {
+    public Result<List<RouterVo>> getDynamicRoutes(Authentication authentication) {
         List<SysMenu> menuTree = getCurrentUserMenuTree(authentication);
         if (menuTree == null || menuTree.isEmpty()) {
-            return Collections.emptyList();
+            return Result.success(Collections.emptyList());
         }
-        return buildRouterTree(menuTree);
+        return Result.success(buildRouterTree(menuTree));
     }
 
     /**
@@ -140,6 +140,10 @@ public class RouterController {
      */
     private RouterVo convertMenuToRouter(SysMenu menu) {
         RouterVo router = new RouterVo();
+        router.setMenuId(menu.getMenuId());
+        router.setPerms(menu.getPerms());
+        router.setMenuType(menu.getMenuType());
+        router.setIsFrame(menu.getIsFrame());
         router.setName(menu.getRouteName());
         router.setPath(menu.getPath());
         router.setHidden("1".equals(menu.getVisible()));

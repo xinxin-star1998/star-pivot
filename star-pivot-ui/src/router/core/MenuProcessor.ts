@@ -8,7 +8,11 @@
  */
 
 import type { AppRouteRecord } from '@/types/router'
-import { fetchGetMenuList, type SysMenu } from '@/api/menu/menu'
+import {
+  fetchGetDynamicRoutes,
+  type DynamicRouteVo,
+  type SysMenu
+} from '@/api/menu/menu'
 import { RoutesAlias } from '../routesAlias'
 import { formatMenuTitle } from '@/utils'
 
@@ -18,18 +22,19 @@ export class MenuProcessor {
    */
   async getMenuListWithRaw(): Promise<{ rawMenuList: SysMenu[]; menuList: AppRouteRecord[] }> {
     try {
-        const rawMenuList = await fetchGetMenuList()
+        const dynamicRoutes = await fetchGetDynamicRoutes()
 
-        if (!rawMenuList || !Array.isArray(rawMenuList)) {
-            console.error('[MenuProcessor] 后端返回的菜单数据格式错误:', rawMenuList)
+        if (!dynamicRoutes || !Array.isArray(dynamicRoutes)) {
+            console.error('[MenuProcessor] 后端返回的动态路由格式错误:', dynamicRoutes)
         throw new Error('后端返回的菜单数据格式错误，期望数组类型')
       }
 
       if (import.meta.env.DEV) {
-          console.log('[MenuProcessor] 获取到菜单数据:', rawMenuList)
+          console.log('[MenuProcessor] 获取到动态路由:', dynamicRoutes)
       }
 
-        const convertedList = this.convertSysMenuToRouteRecord(rawMenuList)
+        const rawMenuList = this.dynamicRoutesToSysMenuShim(dynamicRoutes)
+        const convertedList = this.convertDynamicRouteToRouteRecord(dynamicRoutes)
       const menuList = this.filterEmptyMenus(convertedList)
       this.validateMenuPaths(menuList)
 
@@ -62,6 +67,124 @@ export class MenuProcessor {
     const filteredList = this.filterEmptyMenus(convertedList)
     this.validateMenuPaths(filteredList)
     return this.normalizeMenuPaths(filteredList)
+  }
+
+  /**
+   * 将动态路由树转为精简 SysMenu 树，仅用于权限标识收集（getPermsByPrefix 等）
+   */
+  private dynamicRoutesToSysMenuShim(nodes: DynamicRouteVo[]): SysMenu[] {
+    if (!Array.isArray(nodes) || nodes.length === 0) return []
+    return nodes.map((node) => {
+      const title = node.meta?.title ?? node.name ?? ''
+      const id = node.menuId ?? 0
+      return {
+        menuName: title,
+        path: (node.path || '').replace(/#/g, '').trim(),
+        menuId: node.menuId,
+        perms: node.perms,
+        menuType: node.menuType,
+        label: title,
+        value: id,
+        children:
+          node.children && node.children.length > 0
+            ? this.dynamicRoutesToSysMenuShim(node.children)
+            : undefined
+      }
+    })
+  }
+
+  /**
+   * 将后端 RouterVo（dynamic-routes）转为前端 AppRouteRecord
+   */
+  private convertDynamicRouteToRouteRecord(routes: DynamicRouteVo[], level = 0): AppRouteRecord[] {
+    if (!Array.isArray(routes)) {
+      console.error('[MenuProcessor] convertDynamicRouteToRouteRecord 接收到的不是数组:', routes)
+      return []
+    }
+
+    return routes
+      .map((route, index) => {
+        try {
+          if (!route) {
+            console.warn(`[MenuProcessor] 动态路由项 ${index} 为空，跳过`)
+            return null
+          }
+
+          const path = (route.path || '').replace(/#/g, '').trim()
+          const isExternalLink = path.startsWith('http://') || path.startsWith('https://')
+          const isFrame = route.isFrame
+          const isIframe = isFrame === 0 && !isExternalLink
+          const menuType = route.menuType
+          const isDirectory = menuType === 'M'
+
+          let component = route.component
+          if (component) {
+            component = component.replace(/#/g, '').trim()
+          }
+
+          const hasChildren = route.children && route.children.length > 0
+
+          if (isDirectory && (!component || component === '')) {
+            if (hasChildren) {
+              component = RoutesAlias.Layout
+              if (import.meta.env.DEV) {
+                console.log(
+                  `[MenuProcessor] 目录 "${route.meta?.title || route.name}" (level: ${level}) 有子菜单，设置为 Layout`
+                )
+              }
+            } else {
+              component = undefined
+              if (import.meta.env.DEV) {
+                console.log(
+                  `[MenuProcessor] 目录 "${route.meta?.title || route.name}" (level: ${level}) 没有子菜单，不设置 component`
+                )
+              }
+            }
+          }
+
+          let authList: Array<{ title: string; authMark: string }> | undefined
+          if (route.perms) {
+            const permsArray = route.perms
+              .split(',')
+              .map((p) => p.trim())
+              .filter(Boolean)
+            authList = permsArray.map((perm) => ({
+              title: perm,
+              authMark: perm
+            }))
+          }
+
+          const metaNoCache = route.meta?.noCache === true
+
+          const routeRecord: AppRouteRecord = {
+            id: route.menuId,
+            name: route.name || undefined,
+            path,
+            component: component || undefined,
+            meta: {
+              title: route.meta?.title || '',
+              icon: route.meta?.icon,
+              isIframe,
+              keepAlive: !metaNoCache,
+              isHide: route.hidden === true,
+              link: route.meta?.link || (isExternalLink ? path : undefined),
+              authList,
+              isLayout: component === RoutesAlias.Layout
+            },
+            menuType: menuType as 'M' | 'C' | 'F' | undefined,
+            children:
+              route.children && route.children.length > 0
+                ? this.convertDynamicRouteToRouteRecord(route.children, level + 1)
+                : undefined
+          }
+
+          return routeRecord
+        } catch (error) {
+          console.error(`[MenuProcessor] 转换动态路由项 ${index} 失败:`, route, error)
+          return null
+        }
+      })
+      .filter((item): item is AppRouteRecord => item !== null)
   }
 
   /**
