@@ -180,45 +180,30 @@
 </template>
 
 <script setup lang="ts">
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import ArtImportDialog from '@/components/core/forms/art-import-dialog/index.vue'
-  import { useTable } from '@/hooks/core/useTable'
-  import {
-    fetchDeleteUser,
-    fetchGetUserList,
-    fetchResetUserPassword,
-    fetchUpdateUserStatus,
-    fetchUnlockUser
-  } from '@/api/user/user'
-  import { fetchExportData } from '@/api/common/import-export'
-  import { fetchGetDeptTree, SysDept } from '@/api/dept/dept'
-  import UserSearch from './modules/user-search.vue'
-  import UserDialog from './modules/user-dialog.vue'
-  import {
-    ElMessageBox,
-    ElSwitch,
-    ElMessage,
-    ElTree,
-    ElInput,
-    ElButton,
-    ElIcon
-  } from 'element-plus'
-  import {
-    ArrowDown,
-    DArrowLeft,
-    DArrowRight,
-    OfficeBuilding,
-    RefreshRight,
-    Search
-  } from '@element-plus/icons-vue'
-  import { DialogType } from '@/types'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import ArtAvatarDisplay from '@/components/core/media/art-avatar-display/index.vue'
-  import { useAuth } from '@/hooks/core/useAuth'
-  import { useUserStore } from '@/store/modules/user'
+import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+import ArtImportDialog from '@/components/core/forms/art-import-dialog/index.vue'
+import {useTable} from '@/hooks/core/useTable'
+import {
+  fetchDeleteUser,
+  fetchGetUserList,
+  fetchResetUserPassword,
+  fetchUnlockUser,
+  fetchUpdateUserStatus
+} from '@/api/user/user'
+import {fetchExportData} from '@/api/common/import-export'
+import {fetchGetDeptTree, SysDept} from '@/api/dept/dept'
+import UserSearch from './modules/user-search.vue'
+import UserDialog from './modules/user-dialog.vue'
+import {ElButton, ElIcon, ElInput, ElMessage, ElMessageBox, ElSwitch, ElTree} from 'element-plus'
+import {ArrowDown, DArrowLeft, DArrowRight, OfficeBuilding, RefreshRight, Search} from '@element-plus/icons-vue'
+import {DialogType} from '@/types'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import ArtAvatarDisplay from '@/components/core/media/art-avatar-display/index.vue'
+import {useAuth} from '@/hooks/core/useAuth'
+import {useUserStore} from '@/store/modules/user'
 
-  defineOptions({ name: 'User' })
+defineOptions({ name: 'User' })
 
   const { hasAuth } = useAuth()
   const userStore = useUserStore()
@@ -487,6 +472,7 @@
               actions.push(
                 h(ArtButtonTable, {
                   type: 'edit',
+                  tooltip: '编辑用户',
                   onClick: () => showDialog('edit', user)
                 })
               )
@@ -497,6 +483,7 @@
                   h(ArtButtonTable, {
                     icon: 'ri:lock-unlock-line',
                     iconClass: 'bg-warning/12 text-warning',
+                    tooltip: '解锁账户',
                     onClick: () => unlockUser(user)
                   })
                 )
@@ -508,6 +495,7 @@
               actions.push(
                 h(ArtButtonTable, {
                   type: 'delete',
+                  tooltip: '删除用户',
                   onClick: () => deleteUser(user)
                 })
               )
@@ -516,6 +504,7 @@
               actions.push(
                 h(ArtButtonTable, {
                   type: 'sync',
+                  tooltip: '重置密码',
                   onClick: () => resetPwd(user)
                 })
               )

@@ -6,6 +6,7 @@
       buttonClass
     ]"
     :style="{ backgroundColor: buttonBgColor, color: iconColor }"
+    :title="tooltipText"
     @click="handleClick"
   >
     <ArtSvgIcon :icon="iconContent" class="text-[0.875rem]" />
@@ -39,6 +40,8 @@
     buttonBgColor?: string
     /** 按钮文本标签 */
     label?: string
+    /** 鼠标悬浮提示 */
+    tooltip?: string
   }
 
   const props = withDefaults(defineProps<Props>(), {})
@@ -84,4 +87,6 @@
   const handleClick = () => {
     emit('click')
   }
+
+  const tooltipText = computed(() => props.tooltip || props.label || '')
 </script>
