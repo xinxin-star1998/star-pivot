@@ -169,9 +169,9 @@ pnpm dev
 欢迎提交 Issue / PR 共同完善项目：
 
 1. Fork 本仓库
-2. 新建分支：`git checkout -b feature/xxx`
-3. 提交修改：`git commit -m "feat: xxx"`
-4. 推送分支并发起 PR
+2. 阅读贡献指南：[`CONTRIBUTING.md`](CONTRIBUTING.md)
+3. 新建分支并按规范提交：`git checkout -b feature/xxx`
+4. 推送分支并发起 PR（Gitee / GitHub）
 
 ## License
 
