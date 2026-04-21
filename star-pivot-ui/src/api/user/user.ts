@@ -75,6 +75,16 @@ export function fetchResetUserPassword(userId: number, password: string) {
 }
 
 /**
+ * 当前用户修改密码
+ */
+export function fetchUpdateUserPassword(data: { oldPassword: string; newPassword: string }) {
+  return request.post({
+    url: '/api/sys/user/updatePwd',
+    data
+  })
+}
+
+/**
  * 上传头像
  */
 export function fetchUploadAvatar(data: FormData) {

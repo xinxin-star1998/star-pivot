@@ -13,32 +13,30 @@
             <div class="dept-title-row">
               <div class="dept-title">
                 <el-icon class="dept-title-icon">
-                  <OfficeBuilding/>
+                  <OfficeBuilding />
                 </el-icon>
                 <span>组织机构</span>
               </div>
               <div class="dept-tools">
                 <ElButton
-                    :aria-label="deptTreeExpandAll ? '收起部门树' : '展开部门树'"
-                    class="dept-tool-btn"
-                    text
-                    @click="toggleDeptTreeExpand"
+                  :aria-label="deptTreeExpandAll ? '收起部门树' : '展开部门树'"
+                  class="dept-tool-btn"
+                  text
+                  @click="toggleDeptTreeExpand"
                 >
-                  <el-icon :class="{ 'is-collapsed': !deptTreeExpandAll }" class="dept-arrow-icon"
-                  >
-                    <ArrowDown
-                    />
+                  <el-icon :class="{ 'is-collapsed': !deptTreeExpandAll }" class="dept-arrow-icon">
+                    <ArrowDown />
                   </el-icon>
                 </ElButton>
                 <ElButton
-                    :loading="deptLoading"
-                    aria-label="刷新部门树"
-                    class="dept-tool-btn"
-                    text
-                    @click="handleRefreshDeptTree"
+                  :loading="deptLoading"
+                  aria-label="刷新部门树"
+                  class="dept-tool-btn"
+                  text
+                  @click="handleRefreshDeptTree"
                 >
                   <el-icon>
-                    <RefreshRight/>
+                    <RefreshRight />
                   </el-icon>
                 </ElButton>
               </div>
@@ -59,12 +57,12 @@
           </div>
           <div class="department-tree-wrapper">
             <ElTree
-                :key="deptTreeRenderKey"
+              :key="deptTreeRenderKey"
               :data="deptTree"
               :props="deptTreeProps"
-                :default-expand-all="deptTreeExpandAll"
-                :expand-on-click-node="false"
-                node-key="deptId"
+              :default-expand-all="deptTreeExpandAll"
+              :expand-on-click-node="false"
+              node-key="deptId"
               :default-checked-keys="selectedDeptId ? [selectedDeptId] : []"
               :filter-node-method="filterDeptNode"
               ref="deptTreeRef"
@@ -79,20 +77,20 @@
           </div>
         </ElCard>
         <ElTooltip
-            :content="deptPanelCollapsed ? '展开' : '收起'"
-            :show-arrow="true"
-            effect="dark"
-            placement="right"
-            popper-class="panel-toggle-tooltip"
+          :content="deptPanelCollapsed ? '展开' : '收起'"
+          :show-arrow="true"
+          effect="dark"
+          placement="right"
+          popper-class="panel-toggle-tooltip"
         >
           <ElButton
-              :aria-label="deptPanelCollapsed ? '展开部门树面板' : '收起部门树面板'"
-              class="panel-toggle-btn"
-              text
-              @click="toggleDeptPanel"
+            :aria-label="deptPanelCollapsed ? '展开部门树面板' : '收起部门树面板'"
+            class="panel-toggle-btn"
+            text
+            @click="toggleDeptPanel"
           >
             <el-icon class="panel-toggle-icon">
-              <component :is="deptPanelCollapsed ? DArrowRight : DArrowLeft"/>
+              <component :is="deptPanelCollapsed ? DArrowRight : DArrowLeft" />
             </el-icon>
           </ElButton>
         </ElTooltip>
@@ -188,6 +186,7 @@
   import {
     fetchDeleteUser,
     fetchGetUserList,
+    fetchResetUserPassword,
     fetchUpdateUserStatus,
     fetchUnlockUser
   } from '@/api/user/user'
@@ -217,10 +216,16 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtAvatarDisplay from '@/components/core/media/art-avatar-display/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { useUserStore } from '@/store/modules/user'
 
   defineOptions({ name: 'User' })
 
   const { hasAuth } = useAuth()
+  const userStore = useUserStore()
+  const currentUserId = computed(() => {
+    const info = userStore.getUserInfo as any
+    return info?.userId ?? info?.user?.userId
+  })
 
   type UserListItem = Api.SystemManage.UserListItem
 
@@ -393,7 +398,7 @@
                             color: 'var(--art-gray-900)'
                           }
                         },
-                          user.userName || '未知用户'
+                        user.userName || '未知用户'
                       ),
                       h('span', {
                         class: 'status-indicator',
@@ -418,7 +423,7 @@
                         color: 'var(--art-gray-500)'
                       }
                     },
-                      user.email || '无邮箱'
+                    user.email || '无邮箱'
                   )
                 ]
               )
@@ -504,6 +509,14 @@
                 h(ArtButtonTable, {
                   type: 'delete',
                   onClick: () => deleteUser(user)
+                })
+              )
+            }
+            if (hasAuth('system:user:resetPwd') && user.userId !== currentUserId.value) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'sync',
+                  onClick: () => resetPwd(user)
                 })
               )
             }
@@ -677,6 +690,33 @@
   }
 
   /**
+   * 管理员重置用户密码
+   */
+  const resetPwd = async (row: UserListItem): Promise<void> => {
+    try {
+      const { value } = await ElMessageBox.prompt(
+        `请输入用户 "${row.userName}" 的新密码`,
+        '重置密码',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputPattern: /^.{5,20}$/,
+          inputErrorMessage: '密码长度必须在 5-20 位',
+          inputPlaceholder: '请输入新密码',
+          inputType: 'password'
+        }
+      )
+      if (!value) return
+      await fetchResetUserPassword(row.userId, value)
+      ElMessage.success('重置密码成功')
+    } catch (error: any) {
+      if (error === 'cancel' || error === 'close') return
+      console.error('重置密码失败:', error)
+      ElMessage.error(error?.message || '重置密码失败')
+    }
+  }
+
+  /**
    * 导出用户数据
    */
   const handleExportUsers = async () => {
@@ -724,11 +764,12 @@
     border: var(--panel-border);
     border-radius: var(--panel-radius);
     box-shadow: var(--panel-shadow);
-    transition: width 0.22s ease,
-    min-width 0.22s ease,
-    opacity 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    transition:
+      width 0.22s ease,
+      min-width 0.22s ease,
+      opacity 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
   .left-panel:hover {
@@ -764,9 +805,10 @@
     border-radius: 0 10px 10px 0;
     background: #ecf5ff;
     transform: translateY(-50%);
-    transition: left 0.22s ease,
-    color 0.2s ease,
-    background-color 0.2s ease;
+    transition:
+      left 0.22s ease,
+      color 0.2s ease,
+      background-color 0.2s ease;
   }
 
   .panel-toggle-btn:hover {

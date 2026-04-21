@@ -10,24 +10,17 @@ import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.validation.AssertUtils;
-import com.star.pivot.security.context.SecurityUtils;
 import com.star.pivot.security.context.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityUtils;
+import com.star.pivot.system.assembler.UserVOAssembler;
 import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.AssignUserReqBo;
 import com.star.pivot.system.domain.dto.UserDTO;
-import com.star.pivot.system.domain.entity.SysRole;
-import com.star.pivot.system.domain.entity.SysMenu;
-import com.star.pivot.system.domain.entity.SysUser;
-import com.star.pivot.system.domain.entity.UserRole;
-import com.star.pivot.system.domain.entity.UserPost;
+import com.star.pivot.system.domain.entity.*;
 import com.star.pivot.system.mapper.SysUserMapper;
-import com.star.pivot.system.mapper.UserRoleMapper;
 import com.star.pivot.system.mapper.UserPostMapper;
-import com.star.pivot.system.mapper.RoleDeptMapper;
-import com.star.pivot.system.mapper.SysDeptMapper;
-import com.star.pivot.system.mapper.SysRoleMapper;
-import com.star.pivot.system.assembler.UserVOAssembler;
+import com.star.pivot.system.mapper.UserRoleMapper;
 import com.star.pivot.system.service.interfaces.ImportExportService;
 import com.star.pivot.system.service.interfaces.SysUserService;
 import com.star.pivot.system.service.interfaces.UserPermissionCacheService;
@@ -42,11 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.function.BiFunction;
 
 /**
@@ -246,7 +235,38 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         user.setUpdateBy(currentUser);
         user.setUpdateTime(LocalDateTime.now());
 
-        return this.updateById(user);
+        boolean success = this.updateById(user);
+        if (success) {
+            userPermissionCacheService.clearUserPermissionCache(user.getUserName());
+        }
+        return success;
+    }
+
+    @Override
+    public boolean updateUserPassword(Long userId, String oldPassword, String newPassword) {
+        SysUser user = this.getById(userId);
+        AssertUtils.notNull(user, ErrorCode.USER_NOT_FOUND);
+        if (AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
+        }
+        if (!SecurityUtils.matchesPassword(oldPassword, user.getPassword())) {
+            throw new BizException(ErrorCode.USER_PASSWORD_ERROR, "旧密码不正确");
+        }
+        if (SecurityUtils.matchesPassword(newPassword, user.getPassword())) {
+            throw new BizException(ErrorCode.PARAM_INVALID, "新密码不能与旧密码相同");
+        }
+
+        user.setPassword(SecurityUtils.encryptPassword(newPassword));
+        user.setPwdUpdateDate(LocalDateTime.now());
+        String currentUser = SecurityContextUtils.getUsername();
+        user.setUpdateBy(currentUser);
+        user.setUpdateTime(LocalDateTime.now());
+
+        boolean success = this.updateById(user);
+        if (success) {
+            userPermissionCacheService.clearUserPermissionCache(user.getUserName());
+        }
+        return success;
     }
 
     @Override
@@ -317,8 +337,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         PageResponse<T> resp = new PageResponse<>();
         resp.setTotal(ipage.getTotal());
         resp.setRows(rows);
-        resp.setPageNum(ipage.getCurrent());
-        resp.setPageSize(ipage.getSize());
+        resp.setPageNum(pageNum);
+        resp.setPageSize(pageSize);
         resp.setPageCount(ipage.getPages());
         return resp;
     }

@@ -5,17 +5,17 @@ import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
-import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.exception.BizException;
+import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.security.context.SecurityContextUtils;
 import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.ResetPasswordDTO;
+import com.star.pivot.system.domain.dto.UpdatePasswordDTO;
 import com.star.pivot.system.domain.dto.UserDTO;
-import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.service.interfaces.AccountLockService;
 import com.star.pivot.system.service.interfaces.PermissionService;
 import com.star.pivot.system.service.interfaces.SysUserService;
-import com.star.pivot.security.context.SecurityContextUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -185,7 +185,7 @@ public class SysUserController {
     }
 
     /**
-     * 重置密码
+     * 管理员重置密码
      */
     @Log(title = "用户管理", businessType = 2)
     @Operation(summary = "重置密码", description = "重置指定用户的登录密码")
@@ -193,14 +193,42 @@ public class SysUserController {
             @ApiResponse(responseCode = "200", description = "重置成功"),
             @ApiResponse(responseCode = "404", description = "用户不存在")
     })
-    @PreAuthorize("hasAuthority('system:user:edit')")
+    @PreAuthorize("hasAuthority('system:user:resetPwd')")
     @PostMapping("/resetPwd")
     public Result<?> resetPwd(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
+        Long currentUserId = SecurityContextUtils.getUserId();
+        if (currentUserId != null && currentUserId.equals(resetPasswordDTO.getUserId())) {
+            return Result.error("不能重置当前登录用户密码");
+        }
         boolean success = sysUserService.resetUserPassword(
                 resetPasswordDTO.getUserId(),
                 resetPasswordDTO.getPassword()
         );
         return success ? Result.success("重置密码成功") : Result.error("重置密码失败");
+    }
+
+    /**
+     * 当前用户修改密码（需校验旧密码）
+     */
+    @Log(title = "个人中心", businessType = 2)
+    @Operation(summary = "修改当前用户密码", description = "当前登录用户通过旧密码校验后修改登录密码")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "修改成功"),
+            @ApiResponse(responseCode = "400", description = "旧密码错误或参数不合法"),
+            @ApiResponse(responseCode = "401", description = "用户未登录")
+    })
+    @PostMapping("/updatePwd")
+    public Result<?> updatePwd(@Valid @RequestBody UpdatePasswordDTO updatePasswordDTO) {
+        Long currentUserId = SecurityContextUtils.getUserId();
+        if (currentUserId == null) {
+            return Result.error("用户未登录");
+        }
+        boolean success = sysUserService.updateUserPassword(
+                currentUserId,
+                updatePasswordDTO.getOldPassword(),
+                updatePasswordDTO.getNewPassword()
+        );
+        return success ? Result.success("修改密码成功") : Result.error("修改密码失败");
     }
 
     /**
