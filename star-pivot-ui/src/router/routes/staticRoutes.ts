@@ -40,7 +40,7 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     path: '/privacy-policy',
     name: 'PrivacyPolicy',
     component: () => import('@views/auth/privacy-policy/index.vue'),
-    meta: {title: 'menus.privacyPolicy.title', isHideTab: true}
+    meta: { title: 'menus.privacyPolicy.title', isHideTab: true}
   },
   {
     path: '/403',
