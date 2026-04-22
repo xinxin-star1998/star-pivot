@@ -1,19 +1,10 @@
 package com.star.pivot.framework.utils;
 
 import com.star.pivot.framework.exception.BizException;
-import io.minio.MinioClient;
-import io.minio.BucketExistsArgs;
-import io.minio.MakeBucketArgs;
-import io.minio.PutObjectArgs;
-import io.minio.ListObjectsArgs;
-import io.minio.RemoveObjectArgs;
-import io.minio.StatObjectArgs;
-import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.GetObjectArgs;
+import io.minio.*;
 import io.minio.errors.MinioException;
-import io.minio.Result;
-import io.minio.messages.Item;
 import io.minio.http.Method;
+import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -22,6 +13,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -36,6 +30,7 @@ public class MinioUtil {
 
     // 定义头像上传的常量：大小限制(2MB)、允许的文件类型、非法字符正则
     private static final long AVATAR_MAX_SIZE = 2 * 1024 * 1024;
+    private static final long EDITOR_IMAGE_MAX_SIZE = 3 * 1024 * 1024;
     private static final String[] ALLOWED_AVATAR_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"};
     // 过滤文件名中的特殊字符，避免MinIO路径异常
     private static final Pattern ILLEGAL_CHAR_PATTERN = Pattern.compile("[\\\\/:*?\"<>|]");
@@ -167,6 +162,39 @@ public class MinioUtil {
     public String uploadAvatarWithPresignedUrl(MultipartFile file, String userId) throws BizException {
         String objectName = uploadAvatar(file, userId);
         return getPresignedUrl(objectName);
+    }
+
+    /**
+     * 上传富文本编辑器图片并返回可在浏览器中直接访问的 URL（对象路径：editor/yyyy/MM/dd/{uuid}后缀）。
+     * <p>私有桶场景返回预签名 URL（默认 180 天），避免永久直链 403。</p>
+     */
+    public String uploadEditorImageWithUrl(MultipartFile file) throws BizException {
+        if (file == null || file.isEmpty()) {
+            throw new BizException("上传的图片不能为空");
+        }
+        checkEditorImageValid(file);
+        String suffix = getFileSuffix(file.getOriginalFilename());
+        String day = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        String objectName = "editor/" + day + "/" + UUID.randomUUID() + suffix;
+        uploadFile(file, objectName);
+        return getPresignedUrl(objectName, 180, TimeUnit.DAYS);
+    }
+
+    private void checkEditorImageValid(MultipartFile file) throws BizException {
+        if (file.getSize() > EDITOR_IMAGE_MAX_SIZE) {
+            throw new BizException("图片大小不能超过3MB");
+        }
+        String contentType = file.getContentType();
+        boolean isAllowed = false;
+        for (String allowedType : ALLOWED_AVATAR_TYPES) {
+            if (allowedType.equals(contentType)) {
+                isAllowed = true;
+                break;
+            }
+        }
+        if (!isAllowed) {
+            throw new BizException("仅支持 JPG、PNG、GIF、WEBP 格式图片");
+        }
     }
 
     /**
@@ -355,6 +383,13 @@ public class MinioUtil {
      * 生成文件预签名临时访问链接（私有桶专用，默认7天有效期）
      */
     public String getPresignedUrl(String objectName) throws BizException {
+        return getPresignedUrl(objectName, 7, TimeUnit.DAYS);
+    }
+
+    /**
+     * 生成文件预签名临时访问链接（可指定有效期）
+     */
+    public String getPresignedUrl(String objectName, int duration, TimeUnit unit) throws BizException {
         try {
             checkObjectname(objectName);
             MinioClient minioClient = getMinioClient();
@@ -362,10 +397,10 @@ public class MinioUtil {
                     .method(Method.GET)
                     .bucket(minioProperties.getBucketName())
                     .object(objectName)
-                    .expiry(7, TimeUnit.DAYS) // 有效期7天，可根据需求调整
+                    .expiry(duration, unit)
                     .build();
             String presignedUrl = minioClient.getPresignedObjectUrl(args);
-            log.info("生成MinIO预签名URL成功，对象路径：{}，有效期7天", objectName);
+            log.info("生成MinIO预签名URL成功，对象路径：{}，有效期 {} {}", objectName, duration, unit);
             return presignedUrl;
         } catch (Exception e) {
             log.error("MinIO生成预签名URL失败，对象路径：{}，错误信息：{}", objectName, e.getMessage(), e);

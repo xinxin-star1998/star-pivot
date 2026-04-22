@@ -2,18 +2,17 @@ package com.star.pivot.framework.utils;
 
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
-import com.aliyun.oss.model.ObjectMetadata;
-import com.aliyun.oss.model.PutObjectRequest;
-import com.aliyun.oss.model.ListObjectsV2Request;
-import com.aliyun.oss.model.ListObjectsV2Result;
-import com.aliyun.oss.model.OSSObjectSummary;
+import com.aliyun.oss.model.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -25,6 +24,8 @@ public class OssUtil {
 
     /** 头像大小限制 2MB */
     private static final long AVATAR_MAX_SIZE = 2 * 1024 * 1024;
+    /** 富文本编辑器图片大小限制 3MB（与前端 WangEditor 默认一致） */
+    private static final long EDITOR_IMAGE_MAX_SIZE = 3 * 1024 * 1024;
     /** 允许的头像 Content-Type */
     private static final String[] ALLOWED_AVATAR_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"};
     /** userId 仅允许数字，防止路径穿越 */
@@ -64,6 +65,26 @@ public class OssUtil {
     /**
      * 校验头像文件：大小与类型
      */
+    private void checkEditorImageValid(MultipartFile file) {
+        if (file.getSize() > EDITOR_IMAGE_MAX_SIZE) {
+            throw new IllegalArgumentException("图片大小不能超过3MB");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null) {
+            contentType = "";
+        }
+        boolean allowed = false;
+        for (String t : ALLOWED_AVATAR_TYPES) {
+            if (t.equals(contentType)) {
+                allowed = true;
+                break;
+            }
+        }
+        if (!allowed) {
+            throw new IllegalArgumentException("仅支持 JPG、PNG、GIF、WEBP 格式图片");
+        }
+    }
+
     private void checkAvatarFileValid(MultipartFile file) {
         if (file.getSize() > AVATAR_MAX_SIZE) {
             throw new IllegalArgumentException("头像文件大小不能超过2MB");
@@ -145,6 +166,38 @@ public class OssUtil {
         }
         return objectName;
     }
+
+    /**
+     * 上传富文本编辑器图片并返回可在浏览器中直接访问的 URL（对象路径：editor/yyyy/MM/dd/{uuid}.后缀）。
+     * <p>私有桶场景返回预签名 URL（与 {@link #getPresignedUrl(String)} 一致，最长约 7 天，以阿里云限制为准），避免永久直链 403。</p>
+     */
+    public String uploadEditorImageWithUrl(MultipartFile file) throws Exception {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("上传的图片不能为空");
+        }
+        checkEditorImageValid(file);
+        String suffix = getSafeImageSuffix(file.getOriginalFilename());
+        String day = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        String objectName = "editor/" + day + "/" + UUID.randomUUID() + suffix;
+
+        OSS ossClient = getOssClient();
+        try {
+            ObjectMetadata metadata = new ObjectMetadata();
+            String contentType = file.getContentType();
+            metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "image/png");
+            metadata.setContentLength(file.getSize());
+            PutObjectRequest putObjectRequest = new PutObjectRequest(
+                    bucketName,
+                    objectName,
+                    file.getInputStream()
+            );
+            putObjectRequest.setMetadata(metadata);
+            ossClient.putObject(putObjectRequest);
+        } finally {
+            ossClient.shutdown();
+        }
+        return getPresignedUrl(objectName);
+    }
     
     /**
      * 上传头像文件并返回完整访问URL
@@ -213,8 +266,8 @@ public class OssUtil {
         if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
             throw new IllegalArgumentException("无效的对象路径");
         }
-        if (!objectName.startsWith("avatar/")) {
-            throw new IllegalArgumentException("仅支持头像路径");
+        if (!objectName.startsWith("avatar/") && !objectName.startsWith("editor/")) {
+            throw new IllegalArgumentException("仅支持头像或富文本图片路径");
         }
         if (urlPrefix != null && !urlPrefix.isEmpty()) {
             String prefix = urlPrefix.endsWith("/") ? urlPrefix.substring(0, urlPrefix.length() - 1) : urlPrefix;
@@ -227,15 +280,15 @@ public class OssUtil {
 
     /**
      * 生成文件临时访问链接（私有桶可用，有效期默认7天）
-     * @param objectName 文件路径（仅允许 avatar/ 下对象，禁止 .. 等路径穿越）
+     * @param objectName 文件路径（仅允许 avatar/ 或 editor/ 下对象，禁止 .. 等路径穿越）
      * @return 临时URL
      */
     public String getPresignedUrl(String objectName) throws Exception {
         if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
             throw new IllegalArgumentException("无效的对象路径");
         }
-        if (!objectName.startsWith("avatar/")) {
-            throw new IllegalArgumentException("仅支持头像路径");
+        if (!objectName.startsWith("avatar/") && !objectName.startsWith("editor/")) {
+            throw new IllegalArgumentException("仅支持头像或富文本图片路径");
         }
         OSS ossClient = getOssClient();
         try {

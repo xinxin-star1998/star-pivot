@@ -57,4 +57,10 @@ public class OssFileStorageService implements FileStorageService {
         log.debug("使用 OSS 生成永久URL，objectName={}", objectName);
         return ossUtil.getPermanentUrl(objectName);
     }
+
+    @Override
+    public String uploadEditorImageWithUrl(MultipartFile file) throws Exception {
+        log.debug("使用 OSS 上传富文本图片");
+        return ossUtil.uploadEditorImageWithUrl(file);
+    }
 }

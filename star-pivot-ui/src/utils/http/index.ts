@@ -117,7 +117,7 @@ const { VITE_WITH_CREDENTIALS } = import.meta.env
  * 获取 API 基础地址（优先使用部署后的运行时配置，无需重新打包）
  * 部署后修改 public/config.js 中的 VITE_API_URL 即可生效
  */
-function getApiBaseUrl(): string {
+export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined' && window.__APP_RUNTIME_CONFIG__?.VITE_API_URL !== undefined) {
     return window.__APP_RUNTIME_CONFIG__.VITE_API_URL
   }
