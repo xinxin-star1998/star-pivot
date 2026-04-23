@@ -67,6 +67,7 @@
     type SysMenu
   } from '@/api/menu/menu'
   import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
+  import { Icon } from '@iconify/vue'
   import { MenuProcessor } from '@/router/core/MenuProcessor'
   import type { MenuFormData } from './types'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
@@ -264,7 +265,16 @@
       prop: 'meta.title',
       label: '菜单名称',
       minWidth: 120,
-      formatter: (row: AppRouteRecord) => formatMenuTitle(row.meta?.title)
+      formatter: (row: AppRouteRecord) => {
+        const title = formatMenuTitle(row.meta?.title)
+        const icon = row.meta?.isAuthButton ? undefined : row.meta?.icon
+        if (!icon) return title
+        return h(
+          'div',
+          { style: 'display: inline-flex; align-items: center; gap: 8px;' },
+          [h(Icon, { icon, style: 'font-size: 18px; color: var(--art-gray-700);' }), title]
+        )
+      }
     },
     {
       prop: 'type',

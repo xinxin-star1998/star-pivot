@@ -1,5 +1,7 @@
 package com.star.pivot.config.database;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -9,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
  * 访问 /api/druid 或 /api/druid/ 时重定向到 index.html，避免 404。
  */
 @Controller
+@Profile({"local", "dev", "test"})
+@ConditionalOnProperty(prefix = "druid.monitor", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DruidRedirectController {
 
     @GetMapping({ "/druid", "/druid/" })

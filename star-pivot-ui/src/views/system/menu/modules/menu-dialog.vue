@@ -27,16 +27,23 @@
         </ElRadioGroup>
       </template>
       <template #icon>
-        <ArtIconPicker ref="iconPickerRef" v-model="form.icon">
+        <ArtIconPicker ref="iconPickerRef" v-model="form.icon" :manual="true">
           <ElInput
+            class="menu-icon-input"
             v-model="form.icon"
             placeholder="如：ri:user-line"
             clearable
             style="width: 100%"
-            @focus="handleIconInputFocus"
           >
-            <template #prefix>
-              <Icon v-if="form.icon" :icon="form.icon" style="font-size: 18px" />
+            <template #prepend>
+              <div class="menu-icon-prepend">
+                <Icon :icon="form.icon || 'ri:apps-line'" style="font-size: 18px" />
+              </div>
+            </template>
+            <template #append>
+              <ElButton class="menu-icon-append-btn" @click.stop="handleChooseIconClick">
+                选择图标
+              </ElButton>
             </template>
           </ElInput>
         </ArtIconPicker>
@@ -112,13 +119,8 @@
   const emit = defineEmits<Emits>()
 
   const formRef = ref()
+  const iconPickerRef = ref<{ open: () => void; close: () => void } | null>(null)
   const isEdit = ref(false)
-  const iconPickerRef = ref()
-
-  // 处理图标输入框聚焦
-  const handleIconInputFocus = () => {
-    iconPickerRef.value?.open()
-  }
   // 树形选择器的数据结构
   interface TreeNode {
     label: string
@@ -797,6 +799,54 @@
   onMounted(async () => {
     await loadParentMenuOptions()
   })
+
+  const handleChooseIconClick = () => {
+    iconPickerRef.value?.open()
+  }
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+  .menu-icon-prepend {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 32px;
+    color: var(--el-text-color-regular);
+    cursor: pointer;
+  }
+
+  /* 让输入组更接近截图的“分段”观感 */
+  :deep(.menu-icon-input.el-input-group) {
+    .el-input-group__prepend {
+      padding: 0;
+      background: var(--el-fill-color-light);
+    }
+
+    .el-input-group__append {
+      padding: 0;
+      background: var(--el-fill-color-light);
+    }
+  }
+
+  :deep(.menu-icon-append-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    min-width: 112px;
+    padding: 0 14px;
+    font-size: 13px;
+    line-height: 32px;
+    white-space: nowrap;
+    color: var(--el-color-primary);
+    border: 0;
+    border-left: 1px solid var(--el-border-color);
+    border-radius: 0 4px 4px 0;
+    background: #fff;
+
+    &:hover {
+      background: var(--el-fill-color-light);
+    }
+  }
+</style>

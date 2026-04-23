@@ -1,4 +1,4 @@
-package com.star.pivot.config.mvc;
+package com.star.pivot.framework.boot.autoconfigure;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
@@ -10,10 +10,10 @@ import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
 
-public final class Converters {
-    private Converters() {}
+final class StarPivotConverters {
+    private StarPivotConverters() {}
 
-    public static class StringToLongArrayConverter implements Converter<String, Long[]> {
+    static class StringToLongArrayConverter implements Converter<String, Long[]> {
         @Override
         public Long[] convert(@NonNull String source) {
             if (source.isBlank()) {
@@ -27,13 +27,14 @@ public final class Converters {
         }
     }
 
-    public static class StringToLocalDateTimeConverter implements Converter<String, LocalDateTime> {
+    static class StringToLocalDateTimeConverter implements Converter<String, LocalDateTime> {
         private static final List<DateTimeFormatter> FORMATTERS = Arrays.asList(
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
                 DateTimeFormatter.ISO_LOCAL_DATE_TIME,
                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"),
                 DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
         );
+
         @Override
         public LocalDateTime convert(@NonNull String source) {
             if (source.isBlank()) return null;
@@ -48,11 +49,12 @@ public final class Converters {
         }
     }
 
-    public static class StringToLocalDateConverter implements Converter<String, LocalDate> {
+    static class StringToLocalDateConverter implements Converter<String, LocalDate> {
         private static final List<DateTimeFormatter> FORMATTERS = Arrays.asList(
                 DateTimeFormatter.ofPattern("yyyy-MM-dd"),
                 DateTimeFormatter.ofPattern("yyyy/MM/dd")
         );
+
         @Override
         public LocalDate convert(@NonNull String source) {
             if (source.isBlank()) return null;
@@ -67,3 +69,4 @@ public final class Converters {
         }
     }
 }
+

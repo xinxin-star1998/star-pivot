@@ -53,10 +53,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-        </dependency>
         <!-- 框架层：boot-starter 已聚合 security + core + file，应用层仅依赖本模块即可 -->
         <dependency>
             <groupId>com.star.pivot</groupId>
@@ -93,11 +89,6 @@
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core</artifactId>
-        </dependency>
-        <!-- SpringDoc OpenAPI（Swagger 文档） -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
         <!-- 架构约束：框架层不得依赖业务模块，业务模块不得依赖 controller/config -->
         <dependency>

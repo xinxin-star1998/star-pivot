@@ -1,11 +1,9 @@
-package com.star.pivot.config.properties;
+package com.star.pivot.framework.boot.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 @Data
-@Component
 @ConfigurationProperties(prefix = "star-pivot")
 public class StarPivotProperties {
 
@@ -18,3 +16,4 @@ public class StarPivotProperties {
         private Long userPermissionsTtl = 1800L;
     }
 }
+
