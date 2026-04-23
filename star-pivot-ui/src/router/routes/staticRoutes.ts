@@ -11,13 +11,6 @@ import { AppRouteRecordRaw } from '@/utils/router'
  * 2、静态路由不管是否登录都可以访问
  */
 export const staticRoutes: AppRouteRecordRaw[] = [
-  // 不需要登录就能访问的路由示例
-  // {
-  //   path: '/welcome',
-  //   name: 'WelcomeStatic',
-  //   component: () => import('@views/dashboard/console/dict-data.vue'),
-  //   meta: { title: 'menus.dashboard.title' }
-  // },
   {
     path: '/auth/login',
     name: 'Login',
@@ -87,34 +80,4 @@ export const staticRoutes: AppRouteRecordRaw[] = [
       }
     ]
   }
-  // 代码生成编辑页（静态路由，避免依赖菜单权限）
-  // {
-  //   path: '/tool/gen',
-  //   component: () => import('@views/index/index.vue'),
-  //   name: 'GenToolLayout',
-  //   meta: { title: '代码生成', isHideTab: true },
-  //   children: [
-  //     {
-  //       path: '/tool/gen/edit/:tableId',
-  //       name: 'GenEdit',
-  //       component: () => import('@views/tools/generator/modules/gen-edit.vue'),
-  //       meta: { title: '修改生成配置', isHideTab: true }
-  //     }
-  //   ]
-  // }
-  // 字典数据页面路由
-  // {
-  //   path: '/data',
-  //   name: 'Layout',
-  //   component: () => import('@views/index/index.vue'),
-  //   meta: { title: '字典数据管理' },
-  //   children: [
-  //     {
-  //       path: '/system/dict/dict-data',
-  //       name: 'DictData',
-  //       component: () => import('@views/system/dict/dict-data.vue'),
-  //       meta: { title: '字典数据详情' }
-  //     }
-  //   ]
-  // }
 ]

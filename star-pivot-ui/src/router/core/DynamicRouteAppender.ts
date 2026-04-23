@@ -7,7 +7,6 @@
  *
  * - 追加首页（工作台）路由（数据库不存菜单）
  * - 追加个人中心路由（数据库不存菜单）
- * - 追加字典数据明细路由（数据库不存菜单）
  * - 追加 Druid 监控 iframe 路由（数据库不存菜单）
  * - 支持扩展其他前端动态路由
  *
@@ -15,14 +14,13 @@
  *
  * - 路由守卫中动态添加前端路由
  * - 不需要在数据库中配置的隐藏路由
- * - 明细页面路由（如字典数据）
+ * - 明细页面路由
  *
  * @module router/core/DynamicRouteAppender
  * @author Art Design Pro Team
  */
 
 import type { AppRouteRecord } from '@/types/router'
-import { useMenuStore } from '@/store/modules/menu'
 import { safeLog, safeWarn } from '@/utils'
 
 /**
@@ -43,9 +41,6 @@ export class DynamicRouteAppender {
 
     // 追加个人中心路由
     this.appendUserCenterRoute(menuList, routeIndex)
-
-    // 追加字典数据明细路由
-    this.appendDictDataRoute(menuList, routeIndex)
 
     // 追加分配用户路由
     this.appendAssignUserRoute(menuList, routeIndex)
@@ -210,65 +205,6 @@ export class DynamicRouteAppender {
 
     menuList.push(userCenterRoute)
     safeLog('[DynamicRouteAppender] 已动态追加个人中心路由')
-  }
-
-  /**
-   * 追加「字典数据」明细路由（数据库不存菜单）
-   * @param menuList 菜单列表
-   * @param routeIndex 路由索引
-   */
-  static appendDictDataRoute(menuList: AppRouteRecord[], routeIndex: any): void {
-    if (
-      routeIndex.names.has('DictData') ||
-      Array.from(routeIndex.paths).some((path) => path.includes('/system/dict/data'))
-    ) {
-      safeWarn('[DynamicRouteAppender] 字典数据路由已存在，跳过追加')
-      return
-    }
-
-    // 动态获取 system:data 开头的权限列表
-    const menuStore = useMenuStore()
-    const dataPerms = menuStore.getPermsByPrefix('system:data')
-
-    // 将权限标识转换为 authList 格式
-    const authList = dataPerms.map((perm) => {
-      // 根据权限后缀生成标题
-      const actionMap: Record<string, string> = {
-        query: '查询字典数据',
-        add: '新增字典数据',
-        edit: '编辑字典数据',
-        delete: '删除字典数据',
-        export: '导出字典数据',
-        import: '导入字典数据'
-      }
-      const action = perm.split(':').pop() || ''
-      const title = actionMap[action] || `操作(${action})`
-      return { title, authMark: perm }
-    })
-
-    const dictDataRoute: AppRouteRecord = {
-      // 明细页路径，带上动态参数 dictType
-      path: '/system/dict/data/:dictType',
-      name: 'DictData',
-      // 注意：这里以 `/` 开头，对应视图文件 `src/views/system/dict/dict-data.vue`
-      component: '/system/dict/dict-data',
-      meta: {
-        title: '字典数据',
-        // 不在菜单树中显示，只通过点击"字典类型"进入
-        isHide: true,
-        // 指定父级菜单路径，用于面包屑、高亮等
-        parentPath: '/system/dict',
-        keepAlive: true,
-        // 动态从菜单中获取权限列表
-        authList: authList.length > 0 ? authList : undefined
-      },
-      menuType: 'C',
-      status: '0',
-      orderNum: 1000
-    }
-
-    menuList.push(dictDataRoute)
-    safeLog('[DynamicRouteAppender] 已动态追加字典数据明细路由，权限列表:', dataPerms)
   }
 
   /**

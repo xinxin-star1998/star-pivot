@@ -2,4 +2,3 @@
 declare module '@element-plus/icons-vue'
 declare module '@iconify/vue'
 declare module '@vueuse/core'
-

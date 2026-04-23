@@ -274,10 +274,10 @@ export function resetRouterState(delay: number): void {
     IframeRouteManager.getInstance().clear()
 
     const menuStore = useMenuStore()
-    menuStore.removeAllDynamicRoutes()
+    // removeRouteFn 已由 routeRegistry.unregister 执行，这里只清空引用，避免重复执行
+    menuStore.clearRemoveRouteFns()
     menuStore.setMenuList([])
     menuStore.setRawMenuList([])
-    menuStore.clearRemoveRouteFns()
     menuStore.setHomePath('')
     menuStore.clearMenuCacheMeta()
 
@@ -305,9 +305,10 @@ export async function reloadDynamicRoutes(): Promise<void> {
     safeLog('[RouteGuard] 获取到最新菜单数据，菜单数量:', menuList.length)
 
     // 2. 清除旧的动态路由
-    routeRegistry?.unregister()
     const menuStore = useMenuStore()
-    menuStore.removeAllDynamicRoutes()
+    // 这里统一由 RouteRegistry 执行 removeRouteFn，避免重复执行导致抛错中断后续流程
+    routeRegistry?.unregister()
+    menuStore.clearRemoveRouteFns()
     safeLog('[RouteGuard] 清除旧路由成功')
 
     // 3. 仪表盘和工作台无论动态菜单有无都要加载：若后端菜单为空，先追加前端固定路由
@@ -336,6 +337,7 @@ export async function reloadDynamicRoutes(): Promise<void> {
     const currentUserId = useUserStore().info?.user?.userId
     menuStore.markMenuCache(currentUserId)
     menuStore.setMenuList(menuList)
+    menuStore.clearRemoveRouteFns()
     menuStore.addRemoveRouteFns(routeRegistry?.getRemoveRouteFns() || [])
 
     // 8. 确保 homePath 已被正确设置

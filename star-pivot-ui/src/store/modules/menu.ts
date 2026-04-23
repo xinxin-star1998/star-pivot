@@ -145,7 +145,15 @@ export const useMenuStore = defineStore(
      * 执行所有存储的路由移除函数并清空数组
      */
     const removeAllDynamicRoutes = () => {
-      removeRouteFns.value.forEach((fn) => fn())
+      // removeRouteFn 由 router.addRoute 返回，不同实现/重复调用下可能抛错
+      // 这里做容错，保证清理流程不中断
+      removeRouteFns.value.forEach((fn) => {
+        try {
+          fn()
+        } catch (error) {
+          console.error('[menuStore] 移除动态路由失败:', error)
+        }
+      })
       removeRouteFns.value = []
     }
 

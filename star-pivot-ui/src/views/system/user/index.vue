@@ -344,7 +344,8 @@
   } = useTable({
     // 核心配置
     core: {
-      apiFn: fetchGetUserList,
+      // 适配 useTable 的泛型约束（入参需可接受 any），避免 strictFunctionTypes 下推断为 never
+      apiFn: (params: any) => fetchGetUserList(params as Api.SystemManage.UserSearchParams),
       apiParams: {
         pageNum: 1,
         pageSize: 20,
@@ -429,6 +430,25 @@
               )
             ])
           }
+        },
+        {
+          prop: 'deptNameText',
+          label: '所属部门',
+          sortable: true,
+          minWidth: 140,
+          showOverflowTooltip: true
+        },
+        {
+          prop: 'roleNamesText',
+          label: '关联角色',
+          minWidth: 180,
+          showOverflowTooltip: true
+        },
+        {
+          prop: 'postNamesText',
+          label: '所属岗位',
+          minWidth: 180,
+          showOverflowTooltip: true
         },
         {
           prop: 'sex',
@@ -538,13 +558,23 @@
     // 数据处理
     transform: {
       // 数据转换器
-      dataTransformer: (records) => {
+      dataTransformer: (records: UserListItem[]) => {
         // 类型守卫检查
         if (!Array.isArray(records)) {
           return []
         }
 
-        return records
+        return records.map((r) => {
+          const user = r
+          const roleNames = Array.isArray(user.roleNames) ? user.roleNames.filter(Boolean) : []
+          const postNames = Array.isArray(user.postNames) ? user.postNames.filter(Boolean) : []
+          return {
+            ...user,
+            deptNameText: user.deptName || '-',
+            roleNamesText: roleNames.length ? roleNames.join('、') : '-',
+            postNamesText: postNames.length ? postNames.join('、') : '-'
+          }
+        })
       }
     }
   })
