@@ -1,9 +1,9 @@
 <template>
   <div class="flex w-full h-screen">
-    <LoginLeftView/>
+    <LoginLeftView />
 
     <div class="relative flex-1">
-      <AuthTopBar/>
+      <AuthTopBar />
 
       <div class="policy-wrap">
         <div class="policy-card">
@@ -36,67 +36,67 @@
 </template>
 
 <script lang="ts" setup>
-import {useI18n} from 'vue-i18n'
+  import { useI18n } from 'vue-i18n'
 
-defineOptions({name: 'PrivacyPolicy'})
+  defineOptions({ name: 'PrivacyPolicy' })
 
-const {t} = useI18n()
-const router = useRouter()
+  const { t } = useI18n()
+  const router = useRouter()
 
-const toRegister = () => {
-  router.push({name: 'Register'})
-}
+  const toRegister = () => {
+    router.push({ name: 'Register' })
+  }
 </script>
 
 <style scoped>
-.policy-wrap {
-  height: calc(100vh - 70px);
-  padding: 24px;
-  overflow: auto;
-}
+  .policy-wrap {
+    height: calc(100vh - 70px);
+    padding: 24px;
+    overflow: auto;
+  }
 
-.policy-card {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 28px;
-  border-radius: 12px;
-  background: var(--el-bg-color);
-  box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
-}
+  .policy-card {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px;
+    border-radius: 12px;
+    background: var(--el-bg-color);
+    box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
+  }
 
-.policy-title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  line-height: 1.3;
-}
+  .policy-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
 
-.policy-update {
-  margin: 10px 0 0;
-  color: var(--art-gray-600);
-  font-size: 13px;
-}
+  .policy-update {
+    margin: 10px 0 0;
+    color: var(--art-gray-600);
+    font-size: 13px;
+  }
 
-.policy-content {
-  margin-top: 24px;
-  color: var(--el-text-color-primary);
-  line-height: 1.9;
-  font-size: 14px;
-}
+  .policy-content {
+    margin-top: 24px;
+    color: var(--el-text-color-primary);
+    line-height: 1.9;
+    font-size: 14px;
+  }
 
-.policy-content h3 {
-  margin: 16px 0 8px;
-  font-size: 16px;
-  font-weight: 600;
-}
+  .policy-content h3 {
+    margin: 16px 0 8px;
+    font-size: 16px;
+    font-weight: 600;
+  }
 
-.policy-content p {
-  margin: 0;
-}
+  .policy-content p {
+    margin: 0;
+  }
 
-.policy-footer {
-  margin-top: 28px;
-  display: flex;
-  justify-content: flex-end;
-}
+  .policy-footer {
+    margin-top: 28px;
+    display: flex;
+    justify-content: flex-end;
+  }
 </style>

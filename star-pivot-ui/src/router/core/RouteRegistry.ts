@@ -12,6 +12,7 @@ import type { AppRouteRecord } from '@/types/router'
 import { ComponentLoader } from './ComponentLoader'
 import { RouteValidator } from './RouteValidator'
 import { RouteTransformer } from './RouteTransformer'
+import { safeLog, safeWarn } from '@/utils'
 
 export class RouteRegistry {
   private router: Router
@@ -20,6 +21,8 @@ export class RouteRegistry {
   private transformer: RouteTransformer
   private removeRouteFns: (() => void)[] = []
   private registered = false
+  private routeNames = new Set<string>()
+  private routePaths = new Set<string>()
 
   constructor(router: Router) {
     this.router = router
@@ -33,7 +36,7 @@ export class RouteRegistry {
    */
   register(menuList: AppRouteRecord[]): void {
     if (this.registered) {
-      console.warn('[RouteRegistry] 路由已注册，跳过重复注册')
+      safeWarn('[RouteRegistry] 路由已注册，跳过重复注册')
       return
     }
 
@@ -45,26 +48,74 @@ export class RouteRegistry {
 
     // 转换并注册路由
     const removeRouteFns: (() => void)[] = []
+    const processedRoutes = new Set<string>()
 
     menuList.forEach((route) => {
-      if (route.name && !this.router.hasRoute(route.name)) {
+      try {
+        // 生成唯一标识，避免重复处理
+        const routeKey = route.name || route.path || `route_${Date.now()}_${Math.random()}`
+        if (processedRoutes.has(routeKey)) {
+          safeWarn(`[RouteRegistry] 跳过重复路由: ${routeKey}`)
+          return
+        }
+        processedRoutes.add(routeKey)
+
+        // 检查路由名称是否已存在
+        const routeName = route.name || this.generateRouteKey(route.path || '')
+        if (this.routeNames.has(routeName) || this.router.hasRoute(routeName)) {
+          safeWarn(`[RouteRegistry] 路由名称已存在: ${routeName}`)
+          return
+        }
+
+        // 检查路由路径是否已存在
+        if (route.path && (this.routePaths.has(route.path) || this.router.hasRoute(route.path))) {
+          safeWarn(`[RouteRegistry] 路由路径已存在: ${route.path}`)
+          return
+        }
+
+        // 转换路由配置
         const routeConfig = this.transformer.transform(route)
+
+        // 注册路由
         const removeRouteFn = this.router.addRoute(routeConfig as RouteRecordRaw)
         removeRouteFns.push(removeRouteFn)
+
+        // 记录已注册的路由
+        if (routeName) this.routeNames.add(routeName)
+        if (route.path) this.routePaths.add(route.path)
+
+        safeLog(`[RouteRegistry] 成功注册路由: ${routeName || route.path}`)
+      } catch (error) {
+        console.error(`[RouteRegistry] 注册路由失败: ${route.name || route.path}`, error)
+        // 继续处理其他路由，不中断整个注册过程
       }
     })
 
     this.removeRouteFns = removeRouteFns
     this.registered = true
+    safeLog(`[RouteRegistry] 动态路由注册完成，共注册 ${removeRouteFns.length} 个路由`)
   }
 
   /**
    * 移除所有动态路由
    */
   unregister(): void {
-    this.removeRouteFns.forEach((fn) => fn())
-    this.removeRouteFns = []
-    this.registered = false
+    try {
+      this.removeRouteFns.forEach((fn) => {
+        try {
+          fn()
+        } catch (error) {
+          console.error('[RouteRegistry] 移除路由失败', error)
+        }
+      })
+      this.removeRouteFns = []
+      this.routeNames.clear()
+      this.routePaths.clear()
+      this.registered = false
+      safeLog('[RouteRegistry] 动态路由已全部移除')
+    } catch (error) {
+      console.error('[RouteRegistry] 移除路由失败', error)
+    }
   }
 
   /**
@@ -86,5 +137,15 @@ export class RouteRegistry {
    */
   markAsRegistered(): void {
     this.registered = true
+  }
+
+  /**
+   * 生成路由键值
+   */
+  private generateRouteKey(path?: string): string {
+    if (!path) {
+      return `Route_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    }
+    return path.replace(/[^a-zA-Z0-9]/g, '_')
   }
 }

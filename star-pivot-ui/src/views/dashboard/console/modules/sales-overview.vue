@@ -17,17 +17,17 @@
 </template>
 
 <script setup lang="ts">
-import type {DashboardTrendData} from '@/types/api/dashboard'
+  import type { DashboardTrendData } from '@/types/api/dashboard'
 
-const props = withDefaults(
+  const props = withDefaults(
     defineProps<{
       trendData: DashboardTrendData
     }>(),
     {
-      trendData: () => ({xAxisData: [], data: []})
+      trendData: () => ({ xAxisData: [], data: [] })
     }
-)
+  )
 
-const data = computed(() => props.trendData.data)
-const xAxisData = computed(() => props.trendData.xAxisData)
+  const data = computed(() => props.trendData.data)
+  const xAxisData = computed(() => props.trendData.xAxisData)
 </script>

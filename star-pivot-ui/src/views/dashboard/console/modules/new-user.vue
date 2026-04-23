@@ -83,9 +83,9 @@
   const radio2 = ref('本月')
 
   const props = withDefaults(
-      defineProps<{
-        userList: NewUserRawItem[]
-      }>(),
+    defineProps<{
+      userList: NewUserRawItem[]
+    }>(),
     {
       userList: () => []
     }
@@ -136,12 +136,12 @@
   })
 
   watch(
-      () => props.userList,
-      () => {
-        rebuildTableData()
-        addAnimation()
-      },
-      {immediate: true}
+    () => props.userList,
+    () => {
+      rebuildTableData()
+      addAnimation()
+    },
+    { immediate: true }
   )
 </script>
 

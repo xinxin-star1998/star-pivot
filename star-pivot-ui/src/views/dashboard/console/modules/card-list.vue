@@ -32,9 +32,9 @@
   }
 
   const props = withDefaults(
-      defineProps<{
-        dataList: CardDataItem[]
-      }>(),
+    defineProps<{
+      dataList: CardDataItem[]
+    }>(),
     {
       dataList: () => []
     }

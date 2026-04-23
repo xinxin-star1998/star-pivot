@@ -31,9 +31,9 @@
   }
 
   const props = withDefaults(
-      defineProps<{
-        dynamicList: DynamicItem[]
-      }>(),
+    defineProps<{
+      dynamicList: DynamicItem[]
+    }>(),
     {
       dynamicList: () => []
     }

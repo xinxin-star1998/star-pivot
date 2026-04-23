@@ -35,9 +35,9 @@
   }
 
   const props = withDefaults(
-      defineProps<{
-        todoList: TodoItem[]
-      }>(),
+    defineProps<{
+      todoList: TodoItem[]
+    }>(),
     {
       todoList: () => []
     }
@@ -46,19 +46,19 @@
   const list = reactive<TodoItem[]>([])
 
   watch(
-      () => props.todoList,
-      (value) => {
-        list.splice(
-            0,
-            list.length,
-            ...value.map((item) => ({
-              username: item.username,
-              date: item.date,
-              complete: item.complete
-            }))
-        )
+    () => props.todoList,
+    (value) => {
+      list.splice(
+        0,
+        list.length,
+        ...value.map((item) => ({
+          username: item.username,
+          date: item.date,
+          complete: item.complete
+        }))
+      )
     },
-      {immediate: true}
+    { immediate: true }
   )
 
   const pendingCount = computed(() => list.filter((item) => !item.complete).length)

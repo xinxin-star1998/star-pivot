@@ -1,71 +1,73 @@
 <!-- 参数配置管理页面 -->
 <template>
-  <!-- 搜索栏 -->
-  <ConfigSearch
-    v-model="searchForm"
-    v-auth="'system:config:list'"
-    @reset="resetSearchParams"
-    @search="handleSearch"
-  />
-
-  <ElCard class="art-table-card config-table-card" shadow="never">
-    <!-- 表格头部 -->
-    <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
-      <template #left>
-        <ElSpace class="table-actions" wrap>
-          <ElButton
-            v-auth="'system:config:add'"
-            v-ripple
-            class="action-btn"
-            @click="showDialog('add')"
-          >
-            新增参数配置
-          </ElButton>
-          <ElButton
-            v-auth="'system:config:export'"
-            v-ripple
-            :loading="exporting"
-            plain
-            type="primary"
-            @click="handleExport"
-          >
-            参数导出
-          </ElButton>
-          <ElButton
-            v-auth="'system:config:delete'"
-            v-ripple
-            :disabled="selectedRows.length === 0"
-            class="action-btn"
-            type="danger"
-            @click="handleBatchDelete"
-          >
-            批量删除
-          </ElButton>
-        </ElSpace>
-      </template>
-    </ArtTableHeader>
-
-    <!-- 表格 -->
-    <ArtTable
-      :columns="columns"
-      :data="data"
-      :loading="loading"
-      :pagination="pagination"
-      class="config-table"
-      @selection-change="handleSelectionChange"
-      @pagination:size-change="handleSizeChange"
-      @pagination:current-change="handleCurrentChange"
-    >
-    </ArtTable>
-
-    <!-- 参数配置弹窗 -->
-    <ConfigDialog
-      v-model:visible="dialogVisible"
-      :config-data="currentConfigData"
-      :type="dialogType"
-      @submit="handleDialogSubmit"
+  <div class="config-page">
+    <!-- 搜索栏 -->
+    <ConfigSearch
+      v-model="searchForm"
+      v-auth="'system:config:list'"
+      @reset="resetSearchParams"
+      @search="handleSearch"
     />
-  </ElCard>
+
+    <ElCard class="art-table-card config-table-card" shadow="never">
+      <!-- 表格头部 -->
+      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
+        <template #left>
+          <ElSpace class="table-actions" wrap>
+            <ElButton
+              v-auth="'system:config:add'"
+              v-ripple
+              class="action-btn"
+              @click="showDialog('add')"
+            >
+              新增参数配置
+            </ElButton>
+            <ElButton
+              v-auth="'system:config:export'"
+              v-ripple
+              :loading="exporting"
+              plain
+              type="primary"
+              @click="handleExport"
+            >
+              参数导出
+            </ElButton>
+            <ElButton
+              v-auth="'system:config:delete'"
+              v-ripple
+              :disabled="selectedRows.length === 0"
+              class="action-btn"
+              type="danger"
+              @click="handleBatchDelete"
+            >
+              批量删除
+            </ElButton>
+          </ElSpace>
+        </template>
+      </ArtTableHeader>
+
+      <!-- 表格 -->
+      <ArtTable
+        :columns="columns"
+        :data="data"
+        :loading="loading"
+        :pagination="pagination"
+        class="config-table"
+        @selection-change="handleSelectionChange"
+        @pagination:size-change="handleSizeChange"
+        @pagination:current-change="handleCurrentChange"
+      >
+      </ArtTable>
+
+      <!-- 参数配置弹窗 -->
+      <ConfigDialog
+        v-model:visible="dialogVisible"
+        :config-data="currentConfigData"
+        :type="dialogType"
+        @submit="handleDialogSubmit"
+      />
+    </ElCard>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -84,6 +86,7 @@
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { ref, nextTick, h } from 'vue'
 
   defineOptions({ name: 'Config' })
 
@@ -329,6 +332,10 @@
 </script>
 
 <style lang="scss" scoped>
+  .config-page {
+    padding: 0 16px 16px;
+  }
+
   .search-panel {
     padding: 14px 16px 2px;
     margin-bottom: 12px;
