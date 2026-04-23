@@ -27,6 +27,7 @@
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "next",
     "axios": "1.13.5",
+    "cron-parser": "^5.5.0",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "echarts": "^6.0.0",
