@@ -144,13 +144,15 @@
       prop: 'remark',
       label: '备注',
       minWidth: 150,
-      formatter: (row: SysDictData) => row.remark || h('span', { style: 'color: #999' }, '无')
+      formatter: (row: SysDictData) =>
+        row.remark || h('span', { style: 'color: var(--art-gray-500)' }, '无')
     },
     {
       prop: 'createTime',
       label: '创建时间',
       width: 180,
-      formatter: (row: SysDictData) => row.createTime || h('span', { style: 'color: #999' }, '暂无')
+      formatter: (row: SysDictData) =>
+        row.createTime || h('span', { style: 'color: var(--art-gray-500)' }, '暂无')
     },
     {
       prop: 'operation',
@@ -167,7 +169,7 @@
           actions.push(h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row) }))
         }
 
-        if (actions.length === 0) return h('span', { style: 'color: #999' }, '')
+        if (actions.length === 0) return h('span', { style: 'color: var(--art-gray-500)' }, '')
         return h('div', { style: 'text-align: right' }, actions)
       }
     }

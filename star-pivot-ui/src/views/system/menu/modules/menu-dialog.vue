@@ -843,7 +843,7 @@
     border: 0;
     border-left: 1px solid var(--el-border-color);
     border-radius: 0 4px 4px 0;
-    background: #fff;
+    background: var(--default-box-color);
 
     &:hover {
       background: var(--el-fill-color-light);

@@ -631,11 +631,11 @@
     overflow: hidden;
     border: 1px solid var(--art-card-border);
     border-radius: 16px;
-    box-shadow: 0 4px 16px 0 rgb(0 0 0 / 8%);
+    box-shadow: var(--art-shadow-card);
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 8px 24px 0 rgb(0 0 0 / 12%);
+      box-shadow: var(--art-shadow-card-hover);
     }
   }
 
@@ -650,7 +650,7 @@
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+      box-shadow: var(--art-shadow-sm);
     }
   }
 
@@ -660,7 +660,7 @@
       transition: all 0.3s ease;
 
       &:hover {
-        box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+        box-shadow: var(--art-shadow-sm);
       }
     }
   }
@@ -676,7 +676,7 @@
   }
 
   :deep(.user-center-top-avatar .avatar-preview) {
-    border: 4px solid #fff;
+    border: 4px solid var(--default-box-color);
     box-shadow: 0 10px 20px rgb(0 0 0 / 20%);
   }
 

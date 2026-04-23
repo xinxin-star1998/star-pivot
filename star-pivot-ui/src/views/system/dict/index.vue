@@ -3,17 +3,14 @@
   <div class="dict-page art-full-height">
     <ElRow :gutter="12" class="dict-layout">
       <ElCol :xs="24" class="dict-left">
+        <ArtSearchBar
+          v-model="searchFilters"
+          :items="formItems"
+          :showExpand="false"
+          @reset="handleReset"
+          @search="handleSearch"
+        />
         <ElCard class="art-table-card" shadow="never">
-          <div class="dict-left-filter">
-            <ArtSearchBar
-              v-model="searchFilters"
-              :items="formItems"
-              :showExpand="false"
-              @reset="handleReset"
-              @search="handleSearch"
-            />
-          </div>
-
           <!-- 表格头部 -->
           <ArtTableHeader
             :showZebra="false"
@@ -236,7 +233,7 @@
           'span',
           {
             style: {
-              color: '#409eff', // 蓝色文字，提示可点击
+              color: 'var(--el-color-primary)', // 统一使用主题主色
               cursor: 'pointer' // 鼠标手型
               // textDecoration: 'underline' // 下划线（可选）
             },
@@ -261,7 +258,7 @@
       label: '备注',
       minWidth: 200,
       formatter: (row: SysDictType) => {
-        return row.remark || h('span', { style: 'color: #999' }, '无')
+        return row.remark || h('span', { style: 'color: var(--art-gray-500)' }, '无')
       }
     },
     {
@@ -269,7 +266,7 @@
       label: '创建时间',
       width: 180,
       formatter: (row: SysDictType) => {
-        return row.createTime || h('span', { style: 'color: #999' }, '暂无')
+        return row.createTime || h('span', { style: 'color: var(--art-gray-500)' }, '暂无')
       }
     },
     {
@@ -302,7 +299,7 @@
 
         if (actions.length === 0) {
           // 无任何操作权限时返回空占位
-          return h('span', { style: 'color: #999' }, '')
+          return h('span', { style: 'color: var(--art-gray-500)' }, '')
         }
 
         return h('div', { style: 'text-align: right' }, actions)
@@ -517,7 +514,7 @@
 
 <style scoped lang="scss">
   .dict-page {
-    padding: 16px;
+    padding: var(--art-page-padding);
     background-color: var(--default-bg-color);
   }
 
@@ -530,20 +527,6 @@
     flex-direction: column;
     gap: 12px;
     min-height: 0;
-  }
-
-  .dict-left-filter {
-    margin-bottom: 8px;
-    padding-bottom: 6px;
-    border-bottom: 1px dashed var(--art-card-border);
-
-    :deep(.el-form) {
-      margin-bottom: 0;
-    }
-
-    :deep(.el-card__body) {
-      padding: 0;
-    }
   }
 
   .selected-meta {
@@ -565,11 +548,11 @@
     min-height: 0;
     border: 1px solid var(--art-card-border);
     border-radius: 12px;
-    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    box-shadow: var(--art-shadow-card);
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+      box-shadow: var(--art-shadow-card-hover);
     }
 
     .el-card__body {

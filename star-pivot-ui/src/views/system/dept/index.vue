@@ -272,7 +272,7 @@
 
         if (actions.length === 0) {
           // 无任何操作权限时返回空占位
-          return h('span', { style: 'color: #999' }, '')
+          return h('span', { style: 'color: var(--art-gray-500)' }, '')
         }
 
         return h('div', buttonStyle, actions)
@@ -402,18 +402,18 @@
 
 <style scoped lang="scss">
   .dept-page {
-    padding: 16px;
+    padding: var(--art-page-padding);
     background-color: var(--default-bg-color);
   }
 
   :deep(.art-table-card) {
     border: 1px solid var(--art-card-border);
     border-radius: 12px;
-    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    box-shadow: var(--art-shadow-card);
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+      box-shadow: var(--art-shadow-card-hover);
     }
   }
 

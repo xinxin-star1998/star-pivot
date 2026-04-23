@@ -193,7 +193,7 @@
 
             if (actions.length === 0) {
               // 无任何操作权限时返回空占位
-              return h('span', { style: 'color: #999' }, '')
+              return h('span', { style: 'color: var(--art-gray-500)' }, '')
             }
 
             return h('div', actions)
@@ -333,23 +333,23 @@
 
 <style lang="scss" scoped>
   .config-page {
-    padding: 0 16px 16px;
+    padding: 0 var(--art-page-padding) var(--art-page-padding);
   }
 
   .search-panel {
     padding: 14px 16px 2px;
     margin-bottom: 12px;
-    background-color: var(--el-bg-color);
+    background-color: var(--default-box-color);
     border: 1px solid var(--art-card-border);
     border-radius: 12px;
-    box-shadow: 0 8px 20px rgb(15 23 42 / 4%);
+    box-shadow: var(--art-shadow-card);
   }
 
   .config-table-card {
     overflow: hidden;
     border: 1px solid var(--art-card-border);
     border-radius: 12px;
-    box-shadow: 0 10px 24px rgb(15 23 42 / 5%);
+    box-shadow: var(--art-shadow-card);
   }
 
   .table-actions {
@@ -361,7 +361,7 @@
   .action-btn {
     font-weight: 500;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgb(64 158 255 / 12%);
+    box-shadow: var(--art-shadow-sm);
   }
 
   .config-table {
@@ -372,7 +372,7 @@
 
     :deep(.el-table th.el-table__cell) {
       font-weight: 600;
-      color: #334155;
+      color: var(--art-gray-800);
     }
 
     :deep(.el-table td.el-table__cell) {

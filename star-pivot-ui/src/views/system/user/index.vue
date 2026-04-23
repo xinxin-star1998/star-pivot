@@ -408,7 +408,8 @@
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: user.status === '0' ? '#67C23A' : '#909399'
+                          backgroundColor:
+                            user.status === '0' ? 'var(--el-color-success)' : 'var(--el-color-info)'
                         }
                       })
                     ]
@@ -833,11 +834,11 @@
     width: 22px;
     height: 40px;
     padding: 0;
-    color: #409eff;
+    color: var(--el-color-primary);
     border: var(--panel-border);
     border-left: none;
     border-radius: 0 10px 10px 0;
-    background: #ecf5ff;
+    background: var(--el-color-primary-light-9);
     transform: translateY(-50%);
     transition:
       left 0.22s ease,
@@ -846,8 +847,8 @@
   }
 
   .panel-toggle-btn:hover {
-    color: #66b1ff;
-    background: #d9ecff;
+    color: var(--el-color-primary-light-3);
+    background: var(--el-color-primary-light-8);
     transform: none;
   }
 

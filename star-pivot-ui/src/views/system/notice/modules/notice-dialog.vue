@@ -237,7 +237,7 @@
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+      box-shadow: var(--art-shadow-sm);
     }
   }
 
@@ -249,7 +249,7 @@
       transition: all 0.3s ease;
 
       &:hover {
-        box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+        box-shadow: var(--art-shadow-sm);
       }
     }
   }

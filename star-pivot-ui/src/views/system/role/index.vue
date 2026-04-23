@@ -1,6 +1,6 @@
 <!-- 角色管理页面 -->
 <template>
-  <div class="art-full-height">
+  <div class="role-page art-full-height">
     <RoleSearch
       v-show="showSearchBar"
       v-model="searchForm"
@@ -89,7 +89,7 @@
     daterange: undefined
   })
 
-  const showSearchBar = ref(false)
+  const showSearchBar = ref(true)
 
   const dialogVisible = ref(false)
   const assignDataScopeDialog = ref(false)
@@ -170,7 +170,7 @@
           formatter: (row) => {
             // admin 角色编码不显示任何操作按钮
             if (row.roleKey === 'admin') {
-              return h('span', { style: 'color: #999' }, '')
+              return h('span', { style: 'color: var(--art-gray-500)' }, '')
             }
 
             const actions: any[] = []
@@ -223,7 +223,7 @@
             }
 
             if (actions.length === 0) {
-              return h('span', { style: 'color: #999' }, '')
+              return h('span', { style: 'color: var(--art-gray-500)' }, '')
             }
 
             return h('div', { class: 'flex items-center gap-0' }, actions)
@@ -293,14 +293,19 @@
 </script>
 
 <style scoped lang="scss">
+  .role-page {
+    padding: var(--art-page-padding);
+    background-color: var(--default-bg-color);
+  }
+
   :deep(.art-table-card) {
     border: 1px solid var(--art-card-border);
     border-radius: 12px;
-    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    box-shadow: var(--art-shadow-card);
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+      box-shadow: var(--art-shadow-card-hover);
     }
   }
 

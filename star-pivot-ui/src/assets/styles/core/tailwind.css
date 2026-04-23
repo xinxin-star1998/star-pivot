@@ -46,6 +46,16 @@
 
   /* Element Component Active Color */
   --art-el-active-color: #f2f4f5;
+
+  /* Layout & Shape */
+  --art-page-padding: 16px;
+
+  /* Shadow (cards / panels) */
+  --art-shadow-card: 0 2px 12px 0 rgb(0 0 0 / 8%);
+  --art-shadow-card-hover: 0 4px 16px 0 rgb(0 0 0 / 12%);
+
+  /* Shadow (sm) - inputs / small surfaces */
+  --art-shadow-sm: 0 2px 8px 0 rgb(0 0 0 / 8%);
 }
 
 /* ==================== Dark Mode Variables ==================== */
@@ -83,6 +93,16 @@
 
   /* Element Component Active Color */
   --art-el-active-color: #2e2e38;
+
+  /* Layout & Shape */
+  --art-page-padding: 16px;
+
+  /* Shadow (cards / panels) - dark mode usually flatter */
+  --art-shadow-card: none;
+  --art-shadow-card-hover: none;
+
+  /* Shadow (sm) */
+  --art-shadow-sm: none;
 }
 
 /* ==================== Tailwind Theme Configuration ==================== */
@@ -163,23 +183,23 @@
 
   /* Border Utilities */
   .border-full-d {
-    @apply border border-[var(--default-border)];
+    @apply border border-(--default-border);
   }
 
   .border-b-d {
-    @apply border-b border-[var(--default-border)];
+    @apply border-b border-(--default-border);
   }
 
   .border-t-d {
-    @apply border-t border-[var(--default-border)];
+    @apply border-t border-(--default-border);
   }
 
   .border-l-d {
-    @apply border-l border-[var(--default-border)];
+    @apply border-l border-(--default-border);
   }
 
   .border-r-d {
-    @apply border-r border-[var(--default-border)];
+    @apply border-r border-(--default-border);
   }
 
   /* Cursor Utilities */
@@ -207,5 +227,24 @@
         }
       }
     }
+  }
+
+  /* Page shell: consistent padding + background */
+  .art-page-shell {
+    padding: var(--art-page-padding);
+    background-color: var(--default-bg-color);
+  }
+
+  /* Panel/Card baseline: consistent border/radius/shadow */
+  .art-panel {
+    background-color: var(--default-box-color);
+    border: 1px solid var(--art-card-border);
+    border-radius: 12px;
+    box-shadow: var(--art-shadow-card);
+    transition: box-shadow 0.25s ease;
+  }
+
+  .art-panel:hover {
+    box-shadow: var(--art-shadow-card-hover);
   }
 }

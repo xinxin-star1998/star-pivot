@@ -321,7 +321,7 @@
             )
           )
         }
-        return h('span', { style: 'color: #999' }, '无')
+        return h('span', { style: 'color: var(--art-gray-500)' }, '无')
       }
     },
     {
@@ -329,7 +329,7 @@
       label: '创建时间',
       width: 180,
       formatter: (row: AppRouteRecord) => {
-        return row.createTime || h('span', { style: 'color: #999' }, '暂无')
+        return row.createTime || h('span', { style: 'color: var(--art-gray-500)' }, '暂无')
       }
     },
     {
@@ -413,7 +413,7 @@
 
         if (buttons.length === 0) {
           // 无任何操作权限时返回空占位
-          return h('span', { style: 'color: #999' }, '')
+          return h('span', { style: 'color: var(--art-gray-500)' }, '')
         }
 
         return h('div', buttonStyle, buttons)
@@ -754,18 +754,18 @@
 
 <style scoped lang="scss">
   .menu-page {
-    padding: 16px;
+    padding: var(--art-page-padding);
     background-color: var(--default-bg-color);
   }
 
   :deep(.art-table-card) {
     border: 1px solid var(--art-card-border);
     border-radius: 12px;
-    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    box-shadow: var(--art-shadow-card);
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+      box-shadow: var(--art-shadow-card-hover);
     }
   }
 
