@@ -327,7 +327,12 @@
       deletingCache.value = cache.cacheName
       try {
         const deletedCount = await fetchDeleteCache(cache.cacheName)
-        ElMessage.success(`删除成功，共删除 ${deletedCount} 个键`)
+        if (deletedCount > 0) {
+          ElMessage.success(`删除成功，共删除 ${deletedCount} 个键`)
+        } else {
+          ElMessage.warning('未匹配到可删除的键（可能已被删除或键格式与分组不一致）')
+        }
+        await getCacheList()
         if (selectedCache.value?.cacheName === cache.cacheName) {
           await getCacheKeys(cache.cacheName)
         }

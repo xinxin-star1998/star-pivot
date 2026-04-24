@@ -961,6 +961,10 @@ public class MonitorServiceImpl implements MonitorService {
             // 例如：cacheName = "jwt"，则扫描 "jwt:*"
             String keyPattern = cacheName + ":*";
             Set<String> keys = scanKeys(keyPattern);
+            // 无前缀冒号时，整键即为一组，需包含与分组名完全相同的键
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(cacheName))) {
+                keys.add(cacheName);
+            }
             List<RedisCacheVO.CacheKeyInfo> keyInfoList = new ArrayList<>();
 
             for (String key : keys) {
@@ -1313,14 +1317,21 @@ public class MonitorServiceImpl implements MonitorService {
         }
 
         try {
-            String keyPattern = cacheName + ":*";
-            Set<String> keys = scanKeys(keyPattern);
-            if (keys.isEmpty()) {
-                return 0L;
+            long total = 0L;
+            // 分组规则里「无前缀冒号」时整键即分组名，仅 scan「prefix:*」会漏删
+            Boolean deletedExact = redisTemplate.delete(cacheName);
+            if (Boolean.TRUE.equals(deletedExact)) {
+                total++;
             }
 
-            Long deletedCount = redisTemplate.delete(keys);
-            return deletedCount != null ? deletedCount : 0L;
+            String keyPattern = cacheName + ":*";
+            Set<String> keys = scanKeys(keyPattern);
+            if (!keys.isEmpty()) {
+                Long deletedBatch = redisTemplate.delete(keys);
+                total += deletedBatch != null ? deletedBatch : 0L;
+            }
+
+            return total;
         } catch (Exception e) {
             log.error("删除缓存失败，cacheName: {}", cacheName, e);
             throw new BizException(ErrorCode.REDIS_ERROR, "删除缓存失败: " + e.getMessage());
