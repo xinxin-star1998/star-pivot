@@ -28,7 +28,9 @@
               </div>
             </template>
             <ElTable
+              ref="cacheTableRef"
               :data="cacheList"
+              row-key="cacheName"
               highlight-current-row
               @current-change="handleCacheSelect"
               v-loading="loadingCacheList"
@@ -171,6 +173,9 @@
 
   const loading = ref(false)
   const keyListRef = ref<InstanceType<typeof ArtVirtualList> | null>(null)
+  const cacheTableRef = ref<{
+    setCurrentRow: (row?: RedisCacheInfo) => void
+  } | null>(null)
 
   const loadingCacheList = ref(false)
   const loadingKeys = ref(false)
@@ -194,11 +199,34 @@
   /**
    * 获取缓存列表
    */
+  /** 列表刷新后，若当前选中的分组已不存在（例如已删空），清除高亮与中间栏 */
+  const syncSelectionWithCacheList = () => {
+    const name = selectedCache.value?.cacheName
+    if (!name) {
+      return
+    }
+    const exists = cacheList.value.some((c) => c.cacheName === name)
+    if (!exists) {
+      cacheTableRef.value?.setCurrentRow(undefined)
+      selectedCache.value = null
+      selectedKey.value = null
+      keyList.value = []
+      cacheContent.value = {
+        cacheName: '',
+        key: '',
+        content: '',
+        type: '',
+        ttl: -2
+      }
+    }
+  }
+
   const getCacheList = async () => {
     loadingCacheList.value = true
     try {
       const data = await fetchGetCacheList()
-      cacheList.value = data
+      cacheList.value = data ?? []
+      syncSelectionWithCacheList()
     } catch (error) {
       console.error('获取缓存列表失败:', error)
     } finally {
@@ -366,8 +394,11 @@
         await fetchDeleteCacheKey(selectedCache.value.cacheName, key.key)
         ElMessage.success('删除成功')
         await getCacheKeys(selectedCache.value.cacheName)
+        if (keyList.value.length === 0) {
+          await getCacheList()
+        }
         cacheContent.value = {
-          cacheName: selectedCache.value.cacheName,
+          cacheName: selectedCache.value?.cacheName || '',
           key: '',
           content: '',
           type: '',
@@ -398,6 +429,9 @@
       try {
         await fetchClearAllCache()
         ElMessage.success('清空成功')
+        cacheTableRef.value?.setCurrentRow(undefined)
+        selectedCache.value = null
+        selectedKey.value = null
         await getCacheList()
         keyList.value = []
         cacheContent.value = {
@@ -421,13 +455,13 @@
   /**
    * 处理刷新按钮点击
    */
-  const handleRefresh = () => {
-    getCacheList()
+  const handleRefresh = async () => {
+    await getCacheList()
     if (selectedCache.value) {
-      getCacheKeys(selectedCache.value.cacheName)
+      await getCacheKeys(selectedCache.value.cacheName)
     }
     if (selectedCache.value && selectedKey.value) {
-      getCacheContent(selectedCache.value.cacheName, selectedKey.value.key)
+      await getCacheContent(selectedCache.value.cacheName, selectedKey.value.key)
     }
   }
 
