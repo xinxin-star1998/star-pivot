@@ -105,7 +105,12 @@ public class SecurityConfig {
                 "/auth/login",
                 "/auth/refresh",
                 "/auth/captcha",
-                "/auth/captcha/verify"
+                "/auth/captcha/verify",
+                // 前端/网关常用的 /api 前缀（如 dev server proxy / nginx location /api）
+                "/api/auth/login",
+                "/api/auth/refresh",
+                "/api/auth/captcha",
+                "/api/auth/captcha/verify"
         ));
 
         if (securityProperties.getPermitAllPaths() != null) {

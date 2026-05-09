@@ -21,8 +21,9 @@
   import '@wangeditor/editor/dist/css/style.css'
   import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
   import { useUserStore } from '@/store/modules/user'
+  import { getApiBaseUrl } from '@/utils/http'
   import EmojiText from '@/utils/ui/emojo'
-  import { IDomEditor, IToolbarConfig, IEditorConfig } from '@wangeditor/editor'
+  import { IDomEditor, IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
 
   defineOptions({ name: 'ArtWangEditor' })
 
@@ -69,11 +70,14 @@
     allowedFileTypes: ['image/*']
   } as const
 
-  // 计算属性：上传服务器地址
-  const uploadServer = computed(
-    () =>
-      props.uploadConfig?.server || `${import.meta.env.VITE_API_URL}/api/common/upload/wangeditor`
-  )
+  /** 与 Axios 一致：VITE_API_URL 为 /api 时不应再拼 /api，否则会出现 /api/api/... */
+  const uploadServer = computed(() => {
+    if (props.uploadConfig?.server) return props.uploadConfig.server
+    const base = getApiBaseUrl().replace(/\/$/, '')
+    const path = '/common/upload/wangeditor'
+    if (!base || base === '/') return `/api${path}`
+    return `${base}${path}`
+  })
 
   // 合并上传配置
   const mergedUploadConfig = computed(() => ({
@@ -103,29 +107,37 @@
     return config
   })
 
-  // 编辑器配置
-  const editorConfig: Partial<IEditorConfig> = {
-    placeholder: props.placeholder,
-    MENU_CONF: {
-      uploadImage: {
-        fieldName: mergedUploadConfig.value.fieldName,
-        maxFileSize: mergedUploadConfig.value.maxFileSize,
-        maxNumberOfFiles: mergedUploadConfig.value.maxNumberOfFiles,
-        allowedFileTypes: mergedUploadConfig.value.allowedFileTypes,
-        server: uploadServer.value,
-        headers: {
-          Authorization: userStore.accessToken
-        },
-        onSuccess() {
-          ElMessage.success(`图片上传成功 ${EmojiText[200]}`)
-        },
-        onError(file: File, err: any, res: any) {
-          console.error('图片上传失败:', err, res)
-          ElMessage.error(`图片上传失败 ${EmojiText[500]}`)
+  const authHeader = computed(() => {
+    const t = userStore.accessToken
+    if (!t) return {}
+    return {
+      Authorization: t.startsWith('Bearer ') ? t : `Bearer ${t}`
+    }
+  })
+
+  // 编辑器配置（computed：上传地址、Token 与运行时 config.js 保持一致）
+  const editorConfig = computed(
+    (): Partial<IEditorConfig> => ({
+      placeholder: props.placeholder,
+      MENU_CONF: {
+        uploadImage: {
+          fieldName: mergedUploadConfig.value.fieldName,
+          maxFileSize: mergedUploadConfig.value.maxFileSize,
+          maxNumberOfFiles: mergedUploadConfig.value.maxNumberOfFiles,
+          allowedFileTypes: mergedUploadConfig.value.allowedFileTypes,
+          server: uploadServer.value,
+          headers: authHeader.value,
+          onSuccess() {
+            ElMessage.success(`图片上传成功 ${EmojiText[200]}`)
+          },
+          onError(file: File, err: any, res: any) {
+            console.error('图片上传失败:', err, res)
+            ElMessage.error(`图片上传失败 ${EmojiText[500]}`)
+          }
         }
       }
-    }
-  }
+    })
+  )
 
   // 编辑器创建回调
   const onCreateEditor = (editor: IDomEditor) => {

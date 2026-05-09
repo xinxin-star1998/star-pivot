@@ -8,11 +8,7 @@
  */
 
 import type { AppRouteRecord } from '@/types/router'
-import {
-  fetchGetDynamicRoutes,
-  type DynamicRouteVo,
-  type SysMenu
-} from '@/api/menu/menu'
+import { fetchGetDynamicRoutes, type DynamicRouteVo, type SysMenu } from '@/api/menu/menu'
 import { RoutesAlias } from '../routesAlias'
 import { formatMenuTitle } from '@/utils'
 
@@ -22,39 +18,39 @@ export class MenuProcessor {
    */
   async getMenuListWithRaw(): Promise<{ rawMenuList: SysMenu[]; menuList: AppRouteRecord[] }> {
     try {
-        const dynamicRoutes = await fetchGetDynamicRoutes()
+      const dynamicRoutes = await fetchGetDynamicRoutes()
 
-        if (!dynamicRoutes || !Array.isArray(dynamicRoutes)) {
-            console.error('[MenuProcessor] 后端返回的动态路由格式错误:', dynamicRoutes)
+      if (!dynamicRoutes || !Array.isArray(dynamicRoutes)) {
+        console.error('[MenuProcessor] 后端返回的动态路由格式错误:', dynamicRoutes)
         throw new Error('后端返回的菜单数据格式错误，期望数组类型')
       }
 
       if (import.meta.env.DEV) {
-          console.log('[MenuProcessor] 获取到动态路由:', dynamicRoutes)
+        console.log('[MenuProcessor] 获取到动态路由:', dynamicRoutes)
       }
 
-        const rawMenuList = this.dynamicRoutesToSysMenuShim(dynamicRoutes)
-        const convertedList = this.convertDynamicRouteToRouteRecord(dynamicRoutes)
+      const rawMenuList = this.dynamicRoutesToSysMenuShim(dynamicRoutes)
+      const convertedList = this.convertDynamicRouteToRouteRecord(dynamicRoutes)
       const menuList = this.filterEmptyMenus(convertedList)
       this.validateMenuPaths(menuList)
 
-        return {
-            rawMenuList,
-            menuList: this.normalizeMenuPaths(menuList)
-        }
+      return {
+        rawMenuList,
+        menuList: this.normalizeMenuPaths(menuList)
+      }
     } catch (error) {
       console.error('[MenuProcessor] 获取菜单数据失败:', error)
       throw error
     }
   }
 
-    /**
-     * 获取菜单数据（从后端获取）
-     */
-    async getMenuList(): Promise<AppRouteRecord[]> {
-        const {menuList} = await this.getMenuListWithRaw()
-        return menuList
-    }
+  /**
+   * 获取菜单数据（从后端获取）
+   */
+  async getMenuList(): Promise<AppRouteRecord[]> {
+    const { menuList } = await this.getMenuListWithRaw()
+    return menuList
+  }
 
   /**
    * 将 SysMenu 数组转换为 AppRouteRecord 数组（公共方法）

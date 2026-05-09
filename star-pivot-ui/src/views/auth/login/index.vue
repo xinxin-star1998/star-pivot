@@ -127,17 +127,17 @@
 </template>
 
 <script setup lang="ts">
-import AppConfig from '@/config'
-import {useUserStore} from '@/store/modules/user'
-import {useSettingStore} from '@/store/modules/setting'
-import {useI18n} from 'vue-i18n'
-import {HttpError} from '@/utils/http/error'
-import {fetchCaptcha, fetchLogin, fetchVerifyCaptcha} from '@/api/auth'
-import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
-import {useCommon} from '@/hooks'
-import {useRoute, useRouter} from 'vue-router'
+  import AppConfig from '@/config'
+  import { useUserStore } from '@/store/modules/user'
+  import { useSettingStore } from '@/store/modules/setting'
+  import { useI18n } from 'vue-i18n'
+  import { HttpError } from '@/utils/http/error'
+  import { fetchCaptcha, fetchLogin, fetchVerifyCaptcha } from '@/api/auth'
+  import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
+  import { useCommon } from '@/hooks'
+  import { useRoute, useRouter } from 'vue-router'
 
-defineOptions({ name: 'Login' })
+  defineOptions({ name: 'Login' })
 
   const { t, locale } = useI18n()
   const formKey = ref(0)

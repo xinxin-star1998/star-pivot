@@ -1,14 +1,14 @@
 <!-- 工作台页面 -->
 <template>
   <div>
-    <CardList :data-list="dashboardData.cardList"/>
+    <CardList :data-list="dashboardData.cardList" />
 
     <ElRow :gutter="20">
       <ElCol :sm="24" :md="12" :lg="10">
-        <ActiveUser :trend-data="dashboardData.userTrend"/>
+        <ActiveUser :trend-data="dashboardData.userTrend" />
       </ElCol>
       <ElCol :sm="24" :md="12" :lg="14">
-        <SalesOverview :trend-data="dashboardData.visitTrend"/>
+        <SalesOverview :trend-data="dashboardData.visitTrend" />
       </ElCol>
     </ElRow>
 
@@ -16,13 +16,13 @@
       <ElCol :sm="24" :md="24" :lg="24">
         <ElRow :gutter="20">
           <ElCol :sm="24" :md="24" :lg="12">
-            <NewUser :user-list="dashboardData.newUserList"/>
+            <NewUser :user-list="dashboardData.newUserList" />
           </ElCol>
           <ElCol :sm="24" :md="12" :lg="6">
-            <Dynamic :dynamic-list="dashboardData.dynamicList"/>
+            <Dynamic :dynamic-list="dashboardData.dynamicList" />
           </ElCol>
           <ElCol :sm="24" :md="12" :lg="6">
-            <TodoList :todo-list="dashboardData.todoList"/>
+            <TodoList :todo-list="dashboardData.todoList" />
           </ElCol>
         </ElRow>
       </ElCol>
@@ -33,9 +33,9 @@
 </template>
 
 <script setup lang="ts">
-import {ElMessage} from 'element-plus'
-import {fetchGetConsoleDashboardData} from '@/api/dashboard/console'
-import type {ConsoleDashboardData} from '@/types/api/dashboard'
+  import { ElMessage } from 'element-plus'
+  import { fetchGetConsoleDashboardData } from '@/api/dashboard/console'
+  import type { ConsoleDashboardData } from '@/types/api/dashboard'
   import CardList from './modules/card-list.vue'
   import ActiveUser from './modules/active-user.vue'
   import SalesOverview from './modules/sales-overview.vue'
@@ -46,28 +46,28 @@ import type {ConsoleDashboardData} from '@/types/api/dashboard'
 
   defineOptions({ name: 'Console' })
 
-const createDefaultData = (): ConsoleDashboardData => ({
-  cardList: [],
-  visitTrend: {xAxisData: [], data: []},
-  userTrend: {xAxisData: [], data: []},
-  todoList: [],
-  dynamicList: [],
-  newUserList: []
-})
+  const createDefaultData = (): ConsoleDashboardData => ({
+    cardList: [],
+    visitTrend: { xAxisData: [], data: [] },
+    userTrend: { xAxisData: [], data: [] },
+    todoList: [],
+    dynamicList: [],
+    newUserList: []
+  })
 
-const dashboardData = ref<ConsoleDashboardData>(createDefaultData())
+  const dashboardData = ref<ConsoleDashboardData>(createDefaultData())
 
-const loadDashboardData = async () => {
-  try {
-    dashboardData.value = await fetchGetConsoleDashboardData()
-  } catch (error) {
-    dashboardData.value = createDefaultData()
-    ElMessage.error('加载首页数据失败，请稍后重试')
-    console.error('加载首页数据失败', error)
+  const loadDashboardData = async () => {
+    try {
+      dashboardData.value = await fetchGetConsoleDashboardData()
+    } catch (error) {
+      dashboardData.value = createDefaultData()
+      ElMessage.error('加载首页数据失败，请稍后重试')
+      console.error('加载首页数据失败', error)
+    }
   }
-}
 
-onMounted(() => {
-  loadDashboardData()
-})
+  onMounted(() => {
+    loadDashboardData()
+  })
 </script>

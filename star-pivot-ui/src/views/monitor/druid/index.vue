@@ -68,10 +68,10 @@
                 </ElDescriptionsItem>
               </ElDescriptions>
               <ElProgress
-                  :percentage="druidInfo.connectionPool?.usage || 0"
-                  :color="getProgressColor(druidInfo.connectionPool?.usage || 0)"
-                  :stroke-width="8"
-                  style="margin-top: 10px"
+                :percentage="druidInfo.connectionPool?.usage || 0"
+                :color="getProgressColor(druidInfo.connectionPool?.usage || 0)"
+                :stroke-width="8"
+                style="margin-top: 10px"
               />
             </ElCard>
 

@@ -1,6 +1,6 @@
 <!-- 服务器监控页面 -->
 <template>
-  <div :class="{'is-dark': isDark}" class="server-monitor-page">
+  <div :class="{ 'is-dark': isDark }" class="server-monitor-page">
     <ElCard class="art-table-card server-monitor-card" shadow="never">
       <template #header>
         <div class="card-header">
@@ -15,10 +15,10 @@
             </div>
             <div class="status-pills">
               <div
-                  v-for="item in statusPills"
-                  :key="item.label"
-                  :class="`is-${item.level}`"
-                  class="status-pill"
+                v-for="item in statusPills"
+                :key="item.label"
+                :class="`is-${item.level}`"
+                class="status-pill"
               >
                 <span class="pill-label">{{ item.label }}</span>
                 <span class="pill-value">{{ item.value }}</span>
@@ -64,20 +64,25 @@
                   </div>
                 </template>
                 <div class="meter-group">
-                  <div v-for="item in cpuUsageMeters" :key="item.label" :class="`is-${item.level}`" class="meter-item">
+                  <div
+                    v-for="item in cpuUsageMeters"
+                    :key="item.label"
+                    :class="`is-${item.level}`"
+                    class="meter-item"
+                  >
                     <div class="meter-label">{{ item.label }}</div>
                     <ElProgress
-                        :color="item.color"
-                        :percentage="item.value"
-                        :show-text="false"
-                        :stroke-width="12"
+                      :color="item.color"
+                      :percentage="item.value"
+                      :show-text="false"
+                      :stroke-width="12"
                     />
                     <div class="meter-value">{{ formatPercent(item.value) }}</div>
                   </div>
                 </div>
                 <ElTable :data="cpuRows" border size="small">
-                  <ElTableColumn label="属性" min-width="140" prop="label"/>
-                  <ElTableColumn label="值" min-width="120" prop="value"/>
+                  <ElTableColumn label="属性" min-width="140" prop="label" />
+                  <ElTableColumn label="值" min-width="120" prop="value" />
                 </ElTable>
               </ElCard>
             </ElCol>
@@ -90,22 +95,26 @@
                   </div>
                 </template>
                 <div class="meter-group">
-                  <div v-for="item in memoryUsageMeters" :key="item.label" :class="`is-${item.level}`"
-                       class="meter-item">
+                  <div
+                    v-for="item in memoryUsageMeters"
+                    :key="item.label"
+                    :class="`is-${item.level}`"
+                    class="meter-item"
+                  >
                     <div class="meter-label">{{ item.label }}</div>
                     <ElProgress
-                        :color="item.color"
-                        :percentage="item.value"
-                        :show-text="false"
-                        :stroke-width="12"
+                      :color="item.color"
+                      :percentage="item.value"
+                      :show-text="false"
+                      :stroke-width="12"
                     />
                     <div class="meter-value">{{ formatPercent(item.value) }}</div>
                   </div>
                 </div>
                 <ElTable :data="memoryRows" border size="small">
-                  <ElTableColumn label="属性" min-width="140" prop="label"/>
-                  <ElTableColumn label="内存" min-width="120" prop="memory"/>
-                  <ElTableColumn label="JVM" min-width="120" prop="jvm"/>
+                  <ElTableColumn label="属性" min-width="140" prop="label" />
+                  <ElTableColumn label="内存" min-width="120" prop="memory" />
+                  <ElTableColumn label="JVM" min-width="120" prop="jvm" />
                 </ElTable>
               </ElCard>
             </ElCol>
@@ -144,12 +153,12 @@
               </div>
             </template>
             <ElTable :data="diskRows" border size="small">
-              <ElTableColumn label="盘符路径" min-width="120" prop="mount"/>
-              <ElTableColumn label="文件系统" min-width="100" prop="fileSystem"/>
-              <ElTableColumn label="磁盘类型" min-width="140" prop="typeName"/>
-              <ElTableColumn label="总大小" min-width="90" prop="total"/>
-              <ElTableColumn label="可用大小" min-width="90" prop="usable"/>
-              <ElTableColumn label="已用大小" min-width="90" prop="used"/>
+              <ElTableColumn label="盘符路径" min-width="120" prop="mount" />
+              <ElTableColumn label="文件系统" min-width="100" prop="fileSystem" />
+              <ElTableColumn label="磁盘类型" min-width="140" prop="typeName" />
+              <ElTableColumn label="总大小" min-width="90" prop="total" />
+              <ElTableColumn label="可用大小" min-width="90" prop="usable" />
+              <ElTableColumn label="已用大小" min-width="90" prop="used" />
               <ElTableColumn label="已用百分比" min-width="120" prop="usage">
                 <template #default="{ row }">
                   <ElTag :type="row.usageType" effect="light">{{ row.usage }}</ElTag>
@@ -167,12 +176,12 @@
   import { Refresh } from '@element-plus/icons-vue'
   import { fetchGetServerInfo } from '@/api/monitor/server'
   import { usePageVisibility } from '@/hooks/core/usePageVisibility'
-  import {useSettingStore} from '@/store/modules/setting'
+  import { useSettingStore } from '@/store/modules/setting'
   import type { ServerInfo } from '@/types/api/monitor'
 
   defineOptions({ name: 'ServerMonitor' })
   const settingStore = useSettingStore()
-  const {isDark} = storeToRefs(settingStore)
+  const { isDark } = storeToRefs(settingStore)
 
   const loading = ref(false)
   const serverInfo = ref<ServerInfo | null>(null)
@@ -251,10 +260,10 @@
     if (!serverInfo.value) return []
     const cpu = serverInfo.value.cpu
     return [
-      {label: '核心数', value: cpu?.cpuNum ?? 0},
-      {label: '用户使用率', value: formatPercent(cpu?.used ?? 0)},
-      {label: '系统使用率', value: formatPercent(cpu?.sys ?? 0)},
-      {label: '当前空闲率', value: formatPercent(cpu?.free ?? 0)}
+      { label: '核心数', value: cpu?.cpuNum ?? 0 },
+      { label: '用户使用率', value: formatPercent(cpu?.used ?? 0) },
+      { label: '系统使用率', value: formatPercent(cpu?.sys ?? 0) },
+      { label: '当前空闲率', value: formatPercent(cpu?.free ?? 0) }
     ]
   })
 
@@ -366,20 +375,22 @@
     const cpuUsage = serverInfo.value?.cpu?.used ?? 0
     const memoryUsage = serverInfo.value?.memory?.usage ?? 0
     const jvmUsage = serverInfo.value?.jvm?.usage ?? 0
-    const diskMaxUsage = Math.max(...(serverInfo.value?.disk?.stores?.map((item) => item.usage ?? 0) ?? [0]))
+    const diskMaxUsage = Math.max(
+      ...(serverInfo.value?.disk?.stores?.map((item) => item.usage ?? 0) ?? [0])
+    )
     return [
-      {label: 'CPU', value: formatPercent(cpuUsage), level: getUsageLevel(cpuUsage)},
-      {label: '内存', value: formatPercent(memoryUsage), level: getUsageLevel(memoryUsage)},
-      {label: 'JVM', value: formatPercent(jvmUsage), level: getUsageLevel(jvmUsage)},
-      {label: '磁盘峰值', value: formatPercent(diskMaxUsage), level: getUsageLevel(diskMaxUsage)}
+      { label: 'CPU', value: formatPercent(cpuUsage), level: getUsageLevel(cpuUsage) },
+      { label: '内存', value: formatPercent(memoryUsage), level: getUsageLevel(memoryUsage) },
+      { label: 'JVM', value: formatPercent(jvmUsage), level: getUsageLevel(jvmUsage) },
+      { label: '磁盘峰值', value: formatPercent(diskMaxUsage), level: getUsageLevel(diskMaxUsage) }
     ]
   })
 
   const healthStatus = computed(() => {
     const levels = statusPills.value.map((item) => item.level)
-    if (levels.includes('danger')) return {level: 'danger', label: '系统告警'}
-    if (levels.includes('warning')) return {level: 'warning', label: '系统预警'}
-    return {level: 'normal', label: '运行正常'}
+    if (levels.includes('danger')) return { level: 'danger', label: '系统告警' }
+    if (levels.includes('warning')) return { level: 'warning', label: '系统预警' }
+    return { level: 'normal', label: '运行正常' }
   })
 
   const lastUpdatedText = computed(() => {
@@ -420,10 +431,10 @@
     if (!serverInfo.value) return []
     const system = serverInfo.value.system
     return [
-      {label: '服务器名称', value: system?.computerName || '-'},
-      {label: '操作系统', value: system?.osName || '-'},
-      {label: '服务器IP', value: system?.computerIp || '-'},
-      {label: '系统架构', value: system?.osArch || '-'}
+      { label: '服务器名称', value: system?.computerName || '-' },
+      { label: '操作系统', value: system?.osName || '-' },
+      { label: '服务器IP', value: system?.computerIp || '-' },
+      { label: '系统架构', value: system?.osArch || '-' }
     ]
   })
 
@@ -431,13 +442,13 @@
     if (!serverInfo.value) return []
     const jvm = serverInfo.value.jvm
     return [
-      {label: 'Java名称', value: jvm?.name || '-'},
-      {label: 'Java版本', value: jvm?.version || '-'},
-      {label: '启动时间', value: formatTime(jvm?.startTime || 0)},
-      {label: '运行时长', value: formatDuration(jvm?.runTime || 0)},
-      {label: '安装路径', value: jvm?.home || '-'},
-      {label: '项目路径', value: jvm?.userDir || '-'},
-      {label: '运行参数', value: jvm?.inputArgs || '-'}
+      { label: 'Java名称', value: jvm?.name || '-' },
+      { label: 'Java版本', value: jvm?.version || '-' },
+      { label: '启动时间', value: formatTime(jvm?.startTime || 0) },
+      { label: '运行时长', value: formatDuration(jvm?.runTime || 0) },
+      { label: '安装路径', value: jvm?.home || '-' },
+      { label: '项目路径', value: jvm?.userDir || '-' },
+      { label: '运行参数', value: jvm?.inputArgs || '-' }
     ]
   })
 
@@ -539,13 +550,15 @@
     border: 1px solid var(--monitor-card-border);
     border-radius: 14px;
     background: var(--monitor-card-bg);
-    box-shadow: 0 10px 28px rgb(15 23 42 / 8%),
-    0 2px 8px rgb(15 23 42 / 5%);
+    box-shadow:
+      0 10px 28px rgb(15 23 42 / 8%),
+      0 2px 8px rgb(15 23 42 / 5%);
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 14px 30px rgb(15 23 42 / 10%),
-      0 6px 14px rgb(15 23 42 / 6%);
+      box-shadow:
+        0 14px 30px rgb(15 23 42 / 10%),
+        0 6px 14px rgb(15 23 42 / 6%);
     }
 
     .el-card__body {
@@ -967,14 +980,16 @@
 
   .server-monitor-page.is-dark .overview-card {
     background: linear-gradient(145deg, rgb(30 41 59 / 76%) 0%, rgb(17 24 39 / 84%) 100%);
-    box-shadow: inset 0 0 0 1px rgb(148 163 184 / 12%),
-    0 12px 20px rgb(2 6 23 / 38%);
+    box-shadow:
+      inset 0 0 0 1px rgb(148 163 184 / 12%),
+      0 12px 20px rgb(2 6 23 / 38%);
   }
 
   .server-monitor-page.is-dark .overview-card:hover {
     transform: translateY(-2px);
-    box-shadow: inset 0 0 0 1px rgb(148 163 184 / 20%),
-    0 16px 28px rgb(2 6 23 / 46%);
+    box-shadow:
+      inset 0 0 0 1px rgb(148 163 184 / 20%),
+      0 16px 28px rgb(2 6 23 / 46%);
   }
 
   .server-monitor-page.is-dark .overview-card::after {
@@ -982,13 +997,15 @@
   }
 
   .server-monitor-page.is-dark .overview-card.is-warning {
-    box-shadow: inset 0 0 0 1px rgb(245 158 11 / 24%),
-    0 12px 24px rgb(0 0 0 / 36%);
+    box-shadow:
+      inset 0 0 0 1px rgb(245 158 11 / 24%),
+      0 12px 24px rgb(0 0 0 / 36%);
   }
 
   .server-monitor-page.is-dark .overview-card.is-danger {
-    box-shadow: inset 0 0 0 1px rgb(239 68 68 / 26%),
-    0 12px 24px rgb(0 0 0 / 38%);
+    box-shadow:
+      inset 0 0 0 1px rgb(239 68 68 / 26%),
+      0 12px 24px rgb(0 0 0 / 38%);
   }
 
   .server-monitor-page.is-dark .meter-item:hover {
@@ -1014,7 +1031,8 @@
     color: rgb(191 219 254);
   }
 
-  .server-monitor-page.is-dark :deep(.density-switch .el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  .server-monitor-page.is-dark
+    :deep(.density-switch .el-radio-button__original-radio:checked + .el-radio-button__inner) {
     border-color: rgb(59 130 246 / 72%);
     background: rgb(30 58 138 / 34%);
     color: rgb(219 234 254);

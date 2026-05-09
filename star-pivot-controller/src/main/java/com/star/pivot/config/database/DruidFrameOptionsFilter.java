@@ -19,7 +19,7 @@ import java.io.IOException;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class DruidFrameOptionsFilter extends OncePerRequestFilter {
 
-    private static final String DRUID_PATH = "druid";
+    private static final String DRUID_PATH_SEGMENT = "/druid/";
     private static final String X_FRAME_OPTIONS = "X-Frame-Options";
     private static final String DENY = "DENY";
 
@@ -40,30 +40,23 @@ public class DruidFrameOptionsFilter extends OncePerRequestFilter {
     }
 
     private boolean isDruidPath(HttpServletRequest request) {
-        String requestPath = request.getRequestURI();
-        if (requestPath != null && containsDruid(requestPath)) {
+        String uri = request.getRequestURI();
+        if (uri == null) {
+            return false;
+        }
+
+        // 只对真正的 druid 监控页面放开 iframe，避免“包含字符串”误判
+        // 兼容：/druid/** 与 /api/druid/**（context-path=/api）
+        if (uri.startsWith("/druid/") || uri.startsWith("/api/druid/")) {
             return true;
         }
 
         String contextPath = request.getContextPath();
-        String fullPath = buildFullPath(contextPath, requestPath);
-        if (fullPath != null && containsDruid(fullPath)) {
+        if (contextPath != null && !contextPath.isEmpty() && uri.startsWith(contextPath + DRUID_PATH_SEGMENT)) {
             return true;
         }
 
-        String referer = request.getHeader("Referer");
-        return referer != null && containsDruid(referer);
-    }
-
-    private String buildFullPath(String contextPath, String requestPath) {
-        if (contextPath == null || contextPath.isEmpty()) {
-            return requestPath;
-        }
-        return contextPath + requestPath;
-    }
-
-    private boolean containsDruid(String str) {
-        return str != null && str.toLowerCase().contains(DRUID_PATH);
+        return false;
     }
 
     private static class DruidFrameOptionsResponseWrapper extends HttpServletResponseWrapper {

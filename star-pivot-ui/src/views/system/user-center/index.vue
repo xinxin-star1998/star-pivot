@@ -13,11 +13,16 @@
           </div>
           <div class="relative px-6 pb-8 -mt-16 text-center">
             <div class="relative inline-block">
-              <img
-                class="w-28 h-28 rounded-full border-4 shadow-lg transition-all duration-300 hover:scale-105"
-                :class="isDark ? 'border-g-700' : 'border-white'"
-                :src="topAvatarDisplayUrl"
-                :alt="userDetail.userName || ''"
+              <ArtAvatarUpload
+                class="user-center-top-avatar transition-all duration-300 hover:scale-105"
+                :model-value="topAvatarDisplayUrl"
+                :user-id="form.userId"
+                :size="112"
+                :auto-upload="true"
+                use-presigned-url
+                @update:model-value="(val) => (topAvatarDisplayUrl = val)"
+                @success="handleAvatarUploadSuccess"
+                @error="handleAvatarUploadError"
               />
               <div
                 class="absolute bottom-1 right-1 w-6 h-6 rounded-full border-2 transition-colors"
@@ -132,10 +137,7 @@
       </div>
       <div class="flex-1 overflow-hidden max-md:w-full max-md:mt-3.5">
         <div class="art-card-sm">
-          <div
-            class="relative px-6 py-4 border-b transition-colors"
-            :class="isDark ? 'border-g-500' : 'border-g-200'"
-          >
+          <div class="px-6 pt-4 pb-2">
             <h1
               class="text-xl font-semibold transition-colors"
               :class="isDark ? 'text-g-100' : 'text-g-900'"
@@ -143,113 +145,147 @@
               基本设置
             </h1>
             <p class="mt-1 text-sm transition-colors" :class="isDark ? 'text-g-400' : 'text-g-500'">
-              查看您的基本信息
+              查看您的基本信息或修改登录密码
             </p>
           </div>
 
-          <ElForm
-            :model="form"
-            class="box-border p-6 space-y-6"
-            label-width="86px"
-            label-position="top"
-          >
-            <ElRow class="gap-6">
-              <ElFormItem label="用户名" class="flex-1">
-                <ElInput
-                  v-model="form.userName"
-                  :disabled="true"
-                  class="transition-all duration-300"
-                >
-                  <template #prefix>
-                    <ArtSvgIcon
-                      icon="ri:user-line"
-                      class="transition-colors"
-                      :class="isDark ? 'text-g-500' : 'text-g-400'"
-                    />
-                  </template>
-                </ElInput>
-              </ElFormItem>
-              <ElFormItem label="性别" class="flex-1">
-                <ElSelect
-                  v-model="form.sex"
-                  :disabled="true"
-                  class="w-full transition-all duration-300"
-                >
-                  <ElOption
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </ElSelect>
-              </ElFormItem>
-            </ElRow>
-
-            <ElRow class="gap-6">
-              <ElFormItem label="昵称" class="flex-1">
-                <ElInput
-                  v-model="form.nickName"
-                  :disabled="true"
-                  class="transition-all duration-300"
-                >
-                  <template #prefix>
-                    <ArtSvgIcon
-                      icon="ri:user-smile-line"
-                      class="transition-colors"
-                      :class="isDark ? 'text-g-500' : 'text-g-400'"
-                    />
-                  </template>
-                </ElInput>
-              </ElFormItem>
-              <ElFormItem label="邮箱" class="flex-1">
-                <ElInput v-model="form.email" :disabled="true" class="transition-all duration-300">
-                  <template #prefix>
-                    <ArtSvgIcon
-                      icon="ri:mail-line"
-                      class="transition-colors"
-                      :class="isDark ? 'text-g-500' : 'text-g-400'"
-                    />
-                  </template>
-                </ElInput>
-              </ElFormItem>
-            </ElRow>
-
-            <ElRow class="gap-6">
-              <ElFormItem label="手机" class="flex-1">
-                <ElInput
-                  v-model="form.phonenumber"
-                  :disabled="true"
-                  class="transition-all duration-300"
-                >
-                  <template #prefix>
-                    <ArtSvgIcon
-                      icon="ri:phone-line"
-                      class="transition-colors"
-                      :class="isDark ? 'text-g-500' : 'text-g-400'"
-                    />
-                  </template>
-                </ElInput>
-              </ElFormItem>
-            </ElRow>
-
-            <ElFormItem label="个人介绍" class="h-32">
-              <ElInput
-                type="textarea"
-                :rows="4"
-                v-model="form.remark"
-                :disabled="true"
-                class="transition-all duration-300"
+          <ElTabs v-model="activeTab" class="px-6 pb-6 user-center-tabs">
+            <ElTabPane label="基本资料" name="basic">
+              <ElForm
+                :model="form"
+                class="box-border pt-4 space-y-6"
+                label-width="86px"
+                label-position="top"
               >
-                <template #prefix>
-                  <ArtSvgIcon
-                    icon="ri:file-text-line"
-                    class="transition-colors"
-                    :class="isDark ? 'text-g-500' : 'text-g-400'"
+                <ElRow class="gap-6">
+                  <ElFormItem label="用户名" class="flex-1">
+                    <ElInput v-model="form.userName" class="transition-all duration-300">
+                      <template #prefix>
+                        <ArtSvgIcon
+                          icon="ri:user-line"
+                          class="transition-colors"
+                          :class="isDark ? 'text-g-500' : 'text-g-400'"
+                        />
+                      </template>
+                    </ElInput>
+                  </ElFormItem>
+                  <ElFormItem label="性别" class="flex-1">
+                    <ElSelect v-model="form.sex" class="w-full transition-all duration-300">
+                      <ElOption
+                        v-for="item in options"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                      />
+                    </ElSelect>
+                  </ElFormItem>
+                </ElRow>
+
+                <ElRow class="gap-6">
+                  <ElFormItem label="昵称" class="flex-1">
+                    <ElInput v-model="form.nickName" class="transition-all duration-300">
+                      <template #prefix>
+                        <ArtSvgIcon
+                          icon="ri:user-smile-line"
+                          class="transition-colors"
+                          :class="isDark ? 'text-g-500' : 'text-g-400'"
+                        />
+                      </template>
+                    </ElInput>
+                  </ElFormItem>
+                  <ElFormItem label="邮箱" class="flex-1">
+                    <ElInput v-model="form.email" class="transition-all duration-300">
+                      <template #prefix>
+                        <ArtSvgIcon
+                          icon="ri:mail-line"
+                          class="transition-colors"
+                          :class="isDark ? 'text-g-500' : 'text-g-400'"
+                        />
+                      </template>
+                    </ElInput>
+                  </ElFormItem>
+                </ElRow>
+
+                <ElRow class="gap-6">
+                  <ElFormItem label="手机" class="flex-1">
+                    <ElInput v-model="form.phonenumber" class="transition-all duration-300">
+                      <template #prefix>
+                        <ArtSvgIcon
+                          icon="ri:phone-line"
+                          class="transition-colors"
+                          :class="isDark ? 'text-g-500' : 'text-g-400'"
+                        />
+                      </template>
+                    </ElInput>
+                  </ElFormItem>
+                </ElRow>
+
+                <ElFormItem label="个人介绍" class="h-32">
+                  <ElInput
+                    type="textarea"
+                    :rows="4"
+                    v-model="form.remark"
+                    class="transition-all duration-300"
+                  >
+                    <template #prefix>
+                      <ArtSvgIcon
+                        icon="ri:file-text-line"
+                        class="transition-colors"
+                        :class="isDark ? 'text-g-500' : 'text-g-400'"
+                      />
+                    </template>
+                  </ElInput>
+                </ElFormItem>
+                <ElFormItem>
+                  <ElButton type="primary" @click="submitBasicProfile">保存</ElButton>
+                  <ElButton plain @click="resetBasicProfile">重置</ElButton>
+                </ElFormItem>
+              </ElForm>
+            </ElTabPane>
+
+            <ElTabPane label="修改密码" name="password">
+              <ElForm
+                ref="passwordFormRef"
+                :model="passwordForm"
+                :rules="passwordRules"
+                class="pt-4"
+                label-width="90px"
+                label-position="left"
+              >
+                <ElFormItem label="旧密码" prop="oldPassword">
+                  <ElInput
+                    v-model="passwordForm.oldPassword"
+                    type="password"
+                    show-password
+                    autocomplete="current-password"
+                    placeholder="请输入旧密码"
                   />
-                </template>
-              </ElInput>
-            </ElFormItem>
-          </ElForm>
+                </ElFormItem>
+                <ElFormItem label="新密码" prop="newPassword">
+                  <ElInput
+                    v-model="passwordForm.newPassword"
+                    type="password"
+                    show-password
+                    autocomplete="new-password"
+                    placeholder="请输入新密码"
+                  />
+                </ElFormItem>
+                <ElFormItem label="确认密码" prop="confirmPassword">
+                  <ElInput
+                    v-model="passwordForm.confirmPassword"
+                    type="password"
+                    show-password
+                    autocomplete="new-password"
+                    placeholder="请确认新密码"
+                  />
+                </ElFormItem>
+                <ElFormItem>
+                  <ElButton type="primary" @click="submitPassword">保存</ElButton>
+                  <ElButton type="danger" plain @click="resetPasswordForm">关闭</ElButton>
+                </ElFormItem>
+              </ElForm>
+            </ElTabPane>
+          </ElTabs>
         </div>
       </div>
     </div>
@@ -258,8 +294,15 @@
 
 <script setup lang="ts">
   import { useUserStore } from '@/store/modules/user'
-  import { fetchGetUserById, fetchGetAvatarPresignedUrl } from '@/api/user/user'
-  import { fetchGetUserInfo } from '@/api/auth'
+  import {
+    fetchGetUserById,
+    fetchGetAvatarPresignedUrl,
+    fetchUpdateUser,
+    fetchUpdateUserPassword
+  } from '@/api/user/user'
+  import { fetchGetUserInfo, fetchLogout } from '@/api/auth'
+  import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+  import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
   import defaultAvatarImg from '@imgs/user/avatar.webp'
   import bgImageImg from '@imgs/user/bg.webp'
   import { useSettingStore } from '@/store/modules/setting'
@@ -298,6 +341,7 @@
   const userInfo = computed(() => userStore.getUserInfo)
 
   const loading = ref(false)
+  const activeTab = ref('basic')
 
   /**
    * 用户详情数据
@@ -322,6 +366,62 @@
     sex: '0',
     remark: ''
   })
+  const originalForm = reactive({
+    userId: 0,
+    userName: '',
+    nickName: '',
+    email: '',
+    phonenumber: '',
+    avatar: '',
+    sex: '0',
+    remark: ''
+  })
+
+  const passwordFormRef = ref<FormInstance>()
+  const passwordForm = reactive({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+
+  const passwordRules: FormRules<typeof passwordForm> = {
+    oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
+    newPassword: [
+      { required: true, message: '请输入新密码', trigger: 'blur' },
+      { min: 6, max: 20, message: '密码长度应为 6-20 位', trigger: 'blur' },
+      {
+        validator: (_rule, value, callback) => {
+          if (!value) {
+            callback()
+            return
+          }
+          if (value === passwordForm.oldPassword) {
+            callback(new Error('新密码不能与旧密码相同'))
+            return
+          }
+          callback()
+        },
+        trigger: 'blur'
+      }
+    ],
+    confirmPassword: [
+      { required: true, message: '请确认新密码', trigger: 'blur' },
+      {
+        validator: (_rule, value, callback) => {
+          if (!value) {
+            callback(new Error('请确认新密码'))
+            return
+          }
+          if (value !== passwordForm.newPassword) {
+            callback(new Error('两次输入的新密码不一致'))
+            return
+          }
+          callback()
+        },
+        trigger: 'blur'
+      }
+    ]
+  }
 
   /**
    * 性别选项
@@ -429,6 +529,7 @@
           sex: res.sex || '0',
           remark: res.remark || ''
         })
+        Object.assign(originalForm, form)
         await updateTopAvatarDisplayUrl()
       }
     } catch (error) {
@@ -443,6 +544,86 @@
   onMounted(() => {
     getUserDetail()
   })
+
+  const resetPasswordForm = () => {
+    passwordFormRef.value?.resetFields()
+  }
+
+  const submitPassword = async () => {
+    if (!passwordFormRef.value) return
+    await passwordFormRef.value.validate(async (valid) => {
+      if (!valid) return
+      try {
+        await fetchUpdateUserPassword({
+          oldPassword: passwordForm.oldPassword,
+          newPassword: passwordForm.newPassword
+        })
+        ElMessage.success('密码修改成功，请重新登录')
+        fetchLogout()
+          .catch(() => void 0)
+          .finally(() => {
+            resetPasswordForm()
+            userStore.logOut()
+          })
+      } catch (error) {
+        ElMessage.error((error as any)?.message || '密码修改失败，请检查旧密码或稍后重试')
+        if (import.meta.env.DEV) {
+          console.error('修改密码失败:', error)
+        }
+      }
+    })
+  }
+
+  const resetBasicProfile = () => {
+    Object.assign(form, originalForm)
+  }
+
+  const submitBasicProfile = async () => {
+    if (!form.userId) {
+      ElMessage.error('用户信息未加载完成，请稍后重试')
+      return
+    }
+    try {
+      await fetchUpdateUser({
+        userId: form.userId,
+        userName: form.userName,
+        nickName: form.nickName,
+        email: form.email,
+        phonenumber: form.phonenumber,
+        avatar: form.avatar,
+        sex: form.sex,
+        remark: form.remark
+      } as Api.SystemManage.UserListItem)
+      Object.assign(originalForm, form)
+      Object.assign(userDetail.value, form)
+      userStore.setUserInfo({
+        userName: form.userName,
+        nickName: form.nickName,
+        email: form.email,
+        avatar: form.avatar
+      } as any)
+      ElMessage.success('基本资料保存成功')
+    } catch (error) {
+      ElMessage.error((error as any)?.message || '基本资料保存失败')
+      if (import.meta.env.DEV) {
+        console.error('保存基本资料失败:', error)
+      }
+    }
+  }
+
+  const handleAvatarUploadSuccess = async (avatarUrl: string) => {
+    form.avatar = avatarUrl || ''
+    userDetail.value.avatar = form.avatar
+    await updateTopAvatarDisplayUrl()
+    userStore.setUserInfo({
+      avatar: form.avatar,
+      avatarUpdatedAt: Date.now()
+    } as any)
+  }
+
+  const handleAvatarUploadError = (error: any) => {
+    ElMessage.error(error?.message || '头像上传失败，请稍后重试')
+  }
 </script>
 
 <style scoped lang="scss">
@@ -450,11 +631,11 @@
     overflow: hidden;
     border: 1px solid var(--art-card-border);
     border-radius: 16px;
-    box-shadow: 0 4px 16px 0 rgb(0 0 0 / 8%);
+    box-shadow: var(--art-shadow-card);
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 8px 24px 0 rgb(0 0 0 / 12%);
+      box-shadow: var(--art-shadow-card-hover);
     }
   }
 
@@ -469,7 +650,7 @@
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+      box-shadow: var(--art-shadow-sm);
     }
   }
 
@@ -479,7 +660,7 @@
       transition: all 0.3s ease;
 
       &:hover {
-        box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+        box-shadow: var(--art-shadow-sm);
       }
     }
   }
@@ -492,6 +673,11 @@
     &:hover {
       transform: translateY(-1px);
     }
+  }
+
+  :deep(.user-center-top-avatar .avatar-preview) {
+    border: 4px solid var(--default-box-color);
+    box-shadow: 0 10px 20px rgb(0 0 0 / 20%);
   }
 
   .bg-gradient-to-r {

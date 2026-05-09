@@ -126,6 +126,9 @@ public class MonitorServiceImpl implements MonitorService {
     // Redis 缓存名称和键前缀映射（用于备注显示）
     private static final Map<String, String> CACHE_REMARK_MAP = new HashMap<>();
 
+    /** Spring Cache 逻辑名 -> 备注（与 Redis key 前缀 cache:{name}:: 对应） */
+    private static final Map<String, String> SPRING_CACHE_REMARK = new HashMap<>();
+
     static {
         // 初始化缓存备注映射（用于显示友好的备注信息）
         // 注意：这些键前缀应与 Redis 中实际使用的键保持一致
@@ -137,6 +140,18 @@ public class MonitorServiceImpl implements MonitorService {
         CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_REPEAT_SUBMIT, "防重提交");
         CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_RATE_LIMIT, "限流处理");
         CACHE_REMARK_MAP.put(REDIS_KEY_PREFIX_PWD_ERR_CNT, "密码错误次数");
+
+        SPRING_CACHE_REMARK.put("userPermissions", "用户权限缓存");
+        SPRING_CACHE_REMARK.put("menuTree", "菜单树缓存");
+        SPRING_CACHE_REMARK.put("dictData", "字典数据缓存");
+        SPRING_CACHE_REMARK.put("dictType", "字典类型缓存");
+        SPRING_CACHE_REMARK.put("deptTree", "部门树缓存");
+        SPRING_CACHE_REMARK.put("postList", "岗位列表缓存");
+        SPRING_CACHE_REMARK.put("roleList", "角色列表缓存");
+        SPRING_CACHE_REMARK.put("sysConfig", "系统配置缓存");
+        SPRING_CACHE_REMARK.put("captcha", "验证码缓存");
+        SPRING_CACHE_REMARK.put("loginFailCount", "登录失败次数");
+        SPRING_CACHE_REMARK.put("rateLimit", "接口限流");
     }
 
     @Override
@@ -897,10 +912,9 @@ public class MonitorServiceImpl implements MonitorService {
             // 按前缀分组
             Map<String, Set<String>> cacheGroups = new HashMap<>();
             for (String key : allKeys) {
-                // 提取键的前缀（第一个冒号之前的部分，或者整个键如果没有冒号）
-                String prefix = extractCachePrefix(key);
-                if (prefix != null && !prefix.isEmpty()) {
-                    cacheGroups.computeIfAbsent(prefix, k -> new HashSet<>()).add(key);
+                String groupName = extractCacheGroupName(key);
+                if (groupName != null && !groupName.isEmpty()) {
+                    cacheGroups.computeIfAbsent(groupName, k -> new HashSet<>()).add(key);
                 }
             }
 
@@ -909,9 +923,7 @@ public class MonitorServiceImpl implements MonitorService {
             for (Map.Entry<String, Set<String>> entry : cacheGroups.entrySet()) {
                 RedisCacheVO cacheVO = new RedisCacheVO();
                 cacheVO.setCacheName(entry.getKey());
-                // 使用备注映射，如果没有则使用前缀作为备注
-                String remark = CACHE_REMARK_MAP.getOrDefault(entry.getKey(), entry.getKey());
-                cacheVO.setRemark(remark);
+                cacheVO.setRemark(resolveCacheGroupRemark(entry.getKey()));
                 cacheList.add(cacheVO);
             }
 
@@ -926,24 +938,36 @@ public class MonitorServiceImpl implements MonitorService {
     }
 
     /**
-     * 提取缓存前缀
-     * 规则：取第一个冒号之前的部分作为前缀
-     * 例如：jwt:refresh:user:1 -> jwt
-     *      sys_config:key -> sys_config
-     *      captcha:token -> captcha
+     * 将 Redis 键归为「缓存列表」中的一行（与 getCacheKeys、deleteCache 使用同一分组名）。
+     * <p>Spring Data Redis 默认使用双冒号分隔缓存名与业务键；工程里 {@code prefixCacheNameWith("cache:")}
+     * 后实际键形如 {@code cache:dictData::xxx}。若仅按首个单冒号分组，会把所有 Spring Cache 归为一行 {@code cache}，
+     * 删除时也难以与「仅删某一逻辑缓存」的预期对齐。</p>
      */
-    private String extractCachePrefix(String key) {
+    private String extractCacheGroupName(String key) {
         if (key == null || key.isEmpty()) {
             return null;
         }
-
+        int doubleColon = key.indexOf("::");
+        if (doubleColon > 0) {
+            return key.substring(0, doubleColon);
+        }
         int colonIndex = key.indexOf(':');
         if (colonIndex > 0) {
             return key.substring(0, colonIndex);
         }
-
-        // 如果没有冒号，返回整个键作为前缀
         return key;
+    }
+
+    private String resolveCacheGroupRemark(String groupName) {
+        String mapped = CACHE_REMARK_MAP.get(groupName);
+        if (mapped != null) {
+            return mapped;
+        }
+        if (groupName.startsWith("cache:")) {
+            String logical = groupName.substring("cache:".length());
+            return SPRING_CACHE_REMARK.getOrDefault(logical, groupName + "（Spring Cache）");
+        }
+        return groupName;
     }
 
     @Override
@@ -961,6 +985,10 @@ public class MonitorServiceImpl implements MonitorService {
             // 例如：cacheName = "jwt"，则扫描 "jwt:*"
             String keyPattern = cacheName + ":*";
             Set<String> keys = scanKeys(keyPattern);
+            // 无前缀冒号时，整键即为一组，需包含与分组名完全相同的键
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(cacheName))) {
+                keys.add(cacheName);
+            }
             List<RedisCacheVO.CacheKeyInfo> keyInfoList = new ArrayList<>();
 
             for (String key : keys) {
@@ -1313,14 +1341,21 @@ public class MonitorServiceImpl implements MonitorService {
         }
 
         try {
-            String keyPattern = cacheName + ":*";
-            Set<String> keys = scanKeys(keyPattern);
-            if (keys.isEmpty()) {
-                return 0L;
+            long total = 0L;
+            // 分组规则里「无前缀冒号」时整键即分组名，仅 scan「prefix:*」会漏删
+            Boolean deletedExact = redisTemplate.delete(cacheName);
+            if (Boolean.TRUE.equals(deletedExact)) {
+                total++;
             }
 
-            Long deletedCount = redisTemplate.delete(keys);
-            return deletedCount != null ? deletedCount : 0L;
+            String keyPattern = cacheName + ":*";
+            Set<String> keys = scanKeys(keyPattern);
+            if (!keys.isEmpty()) {
+                Long deletedBatch = redisTemplate.delete(keys);
+                total += deletedBatch != null ? deletedBatch : 0L;
+            }
+
+            return total;
         } catch (Exception e) {
             log.error("删除缓存失败，cacheName: {}", cacheName, e);
             throw new BizException(ErrorCode.REDIS_ERROR, "删除缓存失败: " + e.getMessage());

@@ -514,7 +514,7 @@
           background-color 0.3s ease;
 
         &.light-bg {
-          background: #fff;
+          background: var(--default-box-color);
         }
 
         &.dark-bg {

@@ -57,4 +57,10 @@ public class MinioFileStorageService implements FileStorageService {
         log.debug("使用 MinIO 生成永久URL，objectName={}", objectName);
         return minioUtil.getPermanentUrl(objectName);
     }
+
+    @Override
+    public String uploadEditorImageWithUrl(MultipartFile file) throws Exception {
+        log.debug("使用 MinIO 上传富文本图片");
+        return minioUtil.uploadEditorImageWithUrl(file);
+    }
 }

@@ -1,8 +1,8 @@
 package com.star.pivot;
 
-import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -15,7 +15,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author xinxin
  */
 @SpringBootApplication(scanBasePackages = "com.star.pivot")
-@MapperScan("com.star.pivot.*.mapper")
+@MapperScan(basePackages = {
+        "com.star.pivot.*.mapper"
+})
 @EnableCaching
 @EnableAsync
 @EnableScheduling

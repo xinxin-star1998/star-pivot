@@ -100,8 +100,8 @@ public class CacheController {
             @ApiResponse(responseCode = "200", description = "删除成功")
     })
     @PreAuthorize("hasAuthority('monitor:cache:remove')")
-    @DeleteMapping("/{cacheName}")
-    public Result<Long> deleteCache(@Parameter(description = "缓存名称") @PathVariable String cacheName) {
+    @DeleteMapping("/group/{cacheName}")
+    public Result<Long> deleteCache(@Parameter(description = "缓存名称（Redis 键前缀分组）") @PathVariable String cacheName) {
         long deletedCount = monitorService.deleteCache(cacheName);
         return Result.success("删除成功，共删除 " + deletedCount + " 个键", deletedCount);
     }

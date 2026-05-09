@@ -1,43 +1,84 @@
 <!-- 字典类型管理页面 -->
 <template>
-  <div class="dict-type-page art-full-height">
-    <!-- 搜索栏 -->
-    <ArtSearchBar
-      v-model="searchFilters"
-      :items="formItems"
-      :showExpand="false"
-      @reset="handleReset"
-      @search="handleSearch"
-    />
+  <div class="dict-page art-full-height">
+    <ElRow :gutter="12" class="dict-layout">
+      <ElCol :xs="24" class="dict-left">
+        <ArtSearchBar
+          v-model="searchFilters"
+          :items="formItems"
+          :showExpand="false"
+          @reset="handleReset"
+          @search="handleSearch"
+        />
+        <ElCard class="art-table-card" shadow="never">
+          <!-- 表格头部 -->
+          <ArtTableHeader
+            :showZebra="false"
+            :loading="loading"
+            v-model:columns="columnChecks"
+            @refresh="handleRefresh"
+          >
+            <template #left>
+              <ElButton @click="handleAdd" v-ripple v-auth="'system:type:add'">
+                新增字典类型
+              </ElButton>
+            </template>
+          </ArtTableHeader>
 
-    <ElCard class="art-table-card" shadow="never">
-      <!-- 表格头部 -->
-      <ArtTableHeader
-        :showZebra="false"
-        :loading="loading"
-        v-model:columns="columnChecks"
-        @refresh="handleRefresh"
-      >
-        <template #left>
-          <ElButton @click="handleAdd" v-ripple v-auth="'system:type:add'">新增字典类型</ElButton>
-        </template>
-      </ArtTableHeader>
+          <ArtTable
+            ref="tableRef"
+            rowKey="dictId"
+            :loading="loading"
+            :columns="columns"
+            :data="tableData"
+            :stripe="false"
+            :highlight-current-row="true"
+            :row-class-name="getRowClassName"
+            @row-click="handleRowClick"
+            :pagination="pagination"
+            @pagination:size-change="handleSizeChange"
+            @pagination:current-change="handleCurrentChange"
+          />
 
-      <ArtTable
-        ref="tableRef"
-        rowKey="dictId"
-        :loading="loading"
-        :columns="columns"
-        :data="tableData"
-        :stripe="false"
-        :pagination="pagination"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      />
+          <!-- 字典类型弹窗 -->
+          <DictTypeDialog
+            v-model:visible="dialogVisible"
+            :editData="editData"
+            @submit="handleSubmit"
+          />
+        </ElCard>
+      </ElCol>
+    </ElRow>
 
-      <!-- 字典类型弹窗 -->
-      <DictTypeDialog v-model:visible="dialogVisible" :editData="editData" @submit="handleSubmit" />
-    </ElCard>
+    <ElDrawer
+      v-model="drawerVisible"
+      class="dict-drawer"
+      direction="rtl"
+      :size="drawerSize"
+      :append-to-body="true"
+      :lock-scroll="false"
+      :with-header="false"
+      destroy-on-close
+      @closed="handleDrawerClosed"
+    >
+      <div class="drawer-shell">
+        <div class="drawer-header">
+          <div class="drawer-title">
+            <span class="title">字典数据管理</span>
+            <div v-if="selectedDictType" class="selected-meta">
+              <span class="label">当前选中：</span>
+              <span class="name">{{ selectedDictName || '-' }}</span>
+              <ElTag type="info" effect="plain">{{ selectedDictType }}</ElTag>
+            </div>
+          </div>
+          <ElButton text @click="drawerVisible = false">关闭</ElButton>
+        </div>
+
+        <div class="drawer-body">
+          <DictDataPanel v-if="selectedDictType" :dictType="selectedDictType" />
+        </div>
+      </div>
+    </ElDrawer>
   </div>
 </template>
 
@@ -57,13 +98,15 @@
     type SysDictType,
     type DictTypeFormData
   } from '@/api/dict/type'
-  import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
+  import { ElButton, ElDrawer, ElMessage, ElMessageBox, ElTag } from 'element-plus'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import DictDataPanel from './modules/dict-data-panel.vue'
   import { useRouter } from 'vue-router'
   import { useAuth } from '@/hooks/core/useAuth'
-  const router = useRouter()
+  import { useWindowSize } from '@vueuse/core'
+  useRouter()
 
   defineOptions({ name: 'DictType' })
 
@@ -77,6 +120,19 @@
   // 弹窗相关
   const dialogVisible = ref(false)
   const editData = ref<DictTypeFormData | null>(null)
+
+  const selectedDictType = ref<string>('')
+  const selectedDictName = ref<string>('')
+  const drawerVisible = ref(false)
+
+  const STORAGE_KEY = 'system:dict:lastSelected'
+
+  const { width } = useWindowSize()
+  const drawerSize = computed(() => {
+    if (width.value < 768) return '100%'
+    if (width.value < 1200) return '72%'
+    return '64%'
+  })
 
   // 分页相关
   const pagination = reactive({
@@ -127,11 +183,30 @@
   }
   // 新增：字典类型点击事件处理函数
   const handleDictTypeClick = (row: SysDictType) => {
-    // 与路由 path `/system/dict/data/:dictType` 及 dict-data 页中 route.params.dictType 一致
-    router.push({
-      name: 'DictData',
-      params: { dictType: row.dictType }
-    })
+    selectedDictType.value = row.dictType
+    selectedDictName.value = row.dictName || ''
+    drawerVisible.value = true
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          dictType: selectedDictType.value,
+          dictName: selectedDictName.value,
+          drawerOpen: true
+        })
+      )
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleRowClick = (row: SysDictType) => {
+    handleDictTypeClick(row)
+  }
+
+  const getRowClassName = (data: { row: Record<string, any> }) => {
+    const row = data.row as SysDictType
+    return row.dictType === selectedDictType.value ? 'is-selected' : ''
   }
   // 表格列配置
   const { columnChecks, columns } = useTableColumns(() => [
@@ -158,7 +233,7 @@
           'span',
           {
             style: {
-              color: '#409eff', // 蓝色文字，提示可点击
+              color: 'var(--el-color-primary)', // 统一使用主题主色
               cursor: 'pointer' // 鼠标手型
               // textDecoration: 'underline' // 下划线（可选）
             },
@@ -183,7 +258,7 @@
       label: '备注',
       minWidth: 200,
       formatter: (row: SysDictType) => {
-        return row.remark || h('span', { style: 'color: #999' }, '无')
+        return row.remark || h('span', { style: 'color: var(--art-gray-500)' }, '无')
       }
     },
     {
@@ -191,7 +266,7 @@
       label: '创建时间',
       width: 180,
       formatter: (row: SysDictType) => {
-        return row.createTime || h('span', { style: 'color: #999' }, '暂无')
+        return row.createTime || h('span', { style: 'color: var(--art-gray-500)' }, '暂无')
       }
     },
     {
@@ -224,7 +299,7 @@
 
         if (actions.length === 0) {
           // 无任何操作权限时返回空占位
-          return h('span', { style: 'color: #999' }, '')
+          return h('span', { style: 'color: var(--art-gray-500)' }, '')
         }
 
         return h('div', { style: 'text-align: right' }, actions)
@@ -236,8 +311,57 @@
   const tableData = ref<SysDictType[]>([])
 
   onMounted(() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as {
+          dictType?: string
+          dictName?: string
+          drawerOpen?: boolean
+        }
+        if (parsed?.dictType) {
+          selectedDictType.value = parsed.dictType
+          selectedDictName.value = parsed.dictName || ''
+          drawerVisible.value = !!parsed.drawerOpen
+        }
+      }
+    } catch {
+      // ignore
+    }
     getDictTypeList()
   })
+
+  const syncSelectedName = () => {
+    if (!selectedDictType.value) {
+      selectedDictName.value = ''
+      return
+    }
+    const hit = tableData.value.find((i) => i.dictType === selectedDictType.value)
+    if (hit) selectedDictName.value = hit.dictName || ''
+  }
+
+  watch([tableData, selectedDictType], () => {
+    syncSelectedName()
+  })
+
+  watch(drawerVisible, (open) => {
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          dictType: selectedDictType.value,
+          dictName: selectedDictName.value,
+          drawerOpen: open
+        })
+      )
+    } catch {
+      // ignore
+    }
+  })
+
+  const handleDrawerClosed = () => {
+    // 保持选中态，便于再次打开；只清掉 URL query 在 watch(drawerVisible) 中处理
+  }
 
   /**
    * 获取字典类型列表
@@ -359,7 +483,7 @@
       }
       await getDictTypeList()
     } catch (error) {
-      if (error !== 'cancel') {
+      if (error !== 'cancel' && error !== 'close') {
         safeError('删除字典类型失败:', error)
         ElMessage.error('删除失败')
       }
@@ -389,20 +513,96 @@
 </script>
 
 <style scoped lang="scss">
-  .dict-type-page {
-    padding: 16px;
+  .dict-page {
+    padding: var(--art-page-padding);
     background-color: var(--default-bg-color);
   }
 
+  .dict-layout {
+    height: 100%;
+  }
+
+  .dict-left {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .selected-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    .label {
+      color: var(--art-gray-600);
+    }
+    .name {
+      font-weight: 600;
+      color: var(--art-gray-900);
+    }
+  }
+
   :deep(.art-table-card) {
+    flex: 1;
+    min-height: 0;
     border: 1px solid var(--art-card-border);
     border-radius: 12px;
-    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 8%);
+    box-shadow: var(--art-shadow-card);
     transition: all 0.3s ease;
 
     &:hover {
-      box-shadow: 0 4px 16px 0 rgb(0 0 0 / 12%);
+      box-shadow: var(--art-shadow-card-hover);
     }
+
+    .el-card__body {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+  }
+
+  :deep(.dict-drawer .el-drawer__body) {
+    padding: 0;
+    height: 100%;
+  }
+
+  .drawer-shell {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--default-bg-color);
+  }
+
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--art-card-border);
+    background: var(--default-box-color);
+  }
+
+  .drawer-title {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+
+    .title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--art-gray-900);
+    }
+  }
+
+  .drawer-body {
+    flex: 1;
+    min-height: 0;
+    padding: 12px 12px 16px;
+    overflow: hidden;
   }
 
   :deep(.el-table) {
@@ -425,6 +625,10 @@
         }
       }
     }
+  }
+
+  :deep(.el-table__row.is-selected > td.el-table__cell) {
+    background-color: var(--el-color-primary-light-9) !important;
   }
 
   :deep(.el-button) {

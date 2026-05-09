@@ -30,7 +30,11 @@
         >
       </ElFormItem>
       <ElFormItem label="Cron 表达式" prop="cronExpression">
-        <ElInput v-model="formData.cronExpression" placeholder="如：0 0/5 * * * ? 表示每5分钟" />
+        <ElInput v-model="formData.cronExpression" placeholder="如：0 0/5 * * * ? 表示每5分钟">
+          <template #append>
+            <ElButton type="primary" @click="handleTestCronExpression">配置</ElButton>
+          </template>
+        </ElInput>
       </ElFormItem>
       <ElFormItem label="执行策略" prop="misfirePolicy">
         <ElSelect v-model="formData.misfirePolicy" placeholder="请选择">
@@ -55,6 +59,12 @@
         <ElInput v-model="formData.remark" type="textarea" :rows="2" placeholder="选填" />
       </ElFormItem>
     </ElForm>
+
+    <CronEditorDialog
+      v-model="cronDialogVisible"
+      :value="formData.cronExpression"
+      @confirm="applyCron"
+    />
     <template #footer>
       <ElButton @click="dialogVisible = false">取消</ElButton>
       <ElButton type="primary" @click="handleSubmit">确定</ElButton>
@@ -67,6 +77,7 @@
   import type { FormInstance, FormRules } from 'element-plus'
   import { fetchAddJob, fetchUpdateJob, fetchJobById, type SysJob } from '@/api/monitor/job'
   import type { DialogType } from '@/types'
+  import CronEditorDialog from './cron-editor-dialog.vue'
 
   interface Props {
     visible: boolean
@@ -105,6 +116,13 @@
     jobName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
     invokeTarget: [{ required: true, message: '请输入调用目标', trigger: 'blur' }],
     cronExpression: [{ required: true, message: '请输入 Cron 表达式', trigger: 'blur' }]
+  }
+
+  const cronDialogVisible = ref(false)
+
+  const applyCron = (expression: string) => {
+    formData.cronExpression = expression
+    ElMessage.success('已应用 Cron 表达式')
   }
 
   const initFormData = async () => {
@@ -151,6 +169,10 @@
     } catch (e) {
       console.error(e)
     }
+  }
+
+  const handleTestCronExpression = () => {
+    cronDialogVisible.value = true
   }
 </script>
 

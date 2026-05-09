@@ -11,12 +11,6 @@ public class GlobalPermitAllPathProvider implements PermitAllPathProvider {
     @Override
     public List<String> permitAllPaths() {
         return List.of(
-                "/druid/**",
-                "/api/druid/**",
-                "/swagger-ui/**",
-                "/v3/api-docs/**",
-                "/swagger-resources/**",
-                "/webjars/**",
                 "/auth/register"
         );
     }

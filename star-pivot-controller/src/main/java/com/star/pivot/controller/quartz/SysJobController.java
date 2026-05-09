@@ -65,7 +65,7 @@ public class SysJobController {
     }
 
     @Operation(summary = "删除定时任务")
-    @PreAuthorize("hasAuthority('monitor:job:remove')")
+    @PreAuthorize("hasAuthority('monitor:job:delete')")
     @DeleteMapping
     public Result<?> remove(@RequestBody DeleteRequest request) {
         List<Long> jobIds = validateIds(request.getIds());
@@ -97,7 +97,7 @@ public class SysJobController {
     }
 
     @Operation(summary = "清空任务日志")
-    @PreAuthorize("hasAuthority('monitor:job:remove')")
+    @PreAuthorize("hasAuthority('monitor:job:delete')")
     @DeleteMapping("/log/clear")
     public Result<?> clearLog() {
         sysJobService.clearJobLog();

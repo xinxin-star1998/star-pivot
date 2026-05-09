@@ -165,6 +165,10 @@ declare namespace Api {
     interface UserListItem {
       userId: number
       deptId?: number
+      /** 部门名称（后端 UserVO.deptName） */
+      deptName?: string
+      /** 展示用：所属部门（为空时为 '-'） */
+      deptNameText?: string
       avatar?: string
       status: string
       userName: string
@@ -179,6 +183,14 @@ declare namespace Api {
       pwdUpdateDate?: string
       userRoles?: string[]
       roleName?: string
+      /** 角色名称列表（后端 UserVO.roleNames） */
+      roleNames?: string[]
+      /** 岗位名称列表（后端 UserVO.postNames） */
+      postNames?: string[]
+      /** 展示用：关联角色（数组拼接后字符串，空为 '-'） */
+      roleNamesText?: string
+      /** 展示用：所属岗位（数组拼接后字符串，空为 '-'） */
+      postNamesText?: string
       createBy?: string
       createTime?: string
       updateBy?: string

@@ -68,6 +68,16 @@ public interface FileStorageService {
     String getPermanentUrl(String objectName);
 
     /**
+     * 上传富文本编辑器图片并返回可写入 HTML 的访问 URL（对象路径：editor/...）。
+     * 私有存储桶场景一般为预签名 URL，便于浏览器直接加载；永久直链在私有桶下会 403。
+     *
+     * @param file 图片文件
+     * @return 图片访问 URL
+     * @throws Exception 上传失败时抛出异常
+     */
+    String uploadEditorImageWithUrl(MultipartFile file) throws Exception;
+
+    /**
      * 上传头像并返回完整信息（包含永久URL和预签名URL）
      *
      * @param file 头像文件

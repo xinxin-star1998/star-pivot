@@ -1,115 +1,113 @@
 <template>
-  <ElPopover
-    v-model:visible="visible"
-    placement="bottom-start"
-    :width="600"
-    popper-class="icon-picker-popover"
+  <div
+    ref="referenceRef"
+    @focusin="props.manual ? undefined : handleFocus"
+    @click="props.manual ? undefined : handleClick"
   >
-    <template #reference>
-      <div ref="referenceRef" @focusin="handleFocus" @click="handleClick">
-        <slot></slot>
+    <slot></slot>
+  </div>
+
+  <ElDialog
+    v-model="visible"
+    :show-close="false"
+    :close-on-click-modal="true"
+    :close-on-press-escape="true"
+    width="860px"
+    append-to-body
+    class="icon-picker-dialog"
+    @closed="resetSearch"
+  >
+    <template #header>
+      <div class="picker-titlebar">
+        <div class="picker-title">选择图标</div>
+        <button class="picker-close" type="button" aria-label="close" @click="handleClose">
+          <ElIcon><Close /></ElIcon>
+        </button>
       </div>
     </template>
+
     <div class="icon-picker">
-      <!-- 头部：当前选中图标预览 + 使用提示 -->
-      <div class="icon-picker-header">
-        <div class="icon-preview" v-if="props.modelValue">
-          <span class="icon-preview-avatar">
-            <Icon :icon="props.modelValue" />
-          </span>
-          <div class="icon-preview-info">
-            <div class="icon-preview-label">当前已选图标</div>
-            <div class="icon-preview-name">{{ props.modelValue }}</div>
-          </div>
-        </div>
-        <div class="icon-tip">
-          可直接输入图标名称搜索（如 <span class="icon-tip-keyword">user</span>、
-          <span class="icon-tip-keyword">home</span>），也可从下方分类中快速选择常用图标。
+      <ElTabs v-model="activeIconSet" class="picker-tabs" @tab-change="handleIconSetChange">
+        <ElTabPane
+          v-for="set in iconSets"
+          :key="set.prefix"
+          :label="set.label"
+          :name="set.prefix"
+        />
+      </ElTabs>
+
+      <div class="picker-toolbar">
+        <ElInput
+          ref="searchInputRef"
+          v-model="iconSearchText"
+          placeholder="搜索图标名称，如 user、menu、setting"
+          clearable
+          class="picker-search"
+          @input="handleIconSearch"
+          @clear="handleSearchClear"
+          @keyup.enter="handleSearchEnter"
+        >
+          <template #prefix>
+            <ElIcon><Search /></ElIcon>
+          </template>
+        </ElInput>
+
+        <div class="picker-meta">
+          <span class="picker-meta-pill">{{ iconSetLabel }}</span>
+          <span class="picker-meta-count">共 {{ totalIcons }} 个</span>
         </div>
       </div>
-      <ElInput
-        ref="searchInputRef"
-        v-model="iconSearchText"
-        placeholder="搜索图标（支持在线搜索，如：user、home、settings）..."
-        clearable
-        style="margin-bottom: 12px"
-        @input="handleIconSearch"
-        @clear="handleSearchClear"
-        @keyup.enter="handleSearchEnter"
-      >
-        <template #prefix>
-          <ElIcon><Search /></ElIcon>
-        </template>
-      </ElInput>
+
       <div v-if="isSearchingIcons" class="icon-loading">
         <ElIcon class="is-loading"><Loading /></ElIcon>
         <span style="margin-left: 8px">搜索中...</span>
       </div>
+      <div v-if="isSwitchingIconSet" class="icon-loading">
+        <ElIcon class="is-loading"><Loading /></ElIcon>
+        <span style="margin-left: 8px">加载图标库...</span>
+      </div>
       <div v-if="showEmptyState" class="icon-empty">未找到相关图标</div>
-      <!-- 分类显示图标 - 水平块状 -->
-      <div v-if="!iconSearchText || iconSearchText.trim().length < 2" class="icon-categories">
-        <!-- 分类标签栏 - 单行横向滚动 -->
-        <div class="category-tabs" ref="categoryTabsRef" @wheel.prevent="handleCategoryWheel">
-          <div
-            v-for="category in iconCategories"
-            :key="category.name"
-            class="category-tab"
-            :class="{ active: currentCategory === category.name }"
-            @click="switchCategory(category.name)"
-          >
-            <span class="category-tab-main">
-              <span class="category-tab-dot"></span>
-              <span class="category-tab-name">{{ category.name }}</span>
-            </span>
-            <span class="category-tab-count">{{ category.icons.length }}</span>
-          </div>
-        </div>
-        <!-- 当前分类标题 -->
-        <div class="category-title-row">
-          <div class="category-title-left">
-            <span class="category-title-text">{{ currentCategory }}</span>
-            <span class="category-title-sub">常用场景图标 · 快速点选即可应用</span>
-          </div>
-        </div>
-        <!-- 当前分类的图标列表 -->
-        <div class="icon-list-horizontal">
-          <div
-            v-for="iconItem in currentCategoryIcons"
+
+      <div ref="pickerBodyRef" class="picker-body" @scroll="handlePickerScroll">
+        <div class="icon-grid">
+          <button
+            v-for="iconItem in displayedIcons"
             :key="iconItem"
-            class="icon-item-horizontal"
+            class="icon-card"
+            type="button"
             :class="{ active: (props.modelValue || '') === iconItem }"
+            :title="iconItem"
             @click="selectIcon(iconItem)"
           >
-            <Icon :icon="iconItem" style="font-size: 20px" />
-            <span class="icon-name">{{ iconItem }}</span>
-          </div>
+            <Icon :icon="iconItem" class="icon-card-icon" />
+          </button>
         </div>
       </div>
-      <!-- 搜索结果 - 水平块状 -->
-      <div v-else class="icon-list-horizontal">
-        <div
-          v-for="iconItem in filteredIcons"
-          :key="iconItem"
-          class="icon-item-horizontal"
-          :class="{ active: (props.modelValue || '') === iconItem }"
-          @click="selectIcon(iconItem)"
-        >
-          <Icon :icon="iconItem" style="font-size: 20px" />
-          <span class="icon-name">{{ iconItem }}</span>
-        </div>
+
+      <div class="picker-footer">
+        <ElButton @click="handleClose">关闭</ElButton>
       </div>
     </div>
-  </ElPopover>
+  </ElDialog>
 </template>
 
 <script setup lang="ts">
-  import { ElIcon, ElPopover, ElInput } from 'element-plus'
-  import { Search, Loading } from '@element-plus/icons-vue'
-  import { Icon } from '@iconify/vue'
-  import { onClickOutside } from '@vueuse/core'
+  import { ElIcon, ElDialog, ElInput, ElButton, ElTabs, ElTabPane } from 'element-plus'
+  import { Search, Loading, Close } from '@element-plus/icons-vue'
+  import { Icon, addCollection } from '@iconify/vue'
+
+  type IconSet = {
+    label: string
+    /** Iconify collection prefix, e.g. ri / mdi / ep */
+    prefix: string
+  }
 
   interface Props {
     modelValue: string | undefined
+    /** 手动触发模式：不再监听 focusin/click 自动打开，仅通过 expose 的 open() 打开 */
+    manual?: boolean
+    /** 可选：自定义可切换的图标库（Iconify prefix 列表） */
+    iconSets?: IconSet[]
   }
 
   interface Emits {
@@ -123,8 +121,7 @@
   const visible = ref(false)
   const referenceRef = ref<HTMLElement>()
   const searchInputRef = ref<InstanceType<typeof ElInput>>()
-  const currentCategory = ref('常用')
-  const categoryTabsRef = ref<HTMLElement>()
+  const pickerBodyRef = ref<HTMLElement>()
 
   // 处理输入框聚焦
   const handleFocus = () => {
@@ -137,36 +134,7 @@
   // 处理点击事件，阻止冒泡并打开选择器
   const handleClick = (event: MouseEvent) => {
     event.stopPropagation()
-    // 延迟打开，避免与点击外部监听冲突
-    setTimeout(() => {
-      visible.value = true
-    }, 10)
-  }
-
-  // 使用 @vueuse/core 提供的 onClickOutside 简化点击外部关闭逻辑，避免手动管理事件监听
-  onClickOutside(
-    referenceRef,
-    () => {
-      if (!visible.value) return
-      // 延迟关闭，避免与打开事件冲突
-      setTimeout(() => {
-        visible.value = false
-      }, 10)
-    },
-    {
-      // 仅在弹层可见时才处理点击外部
-      ignore: () => !visible.value
-    }
-  )
-
-  /**
-   * 分类区域滚轮事件处理
-   * 使用鼠标滚轮的垂直滚动，驱动分类标签横向滚动，便于快速浏览所有分类
-   */
-  const handleCategoryWheel = (event: WheelEvent) => {
-    const el = categoryTabsRef.value
-    if (!el) return
-    el.scrollLeft += event.deltaY
+    visible.value = true
   }
 
   /**
@@ -193,124 +161,82 @@
     }
   })
 
-  // 图标分类
-  const iconCategories = [
-    {
-      name: '常用',
-      icons: [
-        'ri:home-line',
-        'ri:user-line',
-        'ri:user-3-line',
-        'ri:settings-line',
-        'ri:menu-line',
-        'ri:search-line'
+  const iconSets = computed<IconSet[]>(() => {
+    return (
+      props.iconSets ?? [
+        { label: 'Remix Icon', prefix: 'ri' },
+        { label: 'Material Design Icons', prefix: 'mdi' },
+        { label: 'Element Plus', prefix: 'ep' }
       ]
-    },
-    {
-      name: '文件管理',
-      icons: [
-        'ri:file-list-line',
-        'ri:folder-line',
-        'ri:folder-open-line',
-        'ri:file-line',
-        'ri:file-text-line',
-        'ri:file-edit-line',
-        'ri:folder-add-line'
-      ]
-    },
-    {
-      name: '操作',
-      icons: [
-        'ri:add-line',
-        'ri:edit-line',
-        'ri:delete-line',
-        'ri:save-line',
-        'ri:close-line',
-        'ri:check-line',
-        'ri:refresh-line'
-      ]
-    },
-    {
-      name: '方向',
-      icons: ['ri:arrow-right-line', 'ri:arrow-left-line', 'ri:arrow-up-line', 'ri:arrow-down-line']
-    },
-    {
-      name: '上传下载',
-      icons: ['ri:download-line', 'ri:upload-line']
-    },
-    {
-      name: '安全',
-      icons: [
-        'ri:eye-line',
-        'ri:eye-off-line',
-        'ri:lock-line',
-        'ri:unlock-line',
-        'ri:key-line',
-        'ri:shield-line',
-        'ri:shield-check-line'
-      ]
-    },
-    {
-      name: '通知',
-      icons: [
-        'ri:notification-line',
-        'ri:bell-line',
-        'ri:mail-line',
-        'ri:message-line',
-        'ri:chat-line'
-      ]
-    },
-    {
-      name: '时间',
-      icons: ['ri:calendar-line', 'ri:time-line']
-    },
-    {
-      name: '图表',
-      icons: ['ri:chart-line', 'ri:bar-chart-line', 'ri:pie-chart-line']
-    },
-    {
-      name: '系统',
-      icons: [
-        'ri:database-line',
-        'ri:server-line',
-        'ri:computer-line',
-        'ri:phone-line',
-        'ri:global-line',
-        'ri:link-line'
-      ]
-    },
-    {
-      name: '媒体',
-      icons: ['ri:image-line']
-    },
-    {
-      name: '其他',
-      icons: [
-        'ri:star-line',
-        'ri:heart-line',
-        'ri:share-line',
-        'ri:grid-line',
-        'ri:table-line',
-        'ri:layout-line',
-        'ri:apps-line',
-        'ri:filter-line'
-      ]
-    },
-    {
-      name: '提示',
-      icons: [
-        'ri:question-line',
-        'ri:information-line',
-        'ri:error-warning-line',
-        'ri:check-circle-line',
-        'ri:close-circle-line',
-        'ri:forbid-line'
-      ]
-    }
-  ]
+    )
+  })
 
-  // 所有常用图标（用于本地搜索）
-  const commonIcons = iconCategories.flatMap((category) => category.icons)
+  const activeIconSet = ref<string>(iconSets.value[0]?.prefix ?? 'ri')
+  const iconSetLabel = computed(() => {
+    const found = iconSets.value.find((s) => s.prefix === activeIconSet.value)
+    return found?.label ?? activeIconSet.value
+  })
+  const allIcons = ref<string[]>([])
+  const isSwitchingIconSet = ref(false)
+
+  // 同一 prefix 只加载/注册一次，避免重复 addCollection 导致卡顿
+  const loadedIconSets = new Set<string>()
+
+  const offlineIconLoaders: Partial<Record<string, () => Promise<any>>> = {
+    ri: () => import('@iconify-json/ri/icons.json'),
+    mdi: () => import('@iconify-json/mdi/icons.json'),
+    ep: () => import('@iconify-json/ep/icons.json')
+  }
+
+  const loadIconifyIcons = async (prefix: string) => {
+    try {
+      const loader = offlineIconLoaders[prefix]
+      if (!loader) {
+        // 未提供离线包：不尝试动态加载，避免在浏览器端报 module specifier 错误
+        allIcons.value = []
+        return
+      }
+
+      // 已经加载过：仅切换列表即可
+      if (
+        loadedIconSets.has(prefix) &&
+        allIcons.value.length > 0 &&
+        allIcons.value[0]?.startsWith(`${prefix}:`)
+      ) {
+        return
+      }
+
+      isSwitchingIconSet.value = true
+      // 先让 UI 刷新出 loading，再进行重型 import/解析
+      await nextTick()
+      await new Promise((r) => setTimeout(r, 0))
+
+      const mod = await loader()
+      const iconsJson = (mod as any).default
+      // 注册到 Iconify 内部存储：这样 <Icon> 渲染时不会再请求 api.iconify.design
+      if (!loadedIconSets.has(prefix)) {
+        addCollection(iconsJson)
+        loadedIconSets.add(prefix)
+      }
+      const icons = iconsJson?.icons ? Object.keys(iconsJson.icons) : []
+      allIcons.value = icons.map((name: string) => `${prefix}:${name}`)
+    } catch (e) {
+      console.warn(`未能加载 ${prefix} 离线数据，将回退到在线搜索模式。`, e)
+      allIcons.value = []
+    } finally {
+      isSwitchingIconSet.value = false
+    }
+  }
+
+  onMounted(() => {
+    loadIconifyIcons(activeIconSet.value)
+  })
+
+  const handleIconSetChange = async () => {
+    resetSearch()
+    resetDisplayLimit()
+    await loadIconifyIcons(activeIconSet.value)
+  }
 
   /**
    * 图标搜索功能 composable
@@ -324,65 +250,21 @@
     const onlineSearchResults = ref<string[]>([])
     const searchError = ref<string | null>(null)
 
-    // 图标API配置 - 支持多个图标库
-    const iconApis = [
-      {
-        name: 'Iconify 全库',
-        url: (keyword: string, limit: number) =>
-          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}`
-      },
-      {
-        name: 'Remix Icon',
-        url: (keyword: string, limit: number) =>
-          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=ri`
-      },
-      {
-        name: 'Material Design',
-        url: (keyword: string, limit: number) =>
-          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=mdi`
-      },
-      {
-        name: 'Heroicons',
-        url: (keyword: string, limit: number) =>
-          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=heroicons`
-      },
-      {
-        name: 'Ant Design',
-        url: (keyword: string, limit: number) =>
-          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=ant-design`
-      },
-      {
-        name: 'Feather',
-        url: (keyword: string, limit: number) =>
-          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=feather`
-      },
-      {
-        name: 'Font Awesome',
-        url: (keyword: string, limit: number) =>
-          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=fa,fa6`
-      },
-      {
-        name: 'Bootstrap',
-        url: (keyword: string, limit: number) =>
-          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=${limit}&prefixes=bx`
-      }
-    ]
-
     /**
      * 本地搜索图标
-     * 在常用图标列表中搜索匹配的图标
+     * 优先在 Remix Icon 全量列表中搜索；若未加载则在空列表中返回空结果
      */
     const searchLocalIcons = (keyword: string): string[] => {
       if (!keyword || keyword.trim().length === 0) {
-        return []
+        return allIcons.value
       }
       const lowerKeyword = keyword.trim().toLowerCase()
-      return commonIcons.filter((icon) => icon.toLowerCase().includes(lowerKeyword))
+      return allIcons.value.filter((icon) => icon.toLowerCase().includes(lowerKeyword))
     }
 
     /**
      * 在线搜索图标
-     * 从多个图标API并行搜索图标
+     * 当离线图标未加载时，从 Iconify Remix Icon 前缀在线搜索兜底
      */
     const searchIconsOnline = async (keyword: string): Promise<void> => {
       if (!keyword || keyword.trim().length < 2) {
@@ -395,30 +277,13 @@
       searchError.value = null
 
       try {
-        // 并行请求多个API端点
-        const searchPromises = iconApis.map(async (api) => {
-          try {
-            const response = await fetch(api.url(keyword, 30))
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}`)
-            }
-            const data = await response.json()
-            return data.icons && Array.isArray(data.icons) ? data.icons : []
-          } catch (error) {
-            console.warn(`${api.name} API 搜索失败:`, error)
-            return []
-          }
-        })
-
-        // 等待所有请求完成
-        const results = await Promise.all(searchPromises)
-
-        // 合并所有结果并去重
-        const allIcons = results.flat()
-        const uniqueIcons = Array.from(new Set(allIcons))
-
-        // 限制最终结果数量，优先显示常用图标库
-        onlineSearchResults.value = uniqueIcons.slice(0, 150)
+        const prefix = activeIconSet.value
+        const response = await fetch(
+          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=300&prefixes=${encodeURIComponent(prefix)}`
+        )
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const data = await response.json()
+        onlineSearchResults.value = data.icons && Array.isArray(data.icons) ? data.icons : []
       } catch (error) {
         console.error('搜索图标失败:', error)
         searchError.value = '在线搜索失败，请稍后重试'
@@ -438,8 +303,8 @@
       // 先进行本地搜索（无论关键词长度）
       localSearchResults.value = searchLocalIcons(trimmedKeyword)
 
-      // 如果关键词长度>=2，进行在线搜索
-      if (trimmedKeyword.length >= 2) {
+      // 若离线列表为空且关键词长度>=2，进行在线搜索兜底
+      if (allIcons.value.length === 0 && trimmedKeyword.length >= 2) {
         await searchIconsOnline(trimmedKeyword)
       } else {
         onlineSearchResults.value = []
@@ -565,12 +430,39 @@
   // 过滤图标列表（用于模板显示）
   const filteredIcons = computed(() => {
     const keyword = iconSearchText.value.trim()
-    // 如果有搜索关键词，返回合并后的搜索结果
-    if (keyword.length > 0) {
-      return mergedSearchResults.value
-    }
-    return []
+    if (keyword.length > 0) return mergedSearchResults.value
+    // 默认展示全量（离线）列表；若离线未加载，则展示空（等待用户搜索触发在线兜底）
+    return allIcons.value
   })
+
+  // 分批渲染，避免一次性渲染几千个按钮导致切换卡顿
+  const displayLimit = ref(300)
+  const resetDisplayLimit = () => {
+    displayLimit.value = 300
+    // 回到顶部，避免切换后仍停留在底部造成“看似空白”
+    if (pickerBodyRef.value) pickerBodyRef.value.scrollTop = 0
+  }
+
+  watch(
+    () => [activeIconSet.value, iconSearchText.value],
+    () => {
+      resetDisplayLimit()
+    }
+  )
+
+  const displayedIcons = computed(() => {
+    return filteredIcons.value.slice(0, displayLimit.value)
+  })
+
+  const handlePickerScroll = () => {
+    const el = pickerBodyRef.value
+    if (!el) return
+    // 接近底部时加载更多
+    const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 200
+    if (nearBottom) {
+      displayLimit.value = Math.min(filteredIcons.value.length, displayLimit.value + 300)
+    }
+  }
 
   // 清理搜索定时器
   onUnmounted(() => {
@@ -578,17 +470,6 @@
       clearTimeout(searchTimer)
       searchTimer = null
     }
-  })
-
-  // 切换分类
-  const switchCategory = (categoryName: string) => {
-    currentCategory.value = categoryName
-  }
-
-  // 当前分类的图标列表
-  const currentCategoryIcons = computed(() => {
-    const category = iconCategories.find((cat) => cat.name === currentCategory.value)
-    return category ? category.icons : []
   })
 
   // 选择图标
@@ -600,84 +481,95 @@
       resetSearch()
     }, 100)
   }
+
+  const handleClose = () => {
+    visible.value = false
+    resetSearch()
+  }
+
+  const totalIcons = computed(() => {
+    return allIcons.value.length > 0 ? allIcons.value.length : mergedSearchResults.value.length
+  })
 </script>
 
 <style scoped lang="scss">
   .icon-picker {
-    max-height: 420px;
-    padding: 12px 14px 14px;
-    overflow-y: auto;
-    background: linear-gradient(180deg, #f9fbff 0%, #fff 40%);
-    border-radius: 10px;
+    padding: 6px 10px 12px;
+    background: #fff;
+    border-radius: 12px;
   }
 
-  .icon-picker-header {
+  .picker-titlebar {
     display: flex;
-    gap: 12px;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    padding-bottom: 4px;
   }
 
-  .icon-preview {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding: 6px 10px;
-    background: rgb(64 158 255 / 6%);
-    border: 1px solid rgb(64 158 255 / 15%);
-    border-radius: 999px;
+  .picker-title {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 30px;
+    color: #303133;
   }
 
-  .icon-preview-avatar {
+  .picker-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 28px;
     height: 28px;
-    color: #409eff;
-    background: #fff;
-    border-radius: 50%;
-    box-shadow: 0 1px 4px rgb(64 158 255 / 20%);
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    transition: background 0.15s;
 
-    :deep(svg) {
-      font-size: 18px;
+    &:hover {
+      background: rgb(0 0 0 / 4%);
     }
   }
 
-  .icon-preview-info {
+  .picker-toolbar {
     display: flex;
-    flex-direction: column;
-    line-height: 1.2;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f5f7fa;
+    border: 1px solid #ebeef5;
+    border-radius: 10px;
   }
 
-  .icon-preview-label {
-    font-size: 11px;
-    color: #909399;
+  .picker-tabs {
+    margin-bottom: 10px;
   }
 
-  .icon-preview-name {
-    max-width: 180px;
-    overflow: hidden;
-    font-size: 12px;
-    color: #303133;
-    text-overflow: ellipsis;
+  .picker-search {
+    flex: 1;
+  }
+
+  .picker-meta {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
     white-space: nowrap;
   }
 
-  .icon-tip {
-    flex: 1;
-    font-size: 11px;
-    color: #909399;
-    text-align: right;
+  .picker-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+    color: #606266;
+    background: #fff;
+    border: 1px solid #e4e7ed;
+    border-radius: 999px;
   }
 
-  .icon-tip-keyword {
-    padding: 0 4px;
-    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
-    color: #409eff;
-    background: rgb(64 158 255 / 8%);
-    border-radius: 4px;
+  .picker-meta-count {
+    font-size: 12px;
+    color: #909399;
   }
 
   .icon-loading,
@@ -690,173 +582,68 @@
     color: #909399;
   }
 
-  .icon-categories {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  .picker-body {
+    height: 520px;
+    padding-top: 12px;
+    overflow: auto;
   }
 
-  .category-tabs {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding-bottom: 10px;
-    overflow: auto hidden;
-    border-bottom: 1px solid #ebeef5;
-    scrollbar-width: thin;
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: 12px;
+    padding: 2px;
   }
 
-  .category-tab {
-    display: inline-flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 10px 6px 12px;
-    font-size: 13px;
-    color: #606266;
-    white-space: nowrap;
-    cursor: pointer;
-    background: #f5f7fa;
-    border: 1px solid #e4e7ed;
-    border-radius: 999px;
-    transition: all 0.2s;
-
-    &:hover {
-      color: #409eff;
-      background: #ecf5ff;
-      border-color: #409eff;
-    }
-
-    &.active {
-      font-weight: 600;
-      color: #409eff;
-      background: #ecf5ff;
-      border-color: #409eff;
-    }
-  }
-
-  .category-tab-main {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-  }
-
-  .category-tab-dot {
-    width: 6px;
-    height: 6px;
-    background: #c0c4cc;
-    border-radius: 50%;
-  }
-
-  .category-tab-name {
-    font-size: 12px;
-  }
-
-  .category-tab-count {
+  .icon-card {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 6px;
-    font-size: 11px;
-    color: #909399;
-    background: rgb(0 0 0 / 4%);
-    border-radius: 999px;
-  }
-
-  .category-tab.active .category-tab-dot {
-    background: #409eff;
-  }
-
-  .category-tab.active .category-tab-count {
-    color: #409eff;
-    background: rgb(64 158 255 / 12%);
-  }
-
-  .category-title-row {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin: 4px 0;
-  }
-
-  .category-title-left {
-    display: flex;
-    gap: 6px;
-    align-items: baseline;
-  }
-
-  .category-title-text {
-    font-size: 13px;
-    font-weight: 600;
-    color: #303133;
-  }
-
-  .category-title-sub {
-    font-size: 11px;
-    color: #a0a3aa;
-  }
-
-  .icon-list-horizontal {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding-bottom: 4px;
-    overflow-x: auto;
-  }
-
-  .icon-item-horizontal {
-    display: inline-flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    min-width: 80px;
-    padding: 12px 16px;
+    width: 100%;
+    height: 56px;
     cursor: pointer;
     background: #fff;
     border: 1px solid #e4e7ed;
-    border-radius: 4px;
-    transition: all 0.2s;
+    border-radius: 8px;
+    transition: all 0.15s;
 
     &:hover {
-      background: #ecf5ff;
       border-color: #409eff;
-      box-shadow: 0 2px 8px rgb(64 158 255 / 20%);
-      transform: translateY(-2px);
+      box-shadow: 0 2px 10px rgb(64 158 255 / 16%);
+      transform: translateY(-1px);
     }
 
     &.active {
-      color: #409eff;
-      background: #ecf5ff;
       border-color: #409eff;
-      box-shadow: 0 2px 8px rgb(64 158 255 / 30%);
+      box-shadow: 0 2px 10px rgb(64 158 255 / 22%);
     }
+  }
 
-    .icon-name {
-      max-width: 100%;
-      margin-top: 6px;
-      overflow: hidden;
-      font-size: 11px;
-      line-height: 1.2;
-      color: #606266;
-      text-align: center;
-      text-overflow: ellipsis;
-      word-break: break-all;
-      white-space: nowrap;
-    }
+  .icon-card-icon {
+    font-size: 22px;
+    color: #303133;
+  }
 
-    &.active .icon-name {
-      color: #409eff;
-    }
+  .icon-card.active .icon-card-icon {
+    color: #409eff;
+  }
+
+  .picker-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 12px;
   }
 </style>
 
 <style lang="scss">
-  .icon-picker-popover {
-    .el-popover__title {
-      display: none;
+  .icon-picker-dialog {
+    .el-dialog__header {
+      margin-right: 0;
+      padding: 4px 16px 0;
+    }
+
+    .el-dialog__body {
+      padding: 0 16px 12px;
     }
   }
 </style>

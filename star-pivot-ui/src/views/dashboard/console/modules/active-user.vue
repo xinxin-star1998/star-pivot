@@ -23,33 +23,33 @@
 </template>
 
 <script setup lang="ts">
-import type {DashboardTrendData} from '@/types/api/dashboard'
+  import type { DashboardTrendData } from '@/types/api/dashboard'
 
   interface UserStatItem {
     name: string
     num: string
   }
 
-const props = withDefaults(
+  const props = withDefaults(
     defineProps<{
       trendData: DashboardTrendData
     }>(),
     {
-      trendData: () => ({xAxisData: [], data: []})
+      trendData: () => ({ xAxisData: [], data: [] })
     }
-)
+  )
 
-const xAxisLabels = computed(() => props.trendData.xAxisData)
-const chartData = computed(() => props.trendData.data)
+  const xAxisLabels = computed(() => props.trendData.xAxisData)
+  const chartData = computed(() => props.trendData.data)
 
   /**
    * 用户统计数据列表
    * 包含总用户量、总访问量、日访问量和周同比等关键指标
    */
   const list: UserStatItem[] = [
-    {name: '统计维度', num: '新增用户'},
-    {name: '周期', num: '近12个月'},
-    {name: '数据来源', num: 'sys_user'},
-    {name: '状态', num: '实时'}
+    { name: '统计维度', num: '新增用户' },
+    { name: '周期', num: '近12个月' },
+    { name: '数据来源', num: 'sys_user' },
+    { name: '状态', num: '实时' }
   ]
 </script>

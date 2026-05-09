@@ -54,6 +54,16 @@ public interface SysUserService extends IService<SysUser>, ImportExportService {
     boolean resetUserPassword(Long userId, String password);
 
     /**
+     * 当前登录用户修改密码（需校验旧密码）
+     *
+     * @param userId      当前登录用户 ID
+     * @param oldPassword 旧密码
+     * @param newPassword 新密码
+     * @return 是否成功
+     */
+    boolean updateUserPassword(Long userId, String oldPassword, String newPassword);
+
+    /**
      * 删除用户（支持单删和批量删除）
      *
      * @param userIds 用户ID列表

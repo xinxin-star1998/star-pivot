@@ -35,7 +35,7 @@ export function fetchGetCacheContent(cacheName: string, key: string) {
  */
 export function fetchDeleteCache(cacheName: string) {
   return request.del<number>({
-    url: `/api/monitor/cache/${cacheName}`
+    url: `/api/monitor/cache/group/${encodeURIComponent(cacheName)}`
   })
 }
 

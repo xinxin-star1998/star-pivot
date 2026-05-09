@@ -13,32 +13,30 @@
             <div class="dept-title-row">
               <div class="dept-title">
                 <el-icon class="dept-title-icon">
-                  <OfficeBuilding/>
+                  <OfficeBuilding />
                 </el-icon>
                 <span>组织机构</span>
               </div>
               <div class="dept-tools">
                 <ElButton
-                    :aria-label="deptTreeExpandAll ? '收起部门树' : '展开部门树'"
-                    class="dept-tool-btn"
-                    text
-                    @click="toggleDeptTreeExpand"
+                  :aria-label="deptTreeExpandAll ? '收起部门树' : '展开部门树'"
+                  class="dept-tool-btn"
+                  text
+                  @click="toggleDeptTreeExpand"
                 >
-                  <el-icon :class="{ 'is-collapsed': !deptTreeExpandAll }" class="dept-arrow-icon"
-                  >
-                    <ArrowDown
-                    />
+                  <el-icon :class="{ 'is-collapsed': !deptTreeExpandAll }" class="dept-arrow-icon">
+                    <ArrowDown />
                   </el-icon>
                 </ElButton>
                 <ElButton
-                    :loading="deptLoading"
-                    aria-label="刷新部门树"
-                    class="dept-tool-btn"
-                    text
-                    @click="handleRefreshDeptTree"
+                  :loading="deptLoading"
+                  aria-label="刷新部门树"
+                  class="dept-tool-btn"
+                  text
+                  @click="handleRefreshDeptTree"
                 >
                   <el-icon>
-                    <RefreshRight/>
+                    <RefreshRight />
                   </el-icon>
                 </ElButton>
               </div>
@@ -59,12 +57,12 @@
           </div>
           <div class="department-tree-wrapper">
             <ElTree
-                :key="deptTreeRenderKey"
+              :key="deptTreeRenderKey"
               :data="deptTree"
               :props="deptTreeProps"
-                :default-expand-all="deptTreeExpandAll"
-                :expand-on-click-node="false"
-                node-key="deptId"
+              :default-expand-all="deptTreeExpandAll"
+              :expand-on-click-node="false"
+              node-key="deptId"
               :default-checked-keys="selectedDeptId ? [selectedDeptId] : []"
               :filter-node-method="filterDeptNode"
               ref="deptTreeRef"
@@ -79,20 +77,20 @@
           </div>
         </ElCard>
         <ElTooltip
-            :content="deptPanelCollapsed ? '展开' : '收起'"
-            :show-arrow="true"
-            effect="dark"
-            placement="right"
-            popper-class="panel-toggle-tooltip"
+          :content="deptPanelCollapsed ? '展开' : '收起'"
+          :show-arrow="true"
+          effect="dark"
+          placement="right"
+          popper-class="panel-toggle-tooltip"
         >
           <ElButton
-              :aria-label="deptPanelCollapsed ? '展开部门树面板' : '收起部门树面板'"
-              class="panel-toggle-btn"
-              text
-              @click="toggleDeptPanel"
+            :aria-label="deptPanelCollapsed ? '展开部门树面板' : '收起部门树面板'"
+            class="panel-toggle-btn"
+            text
+            @click="toggleDeptPanel"
           >
             <el-icon class="panel-toggle-icon">
-              <component :is="deptPanelCollapsed ? DArrowRight : DArrowLeft"/>
+              <component :is="deptPanelCollapsed ? DArrowRight : DArrowLeft" />
             </el-icon>
           </ElButton>
         </ElTooltip>
@@ -188,21 +186,22 @@
   import {
     fetchDeleteUser,
     fetchGetUserList,
-    fetchUpdateUserStatus,
-    fetchUnlockUser
+    fetchResetUserPassword,
+    fetchUnlockUser,
+    fetchUpdateUserStatus
   } from '@/api/user/user'
   import { fetchExportData } from '@/api/common/import-export'
   import { fetchGetDeptTree, SysDept } from '@/api/dept/dept'
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
   import {
+    ElButton,
+    ElIcon,
+    ElInput,
+    ElMessage,
     ElMessageBox,
     ElSwitch,
-    ElMessage,
-    ElTree,
-    ElInput,
-    ElButton,
-    ElIcon
+    ElTree
   } from 'element-plus'
   import {
     ArrowDown,
@@ -217,10 +216,16 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtAvatarDisplay from '@/components/core/media/art-avatar-display/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { useUserStore } from '@/store/modules/user'
 
   defineOptions({ name: 'User' })
 
   const { hasAuth } = useAuth()
+  const userStore = useUserStore()
+  const currentUserId = computed(() => {
+    const info = userStore.getUserInfo as any
+    return info?.userId ?? info?.user?.userId
+  })
 
   type UserListItem = Api.SystemManage.UserListItem
 
@@ -339,7 +344,8 @@
   } = useTable({
     // 核心配置
     core: {
-      apiFn: fetchGetUserList,
+      // 适配 useTable 的泛型约束（入参需可接受 any），避免 strictFunctionTypes 下推断为 never
+      apiFn: (params: any) => fetchGetUserList(params as Api.SystemManage.UserSearchParams),
       apiParams: {
         pageNum: 1,
         pageSize: 20,
@@ -393,7 +399,7 @@
                             color: 'var(--art-gray-900)'
                           }
                         },
-                          user.userName || '未知用户'
+                        user.userName || '未知用户'
                       ),
                       h('span', {
                         class: 'status-indicator',
@@ -402,7 +408,8 @@
                           width: '8px',
                           height: '8px',
                           borderRadius: '50%',
-                          backgroundColor: user.status === '0' ? '#67C23A' : '#909399'
+                          backgroundColor:
+                            user.status === '0' ? 'var(--el-color-success)' : 'var(--el-color-info)'
                         }
                       })
                     ]
@@ -418,12 +425,31 @@
                         color: 'var(--art-gray-500)'
                       }
                     },
-                      user.email || '无邮箱'
+                    user.email || '无邮箱'
                   )
                 ]
               )
             ])
           }
+        },
+        {
+          prop: 'deptNameText',
+          label: '所属部门',
+          sortable: true,
+          minWidth: 140,
+          showOverflowTooltip: true
+        },
+        {
+          prop: 'roleNamesText',
+          label: '关联角色',
+          minWidth: 180,
+          showOverflowTooltip: true
+        },
+        {
+          prop: 'postNamesText',
+          label: '所属岗位',
+          minWidth: 180,
+          showOverflowTooltip: true
         },
         {
           prop: 'sex',
@@ -482,6 +508,7 @@
               actions.push(
                 h(ArtButtonTable, {
                   type: 'edit',
+                  tooltip: '编辑用户',
                   onClick: () => showDialog('edit', user)
                 })
               )
@@ -492,6 +519,7 @@
                   h(ArtButtonTable, {
                     icon: 'ri:lock-unlock-line',
                     iconClass: 'bg-warning/12 text-warning',
+                    tooltip: '解锁账户',
                     onClick: () => unlockUser(user)
                   })
                 )
@@ -503,7 +531,17 @@
               actions.push(
                 h(ArtButtonTable, {
                   type: 'delete',
+                  tooltip: '删除用户',
                   onClick: () => deleteUser(user)
+                })
+              )
+            }
+            if (hasAuth('system:user:resetPwd') && user.userId !== currentUserId.value) {
+              actions.push(
+                h(ArtButtonTable, {
+                  type: 'sync',
+                  tooltip: '重置密码',
+                  onClick: () => resetPwd(user)
                 })
               )
             }
@@ -521,13 +559,23 @@
     // 数据处理
     transform: {
       // 数据转换器
-      dataTransformer: (records) => {
+      dataTransformer: (records: UserListItem[]) => {
         // 类型守卫检查
         if (!Array.isArray(records)) {
           return []
         }
 
-        return records
+        return records.map((r) => {
+          const user = r
+          const roleNames = Array.isArray(user.roleNames) ? user.roleNames.filter(Boolean) : []
+          const postNames = Array.isArray(user.postNames) ? user.postNames.filter(Boolean) : []
+          return {
+            ...user,
+            deptNameText: user.deptName || '-',
+            roleNamesText: roleNames.length ? roleNames.join('、') : '-',
+            postNamesText: postNames.length ? postNames.join('、') : '-'
+          }
+        })
       }
     }
   })
@@ -677,6 +725,33 @@
   }
 
   /**
+   * 管理员重置用户密码
+   */
+  const resetPwd = async (row: UserListItem): Promise<void> => {
+    try {
+      const { value } = await ElMessageBox.prompt(
+        `请输入用户 "${row.userName}" 的新密码`,
+        '重置密码',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputPattern: /^.{5,20}$/,
+          inputErrorMessage: '密码长度必须在 5-20 位',
+          inputPlaceholder: '请输入新密码',
+          inputType: 'password'
+        }
+      )
+      if (!value) return
+      await fetchResetUserPassword(row.userId, value)
+      ElMessage.success('重置密码成功')
+    } catch (error: any) {
+      if (error === 'cancel' || error === 'close') return
+      console.error('重置密码失败:', error)
+      ElMessage.error(error?.message || '重置密码失败')
+    }
+  }
+
+  /**
    * 导出用户数据
    */
   const handleExportUsers = async () => {
@@ -724,11 +799,12 @@
     border: var(--panel-border);
     border-radius: var(--panel-radius);
     box-shadow: var(--panel-shadow);
-    transition: width 0.22s ease,
-    min-width 0.22s ease,
-    opacity 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    transition:
+      width 0.22s ease,
+      min-width 0.22s ease,
+      opacity 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
   .left-panel:hover {
@@ -758,20 +834,21 @@
     width: 22px;
     height: 40px;
     padding: 0;
-    color: #409eff;
+    color: var(--el-color-primary);
     border: var(--panel-border);
     border-left: none;
     border-radius: 0 10px 10px 0;
-    background: #ecf5ff;
+    background: var(--el-color-primary-light-9);
     transform: translateY(-50%);
-    transition: left 0.22s ease,
-    color 0.2s ease,
-    background-color 0.2s ease;
+    transition:
+      left 0.22s ease,
+      color 0.2s ease,
+      background-color 0.2s ease;
   }
 
   .panel-toggle-btn:hover {
-    color: #66b1ff;
-    background: #d9ecff;
+    color: var(--el-color-primary-light-3);
+    background: var(--el-color-primary-light-8);
     transform: none;
   }
 

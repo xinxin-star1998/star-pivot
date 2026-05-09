@@ -1,8 +1,10 @@
 package com.star.pivot.config.database;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /**
  * Druid Frame Options 配置类
@@ -19,6 +21,8 @@ import org.springframework.context.annotation.Configuration;
  * @author xinxin
  */
 @Configuration
+@Profile({"local", "dev", "test"})
+@ConditionalOnProperty(prefix = "druid.monitor", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DruidFrameOptionsConfig {
 
     /**

@@ -14,13 +14,13 @@
  * @author Art Design Pro Team
  */
 
-import axios, {AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from 'axios'
-import {useUserStore} from '@/store/modules/user'
-import {ApiStatus} from './status'
-import {handleError, HttpError, showError, showSuccess} from './error'
-import {$t} from '@/locales'
-import {BaseResponse} from '@/types'
-import {fetchRefreshToken} from '@/api/auth'
+import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import { useUserStore } from '@/store/modules/user'
+import { ApiStatus } from './status'
+import { handleError, HttpError, showError, showSuccess } from './error'
+import { $t } from '@/locales'
+import { BaseResponse } from '@/types'
+import { fetchRefreshToken } from '@/api/auth'
 
 /** 请求配置常量 */
 const REQUEST_TIMEOUT = 15000
@@ -103,8 +103,8 @@ export interface BlobFullResponse {
 /** 扩展 AxiosRequestConfig */
 interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   url: string
-    params?: object
-    data?: object
+  params?: object
+  data?: object
   showErrorMessage?: boolean
   showSuccessMessage?: boolean
   /** blob 请求时是否返回 { data, headers }，便于解析 Content-Disposition 等响应头 */
@@ -117,7 +117,7 @@ const { VITE_WITH_CREDENTIALS } = import.meta.env
  * 获取 API 基础地址（优先使用部署后的运行时配置，无需重新打包）
  * 部署后修改 public/config.js 中的 VITE_API_URL 即可生效
  */
-function getApiBaseUrl(): string {
+export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined' && window.__APP_RUNTIME_CONFIG__?.VITE_API_URL !== undefined) {
     return window.__APP_RUNTIME_CONFIG__.VITE_API_URL
   }
@@ -443,7 +443,7 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
 
       // 显示成功消息
       if (config.showSuccessMessage) {
-          const successMsg = jsonData.message
+        const successMsg = jsonData.message
         if (successMsg) {
           showSuccess(successMsg)
         }
