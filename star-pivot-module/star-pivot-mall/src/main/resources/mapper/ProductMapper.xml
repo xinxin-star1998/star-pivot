@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.star.pivot.mall.mapper.ProductMapper">
+
+    <sql id="Base_Column_List">
+        id, category_id, brand_id, name, subtitle, main_image, images, detail, price, stock, status, create_time, update_time
+    </sql>
+
+    <select id="selectPageList" resultType="com.star.pivot.mall.domain.entity.Product">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM product
+        <where>
+            <if test="productReqBo.name != null and productReqBo.name != ''">
+                AND name LIKE CONCAT('%', #{productReqBo.name}, '%')
+            </if>
+            <if test="productReqBo.categoryId != null">
+                AND category_id = #{productReqBo.categoryId}
+            </if>
+            <if test="productReqBo.brandId != null">
+                AND brand_id = #{productReqBo.brandId}
+            </if>
+            <if test="productReqBo.status != null">
+                AND status = #{productReqBo.status}
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+</mapper>

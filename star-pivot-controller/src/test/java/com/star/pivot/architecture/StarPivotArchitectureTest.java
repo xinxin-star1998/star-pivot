@@ -20,7 +20,8 @@ class StarPivotArchitectureTest {
         "com.star.pivot.quartz..",
         "com.star.pivot.generator..",
         "com.star.pivot.dict..",
-        "com.star.pivot.monitor.."
+        "com.star.pivot.monitor..",
+        "com.star.pivot.mall.."
     };
 
     @ArchTest

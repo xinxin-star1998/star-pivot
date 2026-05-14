@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.star.pivot.mall.mapper.BrandMapper">
+
+    <sql id="Base_Column_List">
+        id, brand_name, brand_logo, brand_desc, sort, status, create_time, update_time
+    </sql>
+
+    <!-- 分页由 MyBatis-Plus 拦截器处理首个 Page 参数 -->
+    <select id="selectPageList" resultType="com.star.pivot.mall.domain.entity.Brand">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM brand
+        <where>
+            <if test="brandReqBo.brandName != null and brandReqBo.brandName != ''">
+                AND brand_name LIKE CONCAT('%', #{brandReqBo.brandName}, '%')
+            </if>
+            <if test="brandReqBo.status != null">
+                AND status = #{brandReqBo.status}
+            </if>
+        </where>
+        ORDER BY sort ASC, id ASC
+    </select>
+</mapper>

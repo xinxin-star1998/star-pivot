@@ -21,6 +21,7 @@
     - star-pivot-framework-log / file / web：仅依赖 framework-core
     - star-pivot-security：依赖 framework-core + log + file + web（本框架内直接依赖，不依赖根目录 star-pivot-common）
     - star-pivot-framework-boot-starter：聚合 security + core，应用层只依赖本模块即可
+    - star-pivot-framework-datasource：多数据源（可选依赖，业务工程按需引入）
     版本由根 POM 的 dependencyManagement（star-pivot-dependencies BOM）统一管理。
     -->
     <modules>
@@ -29,6 +30,7 @@
         <module>star-pivot-framework-file</module>
         <module>star-pivot-framework-web</module>
         <module>star-pivot-security</module>
+        <module>star-pivot-framework-datasource</module>
         <module>star-pivot-framework-boot-starter</module>
     </modules>
 </project>
