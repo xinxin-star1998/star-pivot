@@ -266,6 +266,11 @@
             </dependency>
             <dependency>
                 <groupId>com.star.pivot</groupId>
+                <artifactId>star-pivot-framework-datasource</artifactId>
+                <version>${star-pivot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.star.pivot</groupId>
                 <artifactId>star-pivot-security</artifactId>
                 <version>${star-pivot.version}</version>
             </dependency>
@@ -292,6 +297,11 @@
             <dependency>
                 <groupId>com.star.pivot</groupId>
                 <artifactId>star-pivot-dict</artifactId>
+                <version>${star-pivot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.star.pivot</groupId>
+                <artifactId>star-pivot-mall</artifactId>
                 <version>${star-pivot.version}</version>
             </dependency>
         </dependencies>

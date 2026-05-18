@@ -4,6 +4,8 @@ import com.alibaba.druid.DbType;
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
@@ -83,6 +85,7 @@ public class GenController {
     /**
      * 导入表结构（保存）
      */
+    @Log(title = "导入代码生成表", businessType = AppConstants.BusinessType.IMPORT)
     @PreAuthorize("hasAuthority('tool:gen:import')")
     @PostMapping("/importTable")
     public Result<?> importTableSave(@RequestBody Map<String, String> body)
@@ -125,6 +128,7 @@ public class GenController {
         * 
      * <p>注意：此接口需要 admin 角色或 tool:gen:add 权限
      */
+    @Log(title = "创建代码生成表", businessType = AppConstants.BusinessType.INSERT)
     @PreAuthorize("@ss.hasRole('admin') or hasAuthority('tool:gen:add')")
     @PostMapping("/createTable")
     public Result<?> createTableSave(@RequestBody Map<String, String> body) {
@@ -165,6 +169,7 @@ public class GenController {
     /**
      * 修改保存代码生成业务
      */
+    @Log(title = "修改代码生成配置", businessType = AppConstants.BusinessType.UPDATE)
     @PreAuthorize("hasAuthority('tool:gen:edit')")
     @PostMapping("/editSave")
     public Result<?> editSave(@Validated @RequestBody GenTable genTable)
@@ -178,6 +183,7 @@ public class GenController {
      * 
      * @param deleteRequest 删除请求，包含 ids 数组，格式：{ "ids": [12, 13, 14] }
      */
+    @Log(title = "删除代码生成配置", businessType = AppConstants.BusinessType.DELETE)
     @PreAuthorize("hasAuthority('tool:gen:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest)
@@ -202,6 +208,7 @@ public class GenController {
     /**
      * 生成代码（下载方式）
      */
+    @Log(title = "下载生成代码", businessType = AppConstants.BusinessType.GENCODE)
     @PreAuthorize("hasAuthority('tool:gen:create')")
     @GetMapping("/download/{tableName}")
     public void download(HttpServletResponse response, @PathVariable("tableName") String tableName) throws IOException
@@ -213,6 +220,7 @@ public class GenController {
     /**
      * 生成代码（自定义路径）
      */
+    @Log(title = "生成代码到本地", businessType = AppConstants.BusinessType.GENCODE)
     @PreAuthorize("hasAuthority('tool:gen:create')")
     @GetMapping("/genCode/{tableName}")
     public Result<?> genCode(@PathVariable("tableName") String tableName)
@@ -228,6 +236,7 @@ public class GenController {
     /**
      * 同步数据库
      */
+    @Log(title = "同步代码生成表结构", businessType = AppConstants.BusinessType.UPDATE)
     @PreAuthorize("hasAuthority('tool:gen:sync')")
     @GetMapping("/syncDb/{tableName}")
     public Result<?> syncDb(@PathVariable("tableName") String tableName)
@@ -239,6 +248,7 @@ public class GenController {
     /**
      * 批量生成代码
      */
+    @Log(title = "批量下载生成代码", businessType = AppConstants.BusinessType.GENCODE)
     @PreAuthorize("hasAuthority('tool:gen:create')")
     @GetMapping("/batchGenCode")
     public void batchGenCode(HttpServletResponse response, String tables) throws IOException

@@ -144,13 +144,13 @@
             </template>
           </ArtTableHeader>
 
-          <!-- 通用导入弹窗 -->
-          <ArtImportDialog
+          <ExcelImportDialog
             v-model="importDialogVisible"
-            business-type="user"
             title="用户导入"
             :show-overwrite="true"
             overwrite-label="是否更新已经存在的用户数据"
+            :import-fn="doImportUser"
+            :download-template-fn="fetchDownloadUserImportTemplate"
             @success="refreshData"
           />
 
@@ -181,7 +181,12 @@
 
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import ArtImportDialog from '@/components/core/forms/art-import-dialog/index.vue'
+  import ExcelImportDialog from '@/components/core/forms/excel-import-dialog/index.vue'
+  import {
+    fetchDownloadUserImportTemplate,
+    fetchExportUser,
+    fetchImportUserExcel
+  } from '@/api/user/user'
   import { useTable } from '@/hooks/core/useTable'
   import {
     fetchDeleteUser,
@@ -190,7 +195,6 @@
     fetchUnlockUser,
     fetchUpdateUserStatus
   } from '@/api/user/user'
-  import { fetchExportData } from '@/api/common/import-export'
   import { fetchGetDeptTree, SysDept } from '@/api/dept/dept'
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
@@ -754,13 +758,12 @@
   /**
    * 导出用户数据
    */
+  const doImportUser = (file: File, updateSupport: boolean) =>
+    fetchImportUserExcel(file, updateSupport)
+
   const handleExportUsers = async () => {
     try {
-      // 使用当前搜索条件作为导出参数
-      const exportParams = {
-        ...searchForm.value
-      }
-      await fetchExportData('user', exportParams)
+      await fetchExportUser({ ...searchForm.value })
     } catch (error) {
       console.error('导出用户失败:', error)
     }

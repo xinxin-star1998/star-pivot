@@ -1,5 +1,6 @@
 package com.star.pivot.controller.system;
 
+import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.BizException;
@@ -172,6 +173,7 @@ public class AvatarController {
      * @param usePresignedUrl 是否使用临时访问链接（可选，默认为false）
      * @return 上传结果，包含头像URL
      */
+    @Log(title = "上传用户头像", businessType = AppConstants.BusinessType.UPDATE)
     @PostMapping("/upload")
     public Result<Map<String, String>> upload(
             @RequestParam("file") MultipartFile file,
@@ -257,6 +259,7 @@ public class AvatarController {
      *
      * <p>权限校验：只能删除自己的头像（超级管理员可删除所有用户头像）
      */
+    @Log(title = "删除用户头像", businessType = AppConstants.BusinessType.DELETE)
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/delete")
     public Result<?> delete(@RequestParam("userId") String userId) {

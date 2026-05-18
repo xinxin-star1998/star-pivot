@@ -14,7 +14,7 @@ export interface OperLogListItem {
   operId: number
   /** 模块标题 */
   title?: string
-  /** 业务类型（0其它 1新增 2修改 3删除） */
+  /** 业务类型（字典 sys_oper_type：0其他 1新增 2修改 3删除 4授权 5导出 6导入 7强退 8生成代码 9清空数据） */
   businessType?: number
   /** 方法名称 */
   method?: string
@@ -52,7 +52,7 @@ export interface OperLogListItem {
 export interface OperLogSearchParams extends Api.Common.CommonSearchParams {
   /** 模块标题 */
   title?: string
-  /** 业务类型（0其它 1新增 2修改 3删除） */
+  /** 业务类型（字典 sys_oper_type：0其他 1新增 2修改 3删除 4授权 5导出 6导入 7强退 8生成代码 9清空数据） */
   businessType?: number
   /** 操作人员 */
   operName?: string

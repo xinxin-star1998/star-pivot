@@ -4,6 +4,8 @@ import com.star.pivot.dict.domain.bo.DictDataVO;
 import com.star.pivot.dict.domain.dto.DictDataDTO;
 import com.star.pivot.dict.domain.dto.DictDataQueryDTO;
 import com.star.pivot.dict.service.DictDataService;
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
@@ -89,6 +91,7 @@ public class DictDataController {
             @ApiResponse(responseCode = "200", description = "新增成功"),
             @ApiResponse(responseCode = "400", description = "参数错误")
     })
+    @Log(title = "新增字典数据", businessType = AppConstants.BusinessType.INSERT)
     @PreAuthorize("hasAuthority('system:data:add')")
     @PostMapping
     public Result<?> add(@Valid @RequestBody DictDataDTO dictDataDTO) {
@@ -104,6 +107,7 @@ public class DictDataController {
             @ApiResponse(responseCode = "200", description = "修改成功"),
             @ApiResponse(responseCode = "404", description = "字典数据不存在")
     })
+    @Log(title = "修改字典数据", businessType = AppConstants.BusinessType.UPDATE)
     @PreAuthorize("hasAuthority('system:data:edit')")
     @PutMapping
     public Result<?> edit(@Valid @RequestBody DictDataDTO dictDataDTO) {
@@ -119,6 +123,7 @@ public class DictDataController {
             @ApiResponse(responseCode = "200", description = "删除成功"),
             @ApiResponse(responseCode = "400", description = "删除ID为空")
     })
+    @Log(title = "删除字典数据", businessType = AppConstants.BusinessType.DELETE)
     @PreAuthorize("hasAuthority('system:data:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {

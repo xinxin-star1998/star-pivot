@@ -62,6 +62,7 @@
   import type { OperLogListItem, OperLogSearchParams } from '@/types/api/operlog'
   import OperLogDetail from './modules/oper-log-detail.vue'
   import OperLogSearch from './modules/oper-log-search.vue'
+  import { getOperBusinessTypeLabel } from './constants'
 
   defineOptions({ name: 'OperLog' })
 
@@ -130,7 +131,7 @@
           label: '业务类型',
           width: 100,
           formatter: (row: OperLogListItem) => {
-            return getBusinessTypeText(row.businessType)
+            return getOperBusinessTypeLabel(row.businessType)
           }
         },
         {
@@ -328,19 +329,6 @@
         ElMessage.error(error?.message || '清空失败')
       }
     }
-  }
-
-  /**
-   * 获取业务类型文本（用于表格显示）
-   */
-  const getBusinessTypeText = (businessType?: number) => {
-    const map: Record<number, string> = {
-      0: '其它',
-      1: '新增',
-      2: '修改',
-      3: '删除'
-    }
-    return map[businessType ?? 0] || '未知'
   }
 
   /**

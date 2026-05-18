@@ -69,6 +69,10 @@
         </dependency>
         <dependency>
             <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-mall</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-generator</artifactId>
         </dependency>
         <dependency>

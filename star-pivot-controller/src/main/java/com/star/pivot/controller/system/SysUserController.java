@@ -1,7 +1,13 @@
 package com.star.pivot.controller.system;
 
 import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.annotation.NoResponseWrapper;
 import com.star.pivot.framework.domain.AppConstants;
+import com.star.pivot.framework.excel.ExcelImportOptions;
+import com.star.pivot.framework.excel.ExcelImportResult;
+import com.star.pivot.framework.excel.ExcelToolkit;
+import com.star.pivot.system.domain.excel.SysUserExcel;
+import com.star.pivot.system.excel.SysUserExcelHandler;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
@@ -24,11 +30,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 用户信息表(SysUser)表控制层
@@ -46,11 +53,17 @@ public class SysUserController {
     private final SysUserService sysUserService;
     private final AccountLockService accountLockService;
     private final PermissionService permissionService;
+    private final SysUserExcelHandler sysUserExcelHandler;
 
-    public SysUserController(SysUserService sysUserService, AccountLockService accountLockService, PermissionService permissionService) {
+    public SysUserController(
+            SysUserService sysUserService,
+            AccountLockService accountLockService,
+            PermissionService permissionService,
+            SysUserExcelHandler sysUserExcelHandler) {
         this.sysUserService = sysUserService;
         this.accountLockService = accountLockService;
         this.permissionService = permissionService;
+        this.sysUserExcelHandler = sysUserExcelHandler;
     }
 
     /**
@@ -75,7 +88,6 @@ public class SysUserController {
      * @param userReqBo 用户查询参数
      * @return 分页结果
      */
-    @Log(title = "用户管理")
     @Operation(summary = "分页查询用户", description = "根据条件分页查询用户列表")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = PageResponse.class)))
@@ -93,7 +105,6 @@ public class SysUserController {
      * @param userId 用户ID
      * @return 指定ID的用户详细信息
      */
-    @Log(title = "用户管理")
     @Operation(summary = "获取用户详情", description = "根据用户ID获取用户的详细信息")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(schema = @Schema(implementation = UserVO.class))),
@@ -112,7 +123,7 @@ public class SysUserController {
      * @param userDTO 用户数据对象
      * @return 操作结果，成功或失败的响应
      */
-    @Log(title = "用户管理", businessType = 1)
+    @Log(title = "新增用户", businessType = AppConstants.BusinessType.INSERT)
     @Operation(summary = "新增用户", description = "创建新用户，需要提供用户名、密码、昵称等基本信息")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "新增成功"),
@@ -133,7 +144,7 @@ public class SysUserController {
      * @param userDTO 用户数据对象
      * @return 操作结果，成功或失败的响应
      */
-    @Log(title = "用户管理", businessType = 2)
+    @Log(title = "修改用户", businessType = AppConstants.BusinessType.UPDATE)
     @Operation(summary = "修改用户", description = "更新用户信息，只能修改自己的用户信息")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "修改成功"),
@@ -161,7 +172,7 @@ public class SysUserController {
     /**
      * 删除用户（支持单删和批量删除）
      */
-    @Log(title = "用户管理", businessType = 3)
+    @Log(title = "删除用户", businessType = AppConstants.BusinessType.DELETE)
     @Operation(summary = "删除用户", description = "删除用户（支持批量删除），不能删除当前登录用户")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "删除成功"),
@@ -187,7 +198,7 @@ public class SysUserController {
     /**
      * 管理员重置密码
      */
-    @Log(title = "用户管理", businessType = 2)
+    @Log(title = "重置密码", businessType = AppConstants.BusinessType.UPDATE)
     @Operation(summary = "重置密码", description = "重置指定用户的登录密码")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "重置成功"),
@@ -210,7 +221,7 @@ public class SysUserController {
     /**
      * 当前用户修改密码（需校验旧密码）
      */
-    @Log(title = "个人中心", businessType = 2)
+    @Log(title = "修改当前用户密码", businessType = AppConstants.BusinessType.UPDATE)
     @Operation(summary = "修改当前用户密码", description = "当前登录用户通过旧密码校验后修改登录密码")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "修改成功"),
@@ -234,6 +245,7 @@ public class SysUserController {
     /**
      * 修改用户状态
      */
+    @Log(title = "修改用户状态", businessType = AppConstants.BusinessType.UPDATE)
     @Operation(summary = "修改用户状态", description = "启用或禁用用户账户")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "修改成功"),
@@ -253,7 +265,7 @@ public class SysUserController {
      * @param userId 用户ID
      * @return 操作结果
      */
-    @Log(title = "用户管理", businessType = 2)
+    @Log(title = "解锁账户", businessType = AppConstants.BusinessType.UPDATE)
     @Operation(summary = "解锁账户", description = "管理员解锁因登录失败次数过多而被锁定的账户")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "解锁成功"),
@@ -266,25 +278,33 @@ public class SysUserController {
         return r.isSuccess() ? Result.success(r.getMessage()) : Result.error(r.getMessage());
     }
 
-    /**
-     * 批量导入用户（Excel 导入）
-     * 说明：
-     * - 前端会先将 Excel 解析成 List&lt;Map&lt;String, Object&gt;&gt;
-     * - 再直接调用该接口进行批量导入
-     *
-     * @param rowList Excel 解析后的行数据列表
-     * @return 导入结果
-     */
-    @Log(title = "用户管理", businessType = 1)
-    @Operation(summary = "批量导入用户", description = "通过Excel文件批量导入用户，前端需先将Excel解析为List<Map<String, Object>>格式")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "导入成功")
-    })
+    /** EasyExcel 导出用户 */
+    @Log(title = "导出用户", businessType = AppConstants.BusinessType.EXPORT)
+    @PreAuthorize("hasAuthority('system:user:export')")
+    @NoResponseWrapper
+    @PostMapping("/export")
+    public ResponseEntity<?> exportUsers(@RequestBody(required = false) UserReqBo userReqBo) {
+        return ExcelToolkit.export(sysUserExcelHandler, userReqBo != null ? userReqBo : new UserReqBo(), SysUserExcel.class);
+    }
+
+    /** EasyExcel 导入用户（multipart 上传） */
+    @Log(title = "导入用户", businessType = AppConstants.BusinessType.IMPORT)
     @PreAuthorize("hasAuthority('system:user:import')")
     @PostMapping("/import")
-    public Result<?> importUsers(@RequestBody List<Map<String, Object>> rowList) {
-        int successCount = sysUserService.importUsers(rowList);
-        return Result.success("成功导入 " + successCount + " 个用户");
+    public Result<ExcelImportResult> importUsers(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "updateSupport", defaultValue = "false") boolean updateSupport)
+            throws Exception {
+        return ExcelToolkit.importFile(
+                file, sysUserExcelHandler, ExcelImportOptions.of(updateSupport), SysUserExcel.class);
+    }
+
+    /** EasyExcel 下载用户导入模板 */
+    @PreAuthorize("hasAuthority('system:user:import')")
+    @NoResponseWrapper
+    @GetMapping("/importTemplate")
+    public ResponseEntity<?> importTemplate() {
+        return ExcelToolkit.downloadTemplate(sysUserExcelHandler, new UserReqBo(), SysUserExcel.class);
     }
 
     /**

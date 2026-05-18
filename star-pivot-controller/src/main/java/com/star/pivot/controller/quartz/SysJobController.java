@@ -1,5 +1,7 @@
 package com.star.pivot.controller.quartz;
 
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
@@ -48,6 +50,7 @@ public class SysJobController {
         return Result.success(sysJobService.getJobById(jobId));
     }
 
+    @Log(title = "新增定时任务", businessType = AppConstants.BusinessType.INSERT)
     @Operation(summary = "新增定时任务")
     @PreAuthorize("hasAuthority('monitor:job:add')")
     @PostMapping
@@ -56,6 +59,7 @@ public class SysJobController {
         return Result.success("新增成功");
     }
 
+    @Log(title = "修改定时任务", businessType = AppConstants.BusinessType.UPDATE)
     @Operation(summary = "修改定时任务")
     @PreAuthorize("hasAuthority('monitor:job:edit')")
     @PutMapping
@@ -64,6 +68,7 @@ public class SysJobController {
         return Result.success("修改成功");
     }
 
+    @Log(title = "删除定时任务", businessType = AppConstants.BusinessType.DELETE)
     @Operation(summary = "删除定时任务")
     @PreAuthorize("hasAuthority('monitor:job:delete')")
     @DeleteMapping
@@ -73,6 +78,7 @@ public class SysJobController {
         return Result.success("删除成功");
     }
 
+    @Log(title = "修改定时任务状态", businessType = AppConstants.BusinessType.UPDATE)
     @Operation(summary = "修改任务状态（暂停/恢复）")
     @PreAuthorize("hasAuthority('monitor:job:edit')")
     @PostMapping("/changeStatus")
@@ -96,6 +102,7 @@ public class SysJobController {
         return Result.success(sysJobService.selectJobLogPage(query));
     }
 
+    @Log(title = "清空定时任务日志", businessType = AppConstants.BusinessType.CLEAN)
     @Operation(summary = "清空任务日志")
     @PreAuthorize("hasAuthority('monitor:job:delete')")
     @DeleteMapping("/log/clear")

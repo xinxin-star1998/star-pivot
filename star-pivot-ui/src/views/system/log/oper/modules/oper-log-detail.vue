@@ -11,7 +11,7 @@
       <ElDescriptionsItem label="日志ID">{{ operLog.operId }}</ElDescriptionsItem>
       <ElDescriptionsItem label="模块标题">{{ operLog.title }}</ElDescriptionsItem>
       <ElDescriptionsItem label="业务类型">
-        {{ getBusinessTypeText(operLog.businessType) }}
+        {{ getOperBusinessTypeLabel(operLog.businessType) }}
       </ElDescriptionsItem>
       <ElDescriptionsItem label="操作状态">
         <ElTag :type="operLog.status === 0 ? 'success' : 'danger'">
@@ -50,6 +50,7 @@
 <script setup lang="ts">
   import { ElTag, ElText, ElDescriptions, ElDescriptionsItem } from 'element-plus'
   import type { OperLogListItem } from '@/types/api/operlog'
+  import { getOperBusinessTypeLabel } from '../constants'
 
   interface Props {
     visible: boolean
@@ -74,19 +75,6 @@
    */
   const handleDialogChange = (value: boolean) => {
     emit('update:visible', value)
-  }
-
-  /**
-   * 获取业务类型文本
-   */
-  const getBusinessTypeText = (businessType?: number) => {
-    const map: Record<number, string> = {
-      0: '其它',
-      1: '新增',
-      2: '修改',
-      3: '删除'
-    }
-    return map[businessType ?? 0] || '未知'
   }
 
   /**

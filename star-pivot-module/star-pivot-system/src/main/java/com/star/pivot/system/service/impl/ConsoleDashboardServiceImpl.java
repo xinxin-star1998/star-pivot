@@ -220,8 +220,13 @@ public class ConsoleDashboardServiceImpl implements ConsoleDashboardService {
             case AppConstants.BusinessType.INSERT -> "新增了";
             case AppConstants.BusinessType.UPDATE -> "修改了";
             case AppConstants.BusinessType.DELETE -> "删除了";
+            case AppConstants.BusinessType.GRANT -> "授权了";
             case AppConstants.BusinessType.EXPORT -> "导出了";
             case AppConstants.BusinessType.IMPORT -> "导入了";
+            case AppConstants.BusinessType.FORCE -> "强退了";
+            case AppConstants.BusinessType.GENCODE -> "生成了代码";
+            case AppConstants.BusinessType.CLEAN -> "清空了数据";
+            case AppConstants.BusinessType.OTHER -> "执行了";
             default -> "执行了";
         };
     }

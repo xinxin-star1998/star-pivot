@@ -1,4 +1,10 @@
 import request from '@/utils/http'
+import {
+  fetchExcelExport,
+  fetchExcelImport,
+  fetchExcelTemplate,
+  type ExcelImportResultVo
+} from '@/api/common/excel'
 
 /**
  * 获取用户列表（分页）
@@ -131,14 +137,30 @@ export function fetchUnlockUser(userId: number) {
   })
 }
 
-/**
- * 批量导入用户
- * 前端将 Excel 解析后的数据列表直接提交给后端
- * @deprecated 请使用 fetchImportData('user', data, options) 替代
- */
-export function fetchImportUser(data: Array<Record<string, unknown>>) {
-  return request.post({
+/** EasyExcel 导出用户 */
+export function fetchExportUser(params: Api.SystemManage.UserSearchParams) {
+  return fetchExcelExport({
+    url: '/api/sys/user/export',
+    data: params as Record<string, unknown>,
+    filenameFallback: `user_export_${Date.now()}.xlsx`,
+    successMessage: false
+  })
+}
+
+/** EasyExcel 导入用户 */
+export function fetchImportUserExcel(file: File, updateSupport = false) {
+  return fetchExcelImport<ExcelImportResultVo>({
     url: '/api/sys/user/import',
-    data
+    file,
+    updateSupport
+  })
+}
+
+/** EasyExcel 下载用户导入模板 */
+export function fetchDownloadUserImportTemplate() {
+  return fetchExcelTemplate({
+    url: '/api/sys/user/importTemplate',
+    filenameFallback: 'user_import_template.xlsx',
+    successMessage: false
   })
 }

@@ -1,6 +1,7 @@
 package com.star.pivot.monitor.controller;
 
 import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.monitor.domain.vo.RedisCacheVO;
 import com.star.pivot.monitor.service.MonitorService;
@@ -94,7 +95,7 @@ public class CacheController {
      * @param cacheName 缓存名称
      * @return 删除的键数量
      */
-    @Log(title = "Redis缓存管理", businessType = 3)
+    @Log(title = "删除Redis缓存分组", businessType = AppConstants.BusinessType.DELETE)
     @Operation(summary = "删除缓存", description = "根据缓存名称删除该缓存下的所有键")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "删除成功")
@@ -113,7 +114,7 @@ public class CacheController {
      * @param key       缓存键名
      * @return 操作结果
      */
-    @Log(title = "Redis缓存管理", businessType = 3)
+    @Log(title = "删除Redis缓存键", businessType = AppConstants.BusinessType.DELETE)
     @Operation(summary = "删除单个缓存键", description = "删除指定缓存下的单个键")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "删除成功"),
@@ -133,7 +134,7 @@ public class CacheController {
      *
      * @return 操作结果
      */
-    @Log(title = "Redis缓存管理", businessType = 9)
+    @Log(title = "清空Redis缓存", businessType = AppConstants.BusinessType.CLEAN)
     @Operation(summary = "清空所有缓存", description = "清空所有Redis缓存，请谨慎操作")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "清空成功"),

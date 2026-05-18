@@ -99,6 +99,8 @@ public class StarPivotRedisCacheAutoConfiguration implements CachingConfigurer {
         cacheConfigurations.put("deptTree", defaultConfig.entryTtl(menuLikeTtl));
         cacheConfigurations.put("postList", defaultConfig.entryTtl(menuLikeTtl));
         cacheConfigurations.put("roleList", defaultConfig.entryTtl(menuLikeTtl));
+        cacheConfigurations.put("mallCategoryTree", defaultConfig.entryTtl(menuLikeTtl));
+        cacheConfigurations.put("mallCategoryChildren", defaultConfig.entryTtl(menuLikeTtl));
         cacheConfigurations.put("sysConfig",
                 defaultConfig.entryTtl(createDynamicTtl(Duration.ofHours(2), Duration.ofHours(1))));
         cacheConfigurations.put("captcha", defaultConfig.entryTtl(Duration.ofMinutes(5)));

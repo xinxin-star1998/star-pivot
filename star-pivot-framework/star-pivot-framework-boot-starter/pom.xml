@@ -13,12 +13,16 @@
     <artifactId>star-pivot-framework-boot-starter</artifactId>
     <packaging>jar</packaging>
     <name>star-pivot-framework-boot-starter</name>
-    <description>StarPivot 框架启动聚合：引入 security + core（security 已传递 core/log/file/web），应用层依赖本模块 + 业务模块(system/generator/quartz)</description>
+    <description>StarPivot 框架启动聚合：引入 security + core + 多数据源（security 已传递 core/log/file/web），应用层依赖本模块 + 业务模块(system/generator/quartz)</description>
 
     <dependencies>
         <dependency>
             <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-framework-datasource</artifactId>
         </dependency>
         <!-- 下沉到 starter 的通用自动配置所需依赖 -->
         <dependency>

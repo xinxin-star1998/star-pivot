@@ -1,33 +1,24 @@
 package com.star.pivot.controller.system;
 
-import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.annotation.ExcelProperty;
-import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.annotation.NoResponseWrapper;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.excel.ExcelToolkit;
 import com.star.pivot.system.domain.bo.SysConfigVO;
 import com.star.pivot.system.domain.dto.SysConfigDTO;
 import com.star.pivot.system.domain.dto.SysConfigQueryDTO;
+import com.star.pivot.system.domain.excel.SysConfigExcel;
+import com.star.pivot.system.excel.SysConfigExcelHandler;
 import com.star.pivot.system.service.interfaces.ISysConfigService;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.ByteArrayOutputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -36,12 +27,13 @@ import java.util.List;
  * @author admin
  * @since 2026-03-31
  */
-@Slf4j
 @RestController
 @RequestMapping("/system/config")
 @RequiredArgsConstructor
 public class SysConfigController {
+
     private final ISysConfigService sysConfigService;
+    private final SysConfigExcelHandler sysConfigExcelHandler;
 
     /**
      * 分页查询参数配置列表
@@ -56,60 +48,14 @@ public class SysConfigController {
         return Result.success(page);
     }
 
-    /**
-     * 导出参数配置
-     *
-     * @param queryDTO 查询参数
-     * @return excel 文件字节流
-     */
-    @Log(title = "参数配置", businessType = AppConstants.BusinessType.EXPORT)
+    /** EasyExcel 导出参数配置 */
+    @Log(title = "导出参数配置", businessType = AppConstants.BusinessType.EXPORT)
     @PreAuthorize("hasAuthority('system:config:export')")
     @NoResponseWrapper
     @PostMapping("/export")
     public ResponseEntity<?> export(@RequestBody(required = false) SysConfigQueryDTO queryDTO) {
-        try {
-            SysConfigQueryDTO exportQuery = queryDTO == null ? new SysConfigQueryDTO() : queryDTO;
-            List<SysConfigVO> list = sysConfigService.selectSysConfigList(exportQuery);
-            if (list == null || list.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(Result.error("没有可导出的数据"));
-            }
-
-            List<ConfigExportRow> rows = list.stream()
-                    .map(item -> new ConfigExportRow(
-                            item.getConfigName(),
-                            item.getConfigKey(),
-                            item.getConfigValue(),
-                            item.getConfigType(),
-                            item.getRemark()))
-                    .toList();
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            EasyExcel.write(baos)
-                    .head(ConfigExportRow.class)
-                    .autoCloseStream(false)
-                    .sheet("参数配置")
-                    .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
-                    .doWrite(rows);
-            byte[] bytes = baos.toByteArray();
-
-            String filename = "sys_config_export_" + System.currentTimeMillis() + ".xlsx";
-            String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8);
-            HttpHeaders headers = new HttpHeaders();
-            headers.set(HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=\"" + encodedFilename + "\"; filename*=UTF-8''" + encodedFilename);
-
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                    .body(bytes);
-        } catch (Exception e) {
-            log.error("导出参数配置失败", e);
-            return ResponseEntity.status(500)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Result.error("导出失败：" + e.getMessage()));
-        }
+        SysConfigQueryDTO exportQuery = queryDTO == null ? new SysConfigQueryDTO() : queryDTO;
+        return ExcelToolkit.export(sysConfigExcelHandler, exportQuery, SysConfigExcel.class);
     }
 
     /**
@@ -131,6 +77,7 @@ public class SysConfigController {
      * @param sysConfigDTO 参数配置信息
      * @return 操作结果
      */
+    @Log(title = "新增参数配置", businessType = AppConstants.BusinessType.INSERT)
     @PreAuthorize("hasAuthority('system:config:add')")
     @PostMapping
     public Result<?> add(@Valid @RequestBody SysConfigDTO sysConfigDTO) {
@@ -144,6 +91,7 @@ public class SysConfigController {
      * @param sysConfigDTO 参数配置信息
      * @return 操作结果
      */
+    @Log(title = "修改参数配置", businessType = AppConstants.BusinessType.UPDATE)
     @PreAuthorize("hasAuthority('system:config:edit')")
     @PutMapping
     public Result<?> edit(@Valid @RequestBody SysConfigDTO sysConfigDTO) {
@@ -157,6 +105,7 @@ public class SysConfigController {
      * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果
      */
+    @Log(title = "删除参数配置", businessType = AppConstants.BusinessType.DELETE)
     @PreAuthorize("hasAuthority('system:config:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
@@ -167,28 +116,5 @@ public class SysConfigController {
         Long[] configIds = idList.toArray(new Long[0]);
         boolean success = sysConfigService.deleteSysConfigByConfigIds(configIds);
         return success ? Result.success("删除参数配置成功") : Result.error("删除参数配置失败");
-    }
-
-    /**
-     * 参数配置导出行定义
-     */
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    private static class ConfigExportRow {
-        @ExcelProperty("参数名称")
-        private String configName;
-
-        @ExcelProperty("参数键名")
-        private String configKey;
-
-        @ExcelProperty("参数键值")
-        private String configValue;
-
-        @ExcelProperty("系统内置")
-        private String configType;
-
-        @ExcelProperty("备注")
-        private String remark;
     }
 }

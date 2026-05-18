@@ -14,6 +14,7 @@
 
 <script setup lang="ts">
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+  import { OPER_BUSINESS_TYPE_OPTIONS } from '../constants'
 
   interface Props {
     modelValue: Record<string, any>
@@ -35,14 +36,6 @@
 
   // 校验规则
   const rules = {}
-
-  // 业务类型选项
-  const businessTypeOptions = [
-    { label: '其它', value: 0 },
-    { label: '新增', value: 1 },
-    { label: '修改', value: 2 },
-    { label: '删除', value: 3 }
-  ]
 
   // 操作状态选项
   const statusOptions = [
@@ -66,7 +59,7 @@
       props: {
         placeholder: '请选择业务类型',
         clearable: true,
-        options: businessTypeOptions
+        options: OPER_BUSINESS_TYPE_OPTIONS
       }
     },
     {
