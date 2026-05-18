@@ -6,11 +6,17 @@
  * @author Art Design Pro Team
  */
 export const WEB_LINKS = {
-  // Github 主页
-  GITHUB_HOME: 'https://gitee.com/xin1998/StarPivot',
+  // GitHub 主页
+  GITHUB_HOME: 'https://github.com/xinxin-star1998/star-pivot',
 
-  // 项目 Github 主页
-  GITHUB: 'https://gitee.com/xin1998/StarPivot',
+  // 项目 GitHub 仓库
+  GITHUB: 'https://github.com/xinxin-star1998/star-pivot',
+
+  // Gitee 主页
+  GITEE_HOME: 'https://gitee.com/xin1998/StarPivot',
+
+  // 项目 Gitee 仓库
+  GITEE: 'https://gitee.com/xin1998/StarPivot',
 
   // 个人博客
   BLOG: 'https://www.artd.pro',

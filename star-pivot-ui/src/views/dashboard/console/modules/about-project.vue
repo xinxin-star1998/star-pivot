@@ -22,15 +22,16 @@
 </template>
 
 <script setup lang="ts">
-  import AppConfig from '@/config'
-  import { WEB_LINKS } from '@/utils/constants'
+import AppConfig from '@/config'
+import {WEB_LINKS} from '@/utils/constants'
 
-  const systemName = AppConfig.systemInfo.name
+const systemName = AppConfig.systemInfo.name
 
   const linkList = [
     { label: '项目官网', url: WEB_LINKS.DOCS },
     { label: '文档', url: WEB_LINKS.INTRODUCE },
-    { label: 'Github', url: WEB_LINKS.GITHUB_HOME },
+    { label: 'GitHub', url: WEB_LINKS.GITHUB },
+    { label: 'Gitee', url: WEB_LINKS.GITEE },
     { label: '哔哩哔哩', url: WEB_LINKS.BILIBILI }
   ]
 

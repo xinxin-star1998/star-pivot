@@ -3,7 +3,7 @@
 > 基于 Spring Boot 3 + Vue 3 的前后端分离 RBAC 管理系统，支持动态路由、按钮级权限、JWT 鉴权、缓存优化和系统监控。
 
 <p align="center">
-  <a href="https://github.com/your-org/StarPivot"><img src="https://img.shields.io/badge/GitHub-StarPivot-181717?logo=github" alt="GitHub"></a>
+  <a href="https://github.com/xinxin-star1998/star-pivot"><img src="https://img.shields.io/badge/GitHub-star--pivot-181717?logo=github" alt="GitHub"></a>
   <a href="https://gitee.com/xin1998/StarPivot"><img src="https://img.shields.io/badge/Gitee-StarPivot-C71D23?logo=gitee" alt="Gitee"></a>
   <img src="https://img.shields.io/badge/JDK-17+-orange" alt="JDK">
   <img src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot">
