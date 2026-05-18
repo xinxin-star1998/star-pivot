@@ -22,7 +22,7 @@ public class OperLogReqBo extends PageReqBo {
     private String title;
 
     /**
-     * 业务类型（0其它 1新增 2修改 3删除）
+     * 业务类型（字典 sys_oper_type：0其他 1新增 2修改 3删除 4授权 5导出 6导入 7强退 8生成代码 9清空数据）
      */
     private Integer businessType;
 

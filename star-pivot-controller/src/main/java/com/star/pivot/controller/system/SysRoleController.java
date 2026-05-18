@@ -1,6 +1,7 @@
 package com.star.pivot.controller.system;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
@@ -95,6 +96,7 @@ public class SysRoleController {
             @ApiResponse(responseCode = "200", description = "新增成功"),
             @ApiResponse(responseCode = "400", description = "参数错误或角色键值已存在")
     })
+    @Log(title = "新增角色", businessType = AppConstants.BusinessType.INSERT)
     @PreAuthorize("hasAuthority('system:role:add')")
     @PostMapping("/addRole")
     public Result<?> add(@Valid @RequestBody RoleDTO roleDTO) {
@@ -113,6 +115,7 @@ public class SysRoleController {
             @ApiResponse(responseCode = "200", description = "修改成功"),
             @ApiResponse(responseCode = "404", description = "角色不存在")
     })
+    @Log(title = "修改角色", businessType = AppConstants.BusinessType.UPDATE)
     @PreAuthorize("hasAuthority('system:role:edit')")
     @PutMapping("updateRole")
     public Result<?> edit(@Valid @RequestBody RoleDTO roleDTO) {
@@ -131,6 +134,7 @@ public class SysRoleController {
             @ApiResponse(responseCode = "200", description = "删除成功"),
             @ApiResponse(responseCode = "400", description = "删除ID为空")
     })
+    @Log(title = "删除角色", businessType = AppConstants.BusinessType.DELETE)
     @PreAuthorize("hasAuthority('system:role:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
@@ -150,6 +154,7 @@ public class SysRoleController {
             @ApiResponse(responseCode = "200", description = "修改成功"),
             @ApiResponse(responseCode = "404", description = "角色不存在")
     })
+    @Log(title = "修改角色状态", businessType = AppConstants.BusinessType.UPDATE)
     @PreAuthorize("hasAuthority('system:role:edit')")
     @PutMapping("/changeStatus")
     public Result<?> changeStatus(@RequestBody RoleDTO roleDTO) {
@@ -164,6 +169,7 @@ public class SysRoleController {
             @ApiResponse(responseCode = "200", description = "分配成功"),
             @ApiResponse(responseCode = "404", description = "角色不存在")
     })
+    @Log(title = "分配角色数据权限", businessType = AppConstants.BusinessType.GRANT)
     @PreAuthorize("hasAuthority('system:role:assignDataScope')")
     @PostMapping("/assignPermission")
     public Result<?> assignPermission(@RequestBody RolePermissionAssignDTO rolePermissionAssignDTO) {
@@ -241,6 +247,7 @@ public class SysRoleController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "分配成功")
     })
+    @Log(title = "分配角色用户", businessType = AppConstants.BusinessType.GRANT)
     @PreAuthorize("hasAuthority('system:role:assignUser')")
     @PostMapping("/assignUser")
     public Result<?> assignUser(@RequestBody UserRoleDTO userRoleDTO) {
@@ -254,6 +261,7 @@ public class SysRoleController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "取消成功")
     })
+    @Log(title = "取消角色用户授权", businessType = AppConstants.BusinessType.GRANT)
     @PreAuthorize("hasAuthority('system:role:cancelUser')")
     @DeleteMapping("/cancelUser")
     public Result<?> cancelUser(@RequestBody UserRole userRole) {

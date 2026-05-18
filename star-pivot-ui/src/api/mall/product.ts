@@ -1,43 +1,33 @@
 import request from '@/utils/http'
 
-/** 商品 VO（与后端 ProductVo 对齐） */
+/** SPU VO（pms_spu_info） */
 export interface MallProductVo {
   id?: number
-  categoryId?: number
+  spuName?: string
+  spuDescription?: string
+  catalogId?: number
   brandId?: number
-  name?: string
-  subtitle?: string
-  mainImage?: string
-  images?: string
-  detail?: string
-  price?: number | string
-  stock?: number
-  status?: number
+  weight?: number | string
+  publishStatus?: number /** 0-下架；1-上架 */
   createTime?: string
   updateTime?: string
 }
 
-/** 列表查询 */
 export interface MallProductListParams extends Api.Common.CommonSearchParams {
-  name?: string
-  categoryId?: number
+  spuName?: string
+  catalogId?: number
   brandId?: number
-  status?: number
+  publishStatus?: number /** 0-下架；1-上架 */
 }
 
-/** 新增/修改（与后端 ProductSaveBo 对齐） */
 export interface MallProductSavePayload {
   id?: number
-  categoryId: number
+  spuName: string
+  spuDescription?: string
+  catalogId: number
   brandId?: number | null
-  name: string
-  subtitle?: string
-  mainImage?: string
-  images?: string
-  detail?: string
-  price: number
-  stock: number
-  status: number
+  weight: number
+  publishStatus: number
 }
 
 export function fetchMallProductList(params: MallProductListParams) {

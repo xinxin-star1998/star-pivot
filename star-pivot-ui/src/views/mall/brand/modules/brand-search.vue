@@ -29,26 +29,26 @@
 
   const rules = {}
 
-  const statusOptions = [
-    { label: '启用', value: 0 },
-    { label: '停用', value: 1 }
+  const showStatusOptions = [
+    { label: '显示', value: 1 },
+    { label: '不显示', value: 0 }
   ]
 
   const formItems = computed(() => [
     {
       label: '品牌名称',
-      key: 'brandName',
+      key: 'name',
       type: 'input',
       placeholder: '模糊查询',
       clearable: true
     },
     {
-      label: '状态',
-      key: 'status',
+      label: '显示状态',
+      key: 'showStatus',
       type: 'select',
       props: {
-        placeholder: '请选择状态',
-        options: statusOptions,
+        placeholder: '请选择',
+        options: showStatusOptions,
         clearable: true
       }
     }

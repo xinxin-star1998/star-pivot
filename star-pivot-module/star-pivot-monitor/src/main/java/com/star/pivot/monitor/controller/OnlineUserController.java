@@ -1,6 +1,7 @@
 package com.star.pivot.monitor.controller;
 
 import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.monitor.domain.vo.OnlineUserVO;
 import com.star.pivot.monitor.service.MonitorService;
@@ -67,7 +68,7 @@ public class OnlineUserController {
      * @param sessionId 会话ID（实际为 Redis 中的刷新令牌 key，格式：jwt:refresh:user:{userId}）
      * @return 操作结果
      */
-    @Log(title = "在线用户", businessType = 3)
+    @Log(title = "强退在线用户", businessType = AppConstants.BusinessType.FORCE)
     @Operation(summary = "强制用户下线", description = "强制指定用户下线，删除其刷新令牌")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "强制下线成功"),

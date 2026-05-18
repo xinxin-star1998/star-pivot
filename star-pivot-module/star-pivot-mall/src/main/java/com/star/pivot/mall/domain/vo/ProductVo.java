@@ -5,21 +5,17 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Data;
 
-/** 商品 VO */
+/** SPU VO（pms_spu_info） */
 @Data
 public class ProductVo {
 
     private Long id;
-    private Long categoryId;
+    private String spuName;
+    private String spuDescription;
+    private Long catalogId;
     private Long brandId;
-    private String name;
-    private String subtitle;
-    private String mainImage;
-    private String images;
-    private String detail;
-    private BigDecimal price;
-    private Integer stock;
-    private Integer status;
+    private BigDecimal weight;
+    private Integer publishStatus;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime createTime;

@@ -1,6 +1,7 @@
 package com.star.pivot.controller.system;
 
 import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
@@ -83,7 +84,7 @@ public class SysOperLogController {
      * @param deleteRequest 删除请求，包含 ids 数组
      * @return 操作结果
      */
-    @Log(title = "操作日志", businessType = 3)
+    @Log(title = "删除操作日志", businessType = AppConstants.BusinessType.DELETE)
     @Operation(summary = "删除操作日志", description = "删除操作日志（支持批量删除）")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "删除成功"),
@@ -102,7 +103,7 @@ public class SysOperLogController {
      *
      * @return 操作结果
      */
-    @Log(title = "操作日志", businessType = 3)
+    @Log(title = "清空操作日志", businessType = AppConstants.BusinessType.CLEAN)
     @Operation(summary = "清空操作日志", description = "清空所有操作日志")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "清空成功")

@@ -29,38 +29,26 @@
 
   const rules = {}
 
-  const statusOptions = [
-    { label: '上架', value: 0 },
-    { label: '下架', value: 1 }
+  const publishStatusOptions = [
+    { label: '上架', value: 1 },
+    { label: '下架', value: 0 }
   ]
 
   const formItems = computed(() => [
     {
-      label: '商品名称',
-      key: 'name',
+      label: 'SPU 名称',
+      key: 'spuName',
       type: 'input',
       placeholder: '模糊查询',
       clearable: true
     },
     {
-      label: '分类ID',
-      key: 'categoryId',
-      type: 'number',
-      props: { min: 0, precision: 0, placeholder: '精确匹配', controlsPosition: 'right' }
-    },
-    {
-      label: '品牌ID',
-      key: 'brandId',
-      type: 'number',
-      props: { min: 0, precision: 0, placeholder: '精确匹配', controlsPosition: 'right' }
-    },
-    {
-      label: '状态',
-      key: 'status',
+      label: '上架状态',
+      key: 'publishStatus',
       type: 'select',
       props: {
         placeholder: '请选择',
-        options: statusOptions,
+        options: publishStatusOptions,
         clearable: true
       }
     }

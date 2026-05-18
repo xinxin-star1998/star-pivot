@@ -1,34 +1,32 @@
 import request from '@/utils/http'
 
-/** 品牌 VO（与后端 BrandVo 字段对齐） */
+/** 品牌 VO（pms_brand） */
 export interface MallBrandVo {
-  id?: number
-  brandName?: string
-  brandLogo?: string
-  brandDesc?: string
+  brandId?: number
+  name?: string
+  logo?: string
+  descript?: string
   sort?: number
-  status?: number
-  createTime?: string
-  updateTime?: string
+  showStatus?: number /** 0-不显示；1-显示 */
+  firstLetter?: string
 }
 
-/** 列表查询：分页 + 模糊名称 + 状态 */
 export interface MallBrandListParams extends Api.Common.CommonSearchParams {
-  brandName?: string
-  status?: number
+  name?: string
+  showStatus?: number /** 0-不显示；1-显示 */
+  firstLetter?: string
 }
 
-/** 新增/修改提交体（与后端 BrandSaveBo 对齐） */
 export interface MallBrandSavePayload {
-  id?: number
-  brandName: string
-  brandLogo?: string
-  brandDesc?: string
+  brandId?: number
+  name: string
+  logo?: string
+  descript?: string
   sort?: number
-  status: number
+  showStatus: number
+  firstLetter?: string
 }
 
-/** 品牌分页列表 */
 export function fetchMallBrandList(params: MallBrandListParams) {
   return request.post<Api.Common.PaginatedResponse<MallBrandVo>>({
     url: '/api/mall/brand/list',
@@ -36,14 +34,12 @@ export function fetchMallBrandList(params: MallBrandListParams) {
   })
 }
 
-/** 品牌详情 */
 export function fetchMallBrandById(id: number) {
   return request.get<MallBrandVo>({
     url: `/api/mall/brand/${id}`
   })
 }
 
-/** 新增品牌 */
 export function fetchMallBrandAdd(data: MallBrandSavePayload) {
   return request.post<void>({
     url: '/api/mall/brand',
@@ -52,7 +48,6 @@ export function fetchMallBrandAdd(data: MallBrandSavePayload) {
   })
 }
 
-/** 修改品牌 */
 export function fetchMallBrandUpdate(data: MallBrandSavePayload) {
   return request.put<void>({
     url: '/api/mall/brand',
@@ -61,11 +56,32 @@ export function fetchMallBrandUpdate(data: MallBrandSavePayload) {
   })
 }
 
-/** 删除品牌（请求体 ids） */
 export function fetchMallBrandRemove(ids: number[]) {
   return request.del<void>({
     url: '/api/mall/brand/remove',
     data: { ids },
+    showSuccessMessage: true
+  })
+}
+
+/** 品牌已关联的三级分类 */
+export interface MallBrandCategoryRelation {
+  id?: number
+  catelogId?: number
+  catelogName?: string
+}
+
+export function fetchMallBrandBoundCategories(brandId: number) {
+  return request.get<MallBrandCategoryRelation[]>({
+    url: `/api/mall/brand/${brandId}/categories`
+  })
+}
+
+/** 品牌绑定三级分类（全量覆盖） */
+export function fetchMallBrandBindCategories(brandId: number, catIds: number[]) {
+  return request.put<void>({
+    url: '/api/mall/brand/categories',
+    data: { brandId, catIds },
     showSuccessMessage: true
   })
 }

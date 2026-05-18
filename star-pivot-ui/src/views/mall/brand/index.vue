@@ -1,4 +1,4 @@
-<!-- 商城-品牌管理 -->
+<!-- 商城-品牌管理（pms_brand） -->
 <template>
   <div class="mall-brand-page art-full-height">
     <BrandSearch v-model="searchForm" @search="handleSearch" @reset="resetSearchParams" />
@@ -7,8 +7,11 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton type="primary" @click="showDialog('add')" v-ripple>新增品牌</ElButton>
+            <ElButton v-auth="'mall:brand:add'" type="primary" @click="showDialog('add')" v-ripple>
+              新增品牌
+            </ElButton>
             <ElButton
+              v-auth="'mall:brand:delete'"
               type="danger"
               :disabled="selectedRows.length === 0"
               @click="handleBatchDelete"
@@ -37,6 +40,13 @@
       :brand-data="currentBrand"
       @submit="handleDialogSubmit"
     />
+
+    <BrandCategoryBindDialog
+      v-model:visible="bindDialogVisible"
+      :brand-id="bindBrand.brandId"
+      :brand-name="bindBrand.name"
+      @submit="handleBindSubmit"
+    />
   </div>
 </template>
 
@@ -49,20 +59,27 @@
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import BrandSearch from './modules/brand-search.vue'
   import BrandDialog from './modules/brand-dialog.vue'
+  import BrandCategoryBindDialog from './modules/brand-category-bind-dialog.vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { ElTag } from 'element-plus'
   import type { DialogType } from '@/types'
+  import { useAuth } from '@/hooks/core/useAuth'
 
   defineOptions({ name: 'MallBrand' })
 
+  const { hasAuth } = useAuth()
+
   const searchForm = ref({
-    brandName: undefined as string | undefined,
-    status: undefined as number | undefined
+    name: undefined as string | undefined,
+    showStatus: undefined as number | undefined,
+    firstLetter: undefined as string | undefined
   })
 
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const currentBrand = ref<Partial<MallBrandVo>>({})
+  const bindDialogVisible = ref(false)
+  const bindBrand = ref<{ brandId?: number; name?: string }>({})
   const selectedRows = ref<MallBrandVo[]>([])
 
   const {
@@ -93,48 +110,68 @@
           width: 70,
           index: (index: number) => (pagination.current - 1) * pagination.size + index + 1
         },
-        { prop: 'brandName', label: '品牌名称', minWidth: 140 },
+        { prop: 'name', label: '品牌名称', minWidth: 140 },
         {
-          prop: 'brandLogo',
+          prop: 'logo',
           label: 'Logo',
-          minWidth: 160,
+          minWidth: 140,
           showOverflowTooltip: true
         },
-        { prop: 'brandDesc', label: '描述', minWidth: 180, showOverflowTooltip: true },
+        { prop: 'descript', label: '介绍', minWidth: 160, showOverflowTooltip: true },
         { prop: 'sort', label: '排序', width: 80 },
         {
-          prop: 'status',
-          label: '状态',
+          prop: 'showStatus',
+          label: '显示',
           width: 100,
           formatter: (row: MallBrandVo) => {
-            const s = row.status
+            const s = row.showStatus
             if (s === undefined || s === null) {
               return h('span', {}, () => '-')
             }
-            const enabled = s === 0
-            return h(ElTag, { type: enabled ? 'success' : 'info' }, () =>
-              enabled ? '启用' : '停用'
-            )
+            const show = s === 1
+            return h(ElTag, { type: show ? 'success' : 'info' }, () => (show ? '显示' : '不显示'))
           }
         },
-        { prop: 'createTime', label: '创建时间', width: 180 },
-        { prop: 'updateTime', label: '更新时间', width: 180 },
+        { prop: 'firstLetter', label: '首字母', width: 80 },
         {
           prop: 'operation',
           label: '操作',
-          width: 160,
+          width: 225,
           fixed: 'right',
           formatter: (row: MallBrandVo) => {
-            return h('div', [
-              h(ArtButtonTable, {
-                type: 'edit',
-                onClick: () => showDialog('edit', row)
-              }),
-              h(ArtButtonTable, {
-                type: 'delete',
-                onClick: () => deleteOne(row)
-              })
-            ])
+            const actions: ReturnType<typeof h>[] = []
+            if (hasAuth('mall:brand:edit')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  label: '绑定分类',
+                  icon: 'ri:links-line',
+                  iconClass: 'bg-primary/12 text-primary',
+                  onClick: () => openBindCategory(row)
+                })
+              )
+            }
+            if (hasAuth('mall:brand:edit')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  label: '编辑',
+                  type: 'edit',
+                  onClick: () => showDialog('edit', row)
+                })
+              )
+            }
+            if (hasAuth('mall:brand:delete')) {
+              actions.push(
+                h(ArtButtonTable, {
+                  label: '删除',
+                  type: 'delete',
+                  onClick: () => deleteOne(row)
+                })
+              )
+            }
+            if (actions.length === 0) {
+              return h('span', { style: 'color: #999' }, '')
+            }
+            return h('div', actions)
           }
         }
       ]
@@ -154,6 +191,16 @@
     })
   }
 
+  const openBindCategory = (row: MallBrandVo) => {
+    if (row.brandId == null) return
+    bindBrand.value = { brandId: row.brandId, name: row.name }
+    bindDialogVisible.value = true
+  }
+
+  const handleBindSubmit = () => {
+    bindBrand.value = {}
+  }
+
   const handleDialogSubmit = () => {
     currentBrand.value = {}
     refreshData()
@@ -164,14 +211,14 @@
   }
 
   const deleteOne = (row: MallBrandVo) => {
-    if (!row.id) return
-    ElMessageBox.confirm(`确定删除品牌「${row.brandName || row.id}」吗？`, '删除品牌', {
+    if (!row.brandId) return
+    ElMessageBox.confirm(`确定删除品牌「${row.name || row.brandId}」吗？`, '删除品牌', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
       .then(async () => {
-        await fetchMallBrandRemove([row.id!])
+        await fetchMallBrandRemove([row.brandId!])
         refreshData()
       })
       .catch(() => {})
@@ -182,14 +229,14 @@
       ElMessage.warning('请选择要删除的品牌')
       return
     }
-    const names = selectedRows.value.map((r) => r.brandName || r.id).join('、')
+    const names = selectedRows.value.map((r) => r.name || r.brandId).join('、')
     ElMessageBox.confirm(`确定删除以下品牌吗？\n${names}`, '批量删除', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
     })
       .then(async () => {
-        const ids = selectedRows.value.map((r) => r.id!).filter(Boolean)
+        const ids = selectedRows.value.map((r) => r.brandId!).filter(Boolean)
         await fetchMallBrandRemove(ids)
         selectedRows.value = []
         refreshData()

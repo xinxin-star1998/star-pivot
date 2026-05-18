@@ -1,5 +1,5 @@
-import request, { type BlobFullResponse } from '@/utils/http'
-import { downloadBlob, getFilenameFromContentDisposition } from '@/utils/common/file'
+import request from '@/utils/http'
+import { fetchExcelExport } from '@/api/common/excel'
 
 /**
  * 参数配置实体类型
@@ -23,11 +23,6 @@ export interface ConfigSearchParams {
   configKey?: string
   configValue?: string
   configType?: string
-}
-
-function getContentDisposition(headers: Record<string, string>): string | null {
-  const key = Object.keys(headers).find((k) => k.toLowerCase() === 'content-disposition')
-  return key ? headers[key] : null
 }
 
 /**
@@ -79,19 +74,12 @@ export function fetchDeleteConfig(configIds: number[]) {
   })
 }
 
-/**
- * 导出参数配置
- */
-export async function fetchExportConfig(params: ConfigSearchParams) {
-  const response = await request.post<BlobFullResponse>({
+/** 导出参数配置 */
+export function fetchExportConfig(params: ConfigSearchParams) {
+  return fetchExcelExport({
     url: '/api/system/config/export',
     data: params as Record<string, unknown>,
-    responseType: 'blob',
-    returnFullResponse: true
+    filenameFallback: `sys_config_export_${Date.now()}.xlsx`,
+    successMessage: false
   })
-
-  const contentDisposition = getContentDisposition(response.headers)
-  const filename =
-    getFilenameFromContentDisposition(contentDisposition) || `sys_config_export_${Date.now()}.xlsx`
-  downloadBlob(response.data, filename)
 }

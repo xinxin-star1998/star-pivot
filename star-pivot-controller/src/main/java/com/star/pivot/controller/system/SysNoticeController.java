@@ -1,5 +1,7 @@
 package com.star.pivot.controller.system;
 
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
@@ -72,6 +74,7 @@ public class SysNoticeController
      * @param sysNoticeDTO 通知公告信息
      * @return 操作结果
      */
+    @Log(title = "新增通知公告", businessType = AppConstants.BusinessType.INSERT)
     @PreAuthorize("hasAuthority('system:notice:add')")
     @PostMapping
     public Result<?> addNotice(@Valid @RequestBody SysNoticeDTO sysNoticeDTO)
@@ -86,6 +89,7 @@ public class SysNoticeController
      * @param sysNoticeDTO 通知公告信息
      * @return 操作结果
      */
+    @Log(title = "修改通知公告", businessType = AppConstants.BusinessType.UPDATE)
     @PreAuthorize("hasAuthority('system:notice:edit')")
     @PutMapping
     public Result<?> edit(@Valid @RequestBody SysNoticeDTO sysNoticeDTO)
@@ -100,6 +104,7 @@ public class SysNoticeController
      * @param deleteRequest 需要删除的通知公告主键数组
      * @return 操作结果
      */
+    @Log(title = "删除通知公告", businessType = AppConstants.BusinessType.DELETE)
     @PreAuthorize("hasAuthority('system:notice:delete')")
     @DeleteMapping("/removeNotice")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest)

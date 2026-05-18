@@ -2,7 +2,7 @@
   <ElDialog
     v-model="dialogVisible"
     :title="type === 'add' ? '新增品牌' : '编辑品牌'"
-    width="520px"
+    width="560px"
     align-center
     destroy-on-close
   >
@@ -10,36 +10,34 @@
       ref="formRef"
       :model="formData"
       :rules="rules"
-      label-width="100px"
+      label-width="110px"
       aria-label="品牌信息表单"
     >
-      <ElFormItem label="品牌名称" prop="brandName">
-        <ElInput
-          v-model="formData.brandName"
-          placeholder="请输入品牌名称"
-          maxlength="128"
-          show-word-limit
-        />
+      <ElFormItem label="品牌名称" prop="name">
+        <ElInput v-model="formData.name" placeholder="名称" maxlength="128" show-word-limit />
       </ElFormItem>
-      <ElFormItem label="Logo 地址" prop="brandLogo">
-        <ElInput
-          v-model="formData.brandLogo"
-          placeholder="图片 URL"
-          maxlength="512"
-          show-word-limit
-        />
+      <ElFormItem label="Logo" prop="logo">
+        <ElInput v-model="formData.logo" placeholder="Logo URL" maxlength="512" show-word-limit />
       </ElFormItem>
-      <ElFormItem label="描述" prop="brandDesc">
-        <ElInput v-model="formData.brandDesc" type="textarea" :rows="3" placeholder="品牌描述" />
+      <ElFormItem label="介绍" prop="descript">
+        <ElInput v-model="formData.descript" type="textarea" :rows="3" placeholder="品牌介绍" />
       </ElFormItem>
       <ElFormItem label="排序" prop="sort">
         <ElInputNumber v-model="formData.sort" :min="0" :max="99999" style="width: 100%" />
       </ElFormItem>
-      <ElFormItem label="状态" prop="status">
-        <ElRadioGroup v-model="formData.status">
-          <ElRadio :value="0">启用</ElRadio>
-          <ElRadio :value="1">停用</ElRadio>
+      <ElFormItem label="显示状态" prop="showStatus">
+        <ElRadioGroup v-model="formData.showStatus">
+          <ElRadio :value="1">显示</ElRadio>
+          <ElRadio :value="0">不显示</ElRadio>
         </ElRadioGroup>
+      </ElFormItem>
+      <ElFormItem label="首字母" prop="firstLetter">
+        <ElInput
+          v-model="formData.firstLetter"
+          maxlength="1"
+          placeholder="检索首字母"
+          show-word-limit
+        />
       </ElFormItem>
     </ElForm>
     <template #footer>
@@ -82,53 +80,57 @@
   const formRef = ref<FormInstance>()
 
   const formData = reactive({
-    id: undefined as number | undefined,
-    brandName: '',
-    brandLogo: '',
-    brandDesc: '',
+    brandId: undefined as number | undefined,
+    name: '',
+    logo: '',
+    descript: '',
     sort: 0,
-    status: 0
+    showStatus: 1,
+    firstLetter: ''
   })
 
   const rules: FormRules = {
-    brandName: [{ required: true, message: '请输入品牌名称', trigger: 'blur' }],
+    name: [{ required: true, message: '请输入品牌名称', trigger: 'blur' }],
     sort: [{ required: true, message: '请输入排序', trigger: 'blur' }],
-    status: [{ required: true, message: '请选择状态', trigger: 'change' }]
+    showStatus: [{ required: true, message: '请选择显示状态', trigger: 'change' }]
   }
 
   const initFormData = async () => {
-    const isEdit = props.type === 'edit' && props.brandData?.id
+    const isEdit = props.type === 'edit' && props.brandData?.brandId
 
-    if (isEdit && props.brandData?.id) {
+    if (isEdit && props.brandData?.brandId) {
       try {
-        const detail = await fetchMallBrandById(props.brandData.id)
+        const detail = await fetchMallBrandById(props.brandData.brandId)
         Object.assign(formData, {
-          id: detail.id,
-          brandName: detail.brandName ?? '',
-          brandLogo: detail.brandLogo ?? '',
-          brandDesc: detail.brandDesc ?? '',
+          brandId: detail.brandId,
+          name: detail.name ?? '',
+          logo: detail.logo ?? '',
+          descript: detail.descript ?? '',
           sort: detail.sort ?? 0,
-          status: detail.status ?? 0
+          showStatus: detail.showStatus ?? 1,
+          firstLetter: detail.firstLetter ?? ''
         })
       } catch {
         const row = props.brandData
         Object.assign(formData, {
-          id: row.id,
-          brandName: row.brandName ?? '',
-          brandLogo: row.brandLogo ?? '',
-          brandDesc: row.brandDesc ?? '',
+          brandId: row.brandId,
+          name: row.name ?? '',
+          logo: row.logo ?? '',
+          descript: row.descript ?? '',
           sort: row.sort ?? 0,
-          status: row.status ?? 0
+          showStatus: row.showStatus ?? 1,
+          firstLetter: row.firstLetter ?? ''
         })
       }
     } else {
       Object.assign(formData, {
-        id: undefined,
-        brandName: '',
-        brandLogo: '',
-        brandDesc: '',
+        brandId: undefined,
+        name: '',
+        logo: '',
+        descript: '',
         sort: 0,
-        status: 0
+        showStatus: 1,
+        firstLetter: ''
       })
     }
   }
@@ -154,23 +156,24 @@
       return
     }
     const payload: MallBrandSavePayload = {
-      brandName: formData.brandName,
-      brandLogo: formData.brandLogo || undefined,
-      brandDesc: formData.brandDesc || undefined,
+      name: formData.name,
+      logo: formData.logo || undefined,
+      descript: formData.descript || undefined,
       sort: formData.sort,
-      status: formData.status
+      showStatus: formData.showStatus,
+      firstLetter: formData.firstLetter || undefined
     }
     try {
       if (props.type === 'add') {
         await fetchMallBrandAdd(payload)
       } else {
-        payload.id = formData.id
+        payload.brandId = formData.brandId
         await fetchMallBrandUpdate(payload)
       }
       dialogVisible.value = false
       emit('submit')
     } catch {
-      // 错误提示由 http 拦截器处理
+      // http 拦截器提示
     }
   }
 </script>

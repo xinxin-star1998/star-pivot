@@ -19,6 +19,12 @@ export function downloadBlob(blob: Blob, filename: string) {
   window.URL.revokeObjectURL(url)
 }
 
+/** 从响应头对象中按大小写不敏感获取 Content-Disposition */
+export function getContentDisposition(headers: Record<string, string>): string | null {
+  const key = Object.keys(headers).find((k) => k.toLowerCase() === 'content-disposition')
+  return key ? headers[key] : null
+}
+
 /**
  * 从响应头获取文件名
  * @param contentDisposition Content-Disposition 响应头

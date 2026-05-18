@@ -5,19 +5,19 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 商品列表查询（分页 + 名称模糊 / 分类、品牌、状态筛选）
+ * SPU 列表查询（pms_spu_info）
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ProductReqBo extends PageReqBo {
 
-    /** 商品名称（模糊） */
-    private String name;
+    /** SPU 名称模糊 */
+    private String spuName;
 
-    private Long categoryId;
+    private Long catalogId;
 
     private Long brandId;
 
-    /** 状态：0 上架 1 下架等，不传则不过滤 */
-    private Integer status;
+    /** 上架状态等，不传则不过滤 */
+    private Integer publishStatus;
 }

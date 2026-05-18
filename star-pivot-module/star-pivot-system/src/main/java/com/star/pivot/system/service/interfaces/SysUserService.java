@@ -8,10 +8,11 @@ import com.star.pivot.system.domain.dto.AssignUserReqBo;
 import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
+import com.star.pivot.framework.excel.ExcelImportResult;
 import com.star.pivot.system.domain.entity.SysUser;
+import com.star.pivot.system.domain.excel.SysUserExcel;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 用户信息表(SysUser)表服务接口
@@ -19,7 +20,7 @@ import java.util.Map;
  * @author makejava
  * @since 2025-12-28 17:28:24
  */
-public interface SysUserService extends IService<SysUser>, ImportExportService {
+public interface SysUserService extends IService<SysUser> {
     /**
      * 用户分页查询
      *
@@ -75,12 +76,10 @@ public interface SysUserService extends IService<SysUser>, ImportExportService {
 
     PageResponse<SysUser> unallocatedList(AssignUserReqBo assignUserReqBo);
 
-    /**
-     * 批量导入用户（Excel 导入）
-     *
-     * @param rowList Excel 解析后的行数据列表（key 为表头中文名）
-     * @return 成功导入的用户数量
-     */
-    int importUsers(List<Map<String, Object>> rowList);
+    /** EasyExcel 导出用户列表 */
+    List<SysUserExcel> listForExport(UserReqBo userReqBo);
+
+    /** EasyExcel 导入用户 */
+    ExcelImportResult importFromExcel(List<SysUserExcel> rows, boolean updateSupport);
 }
 

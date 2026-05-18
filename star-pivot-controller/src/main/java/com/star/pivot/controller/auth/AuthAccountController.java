@@ -63,7 +63,7 @@ public class AuthAccountController {
         return Result.success("登录成功", response);
     }
 
-    @Log(title = "用户注册", businessType = 1)
+    @Log(title = "用户注册", businessType = AppConstants.BusinessType.INSERT)
     @Operation(summary = "用户注册", description = "通过用户名和密码注册新用户")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "注册成功", content = @Content(schema = @Schema(implementation = RegisterResponse.class))),

@@ -1,5 +1,7 @@
 package com.star.pivot.controller.system;
 
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.ErrorCode;
@@ -62,6 +64,7 @@ public class SysMenuController {
             @ApiResponse(responseCode = "200", description = "新增成功"),
             @ApiResponse(responseCode = "400", description = "参数错误")
     })
+    @Log(title = "新增菜单", businessType = AppConstants.BusinessType.INSERT)
     @PreAuthorize("hasAuthority('system:menu:add')")
     @PostMapping("/add")
     public Result<?> add(@Valid @RequestBody MenuDTO menuDTO) {
@@ -79,6 +82,7 @@ public class SysMenuController {
             @ApiResponse(responseCode = "200", description = "修改成功"),
             @ApiResponse(responseCode = "404", description = "菜单不存在")
     })
+    @Log(title = "修改菜单", businessType = AppConstants.BusinessType.UPDATE)
     @PreAuthorize("hasAuthority('system:menu:edit')")
     @PutMapping
     public Result<?> edit(@Valid @RequestBody MenuDTO menuDTO) {
@@ -97,6 +101,7 @@ public class SysMenuController {
             @ApiResponse(responseCode = "200", description = "删除成功"),
             @ApiResponse(responseCode = "400", description = "删除ID为空或存在子菜单")
     })
+    @Log(title = "删除菜单", businessType = AppConstants.BusinessType.DELETE)
     @PreAuthorize("hasAuthority('system:menu:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {

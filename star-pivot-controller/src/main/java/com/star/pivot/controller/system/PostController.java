@@ -1,10 +1,12 @@
 package com.star.pivot.controller.system;
 
+import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
-import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.exception.BizException;
+import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.bo.PostBo;
 import com.star.pivot.system.domain.bo.PostVO;
 import com.star.pivot.system.domain.dto.PostDTO;
@@ -114,6 +116,7 @@ public class PostController {
             @ApiResponse(responseCode = "200", description = "新增成功"),
             @ApiResponse(responseCode = "400", description = "参数错误")
     })
+    @Log(title = "新增岗位", businessType = AppConstants.BusinessType.INSERT)
     @PreAuthorize("hasAuthority('system:post:add')")
     @PostMapping
     public Result<?> add(@Valid @RequestBody PostDTO postDTO) {
@@ -132,6 +135,7 @@ public class PostController {
             @ApiResponse(responseCode = "200", description = "修改成功"),
             @ApiResponse(responseCode = "404", description = "岗位不存在")
     })
+    @Log(title = "修改岗位", businessType = AppConstants.BusinessType.UPDATE)
     @PreAuthorize("hasAuthority('system:post:edit')")
     @PutMapping
     public Result<?> edit(@Valid @RequestBody PostDTO postDTO) {
@@ -150,6 +154,7 @@ public class PostController {
             @ApiResponse(responseCode = "200", description = "删除成功"),
             @ApiResponse(responseCode = "400", description = "删除ID为空")
     })
+    @Log(title = "删除岗位", businessType = AppConstants.BusinessType.DELETE)
     @PreAuthorize("hasAuthority('system:post:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {

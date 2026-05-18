@@ -1,6 +1,8 @@
 package com.star.pivot.controller.system;
 
+import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.cache.CacheHelper;
+import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -70,6 +72,7 @@ public class CacheManageController {
     /**
      * 清除指定缓存
      */
+    @Log(title = "清除Spring缓存", businessType = AppConstants.BusinessType.DELETE)
     @Operation(summary = "清除缓存", description = "根据缓存名称清除整个缓存")
     @PreAuthorize("hasAuthority('monitor:cache:clear')")
     @DeleteMapping("/clear/{cacheName}")
@@ -82,6 +85,7 @@ public class CacheManageController {
     /**
      * 清除指定缓存键
      */
+    @Log(title = "清除Spring缓存键", businessType = AppConstants.BusinessType.DELETE)
     @Operation(summary = "清除缓存键", description = "清除指定缓存中的特定键")
     @PreAuthorize("hasAuthority('monitor:cache:clear')")
     @DeleteMapping("/evict")
@@ -94,6 +98,7 @@ public class CacheManageController {
     /**
      * 批量清除缓存
      */
+    @Log(title = "批量清除Spring缓存", businessType = AppConstants.BusinessType.CLEAN)
     @Operation(summary = "批量清除缓存", description = "批量清除多个缓存")
     @PreAuthorize("hasAuthority('monitor:cache:clear')")
     @DeleteMapping("/clear/batch")

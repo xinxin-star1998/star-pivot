@@ -147,6 +147,8 @@ public class MonitorServiceImpl implements MonitorService {
         SPRING_CACHE_REMARK.put("dictType", "字典类型缓存");
         SPRING_CACHE_REMARK.put("deptTree", "部门树缓存");
         SPRING_CACHE_REMARK.put("postList", "岗位列表缓存");
+        SPRING_CACHE_REMARK.put("mallCategoryTree", "商城分类整树缓存");
+        SPRING_CACHE_REMARK.put("mallCategoryChildren", "商城分类子节点缓存");
         SPRING_CACHE_REMARK.put("roleList", "角色列表缓存");
         SPRING_CACHE_REMARK.put("sysConfig", "系统配置缓存");
         SPRING_CACHE_REMARK.put("captcha", "验证码缓存");
