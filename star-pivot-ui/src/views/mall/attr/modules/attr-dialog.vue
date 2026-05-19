@@ -27,12 +27,17 @@
         <ElSwitch
           v-model="valueTypeMultiple"
           inline-prompt
-          active-text="允许多个值"
-          inactive-text="只能单个值"
+          active-text="多选"
+          inactive-text="单选"
         />
+        <span class="value-type-hint">
+          {{
+            Number(formData.valueType) === 1 ? '用户可同时选多个' : '用户只能选一个，且必须选一个'
+          }}
+        </span>
       </ElFormItem>
 
-      <ElFormItem v-show="Number(formData.valueType) === 1" label="可选值" prop="valueSelect">
+      <ElFormItem label="可选值" prop="valueSelect">
         <ElInputTag
           v-model="valueSelectTags"
           clearable
@@ -43,7 +48,23 @@
       </ElFormItem>
 
       <ElFormItem label="属性图标" prop="icon">
-        <ElInput v-model="formData.icon" placeholder="请输入属性图标" />
+        <ArtIconPicker ref="iconPickerRef" v-model="formData.icon" :manual="true">
+          <ElInput
+            v-model="formData.icon"
+            placeholder="如：heroicons-outline:tag"
+            clearable
+            style="width: 100%"
+          >
+            <template #prepend>
+              <div class="attr-icon-prepend">
+                <Icon :icon="formData.icon || 'heroicons-outline:tag'" style="font-size: 18px" />
+              </div>
+            </template>
+            <template #append>
+              <ElButton @click.stop="openIconPicker">选择图标</ElButton>
+            </template>
+          </ElInput>
+        </ArtIconPicker>
       </ElFormItem>
 
       <ElFormItem label="所属分类" prop="catalogPath">
@@ -121,30 +142,28 @@
 </template>
 
 <script setup lang="ts">
-  /**
-   * 属性新增/编辑弹窗。
-   * attrGroupId 提交后由后端写入 pms_attr_attrgroup_relation，非 pms_attr 字段。
-   * attrType 由父页面传入（0 销售 / 1 基本），弹窗内只读展示。
-   */
-  import { ElMessage } from 'element-plus'
-  import type { FormInstance, FormRules } from 'element-plus'
-  import { fetchAddAttr, fetchGetAttrById, fetchUpdateAttr, type MallAttr } from '@/api/mall/attr'
-  import { fetchGetGroupList, type Group } from '@/api/mall/group'
-  import { fetchMallCategoryTree, type MallCategoryTreeNode } from '@/api/mall/category'
-  import {
-    filterVisibleCategoryTree,
-    findCategoryNode,
-    findCategoryPath,
-    mapCategoryCascaderOptions
-  } from '@/utils/mall/category-tree'
-  import {
-    joinValueSelect,
-    normalizeAttrValueFields,
-    parseValueSelect
-  } from '@/utils/mall/attr-value-select'
-  import type { DialogType } from '@/types'
+import type {FormInstance, FormRules} from 'element-plus'
+/**
+ * 属性新增/编辑弹窗。
+ * attrGroupId 提交后由后端写入 pms_attr_attrgroup_relation，非 pms_attr 字段。
+ * attrType 由父页面传入（0 销售 / 1 基本），弹窗内只读展示。
+ */
+import {ElMessage} from 'element-plus'
+import {Icon} from '@iconify/vue'
+import ArtIconPicker from '@/components/core/base/art-icon-picker/index.vue'
+import {fetchAddAttr, fetchGetAttrById, fetchUpdateAttr, type MallAttr} from '@/api/mall/attr'
+import {fetchGetGroupList, type Group} from '@/api/mall/group'
+import {fetchMallCategoryTree, type MallCategoryTreeNode} from '@/api/mall/category'
+import {
+  filterVisibleCategoryTree,
+  findCategoryNode,
+  findCategoryPath,
+  mapCategoryCascaderOptions
+} from '@/utils/mall/category-tree'
+import {joinValueSelect, normalizeAttrValueFields, parseValueSelect} from '@/utils/mall/attr-value-select'
+import type {DialogType} from '@/types'
 
-  const props = defineProps<{
+const props = defineProps<{
     visible: boolean
     type: DialogType
     attrType: 0 | 1
@@ -167,41 +186,28 @@
   const dialogType = computed(() => props.type)
 
   const formRef = ref<FormInstance>()
+  const iconPickerRef = ref<{ open: () => void; close: () => void } | null>(null)
+
+  const openIconPicker = () => {
+    iconPickerRef.value?.open()
+  }
+
   const categoryOptions = ref<MallCategoryTreeNode[]>([])
   const groupOptions = ref<Group[]>([])
-  /** 切到单值时暂存，再切回多值时恢复，避免误报校验 */
-  const valueSelectBackup = ref('')
 
   /** 与 formData.valueSelect 双向同步（分号存储） */
   const valueSelectTags = computed({
-    get: () => {
-      if (Number(formData.valueType) !== 1) return []
-      return parseValueSelect(formData.valueSelect)
-    },
+    get: () => parseValueSelect(formData.valueSelect),
     set: (tags: string[]) => {
-      if (Number(formData.valueType) === 1) {
-        formData.valueSelect = joinValueSelect(tags) ?? ''
-        valueSelectBackup.value = formData.valueSelect
-      }
+      formData.valueSelect = joinValueSelect(tags) ?? ''
     }
   })
 
-  /** 值类型开关：关=单值(0)，开=多值(1) */
+  /** 值类型：0 单选，1 多选 */
   const valueTypeMultiple = computed({
     get: () => Number(formData.valueType) === 1,
     set: (on: boolean) => {
-      if (on) {
-        formData.valueType = 1
-        if (!parseValueSelect(formData.valueSelect).length && valueSelectBackup.value) {
-          formData.valueSelect = valueSelectBackup.value
-        }
-      } else {
-        if (formData.valueSelect) {
-          valueSelectBackup.value = formData.valueSelect
-        }
-        formData.valueType = 0
-        formData.valueSelect = ''
-      }
+      formData.valueType = on ? 1 : 0
       nextTick(() => formRef.value?.clearValidate('valueSelect'))
     }
   })
@@ -233,7 +239,6 @@
 
   const rules: FormRules = {
     attrName: [{ required: true, message: '属性名不能为空', trigger: 'blur' }],
-    icon: [{ required: true, message: '属性图标不能为空', trigger: 'blur' }],
     catalogPath: [
       {
         validator: (_rule, value, callback) => {
@@ -257,10 +262,7 @@
     valueSelect: [
       {
         validator: (_rule, _value, callback) => {
-          if (
-            Number(formData.valueType) === 1 &&
-            parseValueSelect(formData.valueSelect).length === 0
-          ) {
+          if (parseValueSelect(formData.valueSelect).length === 0) {
             callback(new Error('请添加至少一个可选值'))
             return
           }
@@ -355,13 +357,11 @@
             ? Number(fallback.attrGroupId)
             : undefined
     })
-    valueSelectBackup.value = valueSelect
     syncCatalogPathFromId(formData.catelogId)
     loadGroupOptions(formData.catelogId)
   }
 
   const resetForm = () => {
-    valueSelectBackup.value = ''
     const presetId = props.defaultCatelogId != null ? Number(props.defaultCatelogId) : undefined
     Object.assign(formData, {
       attrId: undefined,
@@ -411,9 +411,6 @@
   )
 
   const handleSubmit = async () => {
-    if (Number(formData.valueType) !== 1) {
-      formData.valueSelect = ''
-    }
     if (!formRef.value) return
     try {
       await formRef.value.validate()
@@ -435,10 +432,7 @@
       searchType: formData.searchType,
       valueType: formData.valueType,
       icon: formData.icon,
-      valueSelect:
-        Number(formData.valueType) === 1
-          ? joinValueSelect(parseValueSelect(formData.valueSelect))
-          : undefined,
+      valueSelect: joinValueSelect(parseValueSelect(formData.valueSelect)),
       attrType: props.attrType,
       enable: formData.enable,
       catelogId,
@@ -464,9 +458,22 @@
 </script>
 
 <style scoped lang="scss">
+  .value-type-hint {
+    margin-left: 12px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
   .dialog-footer {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+  }
+
+  .attr-icon-prepend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
   }
 </style>

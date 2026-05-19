@@ -9,6 +9,7 @@ import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.mall.domain.bo.ProductReqBo;
 import com.star.pivot.mall.domain.bo.ProductSaveBo;
+import com.star.pivot.mall.domain.bo.PublishStatusBo;
 import com.star.pivot.mall.domain.vo.ProductVo;
 import com.star.pivot.mall.service.PmsSpuInfoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,6 +61,15 @@ public class PmsSpuInfoController {
     public Result<?> update(@Valid @RequestBody ProductSaveBo bo) {
         pmsSpuInfoService.updatePmsSpuInfo(bo);
         return Result.success("修改成功");
+    }
+
+    @Log(title = "SPU上架状态", businessType = AppConstants.BusinessType.UPDATE)
+    @Operation(summary = "SPU 上架/下架", description = "publishStatus：0-下架 1-上架")
+    @PutMapping("/publish-status")
+    @PreAuthorize("hasAuthority('mall:product:edit')")
+    public Result<?> updatePublishStatus(@Valid @RequestBody PublishStatusBo bo) {
+        pmsSpuInfoService.updatePublishStatus(bo.getId(), bo.getPublishStatus());
+        return Result.success(bo.getPublishStatus() == 1 ? "上架成功" : "下架成功");
     }
 
     @Log(title = "删除SPU", businessType = AppConstants.BusinessType.DELETE)

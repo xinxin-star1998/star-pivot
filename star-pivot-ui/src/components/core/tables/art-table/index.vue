@@ -97,15 +97,15 @@
 </template>
 
 <script setup lang="ts">
-  import type { ElTable, TableProps } from 'element-plus'
-  import { storeToRefs } from 'pinia'
-  import { ColumnOption } from '@/types'
-  import { useTableStore } from '@/store/modules/table'
-  import { useCommon } from '@/hooks/core/useCommon'
-  import { useTableHeight } from '@/hooks/core/useTableHeight'
-  import { useResizeObserver, useWindowSize } from '@vueuse/core'
+import type {ElTable, TableProps} from 'element-plus'
+import {storeToRefs} from 'pinia'
+import {ColumnOption} from '@/types'
+import {useTableStore} from '@/store/modules/table'
+import {useCommon} from '@/hooks/core/useCommon'
+import {useTableHeight} from '@/hooks/core/useTableHeight'
+import {useResizeObserver, useWindowSize} from '@vueuse/core'
 
-  defineOptions({ name: 'ArtTable' })
+defineOptions({ name: 'ArtTable' })
 
   const { width } = useWindowSize()
   const elTableRef = ref<InstanceType<typeof ElTable> | null>(null)
@@ -284,6 +284,8 @@
     delete columnProps.headerSlotName
     delete columnProps.useSlot
     delete columnProps.slotName
+    // ArtTable 自定义 formatter 走 #default 插槽，勿传给 ElTableColumn 避免与 EP 内置 formatter 冲突
+    delete columnProps.formatter
     return columnProps
   }
 

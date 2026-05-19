@@ -6,14 +6,14 @@ import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.excel.ExcelImportOptions;
+import com.star.pivot.framework.excel.ExcelToolkit;
 import com.star.pivot.mall.domain.dto.PmsAttrDTO;
 import com.star.pivot.mall.domain.dto.PmsAttrQueryDTO;
 import com.star.pivot.mall.domain.excel.PmsAttrExcel;
 import com.star.pivot.mall.domain.vo.PmsAttrVO;
 import com.star.pivot.mall.excel.PmsAttrExcelHandler;
 import com.star.pivot.mall.service.IPmsAttrService;
-import com.star.pivot.framework.excel.ExcelImportOptions;
-import com.star.pivot.framework.excel.ExcelToolkit;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +43,8 @@ public class PmsAttrController {
     /**
      * 分页列表。queryDTO.attrType 必填；attrGroupId 仅作展示回填，不作为列表筛选条件。
      */
-    @PreAuthorize("hasAnyAuthority('mall:base:query', 'mall:sale:query')")
+    @PreAuthorize(
+            "hasAnyAuthority('mall:base:query', 'mall:sale:query', 'mall:product:query', 'mall:product:add', 'mall:product:edit')")
     @PostMapping("/list")
     public Result<PageResponse<PmsAttrVO>> list(@RequestBody PmsAttrQueryDTO queryDTO) {
         PageResponse<PmsAttrVO> page = pmsAttrService.selectPmsAttrPage(queryDTO);

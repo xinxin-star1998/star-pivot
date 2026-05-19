@@ -130,31 +130,33 @@
 </template>
 
 <script setup lang="ts">
-  import { nextTick } from 'vue'
-  import { watchDebounced } from '@vueuse/core'
-  import { RefreshRight } from '@element-plus/icons-vue'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import { useTable } from '@/hooks/core/useTable'
-  import {
-    fetchDeleteAttr,
-    fetchDownloadAttrImportTemplate,
-    fetchExportAttr,
-    fetchGetAttrList,
-    fetchImportAttr,
-    type MallAttr
-  } from '@/api/mall/attr'
-  import { fetchMallCategoryChildren, type MallCategoryTreeNode } from '@/api/mall/category'
-  import { fetchCategoryNameMap, getCategoryDisplayName } from '@/utils/mall/category-tree'
-  import AttrSearch from '../modules/attr-search.vue'
-  import AttrDialog from '../modules/attr-dialog.vue'
-  import ExcelImportDialog from '@/components/core/forms/excel-import-dialog/index.vue'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import type { DialogType } from '@/types'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import { useAuth } from '@/hooks/core/useAuth'
+import {nextTick} from 'vue'
+import {watchDebounced} from '@vueuse/core'
+import {RefreshRight} from '@element-plus/icons-vue'
+import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+import {useTable} from '@/hooks/core/useTable'
+import {
+  fetchDeleteAttr,
+  fetchDownloadAttrImportTemplate,
+  fetchExportAttr,
+  fetchGetAttrList,
+  fetchImportAttr,
+  type MallAttr
+} from '@/api/mall/attr'
+import {fetchMallCategoryChildren, type MallCategoryTreeNode} from '@/api/mall/category'
+import {fetchCategoryNameMap, getCategoryDisplayName} from '@/utils/mall/category-tree'
+import {formatTableIconCell} from '@/utils/ui/table-icon-cell'
+import AttrSearch from '../modules/attr-search.vue'
+import AttrDialog from '../modules/attr-dialog.vue'
+import ExcelImportDialog from '@/components/core/forms/excel-import-dialog/index.vue'
+import {ElMessage, ElMessageBox, ElTag, ElTooltip} from 'element-plus'
+import {formatValueSelectBrief, getAttrValueSelect} from '@/utils/mall/attr-value-select'
+import type {DialogType} from '@/types'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import {useAuth} from '@/hooks/core/useAuth'
 
-  const props = withDefaults(
+const props = withDefaults(
     defineProps<{
       /** 0-销售属性 1-基本属性 */
       attrType: 0 | 1
@@ -258,14 +260,40 @@
             prop: 'valueType',
             label: '值类型',
             width: 90,
-            formatter: (row: MallAttr) => labelYesNo(row.valueType, '多选', '单值')
+            formatter: (row: MallAttr) => labelYesNo(row.valueType, '多选', '单选')
           },
-          { prop: 'icon', label: '图标', width: 80, showOverflowTooltip: true },
+          {
+            prop: 'icon',
+            label: '图标',
+            width: 72,
+            align: 'center',
+            formatter: (row: MallAttr) => formatTableIconCell(row.icon)
+          },
           {
             prop: 'valueSelect',
             label: '可选值',
             minWidth: 160,
-            showOverflowTooltip: true
+            formatter: (row: MallAttr) => {
+              const { full, tags, restCount } = formatValueSelectBrief(getAttrValueSelect(row))
+              if (!tags.length) {
+                return h('span', { class: 'value-select-empty' }, '—')
+              }
+              const tagNodes = [
+                h(ElTag, { type: 'success', size: 'small' }, () => tags[0]),
+                ...(restCount > 0
+                  ? [h(ElTag, { type: 'success', size: 'small' }, () => `+${restCount}`)]
+                  : [])
+              ]
+              const tagsEl = h('span', { class: 'value-select-tags' }, tagNodes)
+              if (restCount > 0) {
+                return h(
+                  ElTooltip,
+                  { content: full, placement: 'top', showAfter: 300 },
+                  { default: () => tagsEl }
+                )
+              }
+              return tagsEl
+            }
           },
           {
             prop: 'enable',
@@ -409,7 +437,7 @@
   function applyCategoryFilter(catId: number, name?: string) {
     browsingCategoryName.value = ''
     selectedCatelogId.value = catId
-    selectedCategoryName.value = name || `ID ${catId}`
+    selectedCategoryName.value = name || getCategoryDisplayName(categoryNameMap.value, catId)
     searchForm.value.catelogId = catId
     Object.assign(searchParams, mergeListParams())
     getData()
@@ -614,6 +642,17 @@
     &.is-placeholder {
       color: var(--el-text-color-placeholder);
     }
+  }
+
+  .value-select-empty {
+    color: var(--el-text-color-placeholder);
+  }
+
+  .value-select-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
   }
 
   .right-panel {

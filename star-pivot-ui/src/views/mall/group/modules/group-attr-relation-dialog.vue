@@ -110,18 +110,23 @@
         <ElTableColumn prop="icon" label="属性图标" width="100" show-overflow-tooltip />
         <ElTableColumn label="可选值" min-width="160">
           <template #default="{ row }">
-            <template v-if="parseValueSelect(row.valueSelect).length">
-              <ElTag
-                v-for="tag in parseValueSelect(row.valueSelect)"
-                :key="tag"
-                type="success"
-                size="small"
-                class="value-tag"
-              >
-                {{ tag }}
-              </ElTag>
+            <template v-if="!valueSelectDisplay(row).tags.length">
+              <span class="text-placeholder">—</span>
             </template>
-            <span v-else class="text-placeholder">—</span>
+            <ElTooltip
+              v-else-if="valueSelectDisplay(row).restCount > 0"
+              :content="valueSelectDisplay(row).full"
+              placement="top"
+              :show-after="300"
+            >
+              <span class="value-select-tags">
+                <ElTag type="success" size="small">{{ valueSelectDisplay(row).tags[0] }}</ElTag>
+                <ElTag type="success" size="small">+{{ valueSelectDisplay(row).restCount }}</ElTag>
+              </span>
+            </ElTooltip>
+            <span v-else class="value-select-tags">
+              <ElTag type="success" size="small">{{ valueSelectDisplay(row).tags[0] }}</ElTag>
+            </span>
           </template>
         </ElTableColumn>
       </ElTable>
@@ -154,16 +159,12 @@
 </template>
 
 <script setup lang="ts">
-  import type { TableInstance } from 'element-plus'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import {
-    fetchGroupAttrRelations,
-    fetchSaveGroupAttrRelations,
-    type GroupAttrRelation
-  } from '@/api/mall/group'
-  import { parseValueSelect } from '@/utils/mall/attr-value-select'
+import type {TableInstance} from 'element-plus'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {fetchGroupAttrRelations, fetchSaveGroupAttrRelations, type GroupAttrRelation} from '@/api/mall/group'
+import {formatValueSelectBrief, getAttrValueSelect} from '@/utils/mall/attr-value-select'
 
-  const props = defineProps<{
+const props = defineProps<{
     visible: boolean
     attrGroupId?: number
     groupName?: string
@@ -203,6 +204,9 @@
   const boundAttrIds = computed(() =>
     boundList.value.map((r) => Number(r.attrId)).filter((id) => Number.isFinite(id))
   )
+
+  const valueSelectDisplay = (row: GroupAttrRelation) =>
+    formatValueSelectBrief(getAttrValueSelect(row))
 
   const matchAttrName = (name: string | undefined, keyword: string) => {
     const kw = keyword.trim().toLowerCase()
@@ -435,8 +439,11 @@
     margin-top: 12px;
   }
 
-  .value-tag {
-    margin: 0 4px 4px 0;
+  .value-select-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
   }
 
   .text-placeholder {

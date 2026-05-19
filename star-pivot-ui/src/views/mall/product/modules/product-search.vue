@@ -36,7 +36,7 @@
 
   const formItems = computed(() => [
     {
-      label: 'SPU 名称',
+      label: 'SPU名称',
       key: 'spuName',
       type: 'input',
       placeholder: '模糊查询',

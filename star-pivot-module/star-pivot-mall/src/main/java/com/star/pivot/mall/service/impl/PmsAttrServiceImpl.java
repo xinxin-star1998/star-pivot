@@ -94,7 +94,6 @@ public class PmsAttrServiceImpl extends ServiceImpl<PmsAttrMapper, PmsAttr> impl
         if (!this.save(pmsAttr)) {
             return false;
         }
-        clearValueSelectColumnIfSingle(pmsAttr.getAttrId(), pmsAttr.getValueType());
         saveAttrGroupRelation(
                 pmsAttr.getAttrId(),
                 pmsAttrDTO.getAttrGroupId(),
@@ -123,7 +122,6 @@ public class PmsAttrServiceImpl extends ServiceImpl<PmsAttrMapper, PmsAttr> impl
         if (!this.updateById(pmsAttr)) {
             return false;
         }
-        clearValueSelectColumnIfSingle(pmsAttr.getAttrId(), pmsAttr.getValueType());
         Long catelogId = pmsAttrDTO.getCatelogId() != null ? pmsAttrDTO.getCatelogId() : pmsAttr.getCatelogId();
         saveAttrGroupRelation(
                 pmsAttr.getAttrId(),
@@ -153,35 +151,13 @@ public class PmsAttrServiceImpl extends ServiceImpl<PmsAttrMapper, PmsAttr> impl
         return this.removeByIds(Arrays.asList(attrIds));
     }
 
-    /**
-     * value_type=0（单值）时不落库 value_select；多值时保留非空字符串。
-     */
+    /** 空串不落库；单选/多选均可配置 value_select 候选值。 */
     private void applyValueSelectPolicy(PmsAttr entity) {
-        Integer valueType = entity.getValueType();
-        if (valueType == null || valueType == 0) {
-            entity.setValueSelect(null);
-            return;
-        }
         String vs = entity.getValueSelect();
         if (vs == null || vs.isBlank()) {
             entity.setValueSelect(null);
         } else {
             entity.setValueSelect(vs.trim());
-        }
-    }
-
-    /**
-     * 单值类型须将库中 value_select 置 NULL；updateById 默认跳过 null 字段，需单独 UPDATE。
-     */
-    private void clearValueSelectColumnIfSingle(Long attrId, Integer valueType) {
-        if (attrId == null) {
-            return;
-        }
-        if (valueType == null || valueType == 0) {
-            this.lambdaUpdate()
-                    .eq(PmsAttr::getAttrId, attrId)
-                    .set(PmsAttr::getValueSelect, null)
-                    .update();
         }
     }
 
@@ -252,13 +228,24 @@ public class PmsAttrServiceImpl extends ServiceImpl<PmsAttrMapper, PmsAttr> impl
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new BizException(ErrorCode.FORBIDDEN);
         }
-        boolean allowed =
+        List<String> authorities =
                 authentication.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
-                        .anyMatch(required::equals);
-        if (!allowed) {
-            throw new BizException(ErrorCode.FORBIDDEN, "无权限操作该类型属性");
+                        .toList();
+        if (authorities.contains(required)) {
+            return;
         }
+        // 发布/编辑商品时只读拉取分类下属性（仅 query）
+        if ("query".equals(action)
+                && authorities.stream()
+                        .anyMatch(
+                                a ->
+                                        "mall:product:query".equals(a)
+                                                || "mall:product:add".equals(a)
+                                                || "mall:product:edit".equals(a))) {
+            return;
+        }
+        throw new BizException(ErrorCode.FORBIDDEN, "无权限操作该类型属性");
     }
 
     /** 实体转 VO，并合并关联表中的分组字段。 */

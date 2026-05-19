@@ -7,13 +7,13 @@
  * @author Art Design Pro Team
  */
 
-import type { RouteRecordRaw } from 'vue-router'
-import type { AppRouteRecord } from '@/types/router'
-import { ComponentLoader } from './ComponentLoader'
-import { IframeRouteManager } from './IframeRouteManager'
-import { RoutesAlias } from '../routesAlias'
-import { RouteCacheManager } from './RouteCacheManager'
-import { safeLog, safeWarn } from '@/utils'
+import type {RouteRecordRaw} from 'vue-router'
+import type {AppRouteRecord} from '@/types/router'
+import {ComponentLoader} from './ComponentLoader'
+import {IframeRouteManager} from './IframeRouteManager'
+import {RoutesAlias} from '../routesAlias'
+import {RouteCacheManager} from './RouteCacheManager'
+import {safeLog, safeWarn} from '@/utils'
 
 interface ConvertedRoute extends Omit<RouteRecordRaw, 'children'> {
   id?: number
@@ -237,13 +237,14 @@ export class RouteTransformer {
    */
   private getRelativePath(path: string): string {
     const segments = path.split('/').filter(Boolean)
-    if (segments.length > 0) {
-      // 获取路径的最后一段（相对于父路由）
-      const relativePath = segments[segments.length - 1]
-      // 保留动态参数格式
-      return relativePath
+    if (!segments.length) return ''
+
+    // 相对路径且含多级（如 product/add），保留完整段，避免被截成 /mall/add
+    if (!path.startsWith('/') && segments.length > 1) {
+      return segments.join('/')
     }
-    return ''
+
+    return segments[segments.length - 1]!
   }
 
   /**

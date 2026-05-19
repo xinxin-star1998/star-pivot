@@ -20,7 +20,7 @@ spring:
       max-active: 50
       max-wait: 30000
       validation-query: SELECT 1
-      validation-query-timeout: 3
+      validation-query-timeout: 10
       test-while-idle: true
       test-on-borrow: false
       test-on-return: false

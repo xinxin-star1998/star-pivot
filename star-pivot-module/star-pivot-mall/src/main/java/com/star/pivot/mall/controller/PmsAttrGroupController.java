@@ -6,6 +6,8 @@ import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
+import com.star.pivot.framework.excel.ExcelImportOptions;
+import com.star.pivot.framework.excel.ExcelToolkit;
 import com.star.pivot.mall.domain.dto.GroupAttrRelationSaveDTO;
 import com.star.pivot.mall.domain.dto.PmsAttrGroupDTO;
 import com.star.pivot.mall.domain.dto.PmsAttrGroupQueryDTO;
@@ -14,8 +16,6 @@ import com.star.pivot.mall.domain.vo.GroupAttrRelationVO;
 import com.star.pivot.mall.domain.vo.PmsAttrGroupVO;
 import com.star.pivot.mall.excel.PmsAttrGroupExcelHandler;
 import com.star.pivot.mall.service.IPmsAttrGroupService;
-import com.star.pivot.framework.excel.ExcelImportOptions;
-import com.star.pivot.framework.excel.ExcelToolkit;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +45,8 @@ public class PmsAttrGroupController
      * @param queryDTO 查询参数
      * @return 分页结果
      */
-    @PreAuthorize("hasAuthority('mall:group:query')")
+    @PreAuthorize(
+            "hasAnyAuthority('mall:group:query', 'mall:product:query', 'mall:product:add', 'mall:product:edit')")
     @PostMapping("/list")
     public Result<PageResponse<PmsAttrGroupVO>> list(@RequestBody PmsAttrGroupQueryDTO queryDTO)
     {

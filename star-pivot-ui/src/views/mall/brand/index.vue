@@ -51,21 +51,20 @@
 </template>
 
 <script setup lang="ts">
-  import { h } from 'vue'
-  import { useTable } from '@/hooks/core/useTable'
-  import { fetchMallBrandList, fetchMallBrandRemove, type MallBrandVo } from '@/api/mall/brand'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import BrandSearch from './modules/brand-search.vue'
-  import BrandDialog from './modules/brand-dialog.vue'
-  import BrandCategoryBindDialog from './modules/brand-category-bind-dialog.vue'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import { ElTag } from 'element-plus'
-  import type { DialogType } from '@/types'
-  import { useAuth } from '@/hooks/core/useAuth'
+import {h} from 'vue'
+import {useTable} from '@/hooks/core/useTable'
+import {fetchMallBrandList, fetchMallBrandRemove, type MallBrandVo} from '@/api/mall/brand'
+import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import BrandSearch from './modules/brand-search.vue'
+import BrandDialog from './modules/brand-dialog.vue'
+import BrandCategoryBindDialog from './modules/brand-category-bind-dialog.vue'
+import {ElMessage, ElMessageBox, ElTag} from 'element-plus'
+import type {DialogType} from '@/types'
+import {useAuth} from '@/hooks/core/useAuth'
 
-  defineOptions({ name: 'MallBrand' })
+defineOptions({ name: 'MallBrand' })
 
   const { hasAuth } = useAuth()
 
@@ -126,7 +125,7 @@
           formatter: (row: MallBrandVo) => {
             const s = row.showStatus
             if (s === undefined || s === null) {
-              return h('span', {}, () => '-')
+              return '-'
             }
             const show = s === 1
             return h(ElTag, { type: show ? 'success' : 'info' }, () => (show ? '显示' : '不显示'))

@@ -1,4 +1,4 @@
-import { fetchMallCategoryTree, type MallCategoryTreeNode } from '@/api/mall/category'
+import {fetchMallCategoryTree, type MallCategoryTreeNode} from '@/api/mall/category'
 
 /** 将分类树展平为 catId -> name */
 export function buildCategoryNameMap(
@@ -17,11 +17,10 @@ export function buildCategoryNameMap(
   return map
 }
 
-/** 根据映射解析分类展示名；无映射时回退为 ID */
+/** 根据映射解析分类展示名 */
 export function getCategoryDisplayName(map: Record<number, string>, catId?: number | null): string {
   if (catId == null) return '-'
-  const name = map[catId]
-  return name || `ID ${catId}`
+  return map[catId] || '-'
 }
 
 /** 拉取完整类目树并构建 id -> name 映射 */

@@ -4,6 +4,7 @@ import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.mall.domain.bo.ProductReqBo;
 import com.star.pivot.mall.domain.bo.ProductSaveBo;
 import com.star.pivot.mall.domain.vo.ProductVo;
+
 import java.util.List;
 
 public interface PmsSpuInfoService {
@@ -17,4 +18,7 @@ public interface PmsSpuInfoService {
     void updatePmsSpuInfo(ProductSaveBo bo);
 
     void removePmsSpuInfoByIds(List<Long> ids);
+
+    /** 仅更新上架状态（0-下架 1-上架） */
+    void updatePublishStatus(Long id, Integer publishStatus);
 }

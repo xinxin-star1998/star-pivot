@@ -40,7 +40,7 @@
         <ElInput
           ref="searchInputRef"
           v-model="iconSearchText"
-          placeholder="搜索图标名称，如 user、menu、setting"
+          placeholder="支持中文或英文，如 用户、设置、home"
           clearable
           class="picker-search"
           @input="handleIconSearch"
@@ -66,7 +66,7 @@
         <ElIcon class="is-loading"><Loading /></ElIcon>
         <span style="margin-left: 8px">加载图标库...</span>
       </div>
-      <div v-if="showEmptyState" class="icon-empty">未找到相关图标</div>
+      <div v-if="showEmptyState" class="icon-empty">{{ emptySearchHint }}</div>
 
       <div ref="pickerBodyRef" class="picker-body" @scroll="handlePickerScroll">
         <div class="icon-grid">
@@ -92,15 +92,18 @@
 </template>
 
 <script setup lang="ts">
-  import { ElIcon, ElDialog, ElInput, ElButton, ElTabs, ElTabPane } from 'element-plus'
-  import { Search, Loading, Close } from '@element-plus/icons-vue'
-  import { Icon, addCollection } from '@iconify/vue'
+import {ElButton, ElDialog, ElIcon, ElInput, ElTabPane, ElTabs} from 'element-plus'
+import {Close, Loading, Search} from '@element-plus/icons-vue'
+import {Icon} from '@iconify/vue'
+import {DEFAULT_ICON_SETS, ensureIconCollection, type OfflineIconSetOption} from '@/utils/ui/iconify-offline'
+import {
+  containsCjk,
+  expandIconSearchKeywords,
+  iconMatchesSearchTerms,
+  toIconifySearchQuery
+} from '@/utils/ui/icon-search-zh'
 
-  type IconSet = {
-    label: string
-    /** Iconify collection prefix, e.g. ri / mdi / ep */
-    prefix: string
-  }
+type IconSet = OfflineIconSetOption
 
   interface Props {
     modelValue: string | undefined
@@ -161,17 +164,9 @@
     }
   })
 
-  const iconSets = computed<IconSet[]>(() => {
-    return (
-      props.iconSets ?? [
-        { label: 'Remix Icon', prefix: 'ri' },
-        { label: 'Material Design Icons', prefix: 'mdi' },
-        { label: 'Element Plus', prefix: 'ep' }
-      ]
-    )
-  })
+  const iconSets = computed<IconSet[]>(() => props.iconSets ?? DEFAULT_ICON_SETS)
 
-  const activeIconSet = ref<string>(iconSets.value[0]?.prefix ?? 'ri')
+  const activeIconSet = ref<string>(iconSets.value[0]?.prefix ?? 'heroicons-outline')
   const iconSetLabel = computed(() => {
     const found = iconSets.value.find((s) => s.prefix === activeIconSet.value)
     return found?.label ?? activeIconSet.value
@@ -179,25 +174,10 @@
   const allIcons = ref<string[]>([])
   const isSwitchingIconSet = ref(false)
 
-  // 同一 prefix 只加载/注册一次，避免重复 addCollection 导致卡顿
   const loadedIconSets = new Set<string>()
-
-  const offlineIconLoaders: Partial<Record<string, () => Promise<any>>> = {
-    ri: () => import('@iconify-json/ri/icons.json'),
-    mdi: () => import('@iconify-json/mdi/icons.json'),
-    ep: () => import('@iconify-json/ep/icons.json')
-  }
 
   const loadIconifyIcons = async (prefix: string) => {
     try {
-      const loader = offlineIconLoaders[prefix]
-      if (!loader) {
-        // 未提供离线包：不尝试动态加载，避免在浏览器端报 module specifier 错误
-        allIcons.value = []
-        return
-      }
-
-      // 已经加载过：仅切换列表即可
       if (
         loadedIconSets.has(prefix) &&
         allIcons.value.length > 0 &&
@@ -207,19 +187,13 @@
       }
 
       isSwitchingIconSet.value = true
-      // 先让 UI 刷新出 loading，再进行重型 import/解析
       await nextTick()
       await new Promise((r) => setTimeout(r, 0))
 
-      const mod = await loader()
-      const iconsJson = (mod as any).default
-      // 注册到 Iconify 内部存储：这样 <Icon> 渲染时不会再请求 api.iconify.design
-      if (!loadedIconSets.has(prefix)) {
-        addCollection(iconsJson)
+      allIcons.value = await ensureIconCollection(prefix)
+      if (allIcons.value.length > 0) {
         loadedIconSets.add(prefix)
       }
-      const icons = iconsJson?.icons ? Object.keys(iconsJson.icons) : []
-      allIcons.value = icons.map((name: string) => `${prefix}:${name}`)
     } catch (e) {
       console.warn(`未能加载 ${prefix} 离线数据，将回退到在线搜索模式。`, e)
       allIcons.value = []
@@ -231,12 +205,6 @@
   onMounted(() => {
     loadIconifyIcons(activeIconSet.value)
   })
-
-  const handleIconSetChange = async () => {
-    resetSearch()
-    resetDisplayLimit()
-    await loadIconifyIcons(activeIconSet.value)
-  }
 
   /**
    * 图标搜索功能 composable
@@ -258,16 +226,19 @@
       if (!keyword || keyword.trim().length === 0) {
         return allIcons.value
       }
-      const lowerKeyword = keyword.trim().toLowerCase()
-      return allIcons.value.filter((icon) => icon.toLowerCase().includes(lowerKeyword))
+      const terms = expandIconSearchKeywords(keyword)
+      if (!terms.length) {
+        return []
+      }
+      return allIcons.value.filter((icon) => iconMatchesSearchTerms(icon, terms))
     }
 
     /**
      * 在线搜索图标
      * 当离线图标未加载时，从 Iconify Remix Icon 前缀在线搜索兜底
      */
-    const searchIconsOnline = async (keyword: string): Promise<void> => {
-      if (!keyword || keyword.trim().length < 2) {
+    const searchIconsOnline = async (query: string): Promise<void> => {
+      if (!query || query.trim().length < 2) {
         onlineSearchResults.value = []
         searchError.value = null
         return
@@ -279,7 +250,7 @@
       try {
         const prefix = activeIconSet.value
         const response = await fetch(
-          `https://api.iconify.design/search?query=${encodeURIComponent(keyword)}&limit=300&prefixes=${encodeURIComponent(prefix)}`
+          `https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=300&prefixes=${encodeURIComponent(prefix)}`
         )
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         const data = await response.json()
@@ -299,13 +270,31 @@
      */
     const performSearch = async (keyword: string): Promise<void> => {
       const trimmedKeyword = keyword.trim()
+      if (!trimmedKeyword) {
+        localSearchResults.value = []
+        onlineSearchResults.value = []
+        searchError.value = null
+        return
+      }
 
-      // 先进行本地搜索（无论关键词长度）
+      const terms = expandIconSearchKeywords(trimmedKeyword)
+      if (containsCjk(trimmedKeyword) && !terms.length) {
+        localSearchResults.value = []
+        onlineSearchResults.value = []
+        searchError.value = '未匹配到该中文关键词，请换词或尝试英文（如 home、user）'
+        return
+      }
+
+      searchError.value = null
       localSearchResults.value = searchLocalIcons(trimmedKeyword)
 
-      // 若离线列表为空且关键词长度>=2，进行在线搜索兜底
-      if (allIcons.value.length === 0 && trimmedKeyword.length >= 2) {
-        await searchIconsOnline(trimmedKeyword)
+      const onlineQuery = toIconifySearchQuery(terms) || trimmedKeyword
+      const needOnline =
+        onlineQuery.length >= 2 &&
+        (localSearchResults.value.length === 0 || containsCjk(trimmedKeyword))
+
+      if (needOnline) {
+        await searchIconsOnline(onlineQuery)
       } else {
         onlineSearchResults.value = []
         isSearchingIcons.value = false
@@ -314,9 +303,12 @@
 
     /**
      * 重置搜索状态
+     * @param keepKeyword 切换图标库时保留输入框关键词
      */
-    const resetSearch = (): void => {
-      iconSearchText.value = ''
+    const resetSearch = (opts?: { keepKeyword?: boolean }): void => {
+      if (!opts?.keepKeyword) {
+        iconSearchText.value = ''
+      }
       localSearchResults.value = []
       onlineSearchResults.value = []
       isSearchingIcons.value = false
@@ -354,12 +346,16 @@
      */
     const showEmptyState = computed(() => {
       const keyword = iconSearchText.value.trim()
-      return (
-        keyword.length > 0 &&
-        !isSearchingIcons.value &&
-        !hasSearchResults.value &&
-        !searchError.value
-      )
+      return keyword.length > 0 && !isSearchingIcons.value && !hasSearchResults.value
+    })
+
+    const emptySearchHint = computed(() => {
+      if (searchError.value) return searchError.value
+      const keyword = iconSearchText.value.trim()
+      if (containsCjk(keyword)) {
+        return '未找到相关图标，可换关键词或尝试英文'
+      }
+      return '未找到相关图标'
     })
 
     return {
@@ -371,6 +367,7 @@
       mergedSearchResults,
       hasSearchResults,
       showEmptyState,
+      emptySearchHint,
       performSearch,
       resetSearch
     }
@@ -382,9 +379,20 @@
     isSearchingIcons,
     mergedSearchResults,
     showEmptyState,
+    emptySearchHint,
     performSearch,
     resetSearch
   } = useIconSearch()
+
+  const handleIconSetChange = async () => {
+    const keyword = iconSearchText.value.trim()
+    resetSearch({ keepKeyword: true })
+    resetDisplayLimit()
+    await loadIconifyIcons(activeIconSet.value)
+    if (keyword) {
+      await performSearch(keyword)
+    }
+  }
 
   // 防抖搜索处理
   let searchTimer: ReturnType<typeof setTimeout> | null = null

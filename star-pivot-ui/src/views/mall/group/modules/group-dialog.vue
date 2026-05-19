@@ -23,7 +23,26 @@
         <ElInput v-model="formData.descript" placeholder="请输入描述" />
       </ElFormItem>
       <ElFormItem label="组图标" prop="icon">
-        <ElInput v-model="formData.icon" placeholder="请输入组图标" />
+        <ArtIconPicker ref="iconPickerRef" v-model="formData.icon" :manual="true">
+          <ElInput
+            v-model="formData.icon"
+            placeholder="如：heroicons-outline:rectangle-group"
+            clearable
+            style="width: 100%"
+          >
+            <template #prepend>
+              <div class="group-icon-prepend">
+                <Icon
+                  :icon="formData.icon || 'heroicons-outline:rectangle-group'"
+                  style="font-size: 18px"
+                />
+              </div>
+            </template>
+            <template #append>
+              <ElButton @click.stop="openIconPicker">选择图标</ElButton>
+            </template>
+          </ElInput>
+        </ArtIconPicker>
       </ElFormItem>
       <ElFormItem label="所属分类" prop="catalogPath">
         <ElCascader
@@ -48,18 +67,20 @@
 </template>
 
 <script setup lang="ts">
-  import { ElMessage } from 'element-plus'
-  import type { FormInstance, FormRules } from 'element-plus'
-  import { fetchAddGroup, fetchUpdateGroup, fetchGetGroupById, type Group } from '@/api/mall/group'
-  import { fetchMallCategoryTree, type MallCategoryTreeNode } from '@/api/mall/category'
-  import {
-    filterVisibleCategoryTree,
-    findCategoryNode,
-    findCategoryPath,
-    mapCategoryCascaderOptions
-  } from '@/utils/mall/category-tree'
+import type {FormInstance, FormRules} from 'element-plus'
+import {ElMessage} from 'element-plus'
+import {Icon} from '@iconify/vue'
+import ArtIconPicker from '@/components/core/base/art-icon-picker/index.vue'
+import {fetchAddGroup, fetchGetGroupById, fetchUpdateGroup, type Group} from '@/api/mall/group'
+import {fetchMallCategoryTree, type MallCategoryTreeNode} from '@/api/mall/category'
+import {
+  filterVisibleCategoryTree,
+  findCategoryNode,
+  findCategoryPath,
+  mapCategoryCascaderOptions
+} from '@/utils/mall/category-tree'
 
-  interface Props {
+interface Props {
     visible: boolean
     type: string
     groupData?: Partial<Group>
@@ -83,6 +104,12 @@
   const dialogType = computed(() => props.type)
 
   const formRef = ref<FormInstance>()
+  const iconPickerRef = ref<{ open: () => void; close: () => void } | null>(null)
+
+  const openIconPicker = () => {
+    iconPickerRef.value?.open()
+  }
+
   const categoryOptions = ref<MallCategoryTreeNode[]>([])
   const catalogPath = ref<number[]>([])
 
@@ -108,7 +135,6 @@
     attrGroupName: [{ required: true, message: '组名不能为空', trigger: 'blur' }],
     sort: [{ required: true, message: '排序不能为空', trigger: 'change' }],
     descript: [{ required: true, message: '描述不能为空', trigger: 'blur' }],
-    icon: [{ required: true, message: '组图标不能为空', trigger: 'blur' }],
     catalogPath: [
       {
         validator: (_rule, _value, callback) => {
@@ -254,5 +280,12 @@
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+  }
+
+  .group-icon-prepend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
   }
 </style>
