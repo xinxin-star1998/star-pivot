@@ -7,7 +7,7 @@ import com.star.pivot.system.domain.entity.SysDept;
 import com.star.pivot.system.domain.entity.SysOperLog;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.mapper.SysDeptMapper;
-import com.star.pivot.system.service.interfaces.SysOperLogService;
+import com.star.pivot.system.service.impl.AsyncOperLogService;
 import com.star.pivot.system.utils.LoginUser;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -31,12 +31,12 @@ import java.time.LocalDateTime;
 @Component
 public class LogAspect {
 
-    private final SysOperLogService sysOperLogService;
+    private final AsyncOperLogService asyncOperLogService;
     private final SysDeptMapper sysDeptMapper;
     private final ObjectMapper objectMapper;
 
-    public LogAspect(SysOperLogService sysOperLogService, SysDeptMapper sysDeptMapper, ObjectMapper objectMapper) {
-        this.sysOperLogService = sysOperLogService;
+    public LogAspect(AsyncOperLogService asyncOperLogService, SysDeptMapper sysDeptMapper, ObjectMapper objectMapper) {
+        this.asyncOperLogService = asyncOperLogService;
         this.sysDeptMapper = sysDeptMapper;
         this.objectMapper = objectMapper;
     }
@@ -76,11 +76,8 @@ public class LogAspect {
             long endTime = System.currentTimeMillis();
             operLog.setCostTime(endTime - startTime);
             operLog.setOperTime(LocalDateTime.now());
-            try {
-                sysOperLogService.saveOperLog(operLog);
-            } catch (Exception e) {
-                log.error("保存操作日志失败", e);
-            }
+            // 异步保存操作日志，不阻塞主线程
+            asyncOperLogService.saveOperLogAsync(operLog);
         }
     }
 

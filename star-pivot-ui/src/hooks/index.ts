@@ -6,6 +6,9 @@ export { useCommon } from './core/useCommon'
 // 权限控制
 export { useAuth } from './core/useAuth'
 
+// 字典数据管理
+export { useDict } from './core/useDict'
+
 // 表格数据管理方案
 export { useTable } from './core/useTable'
 

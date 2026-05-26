@@ -44,25 +44,25 @@
 </template>
 
 <script setup lang="ts">
-  import { safeError } from '@/utils'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import { useTableColumns } from '@/hooks/core/useTableColumns'
-  import DictDataDialog from './dict-data-dialog.vue'
-  import {
-    fetchGetDictDataList,
-    fetchAddDictData,
-    fetchUpdateDictData,
-    fetchDeleteDictData,
-    type SysDictData,
-    type DictDataFormData
-  } from '@/api/dict/data'
-  import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
-  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import { useAuth } from '@/hooks/core/useAuth'
+import {safeError} from '@/utils'
+import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+import {useTableColumns} from '@/hooks/core/useTableColumns'
+import DictDataDialog from './dict-data-dialog.vue'
+import {
+  type DictDataFormData,
+  fetchAddDictData,
+  fetchDeleteDictData,
+  fetchGetDictDataList,
+  fetchUpdateDictData,
+  type SysDictData
+} from '@/api/dict/data'
+import {ElMessage, ElMessageBox, ElTag} from 'element-plus'
+import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import {useAuth} from '@/hooks/core/useAuth'
 
-  defineOptions({ name: 'DictDataPanel' })
+defineOptions({ name: 'DictDataPanel' })
 
   interface Props {
     dictType: string
@@ -120,16 +120,16 @@
 
   const { columnChecks, columns } = useTableColumns(() => [
     { type: 'index', width: 60, label: '序号' },
-    { prop: 'dictCode', label: '字典编码', width: 80 },
+    // { prop: 'dictCode', label: '字典编码', width: 80 },
     { prop: 'dictLabel', label: '字典标签', minWidth: 120 },
     { prop: 'dictValue', label: '字典键值', minWidth: 120 },
-    { prop: 'dictType', label: '字典类型', minWidth: 150 },
-    {
-      prop: 'dictSort',
-      label: '字典排序',
-      width: 100,
-      formatter: (row: SysDictData) => row.dictSort || 0
-    },
+    // { prop: 'dictType', label: '字典类型', minWidth: 150 },
+    // {
+    //   prop: 'dictSort',
+    //   label: '字典排序',
+    //   width: 100,
+    //   formatter: (row: SysDictData) => row.dictSort || 0
+    // },
     {
       prop: 'status',
       label: '状态',

@@ -7,6 +7,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+#if($subTable.hasBaseEntityColumns())
+import com.star.pivot.framework.domain.BaseEntity;
+#end
 
 /**
  * ${subTable.functionName}实体类 ${subTableName}
@@ -16,7 +19,11 @@ import lombok.Data;
  */
 @Data
 @TableName("${subTableName}" )
+#if($subTable.hasBaseEntityColumns())
 public class ${subClassName} extends BaseEntity
+#else
+public class ${subClassName}
+#end
 {
     private static final long serialVersionUID = 1L;
 

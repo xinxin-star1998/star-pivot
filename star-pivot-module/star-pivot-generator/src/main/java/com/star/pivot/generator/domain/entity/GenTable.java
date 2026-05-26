@@ -195,4 +195,24 @@ public class GenTable implements Serializable
         }
         return StringUtils.equalsAnyIgnoreCase(javaField, GenConstants.BASE_ENTITY);
     }
+
+    /**
+     * 判断表是否包含 BaseEntity 的字段
+     * @return true 表示包含，需要继承 BaseEntity
+     */
+    public boolean hasBaseEntityColumns()
+    {
+        if (columns == null || columns.isEmpty())
+        {
+            return false;
+        }
+        for (GenTableColumn column : columns)
+        {
+            if (StringUtils.equalsAnyIgnoreCase(column.getJavaField(), GenConstants.BASE_ENTITY))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

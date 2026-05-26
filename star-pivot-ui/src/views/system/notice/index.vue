@@ -54,20 +54,23 @@
 </template>
 
 <script setup lang="ts">
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetNoticeList, fetchDeleteNotice, type Notice } from '@/api/system/notice/notice'
-  import NoticeSearch from './modules/notice-search.vue'
-  import NoticeDialog from './modules/notice-dialog.vue'
-  import { ElMessageBox, ElMessage } from 'element-plus'
-  import { DialogType } from '@/types'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import { useAuth } from '@/hooks/core/useAuth'
+import {h, nextTick, onMounted, ref} from 'vue'
+import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+import {useTable} from '@/hooks/core/useTable'
+import {useDict} from '@/hooks/core/useDict'
+import {fetchDeleteNotice, fetchGetNoticeList, type Notice} from '@/api/system/notice/notice'
+import NoticeSearch from './modules/notice-search.vue'
+import NoticeDialog from './modules/notice-dialog.vue'
+import {ElMessage, ElMessageBox, ElTag} from 'element-plus'
+import {DialogType} from '@/types'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import {useAuth} from '@/hooks/core/useAuth'
 
-  defineOptions({ name: 'Notice' })
+defineOptions({ name: 'Notice' })
 
   const { hasAuth } = useAuth()
+  const { getDictItem, getTagType, loadDicts } = useDict()
 
   // 弹窗相关
   const dialogType = ref<DialogType>('add')
@@ -118,9 +121,11 @@
         {
           prop: 'noticeType',
           label: '公告类型',
-          formatter: (row) => {
-            // 字典类型：sys_notice_type
-            // 这里需要根据实际字典数据格式化显示
+          formatter: (row: Notice) => {
+            const dictItem = getDictItem('sys_notice_type', row.noticeType)
+            if (dictItem) {
+              return h(ElTag, { type: getTagType(dictItem.cssClass) as any }, () => dictItem.dictLabel)
+            }
             return row.noticeType || '-'
           }
         },
@@ -133,9 +138,11 @@
         {
           prop: 'status',
           label: '公告状态',
-          formatter: (row) => {
-            // 字典类型：sys_notice_status
-            // 这里需要根据实际字典数据格式化显示
+          formatter: (row: Notice) => {
+            const dictItem = getDictItem('sys_notice_status', row.status)
+            if (dictItem) {
+              return h(ElTag, { type: getTagType(dictItem.cssClass) as any }, () => dictItem.dictLabel)
+            }
             return row.status || '-'
           }
         },
@@ -301,6 +308,18 @@
   const handleSelectionChange = (selection: Notice[]): void => {
     selectedRows.value = selection
   }
+
+  /**
+   * 初始化加载字典数据
+   */
+  const initDictData = async () => {
+    await loadDicts(['sys_notice_type', 'sys_notice_status'])
+  }
+
+  // 组件挂载时加载字典数据
+  onMounted(() => {
+    initDictData()
+  })
 </script>
 
 <style scoped lang="scss">
