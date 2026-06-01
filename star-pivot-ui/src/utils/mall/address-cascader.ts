@@ -1,6 +1,6 @@
 import {type Address, fetchGetAddressChildren, fetchSearchAddress} from '@/api/mall/address'
 import {addressHasChildren} from '@/utils/mall/address-level'
-import type {CascaderOption} from 'element-plus'
+import type { CascaderOption, CascaderProps } from 'element-plus'
 
 /** 仓库选址：仅省 / 市 / 区县（level 0～2），不含乡镇 */
 export const WAREHOUSE_MAX_AREA_LEVEL = 2
@@ -55,12 +55,12 @@ export const addressCascaderProps = {
 }
 
 /** 仓库：仅省 / 市 / 区县三级 */
-export const warehouseAddressCascaderProps = {
+export const warehouseAddressCascaderProps: CascaderProps = {
   lazy: true,
   emitPath: true,
-  expandTrigger: 'click' as const,
+  expandTrigger: 'click',
   checkStrictly: true,
-  lazyLoad: createAddressCascaderLazyLoad(WAREHOUSE_MAX_AREA_LEVEL)
+  lazyLoad: createAddressCascaderLazyLoad(WAREHOUSE_MAX_AREA_LEVEL) as CascaderProps['lazyLoad']
 }
 
 /** 根据末级编码反查 Cascader 路径（编辑回显） */

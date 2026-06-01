@@ -163,7 +163,19 @@
               DELETE: 'danger',
               PATCH: 'info'
             }
-            return h(ElTag, { type: colorMap[method] || 'info', size: 'small' }, () => method)
+            return h(
+              ElTag,
+              {
+                type: (colorMap[method] || 'info') as
+                  | 'primary'
+                  | 'success'
+                  | 'warning'
+                  | 'info'
+                  | 'danger',
+                size: 'small'
+              },
+              () => method
+            )
           }
         },
         {

@@ -148,7 +148,7 @@
           prop: 'status',
           label: '角色状态',
           width: 100,
-          formatter: (row) => {
+          formatter: (row: Api.SystemManage.RoleListItem) => {
             const status = Number(row.status)
             const isEnabled = status === 0
             const tagType = isEnabled ? 'success' : 'danger'
@@ -167,7 +167,7 @@
           label: '操作',
           width: 180,
           fixed: 'right',
-          formatter: (row) => {
+          formatter: (row: Api.SystemManage.RoleListItem) => {
             // admin 角色编码不显示任何操作按钮
             if (row.roleKey === 'admin') {
               return h('span', { style: 'color: var(--art-gray-500)' }, '')

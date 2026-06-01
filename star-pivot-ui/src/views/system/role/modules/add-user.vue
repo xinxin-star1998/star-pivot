@@ -135,7 +135,12 @@
       // 同步分页参数到 searchForm
       searchForm.value.pageNum = pagination.value.pageNum
       searchForm.value.pageSize = pagination.value.pageSize
-      const response = await fetchGetUserListNotInByRoleId(searchForm.value)
+      const roleId = searchForm.value.roleId
+      if (roleId == null) {
+        ElMessage.warning('缺少角色 ID')
+        return
+      }
+      const response = await fetchGetUserListNotInByRoleId({ ...searchForm.value, roleId })
       // 后端返回的数据结构使用 rows 字段
       tableData.value = (response as any)?.rows || ([] as Api.SystemManage.UserListItem[])
       // 更新分页信息
@@ -208,11 +213,14 @@
       return
     }
     const userIds = selectedUsers.value.map((user: Api.SystemManage.UserListItem) => user.userId)
-    const UserRoleDTO = {
-      roleId: props.roleId,
-      userIds: userIds
+    if (props.roleId == null) {
+      ElMessage.warning('缺少角色 ID')
+      return
     }
-    await fetchAssignUser(UserRoleDTO)
+    await fetchAssignUser({
+      roleId: props.roleId,
+      userIds
+    })
     ElMessage.success('分配成功')
     emit('confirm', userIds)
     handleClose()

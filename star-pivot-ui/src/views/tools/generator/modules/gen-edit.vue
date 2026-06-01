@@ -222,8 +222,13 @@
     moduleName: '',
     businessName: '',
     functionName: '',
-    genType: '0',
-    genPath: ''
+    genType: '0' as '0' | '1',
+    genPath: '',
+    treeCode: '',
+    treeParentCode: '',
+    treeName: '',
+    parentMenuId: undefined as number | string | undefined,
+    parentMenuName: ''
   })
 
   // 字段列表数据

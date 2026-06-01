@@ -212,7 +212,7 @@ export const useDictStore = defineStore(
             if (parsed.dictCache) {
               Object.entries(parsed.dictCache).forEach(([dictType, dictMap]) => {
                 const map = new Map<string, SysDictData>()
-                Object.entries(dictMap).forEach(([dictValue, item]) => {
+                Object.entries(dictMap as Record<string, SysDictData>).forEach(([dictValue, item]) => {
                   map.set(dictValue, item)
                 })
                 dictCache.set(dictType, map)

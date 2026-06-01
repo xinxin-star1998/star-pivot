@@ -669,7 +669,7 @@
       // 清除前端菜单缓存，确保下次刷新或重新登录时获取最新数据
       menuStore.clearMenuCacheMeta()
       // 重新注册动态路由，立即生效
-      await reloadDynamicRoutes(router)
+      await reloadDynamicRoutes()
     } catch (error) {
       safeError('保存菜单失败:', error)
       ElMessage.error(formData.menuId ? '修改菜单失败' : '新增菜单失败')
@@ -705,7 +705,7 @@
       // 清除前端菜单缓存，确保下次刷新或重新登录时获取最新数据
       menuStore.clearMenuCacheMeta()
       // 重新注册动态路由，立即生效
-      await reloadDynamicRoutes(router)
+      await reloadDynamicRoutes()
     } catch (error) {
       // 用户点击取消/关闭时，Element Plus 会抛出 'cancel' 或 'close' 等错误标识，这里统一视为正常中断
       if (error !== 'cancel' && error !== 'close') {

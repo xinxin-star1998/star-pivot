@@ -75,7 +75,7 @@ export class DynamicRouteAppender {
 
     const traverseRoutes = (routes: AppRouteRecord[]) => {
       routes.forEach((route) => {
-        if (route.name) names.add(route.name)
+        if (route.name) names.add(String(route.name))
         if (route.path) paths.add(route.path)
 
         if (route.children && route.children.length > 0) {
@@ -218,7 +218,7 @@ export class DynamicRouteAppender {
   static appendAssignUserRoute(menuList: AppRouteRecord[], routeIndex: any): void {
     if (
       routeIndex.names.has('AssignUser') ||
-      Array.from(routeIndex.paths).some((path) => path.includes('/system/role/assign-user'))
+      Array.from(routeIndex.paths).some((path) => String(path).includes('/system/role/assign-user'))
     ) {
       safeWarn('[DynamicRouteAppender] 分配用户路由已存在，跳过追加')
       return
@@ -256,7 +256,7 @@ export class DynamicRouteAppender {
   static appendGenEditRoute(menuList: AppRouteRecord[], routeIndex: any): void {
     if (
       routeIndex.names.has('GenEdit') ||
-      Array.from(routeIndex.paths).some((path) => path.includes('/tool/gen/edit'))
+      Array.from(routeIndex.paths).some((path) => String(path).includes('/tool/gen/edit'))
     ) {
       safeWarn('[DynamicRouteAppender] 代码生成编辑页路由已存在，跳过追加')
       return
@@ -306,10 +306,10 @@ export class DynamicRouteAppender {
 
     const hasAdd =
       routeIndex.names.has('MallProductAdd') ||
-      Array.from(routeIndex.paths).some((p: string) => String(p).includes('product/add'))
+      Array.from(routeIndex.paths).some((p) => String(p).includes('product/add'))
     const hasEdit =
       routeIndex.names.has('MallProductEdit') ||
-      Array.from(routeIndex.paths).some((p: string) => String(p).includes('product/edit'))
+      Array.from(routeIndex.paths).some((p) => String(p).includes('product/edit'))
 
     if (!hasAdd) {
       mallRoot.children.push({
