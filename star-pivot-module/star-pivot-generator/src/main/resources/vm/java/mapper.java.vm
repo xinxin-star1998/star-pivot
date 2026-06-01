@@ -6,11 +6,15 @@ import org.apache.ibatis.annotations.Param;
 #if($table.crud || $table.sub)
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import ${packageName}.domain.dto.${ClassName}QueryDTO;
+import ${packageName}.domain.bo.${ClassName}ReqPageBo;
 #end
-import ${packageName}.domain.${ClassName};
+#if($table.tree)
+import java.util.List;
+import ${packageName}.domain.bo.${ClassName}ReqBo;
+#end
+import ${packageName}.domain.entity.${ClassName};
 #if($table.sub)
-import ${packageName}.domain.${subClassName};
+import ${packageName}.domain.entity.${subClassName};
 #end
 
 /**
@@ -27,10 +31,19 @@ public interface ${ClassName}Mapper extends BaseMapper<${ClassName}>
      * 分页查询${functionName}列表
      * 
      * @param page 分页参数
-     * @param queryDTO 查询条件
+     * @param ${className}ReqPageBo 查询条件
      * @return 分页结果
      */
-    IPage<${ClassName}> selectPageList(Page<${ClassName}> page, @Param("queryDTO" ) ${ClassName}QueryDTO queryDTO);
+    IPage<${ClassName}> selectPageList(Page<${ClassName}> page, @Param("${className}ReqPageBo") ${ClassName}ReqPageBo ${className}ReqPageBo);
+#end
+#if($table.tree)
+    /**
+     * 条件查询${functionName}列表（树表，不分页）
+     *
+     * @param ${className}ReqBo 查询条件
+     * @return 列表
+     */
+    List<${ClassName}> selectQueryList(@Param("${className}ReqBo") ${ClassName}ReqBo ${className}ReqBo);
 #end
 #if($table.sub)
 

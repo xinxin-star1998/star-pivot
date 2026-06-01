@@ -12,16 +12,19 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 #if($table.crud || $table.sub)
-import ${packageName}.domain.dto.${ClassName}QueryDTO;
-import ${packageName}.domain.bo.${ClassName}VO;
+import ${packageName}.domain.bo.${ClassName}ReqPageBo;
 #end
+#if($table.tree)
+import ${packageName}.domain.bo.${ClassName}ReqBo;
+#end
+import ${packageName}.domain.bo.${ClassName}VO;
 #if($table.sub)
 import java.util.ArrayList;
-import ${packageName}.domain.${subClassName};
+import ${packageName}.domain.entity.${subClassName};
 import ${packageName}.domain.dto.${subClassName}DTO;
 #end
 import ${packageName}.mapper.${ClassName}Mapper;
-import ${packageName}.domain.${ClassName};
+import ${packageName}.domain.entity.${ClassName};
 import ${packageName}.domain.dto.${ClassName}DTO;
 import ${packageName}.service.I${ClassName}Service;
 #if($table.sub)
@@ -47,15 +50,15 @@ public class ${ClassName}ServiceImpl extends ServiceImpl<${ClassName}Mapper, ${C
     /**
      * 分页查询${functionName}列表
      * 
-     * @param queryDTO 查询条件
+     * @param ${className}ReqPageBo 查询条件
      * @return 分页结果
      */
     @Override
-    public PageResponse<${ClassName}VO> select${ClassName}Page(${ClassName}QueryDTO queryDTO)
+    public PageResponse<${ClassName}VO> select${ClassName}Page(${ClassName}ReqPageBo ${className}ReqPageBo)
     {
         PageResponse<${ClassName}VO> pageResponse = new PageResponse<>();
-        Page<${ClassName}> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
-        IPage<${ClassName}> ${className}Page = baseMapper.selectPageList(page, queryDTO);
+        Page<${ClassName}> page = new Page<>(${className}ReqPageBo.getPageNum(), ${className}ReqPageBo.getPageSize());
+        IPage<${ClassName}> ${className}Page = baseMapper.selectPageList(page, ${className}ReqPageBo);
         
         // 转换为VO
         java.util.List<${ClassName}VO> voList = ${className}Page.getRecords().stream()
@@ -68,6 +71,46 @@ public class ${ClassName}ServiceImpl extends ServiceImpl<${ClassName}Mapper, ${C
         pageResponse.setPageSize(${className}Page.getSize());
         pageResponse.setPageCount(${className}Page.getPages());
         return pageResponse;
+    }
+#end
+#if($table.tree)
+#set($TreeParentCap=$treeParentCode.substring(0,1).toUpperCase() + ${treeParentCode.substring(1)})
+#set($TreeCodeCap=$treeCode.substring(0,1).toUpperCase() + ${treeCode.substring(1)})
+
+    private static final Long TREE_ROOT_PARENT_ID = 0L;
+
+    /**
+     * 查询${functionName}树形列表
+     *
+     * @param ${className}ReqBo 查询条件
+     * @return 树形列表
+     */
+    @Override
+    public java.util.List<${ClassName}VO> select${ClassName}TreeList(${ClassName}ReqBo ${className}ReqBo)
+    {
+        java.util.List<${ClassName}> list = baseMapper.selectQueryList(${className}ReqBo);
+        java.util.List<${ClassName}VO> voList = list.stream()
+                .map(this::convertToVO)
+                .collect(java.util.stream.Collectors.toList());
+        return buildTree(voList, TREE_ROOT_PARENT_ID);
+    }
+
+    private java.util.List<${ClassName}VO> buildTree(java.util.List<${ClassName}VO> all, Long parentId)
+    {
+        java.util.List<${ClassName}VO> tree = new java.util.ArrayList<>();
+        for (${ClassName}VO node : all)
+        {
+            if (node.get${TreeParentCap}() != null && node.get${TreeParentCap}().equals(parentId))
+            {
+                java.util.List<${ClassName}VO> children = buildTree(all, node.get${TreeCodeCap}());
+                if (!children.isEmpty())
+                {
+                    node.setChildren(children);
+                }
+                tree.add(node);
+            }
+        }
+        return tree;
     }
 #end
 

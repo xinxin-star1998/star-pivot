@@ -52,7 +52,7 @@ public class GenUtils
         }
         else if (arraysContains(GenConstants.COLUMNTYPE_TIME, dataType))
         {
-            column.setJavaType(GenConstants.TYPE_DATE);
+            column.setJavaType(GenConstants.TYPE_LOCAL_DATE_TIME);
             column.setHtmlType(GenConstants.HTML_DATETIME);
         }
         else if (arraysContains(GenConstants.COLUMNTYPE_NUMBER, dataType))
