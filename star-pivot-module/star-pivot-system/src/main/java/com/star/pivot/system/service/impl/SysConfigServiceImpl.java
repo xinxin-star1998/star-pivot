@@ -3,19 +3,25 @@ package com.star.pivot.system.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.star.pivot.framework.cache.CacheNames;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BizException;
+import com.star.pivot.system.constants.SysConfigKeys;
 import com.star.pivot.system.domain.bo.SysConfigVO;
 import com.star.pivot.system.domain.dto.SysConfigDTO;
 import com.star.pivot.system.domain.dto.SysConfigQueryDTO;
 import com.star.pivot.system.domain.entity.SysConfig;
 import com.star.pivot.system.mapper.SysConfigMapper;
 import com.star.pivot.system.service.interfaces.ISysConfigService;
+import com.star.pivot.system.utils.RedisCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * 参数配置Service业务层实现
@@ -28,6 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig> implements ISysConfigService {
 
+    private static final long CONFIG_CACHE_HOURS = 2L;
+
+    private final RedisCache redisCache;
     /**
      * 分页查询参数配置列表
      *
@@ -102,8 +111,16 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
             throw new BizException("参数配置不存在");
         }
 
+        String oldConfigKey = sysConfig.getConfigKey();
         BeanUtils.copyProperties(sysConfigDTO, sysConfig, "configId");
-        return baseMapper.updateSysConfig(sysConfig) > 0;
+        boolean success = baseMapper.updateSysConfig(sysConfig) > 0;
+        if (success) {
+            evictConfigCache(sysConfig.getConfigKey());
+            if (StringUtils.hasText(oldConfigKey) && !oldConfigKey.equals(sysConfig.getConfigKey())) {
+                evictConfigCache(oldConfigKey);
+            }
+        }
+        return success;
     }
 
     /**
@@ -115,7 +132,36 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     @Transactional(rollbackFor = Exception.class)
     @Override
     public boolean deleteSysConfigByConfigIds(Long[] configIds) {
+        for (Long configId : configIds) {
+            SysConfig config = baseMapper.selectSysConfigByConfigId(configId);
+            if (config != null) {
+                evictConfigCache(config.getConfigKey());
+            }
+        }
         return baseMapper.deleteSysConfigByConfigIds(configIds) > 0;
+    }
+
+    @Override
+    public String selectConfigValueByKey(String configKey) {
+        if (!StringUtils.hasText(configKey)) {
+            return null;
+        }
+        String cacheKey = buildConfigCacheKey(configKey);
+        String cached = redisCache.getCacheObject(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+        SysConfig config = baseMapper.selectByConfigKey(configKey);
+        if (config == null || config.getConfigValue() == null) {
+            return null;
+        }
+        redisCache.setCacheObject(cacheKey, config.getConfigValue(), CONFIG_CACHE_HOURS, TimeUnit.HOURS);
+        return config.getConfigValue();
+    }
+
+    @Override
+    public boolean isRegisterUserEnabled() {
+        return parseBooleanConfig(selectConfigValueByKey(SysConfigKeys.REGISTER_USER));
     }
 
     /**
@@ -128,5 +174,19 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
         SysConfigVO vo = new SysConfigVO();
         BeanUtils.copyProperties(sysConfig, vo);
         return vo;
+    }
+
+    private void evictConfigCache(String configKey) {
+        if (StringUtils.hasText(configKey)) {
+            redisCache.deleteObject(buildConfigCacheKey(configKey));
+        }
+    }
+
+    private String buildConfigCacheKey(String configKey) {
+        return CacheNames.SYS_CONFIG + ":" + configKey;
+    }
+
+    private boolean parseBooleanConfig(String value) {
+        return "true".equalsIgnoreCase(StringUtils.trimWhitespace(value));
     }
 }

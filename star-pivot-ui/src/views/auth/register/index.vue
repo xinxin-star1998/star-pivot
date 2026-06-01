@@ -115,6 +115,7 @@
   import { useI18n } from 'vue-i18n'
   import type { FormInstance, FormRules } from 'element-plus'
   import { fetchRegister } from '@/api/auth'
+  import { isRegisterEnabled } from '@/utils/auth/register-config'
   import { useSettingStore } from '@/store/modules/setting'
 
   defineOptions({ name: 'Register' })
@@ -259,6 +260,13 @@
       router.push({ name: 'Login' })
     }, REDIRECT_DELAY)
   }
+
+  onMounted(async () => {
+    const enabled = await isRegisterEnabled()
+    if (!enabled) {
+      router.replace({ name: 'Login' })
+    }
+  })
 </script>
 
 <style scoped>
