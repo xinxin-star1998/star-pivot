@@ -71,6 +71,12 @@
         where config_id = #{configId}
     </select>
 
+    <select id="selectByConfigKey" resultMap="SysConfigResult">
+        <include refid="selectSysConfigVo"/>
+        where config_key = #{configKey}
+        limit 1
+    </select>
+
     <insert id="insertSysConfig" parameterType="com.star.pivot.system.domain.entity.SysConfig" useGeneratedKeys="true"
             keyProperty="configId">
         insert into sys_config

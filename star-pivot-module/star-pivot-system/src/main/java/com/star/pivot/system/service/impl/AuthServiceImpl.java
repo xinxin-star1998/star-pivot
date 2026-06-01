@@ -17,6 +17,7 @@ import com.star.pivot.system.mapper.UserRoleMapper;
 import com.star.pivot.system.service.interfaces.AccountLockService;
 import com.star.pivot.system.service.interfaces.AuthService;
 import com.star.pivot.system.service.interfaces.CaptchaService;
+import com.star.pivot.system.service.interfaces.ISysConfigService;
 import com.star.pivot.system.service.interfaces.LoginRateLimitService;
 import com.star.pivot.system.service.interfaces.SysLogininforService;
 import com.star.pivot.system.service.interfaces.SysUserService;
@@ -25,6 +26,7 @@ import com.star.pivot.system.utils.LoginUser;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -45,15 +47,10 @@ import java.util.Collections;
 public class AuthServiceImpl implements AuthService {
 
     /**
-     * 注册用户默认角色 ID
-     *
-     * 注意：此 ID 必须与数据库表 sys_role 中普通用户的 role_id 保持一致
-     * 默认为 5，对应 "common" 或 "user" 角色
-     *
-     * 建议后续改造：通过配置文件（application.yml）读取，如：
-     * @Value("${auth.register.default-role-id:5}")
+     * 注册用户默认角色 ID，须与 sys_role 中普通用户 role_id 一致
      */
-    private static final Long DEFAULT_REGISTER_ROLE_ID = 5L;
+    @Value("${auth.register.default-role-id:5}")
+    private Long defaultRegisterRoleId;
 
     private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
@@ -63,6 +60,7 @@ public class AuthServiceImpl implements AuthService {
     private final LoginRateLimitService rateLimitService;
     private final AccountLockService accountLockService;
     private final UserRoleMapper userRoleMapper;
+    private final ISysConfigService sysConfigService;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -143,11 +141,21 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public RegisterResponse register(RegisterRequest request) {
+        if (!sysConfigService.isRegisterUserEnabled()) {
+            throw new BizException(ErrorCode.FORBIDDEN, "当前未开放用户注册");
+        }
+
+        HttpServletRequest httpRequest = getRequest();
+        String ipaddr = httpRequest != null ? LogUtils.getClientIp(httpRequest) : "unknown";
+
         String username = request.getUsername();
         String password = request.getPassword();
 
         AssertUtils.notEmpty(username, ErrorCode.PARAM_NOT_NULL, "用户名不能为空");
         AssertUtils.notEmpty(password, ErrorCode.PARAM_NOT_NULL, "密码不能为空");
+
+        rateLimitService.checkRegisterIpRateLimit(ipaddr);
+        rateLimitService.checkRegisterIpUsernameRateLimit(ipaddr, username.trim());
 
         SysUser exists = userService.getUserByUsername(username.trim());
         AssertUtils.isNull(exists, ErrorCode.USER_USERNAME_EXISTS);
@@ -170,7 +178,7 @@ public class AuthServiceImpl implements AuthService {
         // 为新用户分配默认角色（普通角色），使登录后可获取菜单权限
         UserRole userRole = new UserRole();
         userRole.setUserId(user.getUserId());
-        userRole.setRoleId(DEFAULT_REGISTER_ROLE_ID);
+        userRole.setRoleId(defaultRegisterRoleId);
         userRoleMapper.insertBatchUserRoles(Collections.singletonList(userRole));
 
         RegisterResponse response = new RegisterResponse();
