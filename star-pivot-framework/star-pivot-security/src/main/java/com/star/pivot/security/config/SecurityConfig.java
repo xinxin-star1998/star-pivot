@@ -110,7 +110,9 @@ public class SecurityConfig {
                 "/api/auth/login",
                 "/api/auth/refresh",
                 "/api/auth/captcha",
-                "/api/auth/captcha/verify"
+                "/api/auth/captcha/verify",
+                "/auth/register/enabled",
+                "/api/auth/register/enabled"
         ));
 
         if (securityProperties.getPermitAllPaths() != null) {
