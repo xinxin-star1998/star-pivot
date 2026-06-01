@@ -186,4 +186,24 @@ flowchart TD
 
 ## 待你确认
 
-请回复要执行的 PR 范围（例如「全部」或「先做 PR1+PR2」），确认后再建分支与提交。
+~~请回复要执行的 PR 范围（例如「全部」或「先做 PR1+PR2」），确认后再建分支与提交。~~
+
+**已于 2026-06-01 执行完成**（堆叠分支，已推送 `github` 与 `origin`）。本地环境未安装 `gh`，请用下方链接手动创建 PR（标题用中文）。
+
+| PR | 分支 | Base | 中文标题 | GitHub Compare |
+|----|------|------|----------|----------------|
+| 1 | `split/pr1-ci` | `master` | 新增 CI 流水线与框架核心调整 | [创建 PR](https://github.com/xinxin-star1998/star-pivot/compare/master...split/pr1-ci?expand=1) |
+| 2 | `split/pr2-oss` | `split/pr1-ci` | 统一文件存储为 OSS 并移除 MinIO | [创建 PR](https://github.com/xinxin-star1998/star-pivot/compare/split/pr1-ci...split/pr2-oss?expand=1) |
+| 3 | `split/pr3-security` | `split/pr2-oss` | 生产环境安全校验与异常处理加固 | [创建 PR](https://github.com/xinxin-star1998/star-pivot/compare/split/pr2-oss...split/pr3-security?expand=1) |
+| 4 | `split/pr4-auth` | `split/pr3-security` | 可配置用户注册与限流 | [创建 PR](https://github.com/xinxin-star1998/star-pivot/compare/split/pr3-security...split/pr4-auth?expand=1) |
+| 5 | `split/pr5-generator` | `split/pr4-auth` | 代码生成器模板迁移至 ReqBo 与 Mapper 宏 | [创建 PR](https://github.com/xinxin-star1998/star-pivot/compare/split/pr4-auth...split/pr5-generator?expand=1) |
+| 6 | `split/pr6-mall` | `split/pr5-generator` | 商城商品图片上传 API 与 objectName 存库 | [创建 PR](https://github.com/xinxin-star1998/star-pivot/compare/split/pr5-generator...split/pr6-mall?expand=1) |
+| 7 | `split/pr7-ui` | `split/pr6-mall` | 前端商品图预签名 URL 与商城页面更新 | [创建 PR](https://github.com/xinxin-star1998/star-pivot/compare/split/pr6-mall...split/pr7-ui?expand=1) |
+| 8 | `split/pr8-docs` | `split/pr7-ui` | 更新架构与依赖文档 | [创建 PR](https://github.com/xinxin-star1998/star-pivot/compare/split/pr7-ui...split/pr8-docs?expand=1) |
+
+**说明**
+
+- 备份 ref：`refs/backup/pre-split-*`（`git stash create` 快照）；工作区 stash：`stash@{0}: pre-split-all`
+- 完整代码栈在 `split/pr8-docs`；`master` 保持干净
+- PR2 误含 `doc/PR拆分计划.md` 与 `doc/生成器模板迁移指南.md`（原计划 PR5/PR8），不影响功能，可合并后忽略 PR8 中重复 doc 变更
+- Gitee PR：将 base 改为对应分支后在 Gitee 新建合并请求即可
