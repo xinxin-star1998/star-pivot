@@ -134,7 +134,7 @@ defineOptions({ name: 'Post' })
           prop: 'status',
           label: '状态',
           width: 100,
-          formatter: (row) => {
+          formatter: (row: Api.Post.PostListItem) => {
             return h(ElSwitch, {
               modelValue: Number(row.status) === 0 || String(row.status) === '0',
               activeValue: true,

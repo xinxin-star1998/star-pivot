@@ -220,7 +220,7 @@ export class DynamicRouteAppender {
   static appendAssignUserRoute(menuList: AppRouteRecord[], routeIndex: RouteIndex): void {
     if (
       routeIndex.names.has('AssignUser') ||
-      Array.from(routeIndex.paths).some((path) => path.includes('/system/role/assign-user'))
+      Array.from(routeIndex.paths).some((path) => String(path).includes('/system/role/assign-user'))
     ) {
       safeWarn('[DynamicRouteAppender] 分配用户路由已存在，跳过追加')
       return
@@ -258,7 +258,7 @@ export class DynamicRouteAppender {
   static appendGenEditRoute(menuList: AppRouteRecord[], routeIndex: RouteIndex): void {
     if (
       routeIndex.names.has('GenEdit') ||
-      Array.from(routeIndex.paths).some((path) => path.includes('/tool/gen/edit'))
+      Array.from(routeIndex.paths).some((path) => String(path).includes('/tool/gen/edit'))
     ) {
       safeWarn('[DynamicRouteAppender] 代码生成编辑页路由已存在，跳过追加')
       return
