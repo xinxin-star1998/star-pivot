@@ -20,21 +20,21 @@
     >
       <template v-for="col in columns" :key="col.prop || col.type">
         <!-- 渲染全局序号列 -->
-        <ElTableColumn v-if="col.type === 'globalIndex'" v-bind="{ ...col }">
+        <ElTableColumn v-if="col.type === 'globalIndex'" v-bind="{ ...col } as any">
           <template #default="{ $index }">
             <span>{{ getGlobalIndex($index) }}</span>
           </template>
         </ElTableColumn>
 
         <!-- 渲染展开行 -->
-        <ElTableColumn v-else-if="col.type === 'expand'" v-bind="cleanColumnProps(col)">
+        <ElTableColumn v-else-if="col.type === 'expand'" v-bind="cleanColumnProps(col) as any">
           <template #default="{ row }">
             <component :is="col.formatter ? col.formatter(row) : null" />
           </template>
         </ElTableColumn>
 
         <!-- 渲染普通列 -->
-        <ElTableColumn v-else v-bind="cleanColumnProps(col)">
+        <ElTableColumn v-else v-bind="cleanColumnProps(col) as any">
           <template v-if="col.useHeaderSlot && col.prop" #header="headerScope">
             <slot
               :name="col.headerSlotName || `${col.prop}-header`"

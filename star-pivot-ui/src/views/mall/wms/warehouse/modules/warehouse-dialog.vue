@@ -103,8 +103,8 @@ interface Props {
     formData.areaPath = [...areaPath.value]
   }
 
-  const handleAreaChange = (path: string[] | undefined) => {
-    const codes = path ?? []
+  const handleAreaChange = (value: import('element-plus').CascaderValue | null | undefined) => {
+    const codes = (Array.isArray(value) ? value : []).map(String)
     areaPath.value = codes
     formData.areacode = codes.length ? codes[codes.length - 1] : ''
     syncAreaPathToForm()

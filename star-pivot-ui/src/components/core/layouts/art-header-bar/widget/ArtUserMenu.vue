@@ -31,7 +31,7 @@
           <div class="w-[calc(100%-60px)] h-full">
             <span class="block text-sm font-medium text-g-800 truncate">
               {{
-                userInfo.user?.userName ||
+                userInfo.user?.username ||
                 userInfo.user?.nickName ||
                 (userInfo as any).username ||
                 (userInfo as any).nickname ||

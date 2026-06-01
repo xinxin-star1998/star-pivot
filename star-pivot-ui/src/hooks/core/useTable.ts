@@ -17,24 +17,29 @@
  * @author Art Design Pro Team
  */
 
-import { useWindowSize } from '@vueuse/core'
-import { useTableColumns } from '@/hooks'
-import type { ColumnOption } from '@/types/component'
-import { type ApiResponse, CacheInvalidationStrategy, TableCache } from '@utils/table/tableCache'
+import {useWindowSize} from '@vueuse/core'
+import {useTableColumns} from '@/hooks'
+import type {ColumnOption} from '@/types/component'
+import {type ApiResponse, CacheInvalidationStrategy, TableCache} from '@utils/table/tableCache'
 import {
-  createErrorHandler,
-  createSmartDebounce,
-  defaultResponseAdapter,
-  extractTableData,
-  type TableError,
-  updatePaginationFromResponse
+    createErrorHandler,
+    createSmartDebounce,
+    defaultResponseAdapter,
+    extractTableData,
+    type TableError,
+    updatePaginationFromResponse
 } from '@utils/table/tableUtils'
-import { tableConfig } from '@utils/table/tableConfig'
+import {tableConfig} from '@utils/table/tableConfig'
 
 // 类型推导工具类型
 type InferApiParams<T> = T extends (params: infer P) => Promise<unknown> ? P : never
 type InferApiResponse<T> = T extends (params: unknown) => Promise<infer R> ? R : never
-type InferRecordType<T> = T extends Api.Common.PaginatedResponse<infer U> ? U : never
+type InferRecordType<T> =
+  T extends Api.Common.PaginatedResponse<infer U>
+    ? U
+    : T extends { records: (infer U)[] }
+      ? U
+      : never
 
 // 优化的配置接口 - 支持自动类型推导
 export interface UseTableConfig<

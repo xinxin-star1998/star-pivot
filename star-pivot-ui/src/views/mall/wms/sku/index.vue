@@ -222,6 +222,10 @@ defineOptions({ name: 'WareSku' })
         cancelButtonText: '取消',
         type: 'error'
       })
+      if (row.id == null) {
+        ElMessage.warning('缺少库存 ID，无法删除')
+        return
+      }
       await fetchDeleteSku([row.id])
       refreshData()
       ElMessage.success('删除成功')
@@ -248,7 +252,9 @@ defineOptions({ name: 'WareSku' })
       type: 'error'
     })
       .then(() => {
-        const ids = selectedRows.value.map((row) => row.id)
+        const ids = selectedRows.value
+          .map((row) => row.id)
+          .filter((id): id is number => id != null)
         fetchDeleteSku(ids)
         selectedRows.value = []
         refreshData()

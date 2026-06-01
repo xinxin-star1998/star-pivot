@@ -89,11 +89,11 @@
                   <div
                     class="key-list-row"
                     :class="{ 'is-active': selectedKey?.key === item.key }"
-                    @click="handleKeySelect(item)"
+                    @click="handleKeySelect(item as unknown as CacheKeyInfo)"
                   >
                     <span class="col-index">{{ index + 1 }}</span>
-                    <ElTooltip :content="item.key" placement="top">
-                      <span class="col-key text-ellipsis">{{ item.key }}</span>
+                    <ElTooltip :content="(item as unknown as CacheKeyInfo).key" placement="top">
+                      <span class="col-key text-ellipsis">{{ (item as unknown as CacheKeyInfo).key }}</span>
                     </ElTooltip>
                     <span class="col-action">
                       <ElButton
@@ -101,8 +101,8 @@
                         :icon="Delete"
                         circle
                         size="small"
-                        @click.stop="handleDeleteKey(item)"
-                        :loading="deletingKey === item.key"
+                        @click.stop="handleDeleteKey(item as unknown as CacheKeyInfo)"
+                        :loading="deletingKey === (item as unknown as CacheKeyInfo).key"
                       />
                     </span>
                   </div>

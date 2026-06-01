@@ -29,7 +29,7 @@
     <ArtTable
       :loading="loading"
       :data="data"
-      :columns="columns"
+      :columns="columns as ColumnOption[]"
       :pagination="pagination"
       @selection-change="handleSelectionChange"
       @pagination:size-change="handleSizeChange"
@@ -55,6 +55,7 @@
   import { ElDialog, ElForm, ElFormItem, ElInput, ElButton, ElMessage } from 'element-plus'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import type { ColumnOption } from '@/types/component'
   import { fetchGetDbList, fetchImportTable } from '@/api/generator/gen-table'
 
   interface ImportTableItem {
@@ -100,7 +101,7 @@
   const loading = ref(false)
 
   // 表格列配置
-  const columns = ref([
+  const columns = ref<ColumnOption<ImportTableItem>[]>([
     {
       type: 'selection',
       width: 55

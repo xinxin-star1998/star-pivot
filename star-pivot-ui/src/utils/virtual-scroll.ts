@@ -249,11 +249,8 @@ export function useVirtualScroll(options: {
   total: number | Ref<number> | (() => number)
 }) {
   // 将各种输入转换为 getter 函数
-  const getScrollTop = vueIsRef(options.scrollTop)
-    ? () => (options.scrollTop as Ref<number>).value
-    : typeof options.scrollTop === 'function'
-      ? options.scrollTop
-      : () => options.scrollTop as number
+  const getScrollTop = (): number =>
+    typeof options.scrollTop === 'function' ? options.scrollTop() : options.scrollTop.value
 
   const getContainerHeight = vueIsRef(options.containerHeight)
     ? () => (options.containerHeight as Ref<number>).value

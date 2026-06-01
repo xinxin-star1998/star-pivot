@@ -81,7 +81,7 @@
           axisPointer: {
             type: 'cross'
           },
-          formatter: (params: Array<{ name: string; data: number[] }>) => {
+          formatter: ((params: Array<{ name: string; data: number[] }>) => {
             const param = params[0]
             const data = param.data
             return `
@@ -93,7 +93,7 @@
                 <div><strong>最高：</strong>${data[3]}</div>
               </div>
             `
-          }
+          }) as any
         }),
         xAxis: {
           type: 'category',

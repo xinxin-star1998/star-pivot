@@ -68,10 +68,10 @@
         },
         tooltip: props.showTooltip
           ? getTooltipStyle('item', {
-              formatter: (params: { value: [number, number] }) => {
+              formatter: ((params: { value: [number, number] }) => {
                 const [x, y] = params.value
                 return `X: ${x}<br/>Y: ${y}`
-              }
+              }) as any
             })
           : undefined,
         xAxis: {
