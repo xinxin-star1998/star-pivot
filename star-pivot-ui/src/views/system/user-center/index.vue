@@ -281,7 +281,6 @@
                 </ElFormItem>
                 <ElFormItem>
                   <ElButton type="primary" @click="submitPassword">保存</ElButton>
-                  <ElButton type="danger" plain @click="resetPasswordForm">关闭</ElButton>
                 </ElFormItem>
               </ElForm>
             </ElTabPane>
@@ -293,41 +292,17 @@
 </template>
 
 <script setup lang="ts">
-  import { useUserStore } from '@/store/modules/user'
-  import {
-    fetchGetUserById,
-    fetchGetAvatarPresignedUrl,
-    fetchUpdateUser,
-    fetchUpdateUserPassword
-  } from '@/api/user/user'
-  import { fetchGetUserInfo, fetchLogout } from '@/api/auth'
-  import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-  import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
-  import defaultAvatarImg from '@imgs/user/avatar.webp'
-  import bgImageImg from '@imgs/user/bg.webp'
-  import { useSettingStore } from '@/store/modules/setting'
+import {useUserStore} from '@/store/modules/user'
+import {fetchGetAvatarPresignedUrl, fetchGetUserById, fetchUpdateUser, fetchUpdateUserPassword} from '@/api/user/user'
+import {fetchGetUserInfo, fetchLogout} from '@/api/auth'
+import {ElMessage, type FormInstance, type FormRules} from 'element-plus'
+import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
+import defaultAvatarImg from '@imgs/user/avatar.webp'
+import bgImageImg from '@imgs/user/bg.webp'
+import {useSettingStore} from '@/store/modules/setting'
+import {extractOssObjectPath, needsOssPresignedDisplay} from '@/utils/storage/oss-object-path'
 
-  defineOptions({ name: 'UserCenter' })
-
-  /** 从 OSS/MinIO 完整 URL 中提取对象路径，用于请求 presigned URL */
-  function extractAvatarPathFromUrl(url: string): string | null {
-    if (!url || !url.startsWith('http')) return null
-    try {
-      const u = new URL(url)
-      let path = u.pathname.replace(/^\//, '')
-      if (u.hostname.includes('.oss-') || u.hostname.includes('aliyuncs.com')) return path || null
-      if (u.hostname.includes('localhost') || u.hostname.includes('127.0.0.1')) {
-        const parts = path.split('/')
-        if (parts.length > 1) return parts.slice(1).join('/')
-        return path || null
-      }
-      const parts = path.split('/')
-      if (parts.length > 1) return parts.slice(1).join('/')
-      return path || null
-    } catch {
-      return null
-    }
-  }
+defineOptions({ name: 'UserCenter' })
 
   // 主题状态
   const settingStore = useSettingStore()
@@ -439,10 +414,8 @@
       topAvatarDisplayUrl.value = defaultAvatar
       return
     }
-    const path = extractAvatarPathFromUrl(avatar)
-    const isOssUrl = avatar.includes('aliyuncs.com') || avatar.includes('.oss-')
-    const isMinioUrl = avatar.includes('localhost') || avatar.includes('127.0.0.1')
-    if (path && (isOssUrl || isMinioUrl)) {
+    const path = extractOssObjectPath(avatar)
+    if (path && needsOssPresignedDisplay(avatar)) {
       try {
         const res = (await fetchGetAvatarPresignedUrl(path)) as any
         const presigned = res?.presignedUrl ?? res?.data?.presignedUrl
@@ -545,10 +518,6 @@
     getUserDetail()
   })
 
-  const resetPasswordForm = () => {
-    passwordFormRef.value?.resetFields()
-  }
-
   const submitPassword = async () => {
     if (!passwordFormRef.value) return
     await passwordFormRef.value.validate(async (valid) => {
@@ -572,6 +541,13 @@
         }
       }
     })
+  }
+
+  const resetPasswordForm = () => {
+    passwordForm.oldPassword = ''
+    passwordForm.newPassword = ''
+    passwordForm.confirmPassword = ''
+    passwordFormRef.value?.resetFields()
   }
 
   const resetBasicProfile = () => {

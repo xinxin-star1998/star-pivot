@@ -2,11 +2,20 @@ package com.star.pivot.framework.storage;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 文件存储服务统一接口
- * 支持多种存储方式（MinIO、OSS等）的统一抽象
+ * 支持多种存储方式（OSS 等）的统一抽象
+ * <p>
+ * 架构分层：
+ * - 业务接口层：AvatarController、GoodsImageController 等
+ * - 公共服务层：FileStorageService（统一文件处理逻辑）
+ * - 存储驱动层：OssFileStorageService（具体存储实现）
+ * </p>
  *
  * @author stardust
  */
@@ -89,10 +98,137 @@ public interface FileStorageService {
         String objectName = uploadAvatar(file, userId);
         String avatarUrl = getPermanentUrl(objectName);
         String presignedUrl = getPresignedUrl(objectName);
-        
+
         return Map.of(
             "avatarUrl", avatarUrl,
             "presignedUrl", presignedUrl
         );
     }
+
+    /**
+     * 通用文件上传方法
+     * <p>
+     * 统一封装文件接收、格式校验、转存、返回结果的全流程。
+     * 对外暴露两个独立接口：
+     * - /api/user/avatar/upload 头像上传
+     * - /api/goods/image/upload 商品图片上传
+     * 各接口自行处理业务权限校验和后置逻辑。
+     * </p>
+     *
+     * @param file          上传文件
+     * @param category      业务分类（如：avatar, goods, editor, attachment）
+     * @param businessId    业务ID（可选，用于分目录存储）
+     * @param allowedTypes  允许的文件类型（可选，如：image/png, image/jpeg）
+     * @param maxSize       最大文件大小（字节，可选）
+     * @return 上传结果封装（包含对象路径、永久URL、预签名URL）
+     * @throws Exception 上传失败时抛出异常
+     */
+    default UploadResult uploadFile(MultipartFile file, String category, String businessId,
+                                   String[] allowedTypes, Long maxSize) throws Exception {
+        validateFile(file, allowedTypes, maxSize);
+
+        String objectName = generateObjectName(category, businessId, file.getOriginalFilename(), allowedTypes);
+
+        uploadFileInternal(file, objectName);
+
+        // 返回结果
+        return UploadResult.builder()
+                .objectName(objectName)
+                .permanentUrl(getPermanentUrl(objectName))
+                .presignedUrl(getPresignedUrl(objectName))
+                .build();
+    }
+
+    /**
+     * 内部方法：生成对象路径
+     */
+    default String generateObjectName(String category, String businessId, String originalFilename,
+                                      String[] allowedTypes) {
+        String suffix = getFileSuffix(originalFilename, allowedTypes);
+        String day = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+
+        if (org.springframework.util.StringUtils.hasText(businessId)) {
+            return String.format("%s/%s/%s/%s%s",
+                    category, day, businessId, UUID.randomUUID(), suffix);
+        } else {
+            return String.format("%s/%s/%s%s",
+                    category, day, UUID.randomUUID(), suffix);
+        }
+    }
+
+    /**
+     * 内部方法：文件校验
+     */
+    default void validateFile(MultipartFile file, String[] allowedTypes, Long maxSize) throws Exception {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("上传文件不能为空");
+        }
+
+        // 文件大小校验
+        if (maxSize != null && file.getSize() > maxSize) {
+            throw new IllegalArgumentException(String.format("文件大小不能超过 %dMB", maxSize / 1024 / 1024));
+        }
+
+        // 文件类型校验
+        if (allowedTypes != null && allowedTypes.length > 0) {
+            String contentType = file.getContentType();
+            boolean allowed = false;
+            for (String type : allowedTypes) {
+                if (type.equals(contentType)) {
+                    allowed = true;
+                    break;
+                }
+            }
+            if (!allowed) {
+                throw new IllegalArgumentException("不支持的文件类型，仅支持：" + String.join(", ", allowedTypes));
+            }
+        }
+    }
+
+    /** 图片类上传允许的文件后缀 */
+    String[] IMAGE_SUFFIXES = {".jpeg", ".jpg", ".png", ".gif", ".webp"};
+
+    /**
+     * 内部方法：获取文件后缀；图片上传场景仅保留白名单后缀，防止恶意扩展名
+     */
+    default String getFileSuffix(String filename, String[] allowedTypes) {
+        if (!org.springframework.util.StringUtils.hasText(filename) || !filename.contains(".")) {
+            return ".png";
+        }
+        String suffix = filename.substring(filename.lastIndexOf(".")).toLowerCase();
+        if (isImageUpload(allowedTypes) && !isAllowedImageSuffix(suffix)) {
+            return ".png";
+        }
+        return suffix;
+    }
+
+    default boolean isImageUpload(String[] allowedTypes) {
+        if (allowedTypes == null) {
+            return false;
+        }
+        for (String type : allowedTypes) {
+            if (type != null && type.startsWith("image/")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    default boolean isAllowedImageSuffix(String suffix) {
+        for (String allowed : IMAGE_SUFFIXES) {
+            if (allowed.equals(suffix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 子类必须实现的内部上传方法
+     *
+     * @param file       上传文件
+     * @param objectName 对象路径
+     * @throws Exception 上传失败时抛出异常
+     */
+    void uploadFileInternal(MultipartFile file, String objectName) throws Exception;
 }

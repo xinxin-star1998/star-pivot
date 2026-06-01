@@ -41,7 +41,6 @@
         <commons-io.version>2.16.1</commons-io.version>
         <easyexcel.version>3.3.2</easyexcel.version>
         <springdoc.version>2.3.0</springdoc.version>
-        <minio.version>8.4.3</minio.version>
         <quartz.version>2.3.2</quartz.version>
         <!-- 架构约束测试（仅 star-pivot-controller 等模块 test 引用） -->
         <archunit.version>1.3.0</archunit.version>
@@ -217,12 +216,6 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
-            </dependency>
-            <!-- MinIO -->
-            <dependency>
-                <groupId>io.minio</groupId>
-                <artifactId>minio</artifactId>
-                <version>${minio.version}</version>
             </dependency>
             <!-- Quartz -->
             <dependency>

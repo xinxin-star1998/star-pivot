@@ -32,7 +32,12 @@
         <ElInput v-model="formData.icon" placeholder="图标 URL" maxlength="512" show-word-limit />
       </ElFormItem>
       <ElFormItem label="计量单位" prop="productUnit">
-        <ElInput v-model="formData.productUnit" placeholder="如：件、箱" maxlength="32" show-word-limit />
+        <ElInput
+          v-model="formData.productUnit"
+          placeholder="如：件、箱"
+          maxlength="32"
+          show-word-limit
+        />
       </ElFormItem>
     </ElForm>
     <template #footer>
@@ -43,17 +48,17 @@
 </template>
 
 <script setup lang="ts">
-  import type { FormInstance, FormRules } from 'element-plus'
-  import {
-    fetchMallCategoryAdd,
-    fetchMallCategoryById,
-    fetchMallCategoryUpdate,
-    type MallCategorySavePayload,
-    type MallCategoryTreeNode
-  } from '@/api/mall/category'
-  import type { DialogType } from '@/types'
+import type {FormInstance, FormRules} from 'element-plus'
+import {
+  fetchMallCategoryAdd,
+  fetchMallCategoryById,
+  fetchMallCategoryUpdate,
+  type MallCategorySavePayload,
+  type MallCategoryTreeNode
+} from '@/api/mall/category'
+import type {DialogType} from '@/types'
 
-  interface ParentForAdd {
+interface ParentForAdd {
     catId: number
     name?: string
   }

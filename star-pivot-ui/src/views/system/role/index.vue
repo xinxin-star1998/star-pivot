@@ -57,28 +57,27 @@
 </template>
 
 <script setup lang="ts">
-  import { useTable } from '@/hooks/core/useTable'
-  import { useAuth } from '@/hooks/core/useAuth'
-  import { fetchDeleteRole, fetchGetRoleList } from '@/api/role/role'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import ArtButtonMore, {
-    type ButtonMoreItem
-  } from '@/components/core/forms/art-button-more/index.vue'
-  import RoleSearch from './modules/role-search.vue'
-  import RoleEditDialog from './modules/role-edit-dialog.vue'
-  import AssignDataScopeDialog from './modules/assign-dataScope-dialog.vue'
-  import { ElTag, ElMessageBox } from 'element-plus'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import { useRouter } from 'vue-router'
+import {useTable} from '@/hooks/core/useTable'
+import {useAuth} from '@/hooks/core/useAuth'
+import {fetchDeleteRole, fetchGetRoleList} from '@/api/role/role'
+import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+import ArtButtonMore, {type ButtonMoreItem} from '@/components/core/forms/art-button-more/index.vue'
+import RoleSearch from './modules/role-search.vue'
+import RoleEditDialog from './modules/role-edit-dialog.vue'
+import AssignDataScopeDialog from './modules/assign-dataScope-dialog.vue'
+import {ElMessageBox, ElTag} from 'element-plus'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import {useRouter} from 'vue-router'
+import type {ColumnOption} from '@/types'
 
-  const { hasAuth } = useAuth()
+const { hasAuth } = useAuth()
 
   defineOptions({ name: 'Role' })
 
-  const router = useRouter()
-
   type RoleListItem = Api.SystemManage.RoleListItem
+
+  const router = useRouter()
 
   // 搜索表单
   const searchForm = ref({
@@ -119,7 +118,7 @@
       },
       // 排除 apiParams 中的属性
       excludeParams: ['date range'],
-      columnsFactory: () => [
+      columnsFactory: (): ColumnOption<RoleListItem>[] => [
         {
           type: 'index',
           label: '序号',

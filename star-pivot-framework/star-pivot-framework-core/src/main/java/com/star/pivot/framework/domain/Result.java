@@ -74,4 +74,44 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> forbidden(String message) {
         return new Result<>(403, message);
     }
+
+    public static <T> Result<T> badRequest() {
+        return new Result<>(400, "请求参数错误");
+    }
+
+    public static <T> Result<T> badRequest(String message) {
+        return new Result<>(400, message);
+    }
+
+    public static <T> Result<T> notFound() {
+        return new Result<>(404, "请求的资源不存在");
+    }
+
+    public static <T> Result<T> notFound(String message) {
+        return new Result<>(404, message);
+    }
+
+    public static <T> Result<T> serviceUnavailable() {
+        return new Result<>(503, "服务暂时不可用");
+    }
+
+    public static <T> Result<T> serviceUnavailable(String message) {
+        return new Result<>(503, message);
+    }
+
+    public static <T> Result<T> conflict() {
+        return new Result<>(409, "资源冲突");
+    }
+
+    public static <T> Result<T> conflict(String message) {
+        return new Result<>(409, message);
+    }
+
+    public static <T> Result<T> created(T data) {
+        return new Result<>(201, "创建成功", data);
+    }
+
+    public static <T> Result<T> noContent() {
+        return new Result<>(204, "操作成功");
+    }
 }

@@ -3,24 +3,21 @@ package com.star.pivot.controller.system;
 import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.annotation.NoResponseWrapper;
 import com.star.pivot.framework.domain.AppConstants;
-import com.star.pivot.framework.excel.ExcelImportOptions;
-import com.star.pivot.framework.excel.ExcelImportResult;
-import com.star.pivot.framework.excel.ExcelToolkit;
-import com.star.pivot.system.domain.excel.SysUserExcel;
-import com.star.pivot.system.excel.SysUserExcelHandler;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
-import com.star.pivot.framework.exception.BizException;
-import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.excel.ExcelImportOptions;
+import com.star.pivot.framework.excel.ExcelImportResult;
+import com.star.pivot.framework.excel.ExcelToolkit;
 import com.star.pivot.security.context.SecurityContextUtils;
 import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.ResetPasswordDTO;
 import com.star.pivot.system.domain.dto.UpdatePasswordDTO;
 import com.star.pivot.system.domain.dto.UserDTO;
+import com.star.pivot.system.domain.excel.SysUserExcel;
+import com.star.pivot.system.excel.SysUserExcelHandler;
 import com.star.pivot.system.service.interfaces.AccountLockService;
-import com.star.pivot.system.service.interfaces.PermissionService;
 import com.star.pivot.system.service.interfaces.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,8 +31,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 /**
  * 用户信息表(SysUser)表控制层
@@ -52,34 +47,15 @@ public class SysUserController {
      */
     private final SysUserService sysUserService;
     private final AccountLockService accountLockService;
-    private final PermissionService permissionService;
     private final SysUserExcelHandler sysUserExcelHandler;
 
     public SysUserController(
             SysUserService sysUserService,
             AccountLockService accountLockService,
-            PermissionService permissionService,
             SysUserExcelHandler sysUserExcelHandler) {
         this.sysUserService = sysUserService;
         this.accountLockService = accountLockService;
-        this.permissionService = permissionService;
         this.sysUserExcelHandler = sysUserExcelHandler;
-    }
-
-    /**
-     * 判断当前用户是否是超级管理员
-     */
-    private boolean isSuperAdmin() {
-        Long currentUserId = SecurityContextUtils.getUserId();
-        if (currentUserId == null) {
-            return false;
-        }
-        // 超级管理员用户ID
-        if (AppConstants.ADMIN_USER_ID.equals(currentUserId)) {
-            return true;
-        }
-        // 拥有 admin 角色的用户
-        return permissionService.hasRole(AppConstants.ADMIN_ROLE_KEY);
     }
 
     /**
@@ -154,15 +130,8 @@ public class SysUserController {
     @PostMapping("/update")
     public Result<?> updateUser(@RequestBody UserDTO userDTO) {
         // 权限校验：只能修改自己的用户信息，超级管理员可以修改所有用户信息
-        Long currentUserId = SecurityContextUtils.getUserId();
-        if (currentUserId == null) {
-            return Result.error("用户未登录");
-        }
-
-        // 超级管理员可以修改所有用户信息
-        boolean isSuperAdmin = isSuperAdmin();
-        if (!isSuperAdmin && !currentUserId.equals(userDTO.getUserId())) {
-            return Result.error("只能修改自己的用户信息");
+        if (!sysUserService.canUpdateUser(userDTO.getUserId())) {
+            return Result.error("无权修改该用户信息");
         }
 
         boolean success = sysUserService.updateUser(userDTO);
@@ -181,17 +150,13 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        List<Long> userIds = validateIds(deleteRequest.getIds());
-        
-        // 不能删除自己
-        Long currentUserId = SecurityContextUtils.getUserId();
-        for (Long userId : userIds) {
-            if (userId.equals(currentUserId)) {
-                return Result.error("不能删除当前登录用户");
-            }
+        // 权限校验：不能删除当前登录用户
+        String errorMsg = sysUserService.canDeleteUsers(deleteRequest.getIds());
+        if (errorMsg != null) {
+            return Result.error(errorMsg);
         }
 
-        boolean success = sysUserService.deleteUserByIds(userIds);
+        boolean success = sysUserService.deleteUserByIds(deleteRequest.getIds());
         return success ? Result.success("删除用户成功") : Result.error("删除用户失败");
     }
 
@@ -207,9 +172,10 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:resetPwd')")
     @PostMapping("/resetPwd")
     public Result<?> resetPwd(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
-        Long currentUserId = SecurityContextUtils.getUserId();
-        if (currentUserId != null && currentUserId.equals(resetPasswordDTO.getUserId())) {
-            return Result.error("不能重置当前登录用户密码");
+        // 权限校验：不能重置当前登录用户密码
+        String errorMsg = sysUserService.canResetPassword(resetPasswordDTO.getUserId());
+        if (errorMsg != null) {
+            return Result.error(errorMsg);
         }
         boolean success = sysUserService.resetUserPassword(
                 resetPasswordDTO.getUserId(),
@@ -305,16 +271,6 @@ public class SysUserController {
     @GetMapping("/importTemplate")
     public ResponseEntity<?> importTemplate() {
         return ExcelToolkit.downloadTemplate(sysUserExcelHandler, new UserReqBo(), SysUserExcel.class);
-    }
-
-    /**
-     * 验证ID列表非空
-     */
-    private List<Long> validateIds(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            throw new BizException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
-        }
-        return ids;
     }
 }
 

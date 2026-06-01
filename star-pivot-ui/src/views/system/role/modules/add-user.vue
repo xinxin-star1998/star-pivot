@@ -71,11 +71,11 @@
 </template>
 
 <script setup lang="ts">
-  import { ElMessage } from 'element-plus'
-  import { Search, Refresh } from '@element-plus/icons-vue'
-  import { fetchGetUserListNotInByRoleId, fetchAssignUser } from '@/api/role/role'
+import {ElMessage} from 'element-plus'
+import {Refresh, Search} from '@element-plus/icons-vue'
+import {fetchAssignUser, fetchGetUserListNotInByRoleId} from '@/api/role/role'
 
-  interface Props {
+interface Props {
     modelValue: boolean
     roleId?: string | number
   }
@@ -130,12 +130,19 @@
    * 获取用户列表
    */
   const fetchUserList = async () => {
+    if (props.roleId == null) {
+      tableData.value = []
+      return
+    }
     try {
       loading.value = true
       // 同步分页参数到 searchForm
       searchForm.value.pageNum = pagination.value.pageNum
       searchForm.value.pageSize = pagination.value.pageSize
-      const response = await fetchGetUserListNotInByRoleId(searchForm.value)
+      const response = await fetchGetUserListNotInByRoleId({
+        ...searchForm.value,
+        roleId: props.roleId
+      })
       // 后端返回的数据结构使用 rows 字段
       tableData.value = (response as any)?.rows || ([] as Api.SystemManage.UserListItem[])
       // 更新分页信息
@@ -205,6 +212,10 @@
   const handleConfirm = async () => {
     if (selectedUsers.value.length === 0) {
       ElMessage.warning('请至少选择一个用户')
+      return
+    }
+    if (props.roleId == null) {
+      ElMessage.warning('角色ID无效')
       return
     }
     const userIds = selectedUsers.value.map((user: Api.SystemManage.UserListItem) => user.userId)

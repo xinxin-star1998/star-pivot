@@ -12,7 +12,6 @@ export interface WareSku {
   stockLocked?: number
 }
 
-
 /**
  * 商品库存搜索参数
  */
@@ -41,7 +40,7 @@ export function fetchGetSkuList(params: SkuSearchParams) {
  */
 export function fetchGetSkuById(id: number) {
   return request.get<WareSku>({
-    url: `/api/mall/ware-sku/\${id}`
+    url: `/api/mall/ware-sku/${id}`
   })
 }
 

@@ -7,7 +7,7 @@
  * @module utils/virtual-scroll
  */
 
-import { computed, isRef as vueIsRef, type Ref } from 'vue'
+import {computed, isRef as vueIsRef, type Ref} from 'vue'
 
 /**
  * 虚拟滚动配置选项
@@ -253,7 +253,7 @@ export function useVirtualScroll(options: {
     ? () => (options.scrollTop as Ref<number>).value
     : typeof options.scrollTop === 'function'
       ? options.scrollTop
-      : () => options.scrollTop as number
+      : () => (typeof options.scrollTop === 'number' ? options.scrollTop : 0)
 
   const getContainerHeight = vueIsRef(options.containerHeight)
     ? () => (options.containerHeight as Ref<number>).value

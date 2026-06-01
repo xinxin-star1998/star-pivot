@@ -133,15 +133,14 @@
 </template>
 
 <script setup lang="ts">
-  import { ElMessage } from 'element-plus'
-  import type { FormInstance, FormRules } from 'element-plus'
-#if($table.tree)
-  import { ElTreeSelect } from 'element-plus'
-#end
-  import { fetchAdd${BusinessName}, fetchUpdate${BusinessName}, fetchGet${BusinessName}ById, type ${BusinessName}#if($table.sub), type ${subClassName}Sub#end } from '@/api/${moduleName}/${businessName}'
-#if($table.tree)
-  import { fetchGet${BusinessName}List } from '@/api/${moduleName}/${businessName}'
-#end
+  import type {FormInstance, FormRules} from 'element-plus'
+  import {ElMessage} from 'element-plus'
+
+  import {fetchAdd${BusinessName}, fetchUpdate${BusinessName}, type ${subClassName}Sub} from '@/api/'
+      #if($table.tree)
+  #end
+  #if($table.tree)
+  #end
 
   interface Props {
     visible: boolean
@@ -225,8 +224,8 @@
    */
   const load${BusinessName}Tree = async (): Promise<void> => {
     try {
-      const res = await fetchGet${BusinessName}List({ pageNum: 1, pageSize: 1000 })
-      ${businessName}TreeData.value = res.records || res.rows || []
+      const res = await fetchGet${BusinessName}List({})
+      ${businessName}TreeData.value = Array.isArray(res) ? res : (res?.rows ?? res?.records ?? [])
     } catch (error) {
       console.error('获取${functionName}树数据失败:', error)
     }

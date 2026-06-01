@@ -9,7 +9,14 @@
     <div class="bind-toolbar">
       <ElButton type="primary" @click="openPicker">新增关联</ElButton>
     </div>
-    <ElTable v-loading="loading" :data="boundList" border stripe max-height="360px" empty-text="暂无关联分类">
+    <ElTable
+      v-loading="loading"
+      :data="boundList"
+      border
+      stripe
+      max-height="360px"
+      empty-text="暂无关联分类"
+    >
       <ElTableColumn type="index" label="序号" width="60" />
       <ElTableColumn prop="catelogName" label="三级分类" min-width="200" show-overflow-tooltip>
         <template #default="{ row }">
@@ -18,7 +25,12 @@
       </ElTableColumn>
       <ElTableColumn label="操作" width="80" fixed="right">
         <template #default="{ row }">
-          <ElButton link type="danger" :loading="removingId === row.catelogId" @click="handleRemove(row)">
+          <ElButton
+            link
+            type="danger"
+            :loading="removingId === row.catelogId"
+            @click="handleRemove(row)"
+          >
             移除
           </ElButton>
         </template>

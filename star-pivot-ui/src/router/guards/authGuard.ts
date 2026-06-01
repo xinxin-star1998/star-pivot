@@ -1,8 +1,30 @@
-import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
-import { useUserStore } from '@/store/modules/user'
-import { RoutesAlias } from '../routesAlias'
-import { staticRoutes } from '../routes/staticRoutes'
-import { useCommon } from '@/hooks/core/useCommon'
+import type {NavigationGuardNext, RouteLocationNormalized} from 'vue-router'
+import {useUserStore} from '@/store/modules/user'
+import {RoutesAlias} from '../routesAlias'
+import {staticRoutes} from '../routes/staticRoutes'
+import {useCommon} from '@/hooks/core/useCommon'
+import {isRegisterEnabled} from '@/utils/auth/register-config'
+
+/**
+ * 注册页访问控制：配置关闭时重定向到登录页
+ * @returns true 表示可以继续，false 表示已处理跳转
+ */
+export async function handleRegisterRouteGuard(
+  to: RouteLocationNormalized,
+  next: NavigationGuardNext
+): Promise<boolean> {
+  if (to.name !== 'Register') {
+    return true
+  }
+
+  const enabled = await isRegisterEnabled()
+  if (!enabled) {
+    next({ name: 'Login', replace: true })
+    return false
+  }
+
+  return true
+}
 
 /**
  * 处理登录状态

@@ -39,7 +39,7 @@ StarPivot 面向企业后台管理场景，提供一套可快速落地的权限�
 - 用户 / 角色 / 菜单 / 权限（RBAC）完整链路
 - JWT 无状态认证 + Redis 黑名单机制
 - 动态菜单、动态路由、按钮级权限控制
-- 部门（树）、岗位、字典、文件上传（MinIO/OSS）
+- 部门（树）、岗位、字典、文件上传（阿里云 OSS）
 - EasyExcel 模块化导入导出（各业务独立 `/export`、`/import`、`/importTemplate`）
 - MyBatis-Plus + 代码生成器，提升开发效率
 - Vue 3 + TypeScript + Element Plus，支持主题和国际化

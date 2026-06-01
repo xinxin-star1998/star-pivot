@@ -30,13 +30,7 @@
           />
           <div class="w-[calc(100%-60px)] h-full">
             <span class="block text-sm font-medium text-g-800 truncate">
-              {{
-                userInfo.user?.userName ||
-                userInfo.user?.nickName ||
-                (userInfo as any).username ||
-                (userInfo as any).nickname ||
-                ''
-              }}
+              {{ userInfo.user?.username || userInfo.user?.nickName || '' }}
             </span>
             <span class="block mt-0.5 text-xs text-g-500 truncate">
               {{ userInfo.user?.email }}
@@ -71,18 +65,18 @@
 </template>
 
 <script setup lang="ts">
-  import { useI18n } from 'vue-i18n'
-  import { useRouter } from 'vue-router'
-  import { ElMessageBox } from 'element-plus'
-  import { storeToRefs } from 'pinia'
-  import { useUserStore } from '@/store/modules/user'
-  import { mittBus } from '@/utils/sys'
-  import { fetchLogout } from '@/api/auth'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-  import ArtAvatarDisplay from '@/components/core/media/art-avatar-display/index.vue'
-  import defaultAvatarImg from '@imgs/user/avatar.webp'
+import {useI18n} from 'vue-i18n'
+import {useRouter} from 'vue-router'
+import {ElMessageBox} from 'element-plus'
+import {storeToRefs} from 'pinia'
+import {useUserStore} from '@/store/modules/user'
+import {mittBus} from '@/utils/sys'
+import {fetchLogout} from '@/api/auth'
+import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+import ArtAvatarDisplay from '@/components/core/media/art-avatar-display/index.vue'
+import defaultAvatarImg from '@imgs/user/avatar.webp'
 
-  defineOptions({ name: 'ArtUserMenu' })
+defineOptions({ name: 'ArtUserMenu' })
 
   const router = useRouter()
   const { t } = useI18n()

@@ -35,22 +35,22 @@
  * @module router/guards/beforeEach
  * @author Art Design Pro Team
  */
-import type { Router, RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
+import type {NavigationGuardNext, RouteLocationNormalized, Router} from 'vue-router'
 import NProgress from 'nprogress'
-import { useSettingStore } from '@/store/modules/setting'
-import { useUserStore } from '@/store/modules/user'
-import { useMenuStore } from '@/store/modules/menu'
-import { setWorktab } from '@/utils/navigation'
-import { setPageTitle } from '@/utils/router'
-import { handleLoginStatus, handleRootPathRedirect, isStaticRoute } from './authGuard'
+import {useSettingStore} from '@/store/modules/setting'
+import {useUserStore} from '@/store/modules/user'
+import {useMenuStore} from '@/store/modules/menu'
+import {setWorktab} from '@/utils/navigation'
+import {setPageTitle} from '@/utils/router'
+import {handleLoginStatus, handleRegisterRouteGuard, handleRootPathRedirect, isStaticRoute} from './authGuard'
 import {
-  setupRouteRegistry,
-  handleDynamicRoutes,
-  tryRestoreRoutesFromCache,
-  closeLoading,
-  getRouteLoadingState,
-  resetRouteLoadingState,
-  resetRouterState
+    closeLoading,
+    getRouteLoadingState,
+    handleDynamicRoutes,
+    resetRouteLoadingState,
+    resetRouterState,
+    setupRouteRegistry,
+    tryRestoreRoutesFromCache
 } from './dynamicRouteGuard'
 
 export { getRouteLoadingState, resetRouteLoadingState, resetRouterState }
@@ -94,6 +94,11 @@ async function handleRouteGuard(
   // 启动进度条
   if (settingStore.showNprogress) {
     NProgress.start()
+  }
+
+  // 0. 注册页开关校验（需在登录态检查之前，未登录也可拦截）
+  if (!(await handleRegisterRouteGuard(to, next))) {
+    return
   }
 
   // 1. 检查登录状态

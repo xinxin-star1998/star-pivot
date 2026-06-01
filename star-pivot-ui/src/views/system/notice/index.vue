@@ -124,7 +124,11 @@ defineOptions({ name: 'Notice' })
           formatter: (row: Notice) => {
             const dictItem = getDictItem('sys_notice_type', row.noticeType)
             if (dictItem) {
-              return h(ElTag, { type: getTagType(dictItem.cssClass) as any }, () => dictItem.dictLabel)
+              return h(
+                ElTag,
+                { type: getTagType(dictItem.cssClass) as any },
+                () => dictItem.dictLabel
+              )
             }
             return row.noticeType || '-'
           }
@@ -141,7 +145,11 @@ defineOptions({ name: 'Notice' })
           formatter: (row: Notice) => {
             const dictItem = getDictItem('sys_notice_status', row.status)
             if (dictItem) {
-              return h(ElTag, { type: getTagType(dictItem.cssClass) as any }, () => dictItem.dictLabel)
+              return h(
+                ElTag,
+                { type: getTagType(dictItem.cssClass) as any },
+                () => dictItem.dictLabel
+              )
             }
             return row.status || '-'
           }

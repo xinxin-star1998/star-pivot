@@ -1,11 +1,12 @@
 package com.star.pivot.generator.utils;
 
-import java.util.Arrays;
 import com.star.pivot.framework.constants.GenConstants;
 import com.star.pivot.generator.config.GenConfig;
 import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.entity.GenTableColumn;
 import org.apache.commons.lang3.RegExUtils;
+
+import java.util.Arrays;
 
 /**
  * 代码生成器 工具类
@@ -52,7 +53,7 @@ public class GenUtils
         }
         else if (arraysContains(GenConstants.COLUMNTYPE_TIME, dataType))
         {
-            column.setJavaType(GenConstants.TYPE_DATE);
+            column.setJavaType(GenConstants.TYPE_LOCAL_DATE_TIME);
             column.setHtmlType(GenConstants.HTML_DATETIME);
         }
         else if (arraysContains(GenConstants.COLUMNTYPE_NUMBER, dataType))

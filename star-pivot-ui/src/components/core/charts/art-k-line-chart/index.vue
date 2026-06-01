@@ -9,11 +9,11 @@
 </template>
 
 <script setup lang="ts">
-  import type { EChartsOption } from '@/plugins/echarts'
-  import { useChartOps, useChartComponent } from '@/hooks/core/useChart'
-  import type { KLineChartProps } from '@/types/component/chart'
+import type {EChartsOption, TooltipComponentOption} from '@/plugins/echarts'
+import {useChartComponent, useChartOps} from '@/hooks/core/useChart'
+import type {KLineChartProps} from '@/types/component/chart'
 
-  defineOptions({ name: 'ArtKLineChart' })
+defineOptions({ name: 'ArtKLineChart' })
 
   const props = withDefaults(defineProps<KLineChartProps>(), {
     // 基础配置
@@ -81,8 +81,9 @@
           axisPointer: {
             type: 'cross'
           },
-          formatter: (params: Array<{ name: string; data: number[] }>) => {
-            const param = params[0]
+          formatter: ((params) => {
+            const list = Array.isArray(params) ? params : [params]
+            const param = list[0] as { name: string; data: number[] }
             const data = param.data
             return `
               <div style="padding: 5px;">
@@ -93,7 +94,7 @@
                 <div><strong>最高：</strong>${data[3]}</div>
               </div>
             `
-          }
+          }) as TooltipComponentOption['formatter']
         }),
         xAxis: {
           type: 'category',

@@ -1,8 +1,8 @@
 package com.star.pivot;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -34,7 +34,7 @@ public class StarPivotApplication {
                 访问地址: http://localhost:8080
                 API 文档: http://localhost:8080/api/swagger-ui/index.html
                 OpenAPI JSON: http://localhost:8080/api/v3/api-docs
-                文件存储: 阿里云 OSS / MinIO
+                文件存储: 阿里云 OSS
                 Druid: http://localhost:8080/api/druid/index.html
                 ========================================
                 """);

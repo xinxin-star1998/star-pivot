@@ -7,12 +7,12 @@
  * @author Art Design Pro Team
  */
 
-import type { Router, RouteRecordRaw } from 'vue-router'
-import type { AppRouteRecord } from '@/types/router'
-import { ComponentLoader } from './ComponentLoader'
-import { RouteValidator } from './RouteValidator'
-import { RouteTransformer } from './RouteTransformer'
-import { safeLog, safeWarn } from '@/utils'
+import type {Router, RouteRecordRaw} from 'vue-router'
+import type {AppRouteRecord} from '@/types/router'
+import {ComponentLoader} from './ComponentLoader'
+import {RouteValidator} from './RouteValidator'
+import {RouteTransformer} from './RouteTransformer'
+import {safeLog, safeWarn} from '@/utils'
 
 export class RouteRegistry {
   private router: Router
@@ -23,6 +23,10 @@ export class RouteRegistry {
   private registered = false
   private routeNames = new Set<string>()
   private routePaths = new Set<string>()
+
+  private static toRouteKey(name: string | symbol | undefined): string | undefined {
+    return name === undefined ? undefined : String(name)
+  }
 
   constructor(router: Router) {
     this.router = router
@@ -53,7 +57,10 @@ export class RouteRegistry {
     menuList.forEach((route) => {
       try {
         // 生成唯一标识，避免重复处理
-        const routeKey = route.name || route.path || `route_${Date.now()}_${Math.random()}`
+        const routeKey =
+          RouteRegistry.toRouteKey(route.name) ||
+          route.path ||
+          `route_${Date.now()}_${Math.random()}`
         if (processedRoutes.has(routeKey)) {
           safeWarn(`[RouteRegistry] 跳过重复路由: ${routeKey}`)
           return
@@ -61,7 +68,8 @@ export class RouteRegistry {
         processedRoutes.add(routeKey)
 
         // 检查路由名称是否已存在
-        const routeName = route.name || this.generateRouteKey(route.path || '')
+        const routeName =
+          RouteRegistry.toRouteKey(route.name) || this.generateRouteKey(route.path || '')
         if (this.routeNames.has(routeName) || this.router.hasRoute(routeName)) {
           safeWarn(`[RouteRegistry] 路由名称已存在: ${routeName}`)
           return
@@ -86,7 +94,10 @@ export class RouteRegistry {
 
         safeLog(`[RouteRegistry] 成功注册路由: ${routeName || route.path}`)
       } catch (error) {
-        console.error(`[RouteRegistry] 注册路由失败: ${route.name || route.path}`, error)
+        console.error(
+          `[RouteRegistry] 注册路由失败: ${RouteRegistry.toRouteKey(route.name) || route.path}`,
+          error
+        )
         // 继续处理其他路由，不中断整个注册过程
       }
     })

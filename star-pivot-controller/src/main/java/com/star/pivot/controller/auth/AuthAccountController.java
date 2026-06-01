@@ -3,14 +3,12 @@ package com.star.pivot.controller.auth;
 import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.Result;
-import com.star.pivot.system.domain.bo.LoginRequest;
-import com.star.pivot.system.domain.bo.LoginResponse;
-import com.star.pivot.system.domain.bo.RegisterRequest;
-import com.star.pivot.system.domain.bo.RegisterResponse;
+import com.star.pivot.system.domain.bo.*;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.service.interfaces.AuthService;
+import com.star.pivot.system.service.interfaces.ISysConfigService;
 import com.star.pivot.system.service.interfaces.SysMenuService;
 import com.star.pivot.system.service.interfaces.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,11 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +42,7 @@ public class AuthAccountController {
     private final AuthService authService;
     private final SysUserService sysUserService;
     private final SysMenuService sysMenuService;
+    private final ISysConfigService sysConfigService;
 
     @Log(title = "用户登录")
     @Operation(summary = "用户登录", description = "通过用户名和密码进行登录，返回访问令牌和刷新令牌")
@@ -73,6 +68,12 @@ public class AuthAccountController {
     public Result<RegisterResponse> register(@RequestBody RegisterRequest request) {
         RegisterResponse response = authService.register(request);
         return Result.success(AppConstants.REGISTER_SUCCESS, response);
+    }
+
+    @Operation(summary = "查询注册开关", description = "读取 sys.account.registerUser 配置，供登录页判断是否展示注册入口")
+    @GetMapping("/register/enabled")
+    public Result<RegisterConfigResponse> getRegisterEnabled() {
+        return Result.success(new RegisterConfigResponse(sysConfigService.isRegisterUserEnabled()));
     }
 
     @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息，包括用户基本信息、角色列表和权限菜单树")

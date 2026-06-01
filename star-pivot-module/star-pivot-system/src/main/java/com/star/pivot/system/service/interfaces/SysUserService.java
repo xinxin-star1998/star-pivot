@@ -2,13 +2,13 @@ package com.star.pivot.system.service.interfaces;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.star.pivot.framework.domain.PageResponse;
+import com.star.pivot.framework.excel.ExcelImportResult;
 import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.AssignUserReqBo;
 import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
-import com.star.pivot.framework.excel.ExcelImportResult;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.domain.excel.SysUserExcel;
 
@@ -81,5 +81,39 @@ public interface SysUserService extends IService<SysUser> {
 
     /** EasyExcel 导入用户 */
     ExcelImportResult importFromExcel(List<SysUserExcel> rows, boolean updateSupport);
+
+    /**
+     * 判断当前用户是否是超级管理员
+     *
+     * @return 是否为超级管理员
+     */
+    boolean isCurrentUserSuperAdmin();
+
+    /**
+     * 检查是否允许修改指定用户
+     * 规则：超级管理员可以修改所有用户，普通用户只能修改自己
+     *
+     * @param targetUserId 目标用户ID
+     * @return 是否允许修改
+     */
+    boolean canUpdateUser(Long targetUserId);
+
+    /**
+     * 检查是否允许删除指定用户列表
+     * 规则：不能删除当前登录用户
+     *
+     * @param userIds 用户ID列表
+     * @return 是否允许删除（null表示允许，非null表示不允许的原因）
+     */
+    String canDeleteUsers(List<Long> userIds);
+
+    /**
+     * 检查是否允许重置指定用户密码
+     * 规则：不能重置当前登录用户密码
+     *
+     * @param targetUserId 目标用户ID
+     * @return 是否允许重置（null表示允许，非null表示不允许的原因）
+     */
+    String canResetPassword(Long targetUserId);
 }
 

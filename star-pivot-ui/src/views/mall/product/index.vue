@@ -66,12 +66,7 @@
             <template #left>
               <ElSpace wrap>
                 <ElButton @click="handleSearchAll">查询全部</ElButton>
-                <ElButton
-                  v-auth="'mall:product:add'"
-                  type="primary"
-                  @click="goAddSpu"
-                  v-ripple
-                >
+                <ElButton v-auth="'mall:product:add'" type="primary" @click="goAddSpu" v-ripple>
                   新增 SPU
                 </ElButton>
                 <ElButton
@@ -96,7 +91,6 @@
             @pagination:size-change="handleSizeChange"
             @pagination:current-change="handleCurrentChange"
           />
-
         </ElCard>
       </div>
     </div>
@@ -124,8 +118,23 @@ import ArtTable from '@/components/core/tables/art-table/index.vue'
 import ProductSearch from './modules/product-search.vue'
 import {ElImage, ElMessage, ElMessageBox, ElTag} from 'element-plus'
 import {useAuth} from '@/hooks/core/useAuth'
+import {getCoverDisplayUrl, resolveGoodsImageDisplayUrls} from '@/utils/mall/goods-image-url'
 
 defineOptions({ name: 'MallProduct' })
+
+  const coverImgDisplayUrls = ref<Map<string, string>>(new Map())
+  const coverImgVersion = ref(0)
+
+  const preloadCoverImages = async (rows: MallProductVo[]) => {
+    if (!rows?.length) return
+    const coverImgs = rows
+      .map((row) => row.coverImg?.trim() || row.images?.[0]?.trim())
+      .filter((url): url is string => !!url)
+    if (!coverImgs.length) return
+    const resolved = await resolveGoodsImageDisplayUrls(coverImgs)
+    resolved.forEach((url, key) => coverImgDisplayUrls.value.set(key, url))
+    coverImgVersion.value++
+  }
 
   type LazyCatNode = MallCategoryTreeNode & { leaf?: boolean }
 
@@ -205,12 +214,15 @@ defineOptions({ name: 'MallProduct' })
           label: '图片',
           width: 88,
           formatter: (row: MallProductVo) => {
-            const url = row.coverImg?.trim()
-            if (!url) return '-'
+            void coverImgVersion.value
+            const raw = row.coverImg?.trim() || row.images?.[0]?.trim()
+            if (!raw) return '-'
+            const displayUrl = getCoverDisplayUrl(raw, coverImgDisplayUrls.value)
+            if (!displayUrl) return '-'
             return h(ElImage, {
-              src: url,
+              src: displayUrl,
               fit: 'cover',
-              previewSrcList: [url],
+              previewSrcList: [displayUrl],
               previewTeleported: true,
               style: 'width:56px;height:56px;border-radius:4px'
             })
@@ -300,6 +312,14 @@ defineOptions({ name: 'MallProduct' })
           }
         }
       ]
+    },
+    hooks: {
+      onSuccess: (rows) => {
+        preloadCoverImages(rows)
+      },
+      onCacheHit: (rows) => {
+        preloadCoverImages(rows)
+      }
     }
   })
 

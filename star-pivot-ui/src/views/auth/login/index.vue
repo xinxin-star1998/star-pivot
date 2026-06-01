@@ -113,7 +113,7 @@
               {{ t('login.btnText') }}
             </ElButton>
 
-            <div class="form-footer">
+            <div v-if="registerEnabled" class="form-footer">
               <span class="footer-text">{{ t('login.noAccount') }}</span>
               <RouterLink class="register-link" :to="{ name: 'Register' }">
                 {{ t('login.register') }}
@@ -127,17 +127,18 @@
 </template>
 
 <script setup lang="ts">
-  import AppConfig from '@/config'
-  import { useUserStore } from '@/store/modules/user'
-  import { useSettingStore } from '@/store/modules/setting'
-  import { useI18n } from 'vue-i18n'
-  import { HttpError } from '@/utils/http/error'
-  import { fetchCaptcha, fetchLogin, fetchVerifyCaptcha } from '@/api/auth'
-  import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
-  import { useCommon } from '@/hooks'
-  import { useRoute, useRouter } from 'vue-router'
+import AppConfig from '@/config'
+import {useUserStore} from '@/store/modules/user'
+import {useSettingStore} from '@/store/modules/setting'
+import {useI18n} from 'vue-i18n'
+import {HttpError} from '@/utils/http/error'
+import {fetchCaptcha, fetchLogin, fetchVerifyCaptcha} from '@/api/auth'
+import {isRegisterEnabled} from '@/utils/auth/register-config'
+import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
+import {useCommon} from '@/hooks'
+import {useRoute, useRouter} from 'vue-router'
 
-  defineOptions({ name: 'Login' })
+defineOptions({ name: 'Login' })
 
   const { t, locale } = useI18n()
   const formKey = ref(0)
@@ -178,6 +179,7 @@
   }))
 
   const loading = ref(false)
+  const registerEnabled = ref(false)
 
   // 登录
   const handleSubmit = async () => {
@@ -353,9 +355,10 @@
   }
 
   // 组件挂载时获取验证码并加载保存的登录信息
-  onMounted(() => {
+  onMounted(async () => {
     refreshCaptcha()
     loadSavedLoginInfo()
+    registerEnabled.value = await isRegisterEnabled()
   })
 
   // 登录成功提示

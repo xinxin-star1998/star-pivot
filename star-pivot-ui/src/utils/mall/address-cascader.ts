@@ -1,11 +1,9 @@
 import {type Address, fetchGetAddressChildren, fetchSearchAddress} from '@/api/mall/address'
 import {addressHasChildren} from '@/utils/mall/address-level'
-import type {CascaderOption} from 'element-plus'
+import type {CascaderNode, CascaderOption, CascaderProps} from 'element-plus'
 
 /** 仓库选址：仅省 / 市 / 区县（level 0～2），不含乡镇 */
 export const WAREHOUSE_MAX_AREA_LEVEL = 2
-
-type CascaderLazyNode = { level: number; value?: string | number }
 
 export function mapAddressToCascaderOption(item: Address): CascaderOption {
   return {
@@ -24,8 +22,10 @@ function mapAddressToCascaderOptionWithMaxLevel(item: Address, maxLevel: number)
   }
 }
 
-function createAddressCascaderLazyLoad(maxAreaLevel: number) {
-  return async (node: CascaderLazyNode, resolve: (data: CascaderOption[]) => void) => {
+function createAddressCascaderLazyLoad(
+  maxAreaLevel: number
+): NonNullable<CascaderProps['lazyLoad']> {
+  return async (node: CascaderNode, resolve: (data: CascaderOption[]) => void) => {
     // 级联第 4 列对应乡镇，仓库不加载
     if (node.level > maxAreaLevel + 1) {
       resolve([])
@@ -46,19 +46,19 @@ function createAddressCascaderLazyLoad(maxAreaLevel: number) {
 }
 
 /** 省市区乡镇懒加载 Cascader（value 为地区 code） */
-export const addressCascaderProps = {
+export const addressCascaderProps: CascaderProps = {
   lazy: true,
   emitPath: true,
-  expandTrigger: 'click' as const,
+  expandTrigger: 'click',
   checkStrictly: true,
   lazyLoad: createAddressCascaderLazyLoad(3)
 }
 
 /** 仓库：仅省 / 市 / 区县三级 */
-export const warehouseAddressCascaderProps = {
+export const warehouseAddressCascaderProps: CascaderProps = {
   lazy: true,
   emitPath: true,
-  expandTrigger: 'click' as const,
+  expandTrigger: 'click',
   checkStrictly: true,
   lazyLoad: createAddressCascaderLazyLoad(WAREHOUSE_MAX_AREA_LEVEL)
 }

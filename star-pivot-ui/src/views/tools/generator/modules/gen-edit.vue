@@ -169,31 +169,31 @@
 </template>
 
 <script setup lang="ts">
-  /**
-   * 代码生成配置编辑逻辑
-   * 从后端接口获取表的基本信息、字段信息、生成信息
-   */
-  import { useRoute, useRouter } from 'vue-router'
-  import {
-    ElMessage,
-    ElTabs,
-    ElTabPane,
-    ElCard,
-    ElForm,
-    ElFormItem,
-    ElInput,
-    ElButton,
-    ElTable,
-    ElTableColumn,
-    ElCheckbox,
-    ElSelect,
-    ElOption
-  } from 'element-plus'
-  import { fetchGetGenTableInfo, fetchEditSave } from '@/api/generator/gen-table'
-  import { fetchGetDictTypeSelectList, type SysDictType } from '@/api/dict/type'
-  import { fetchGetParentMenu } from '@/api/menu/menu'
+/**
+ * 代码生成配置编辑逻辑
+ * 从后端接口获取表的基本信息、字段信息、生成信息
+ */
+import {useRoute, useRouter} from 'vue-router'
+import {
+  ElButton,
+  ElCard,
+  ElCheckbox,
+  ElForm,
+  ElFormItem,
+  ElInput,
+  ElMessage,
+  ElOption,
+  ElSelect,
+  ElTable,
+  ElTableColumn,
+  ElTabPane,
+  ElTabs
+} from 'element-plus'
+import {fetchEditSave, fetchGetGenTableInfo} from '@/api/generator/gen-table'
+import {fetchGetDictTypeSelectList, type SysDictType} from '@/api/dict/type'
+import {fetchGetParentMenu} from '@/api/menu/menu'
 
-  const GenInfoForm = defineAsyncComponent(
+const GenInfoForm = defineAsyncComponent(
     () => import('@views/tools/generator/modules/genInfoForm.vue')
   )
 
@@ -222,8 +222,13 @@
     moduleName: '',
     businessName: '',
     functionName: '',
-    genType: '0',
-    genPath: ''
+    genType: '0' as '0' | '1',
+    genPath: '',
+    treeCode: '',
+    treeParentCode: '',
+    treeName: '',
+    parentMenuId: undefined as number | string | undefined,
+    parentMenuName: ''
   })
 
   // 字段列表数据
@@ -276,7 +281,7 @@
       genInfoForm.moduleName = info.moduleName || ''
       genInfoForm.businessName = info.businessName || ''
       genInfoForm.functionName = info.functionName || ''
-      genInfoForm.genType = info.genType || '0'
+      genInfoForm.genType = (info.genType || '0') as '0' | '1'
       genInfoForm.genPath = info.genPath || ''
 
       // 树表与上级菜单等生成附加信息（用于编辑回显）

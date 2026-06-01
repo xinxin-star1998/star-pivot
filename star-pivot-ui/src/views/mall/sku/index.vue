@@ -31,8 +31,21 @@ import ArtTable from '@/components/core/tables/art-table/index.vue'
 import SkuSearch from './modules/sku-search.vue'
 import {ElImage} from 'element-plus'
 import {useAuth} from '@/hooks/core/useAuth'
+import {getCoverDisplayUrl, resolveGoodsImageDisplayUrls} from '@/utils/mall/goods-image-url'
 
 defineOptions({ name: 'MallSku' })
+
+  const skuImgDisplayUrls = ref<Map<string, string>>(new Map())
+  const skuImgVersion = ref(0)
+
+  const preloadSkuImages = async (rows: MallSkuVo[]) => {
+    if (!rows?.length) return
+    const imgs = rows.map((row) => row.skuDefaultImg?.trim()).filter((url): url is string => !!url)
+    if (!imgs.length) return
+    const resolved = await resolveGoodsImageDisplayUrls(imgs)
+    resolved.forEach((url, key) => skuImgDisplayUrls.value.set(key, url))
+    skuImgVersion.value++
+  }
 
   const { hasAuth } = useAuth()
   const route = useRoute()
@@ -101,12 +114,15 @@ defineOptions({ name: 'MallSku' })
           label: '图片',
           width: 88,
           formatter: (row: MallSkuVo) => {
-            const url = row.skuDefaultImg?.trim()
-            if (!url) return '-'
+            void skuImgVersion.value
+            const raw = row.skuDefaultImg?.trim()
+            if (!raw) return '-'
+            const displayUrl = getCoverDisplayUrl(raw, skuImgDisplayUrls.value)
+            if (!displayUrl) return '-'
             return h(ElImage, {
-              src: url,
+              src: displayUrl,
               fit: 'cover',
-              previewSrcList: [url],
+              previewSrcList: [displayUrl],
               previewTeleported: true,
               style: 'width:56px;height:56px;border-radius:4px'
             })
@@ -166,6 +182,14 @@ defineOptions({ name: 'MallSku' })
           }
         }
       ]
+    },
+    hooks: {
+      onSuccess: (rows) => {
+        preloadSkuImages(rows)
+      },
+      onCacheHit: (rows) => {
+        preloadSkuImages(rows)
+      }
     }
   })
 

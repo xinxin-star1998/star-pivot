@@ -91,10 +91,20 @@
           </ElRadioGroup>
         </ElFormItem>
         <ElFormItem label="商品介绍图" prop="decript">
-          <SpuImageUpload v-model="baseForm.decript" :limit="20" hint="详情页展示图（可选）" />
+          <SpuImageUpload
+            v-model="baseForm.decript"
+            :goods-id="spuId"
+            :limit="20"
+            hint="详情页展示图（可选）"
+          />
         </ElFormItem>
         <ElFormItem label="商品图集" prop="images">
-          <SpuImageUpload v-model="baseForm.images" :limit="10" hint="SPU 主图，SKU 可从中勾选" />
+          <SpuImageUpload
+            v-model="baseForm.images"
+            :goods-id="spuId"
+            :limit="10"
+            hint="SPU 主图，SKU 可从中勾选"
+          />
         </ElFormItem>
         <ElFormItem>
           <ElButton type="primary" :loading="loadingAttrs" @click="onBaseNext">
@@ -337,7 +347,7 @@
                   :key="imgIdx"
                   class="sku-image-pick__item"
                 >
-                  <img :src="img" alt="" />
+                  <img :src="getImageDisplayUrl(img)" alt="" />
                   <div class="sku-image-pick__actions">
                     <ElCheckbox
                       :model-value="row.images[imgIdx]?.imgUrl === img"
@@ -407,8 +417,14 @@ import {
   type SpuWizardSkuRow
 } from '@/utils/mall/spu-wizard-payload'
 import SpuImageUpload from './spu-image-upload.vue'
+import {resolveGoodsImageDisplayUrls} from '@/utils/mall/goods-image-url'
 
 defineOptions({ name: 'MallProductAddSpu' })
+
+  const imageDisplayUrls = ref<Map<string, string>>(new Map())
+
+  const getImageDisplayUrl = (objectName: string): string =>
+    imageDisplayUrls.value.get(objectName) || ''
 
   const route = useRoute()
   const router = useRouter()
@@ -746,10 +762,12 @@ defineOptions({ name: 'MallProductAddSpu' })
   }
 
   watch(
-    () => baseForm.images.length,
-    () => {
+    () => baseForm.images,
+    async (images) => {
       syncSkuImageSlots()
-    }
+      imageDisplayUrls.value = await resolveGoodsImageDisplayUrls(images)
+    },
+    { deep: true }
   )
 
   const toggleSkuImage = (row: SpuWizardSkuRow, imgIdx: number, img: string, checked: boolean) => {

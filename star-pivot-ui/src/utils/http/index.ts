@@ -14,13 +14,13 @@
  * @author Art Design Pro Team
  */
 
-import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import { useUserStore } from '@/store/modules/user'
-import { ApiStatus } from './status'
-import { handleError, HttpError, showError, showSuccess } from './error'
-import { $t } from '@/locales'
-import { BaseResponse } from '@/types'
-import { fetchRefreshToken } from '@/api/auth'
+import axios, {AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from 'axios'
+import {useUserStore} from '@/store/modules/user'
+import {ApiStatus} from './status'
+import {handleError, HttpError, showError, showSuccess} from './error'
+import {$t} from '@/locales'
+import {BaseResponse} from '@/types'
+import {fetchRefreshToken} from '@/api/auth'
 
 /** 请求配置常量 */
 const REQUEST_TIMEOUT = 15000
@@ -388,7 +388,10 @@ function delay(ms: number) {
 function generateRequestKey(config: ExtendedAxiosRequestConfig): string {
   const method = (config.method || 'GET').toUpperCase()
   const url = config.url || ''
-  // 将params和data序列化为字符串（忽略顺序）
+  // FormData 无法稳定序列化，禁止去重，避免并发上传共用同一 Promise
+  if (config.data instanceof FormData) {
+    return `${method}_${url}_form_${Date.now()}_${Math.random()}`
+  }
   const paramsStr = config.params
     ? JSON.stringify(config.params, Object.keys(config.params).sort())
     : ''

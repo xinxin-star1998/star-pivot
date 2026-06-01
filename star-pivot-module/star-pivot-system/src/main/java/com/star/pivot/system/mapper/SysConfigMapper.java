@@ -42,6 +42,14 @@ public interface SysConfigMapper extends BaseMapper<SysConfig> {
     SysConfig selectSysConfigByConfigId(@Param("configId") Long configId);
 
     /**
+     * 根据参数键名查询
+     *
+     * @param configKey 参数键名
+     * @return 参数配置
+     */
+    SysConfig selectByConfigKey(@Param("configKey") String configKey);
+
+    /**
      * 新增参数配置
      *
      * @param sysConfig 参数配置

@@ -86,15 +86,16 @@
 </template>
 
 <script setup lang="ts">
-  import { Search, Refresh } from '@element-plus/icons-vue'
-  import { fetchGetOnlineUserList, fetchForceLogout } from '@/api/monitor/online'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import { usePageVisibility } from '@/hooks/core/usePageVisibility'
-  import type { OnlineUser, OnlineUserQueryParams } from '@/types/api/monitor'
+import {Refresh, Search} from '@element-plus/icons-vue'
+import {fetchForceLogout, fetchGetOnlineUserList} from '@/api/monitor/online'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import {usePageVisibility} from '@/hooks/core/usePageVisibility'
+import type {OnlineUser, OnlineUserQueryParams} from '@/types/api/monitor'
+import type {ColumnOption} from '@/types'
 
-  defineOptions({ name: 'OnlineUser' })
+defineOptions({ name: 'OnlineUser' })
 
   // 页面可见性检测 - 页面不可见时暂停刷新
   const { onPause, onResume } = usePageVisibility()
@@ -123,7 +124,7 @@
   const selectedRows = ref<OnlineUser[]>([])
 
   // 表格列
-  const columns = ref([
+  const columns = ref<ColumnOption[]>([
     { type: 'selection' },
     { type: 'index', width: 60, label: '序号' },
     { prop: 'userName', label: '用户名', width: 120 },
@@ -138,7 +139,7 @@
     // { prop: 'operation', label: '操作', width: 120, fixed: 'right', slot: 'operation' }
   ])
 
-  const columnChecks = ref(columns.value.map((col) => col.prop || col.type))
+  const columnChecks = ref<ColumnOption[]>([...columns.value])
 
   /**
    * 获取在线用户数据

@@ -16,12 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.Valid;
-import ${packageName}.domain.${ClassName};
 import ${packageName}.service.I${ClassName}Service;
 #if($table.crud || $table.sub)
-import ${packageName}.domain.dto.${ClassName}QueryDTO;
-import ${packageName}.domain.bo.${ClassName}VO;
+import ${packageName}.domain.bo.${ClassName}ReqPageBo;
 #end
+#if($table.tree)
+import ${packageName}.domain.bo.${ClassName}ReqBo;
+#end
+import ${packageName}.domain.bo.${ClassName}VO;
 import ${packageName}.domain.dto.${ClassName}DTO;
 
 /**
@@ -39,32 +41,28 @@ public class ${ClassName}Controller
     private final I${ClassName}Service ${className}Service;
 
     /**
-     * 分页查询${functionName}列表
+     * 查询${functionName}列表
      * 
-     * @param queryDTO 查询参数
-     * @return 分页结果
+#if($table.tree)
+     * @param ${className}ReqBo 查询参数
+#else
+     * @param ${className}ReqPageBo 查询参数
+#end
+     * @return 列表结果
      */
     @PreAuthorize("hasAuthority('${permissionPrefix}:query')")
     @PostMapping("/list")
 #if($table.crud || $table.sub)
-    public Result<PageResponse<${ClassName}VO>> list(@RequestBody ${ClassName}QueryDTO queryDTO)
+    public Result<PageResponse<${ClassName}VO>> list(@Valid @RequestBody ${ClassName}ReqPageBo ${className}ReqPageBo)
     {
-        PageResponse<${ClassName}VO> page = ${className}Service.select${ClassName}Page(queryDTO);
+        PageResponse<${ClassName}VO> page = ${className}Service.select${ClassName}Page(${className}ReqPageBo);
         return Result.success(page);
     }
 #elseif($table.tree)
-    public Result<List<${ClassName}VO>> list(${ClassName}QueryDTO queryDTO)
+    public Result<List<${ClassName}VO>> list(@RequestBody ${ClassName}ReqBo ${className}ReqBo)
     {
-        // 树形结构查询逻辑
-        List<${ClassName}> list = ${className}Service.list();
-        List<${ClassName}VO> voList = list.stream()
-                .map(item -> {
-                    ${ClassName}VO vo = new ${ClassName}VO();
-                    org.springframework.beans.BeanUtils.copyProperties(item, vo);
-                    return vo;
-                })
-                .collect(java.util.stream.Collectors.toList());
-        return Result.success(voList);
+        List<${ClassName}VO> list = ${className}Service.select${ClassName}TreeList(${className}ReqBo);
+        return Result.success(list);
     }
 #end
 

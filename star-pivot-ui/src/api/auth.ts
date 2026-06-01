@@ -96,3 +96,14 @@ export function fetchRefreshToken(data: { username: string; refreshToken: string
     showErrorMessage: false // 刷新失败时不显示错误消息，由拦截器统一处理
   })
 }
+
+/**
+ * 查询用户注册是否开放（读取 sys.account.registerUser）
+ */
+export async function fetchRegisterEnabled(): Promise<boolean> {
+  const response = await request.get<Api.Auth.RegisterConfigResponse>({
+    url: '/api/auth/register/enabled',
+    showErrorMessage: false
+  })
+  return response.registerEnabled
+}

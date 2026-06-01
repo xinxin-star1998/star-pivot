@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
-import java.util.*;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -123,13 +123,6 @@ public class GlobalExceptionHandler {
         log.error("数据库访问异常：", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(Result.error(ErrorCode.DATABASE_ERROR.getCode(), ErrorCode.DATABASE_ERROR.getMessage()));
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Result<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
-        log.warn("参数非法：{}", e.getMessage());
-        return ResponseEntity.badRequest()
-            .body(Result.error(ErrorCode.CLIENT_ERROR.getCode(), "请求参数不合法"));
     }
 
     @ExceptionHandler(BaseException.class)

@@ -88,12 +88,12 @@
                 <template #default="{ item, index }">
                   <div
                     class="key-list-row"
-                    :class="{ 'is-active': selectedKey?.key === item.key }"
-                    @click="handleKeySelect(item)"
+                    :class="{ 'is-active': selectedKey?.key === resolveCacheKeyInfo(item).key }"
+                    @click="handleKeySelect(resolveCacheKeyInfo(item))"
                   >
                     <span class="col-index">{{ index + 1 }}</span>
-                    <ElTooltip :content="item.key" placement="top">
-                      <span class="col-key text-ellipsis">{{ item.key }}</span>
+                    <ElTooltip :content="resolveCacheKeyInfo(item).key" placement="top">
+                      <span class="col-key text-ellipsis">{{ resolveCacheKeyInfo(item).key }}</span>
                     </ElTooltip>
                     <span class="col-action">
                       <ElButton
@@ -101,8 +101,8 @@
                         :icon="Delete"
                         circle
                         size="small"
-                        @click.stop="handleDeleteKey(item)"
-                        :loading="deletingKey === item.key"
+                        @click.stop="handleDeleteKey(resolveCacheKeyInfo(item))"
+                        :loading="deletingKey === resolveCacheKeyInfo(item).key"
                       />
                     </span>
                   </div>
@@ -156,20 +156,20 @@
 </template>
 
 <script setup lang="ts">
-  import { Refresh, Delete } from '@element-plus/icons-vue'
-  import {
-    fetchGetCacheList,
-    fetchGetCacheKeys,
-    fetchGetCacheContent,
-    fetchDeleteCache,
-    fetchDeleteCacheKey,
-    fetchClearAllCache
-  } from '@/api/monitor/cache'
-  import type { RedisCacheInfo, CacheKeyInfo, CacheContentInfo } from '@/types/api/monitor'
-  import { ElMessage, ElMessageBox } from 'element-plus'
-  import ArtVirtualList from '@/components/core/lists/art-virtual-list/index.vue'
+import {Delete, Refresh} from '@element-plus/icons-vue'
+import {
+  fetchClearAllCache,
+  fetchDeleteCache,
+  fetchDeleteCacheKey,
+  fetchGetCacheContent,
+  fetchGetCacheKeys,
+  fetchGetCacheList
+} from '@/api/monitor/cache'
+import type {CacheContentInfo, CacheKeyInfo, RedisCacheInfo} from '@/types/api/monitor'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import ArtVirtualList from '@/components/core/lists/art-virtual-list/index.vue'
 
-  defineOptions({ name: 'CacheManage' })
+defineOptions({ name: 'CacheManage' })
 
   const loading = ref(false)
   const keyListRef = ref<InstanceType<typeof ArtVirtualList> | null>(null)
@@ -188,6 +188,9 @@
   const selectedCache = ref<RedisCacheInfo | null>(null)
   const keyList = ref<CacheKeyInfo[]>([])
   const selectedKey = ref<CacheKeyInfo | null>(null)
+
+  const resolveCacheKeyInfo = (item: Record<string, unknown>): CacheKeyInfo =>
+    item as unknown as CacheKeyInfo
   const cacheContent = ref<CacheContentInfo>({
     cacheName: '',
     key: '',

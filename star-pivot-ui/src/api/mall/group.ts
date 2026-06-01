@@ -1,5 +1,5 @@
 import request from '@/utils/http'
-import { fetchExcelExport, fetchExcelImport, fetchExcelTemplate } from '@/api/common/excel'
+import {fetchExcelExport, fetchExcelImport, fetchExcelTemplate} from '@/api/common/excel'
 
 /**
  * 属性分组实体类型
@@ -19,10 +19,10 @@ export interface Group {
 export interface GroupSearchParams {
   pageNum?: number
   pageSize?: number
-  attrGroupName?: String
+  attrGroupName?: string
   sort?: number
-  descript?: String
-  icon?: String
+  descript?: string
+  icon?: string
   catelogId?: number
 }
 

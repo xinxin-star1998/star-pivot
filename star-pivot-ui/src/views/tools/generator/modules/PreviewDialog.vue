@@ -40,22 +40,14 @@
 </template>
 
 <script setup lang="ts">
-  /**
-   * 代码预览弹窗组件
-   * 用于预览代码生成器生成的代码文件
-   */
-  import {
-    ElDialog,
-    ElTabs,
-    ElTabPane,
-    ElScrollbar,
-    ElButton,
-    ElEmpty,
-    ElMessage
-  } from 'element-plus'
-  import { fetchPreviewCode } from '@/api/generator/gen-table'
+/**
+ * 代码预览弹窗组件
+ * 用于预览代码生成器生成的代码文件
+ */
+import {ElButton, ElDialog, ElEmpty, ElMessage, ElScrollbar, ElTabPane, ElTabs} from 'element-plus'
+import {fetchPreviewCode} from '@/api/generator/gen-table'
 
-  interface Props {
+interface Props {
     /** 弹窗可见性，由父组件控制 */
     visible: boolean
     /** 表ID，用于获取预览代码 */
@@ -229,8 +221,8 @@
    * 监听弹窗显示状态和 tableId 变化
    */
   watch(
-    () => [props.visible, props.tableId],
-    ([newVisible, newTableId]: [boolean, number | undefined]) => {
+    [() => props.visible, () => props.tableId],
+    ([newVisible, newTableId]) => {
       if (newVisible && newTableId) {
         loadPreviewCode(newTableId)
         // 延迟设置滚轮监听，确保 DOM 已渲染

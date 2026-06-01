@@ -7,9 +7,9 @@
  * @author Art Design Pro Team
  */
 
-import type { AppRouteRecord } from '@/types/router'
-import type { RouteRecordRaw } from 'vue-router'
-import { safeLog } from '@/utils'
+import type {AppRouteRecord} from '@/types/router'
+import type {RouteRecordRaw} from 'vue-router'
+import {safeLog} from '@/utils'
 
 /**
  * 路由缓存项
@@ -139,7 +139,7 @@ export class RouteCacheManager {
    */
   private generateCacheKey(route: AppRouteRecord): string {
     if (route.name) {
-      return `route_${route.name}`
+      return `route_${String(route.name)}`
     } else if (route.path) {
       return `route_${(route.path || '').replace(/\//g, '_')}`
     }

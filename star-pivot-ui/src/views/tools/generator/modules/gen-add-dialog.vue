@@ -34,11 +34,12 @@
 </template>
 
 <script setup lang="ts">
-  import { ElDialog, ElForm, ElFormItem, ElInput, ElButton, ElMessage } from 'element-plus'
-  import type { FormInstance, FormRules } from 'element-plus'
-  import { DialogType } from '@/types'
-  import { fetchCreateTable } from '@/api/generator/gen-table'
-  interface Props {
+import type {FormInstance, FormRules} from 'element-plus'
+import {ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage} from 'element-plus'
+import {DialogType} from '@/types'
+import {fetchCreateTable} from '@/api/generator/gen-table'
+
+interface Props {
     visible: boolean
     type: DialogType
   }
@@ -118,7 +119,7 @@
       await fetchCreateTable(formData.tableSql.trim())
       ElMessage.success('创建表成功')
       dialogVisible.value = false
-      emit('submit', formData.tableSql.trim())
+      emit('submit', { tableSql: formData.tableSql.trim() })
     } catch (error) {
       console.error('创建表失败:', error)
       ElMessage.error('创建表失败，请检查SQL语句是否正确')

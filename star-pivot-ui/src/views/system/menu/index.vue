@@ -51,41 +51,32 @@
 </template>
 
 <script setup lang="ts">
-  import { formatMenuTitle } from '@/utils/router'
-  import { deepClone, safeError } from '@/utils'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import { useTableColumns } from '@/hooks/core/useTableColumns'
-  import { useAuth } from '@/hooks/core/useAuth'
-  import { useMenuStore } from '@/store/modules/menu'
-  import type { AppRouteRecord } from '@/types/router'
-  import MenuDialog from './modules/menu-dialog.vue'
-  import {
-    fetchAddMenu,
-    fetchDeleteMenu,
-    fetchGetMenuTree,
-    fetchUpdateMenu,
-    type SysMenu
-  } from '@/api/menu/menu'
-  import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
-  import { Icon } from '@iconify/vue'
-  import { MenuProcessor } from '@/router/core/MenuProcessor'
-  import type { MenuFormData } from './types'
-  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import { MENU_TYPE_CONFIG, STATUS_CONFIG, INITIAL_SEARCH_STATE } from './constants'
-  import { reloadDynamicRoutes } from '@/router/guards/dynamicRouteGuard'
-  import { useRouter } from 'vue-router'
+import {formatMenuTitle} from '@/utils/router'
+import {deepClone, safeError} from '@/utils'
+import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+import {useTableColumns} from '@/hooks/core/useTableColumns'
+import {useAuth} from '@/hooks/core/useAuth'
+import {useMenuStore} from '@/store/modules/menu'
+import type {AppRouteRecord} from '@/types/router'
+import MenuDialog from './modules/menu-dialog.vue'
+import {fetchAddMenu, fetchDeleteMenu, fetchGetMenuTree, fetchUpdateMenu, type SysMenu} from '@/api/menu/menu'
+import {ElMessage, ElMessageBox, ElTag} from 'element-plus'
+import {Icon} from '@iconify/vue'
+import {MenuProcessor} from '@/router/core/MenuProcessor'
+import type {MenuFormData} from './types'
+import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import {INITIAL_SEARCH_STATE, MENU_TYPE_CONFIG, STATUS_CONFIG} from './constants'
+import {reloadDynamicRoutes} from '@/router/guards/dynamicRouteGuard'
 
-  defineOptions({ name: 'Menus' })
+defineOptions({ name: 'Menus' })
 
   // 权限检查
   const { hasAuth } = useAuth()
   // 菜单状态管理
   const menuStore = useMenuStore()
   // 路由
-  const router = useRouter()
-
   // 状态管理
   const loading = ref(false)
   const isExpanded = ref(false)
@@ -269,11 +260,10 @@
         const title = formatMenuTitle(row.meta?.title)
         const icon = row.meta?.isAuthButton ? undefined : row.meta?.icon
         if (!icon) return title
-        return h(
-          'div',
-          { style: 'display: inline-flex; align-items: center; gap: 8px;' },
-          [h(Icon, { icon, style: 'font-size: 18px; color: var(--art-gray-700);' }), title]
-        )
+        return h('div', { style: 'display: inline-flex; align-items: center; gap: 8px;' }, [
+          h(Icon, { icon, style: 'font-size: 18px; color: var(--art-gray-700);' }),
+          title
+        ])
       }
     },
     {
@@ -669,7 +659,7 @@
       // 清除前端菜单缓存，确保下次刷新或重新登录时获取最新数据
       menuStore.clearMenuCacheMeta()
       // 重新注册动态路由，立即生效
-      await reloadDynamicRoutes(router)
+      await reloadDynamicRoutes()
     } catch (error) {
       safeError('保存菜单失败:', error)
       ElMessage.error(formData.menuId ? '修改菜单失败' : '新增菜单失败')
@@ -705,7 +695,7 @@
       // 清除前端菜单缓存，确保下次刷新或重新登录时获取最新数据
       menuStore.clearMenuCacheMeta()
       // 重新注册动态路由，立即生效
-      await reloadDynamicRoutes(router)
+      await reloadDynamicRoutes()
     } catch (error) {
       // 用户点击取消/关闭时，Element Plus 会抛出 'cancel' 或 'close' 等错误标识，这里统一视为正常中断
       if (error !== 'cancel' && error !== 'close') {
