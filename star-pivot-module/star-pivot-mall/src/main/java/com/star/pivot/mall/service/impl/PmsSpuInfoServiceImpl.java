@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.storage.StorageObjectPathUtils;
 import com.star.pivot.mall.domain.bo.ProductReqBo;
 import com.star.pivot.mall.domain.bo.ProductSaveBo;
 import com.star.pivot.mall.domain.entity.*;
@@ -45,6 +46,7 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
         IPage<PmsSpuInfo> pageList = pmsSpuInfoMapper.selectPageList(page, productReqBo);
         List<ProductVo> rows = pageList.getRecords().stream().map(this::toVo).collect(Collectors.toList());
         fillCoverImages(rows);
+        rows.forEach(this::normalizeVoImagePaths);
         PageResponse<ProductVo> pageResponse = new PageResponse<>();
         pageResponse.setTotal(pageList.getTotal());
         pageResponse.setRows(rows);
@@ -66,6 +68,8 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
         }
         ProductVo vo = toVo(spu);
         fillSpuRelations(vo, id);
+        normalizeVoImagePaths(vo);
+        fillCoverImages(Collections.singletonList(vo));
         return vo;
     }
 
@@ -172,6 +176,7 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
                     spuImages.stream()
                             .map(PmsSpuImages::getImgUrl)
                             .filter(StringUtils::hasText)
+                            .map(url -> url.trim())
                             .collect(Collectors.toList()));
         }
 
@@ -197,15 +202,46 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
                 pmsSkuInfoMapper.selectList(
                         Wrappers.<PmsSkuInfo>lambdaQuery().eq(PmsSkuInfo::getSpuId, spuId));
         if (!CollectionUtils.isEmpty(skuList)) {
+            List<Long> skuIds =
+                    skuList.stream()
+                            .map(PmsSkuInfo::getSkuId)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+
+            Map<Long, List<PmsSkuSaleAttrValue>> saleAttrMap = Collections.emptyMap();
+            Map<Long, List<PmsSkuImages>> skuImageMap = Collections.emptyMap();
+            if (!skuIds.isEmpty()) {
+                saleAttrMap =
+                        pmsSkuSaleAttrValueMapper
+                                .selectList(
+                                        Wrappers.<PmsSkuSaleAttrValue>lambdaQuery()
+                                                .in(PmsSkuSaleAttrValue::getSkuId, skuIds)
+                                                .orderByAsc(PmsSkuSaleAttrValue::getAttrSort))
+                                .stream()
+                                .collect(Collectors.groupingBy(PmsSkuSaleAttrValue::getSkuId));
+                skuImageMap =
+                        pmsSkuImagesMapper
+                                .selectList(
+                                        Wrappers.<PmsSkuImages>lambdaQuery()
+                                                .in(PmsSkuImages::getSkuId, skuIds)
+                                                .orderByAsc(PmsSkuImages::getImgSort))
+                                .stream()
+                                .collect(Collectors.groupingBy(PmsSkuImages::getSkuId));
+            }
+
             List<Skus> skus = new ArrayList<>();
             for (PmsSkuInfo sku : skuList) {
-                skus.add(buildSkuVo(sku));
+                skus.add(buildSkuVo(sku, saleAttrMap, skuImageMap));
             }
             vo.setSkus(skus);
         }
+
     }
 
-    private Skus buildSkuVo(PmsSkuInfo sku) {
+    private Skus buildSkuVo(
+            PmsSkuInfo sku,
+            Map<Long, List<PmsSkuSaleAttrValue>> saleAttrMap,
+            Map<Long, List<PmsSkuImages>> skuImageMap) {
         Skus vo = new Skus();
         vo.setSkuName(sku.getSkuName());
         vo.setSkuTitle(sku.getSkuTitle());
@@ -213,10 +249,7 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
         vo.setPrice(sku.getPrice());
 
         List<PmsSkuSaleAttrValue> saleAttrs =
-                pmsSkuSaleAttrValueMapper.selectList(
-                        Wrappers.<PmsSkuSaleAttrValue>lambdaQuery()
-                                .eq(PmsSkuSaleAttrValue::getSkuId, sku.getSkuId())
-                                .orderByAsc(PmsSkuSaleAttrValue::getAttrSort));
+                saleAttrMap.getOrDefault(sku.getSkuId(), Collections.emptyList());
         if (!CollectionUtils.isEmpty(saleAttrs)) {
             vo.setAttr(
                     saleAttrs.stream()
@@ -236,24 +269,22 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
             vo.setDescar(Collections.emptyList());
         }
 
-        List<PmsSkuImages> skuImages =
-                pmsSkuImagesMapper.selectList(
-                        Wrappers.<PmsSkuImages>lambdaQuery()
-                                .eq(PmsSkuImages::getSkuId, sku.getSkuId())
-                                .orderByAsc(PmsSkuImages::getImgSort));
+        List<PmsSkuImages> skuImages = skuImageMap.getOrDefault(sku.getSkuId(), Collections.emptyList());
         if (!CollectionUtils.isEmpty(skuImages)) {
-            vo.setImages(
-                    skuImages.stream()
-                            .map(
-                                    img -> {
-                                        Images i = new Images();
-                                        i.setImgUrl(img.getImgUrl());
-                                        i.setDefaultImg(img.getDefaultImg() != null ? img.getDefaultImg().intValue() : 0);
-                                        return i;
-                                    })
-                            .collect(Collectors.toList()));
+            vo.setImages(mapSkuImageVos(skuImages));
+        }return vo;
+
+    }
+
+    private List<Images> mapSkuImageVos(List<PmsSkuImages> skuImages) {
+        List<Images> result = new ArrayList<>(skuImages.size());
+        for (PmsSkuImages entity : skuImages) {
+            Images item = new Images();
+            item.setImgUrl(entity.getImgUrl());
+            item.setDefaultImg(entity.getDefaultImg() != null ? entity.getDefaultImg().intValue() : 0);
+            result.add(item);
         }
-        return vo;
+        return result;
     }
 
     /** 步骤 2～5：在 pms_spu_info 已落库后写入关联表（pms_spu_bounds 仅前端展示，不落库） */
@@ -271,7 +302,11 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
         }
         PmsSpuInfoDesc desc = new PmsSpuInfoDesc();
         desc.setSpuId(spuId);
-        desc.setDecript(String.join(",", bo.getDecript()));
+        desc.setDecript(
+                bo.getDecript().stream()
+                        .filter(StringUtils::hasText)
+                        .map(url -> StorageObjectPathUtils.normalizeToObjectName(url.trim()))
+                        .collect(Collectors.joining(",")));
         pmsSpuInfoDescMapper.insert(desc);
     }
 
@@ -287,7 +322,7 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
             }
             PmsSpuImages img = new PmsSpuImages();
             img.setSpuId(spuId);
-            img.setImgUrl(url.trim());
+            img.setImgUrl(StorageObjectPathUtils.normalizeToObjectName(url.trim()));
             img.setImgSort(sort++);
             img.setDefaultImg(sort == 1 ? 1 : 0);
             pmsSpuImagesMapper.insert(img);
@@ -398,7 +433,7 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
             }
             PmsSkuImages entity = new PmsSkuImages();
             entity.setSkuId(skuId);
-            entity.setImgUrl(img.getImgUrl().trim());
+            entity.setImgUrl(StorageObjectPathUtils.normalizeToObjectName(img.getImgUrl().trim()));
             entity.setImgSort(sort++);
             entity.setDefaultImg((long) img.getDefaultImg());
             pmsSkuImagesMapper.insert(entity);
@@ -497,7 +532,7 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
             if (img.getSpuId() == null || !StringUtils.hasText(img.getImgUrl())) {
                 continue;
             }
-            coverMap.putIfAbsent(img.getSpuId(), img.getImgUrl().trim());
+            coverMap.putIfAbsent(img.getSpuId(), StorageObjectPathUtils.normalizeToObjectName(img.getImgUrl().trim()));
         }
         for (ProductVo vo : rows) {
             if (vo.getId() != null) {
@@ -505,4 +540,39 @@ public class PmsSpuInfoServiceImpl implements PmsSpuInfoService {
             }
         }
     }
-}
+
+    private void normalizeVoImagePaths(ProductVo vo) {
+        if (vo == null) {
+            return;
+        }
+        if (vo.getCoverImg() != null) {
+            vo.setCoverImg(StorageObjectPathUtils.normalizeToObjectName(vo.getCoverImg()));
+        }
+        if (!CollectionUtils.isEmpty(vo.getImages())) {
+            vo.setImages(
+                    vo.getImages().stream()
+                            .map(StorageObjectPathUtils::normalizeToObjectName)
+                            .filter(StringUtils::hasText)
+                            .collect(Collectors.toList()));
+        }
+        if (!CollectionUtils.isEmpty(vo.getDecript())) {
+            vo.setDecript(
+                    vo.getDecript().stream()
+                            .map(StorageObjectPathUtils::normalizeToObjectName)
+                            .filter(StringUtils::hasText)
+                            .collect(Collectors.toList()));
+        }
+        if (!CollectionUtils.isEmpty(vo.getSkus())) {
+            for (Skus sku : vo.getSkus()) {
+                if (CollectionUtils.isEmpty(sku.getImages())) {
+                    continue;
+                }
+                for (Images img : sku.getImages()) {
+                    if (img != null && StringUtils.hasText(img.getImgUrl())) {
+                        img.setImgUrl(StorageObjectPathUtils.normalizeToObjectName(img.getImgUrl()));
+                    }
+                }
+            }
+        }
+    }
+}    
