@@ -54,21 +54,6 @@ jobs:
           HUSKY: 0
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Generate auto-import types
-        run: |
-          pnpm exec vite --mode development --host 127.0.0.1 --port 5173 &
-          VITE_PID=$!
-          for i in $(seq 1 60); do
-            if [ -f src/types/import/auto-imports.d.ts ] && [ -f src/types/import/components.d.ts ]; then
-              break
-            fi
-            sleep 1
-          done
-          kill $VITE_PID 2>/dev/null || true
-          wait $VITE_PID 2>/dev/null || true
-          test -f src/types/import/auto-imports.d.ts
-          test -f src/types/import/components.d.ts
-
       - name: Type check
         run: pnpm exec vue-tsc --noEmit
 

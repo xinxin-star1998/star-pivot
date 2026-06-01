@@ -10,7 +10,5 @@ dist-ssr
 .env.local
 .env.*.local
 
-# Auto-generated files
-src/types/import/auto-imports.d.ts
-src/types/import/components.d.ts
+# Auto-generated files (committed for CI vue-tsc; regenerate via `pnpm dev` or `pnpm build`)
 .auto-import.json

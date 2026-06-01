@@ -61,6 +61,6 @@ Icon?
 # Cursor
 .cursor/
 
-# Logs
-logs/
-log/
+# Logs (project root only; do not match src/views/system/log)
+/logs/
+/log/
