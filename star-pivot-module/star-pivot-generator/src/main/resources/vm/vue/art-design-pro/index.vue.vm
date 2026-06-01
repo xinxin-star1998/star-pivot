@@ -198,12 +198,29 @@
   })
 
   /**
+   * 构建查询参数（处理日期范围等）
+   */
+  const buildSearchQuery = (params: Record<string, any>) => {
+    const query = { ...params }
+#foreach($column in $columns)
+#if($column.query && $column.queryType == "BETWEEN")
+#set($AttrName=$column.javaField.substring(0,1).toUpperCase() + ${column.javaField.substring(1)})
+    if (Array.isArray(query.${column.javaField})) {
+      query.begin${AttrName} = query.${column.javaField}[0]
+      query.end${AttrName} = query.${column.javaField}[1]
+      delete query.${column.javaField}
+    }
+#end
+#end
+    return query
+  }
+
+  /**
    * 搜索处理
    * @param params 参数
    */
   const handleSearch = (params: Record<string, any>) => {
-    // 搜索参数赋值
-    Object.assign(searchParams, params)
+    Object.assign(searchParams, buildSearchQuery(params))
     getData()
   }
 
@@ -254,9 +271,9 @@
       cancelButtonText: '取消',
       type: 'error'
     })
-      .then(() => {
+      .then(async () => {
         const ids = selectedRows.value.map((row) => row.${pkColumn.javaField})
-        fetchDelete${BusinessName}(ids)
+        await fetchDelete${BusinessName}(ids)
         selectedRows.value = []
         refreshData()
         ElMessage.success('删除成功')

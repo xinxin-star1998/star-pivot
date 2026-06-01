@@ -139,7 +139,7 @@ public class VelocityUtils
         }
         List<String> templates = new ArrayList<String>();
         templates.add("vm/java/domain.java.vm");
-        templates.add("vm/java/dto/queryDTO.java.vm");
+        templates.add("vm/java/bo/reqBo.java.vm");
         templates.add("vm/java/dto/dto.java.vm");
         templates.add("vm/java/bo/vo.java.vm");
         templates.add("vm/java/mapper.java.vm");
@@ -203,13 +203,14 @@ public class VelocityUtils
 
         if (template.contains("domain.java.vm"))
         {
-            fileName = StringUtils.format("{}/domain/{}.java", javaPath, className);
+            fileName = StringUtils.format("{}/domain/entity/{}.java", javaPath, className);
         }
-        else if (template.contains("queryDTO.java.vm"))
+        else if (template.contains("reqBo.java.vm"))
         {
-            fileName = StringUtils.format("{}/domain/dto/{}QueryDTO.java", javaPath, className);
+            String reqBoSuffix = GenConstants.TPL_TREE.equals(genTable.getTplCategory()) ? "ReqBo" : "ReqPageBo";
+            fileName = StringUtils.format("{}/domain/bo/{}{}.java", javaPath, className, reqBoSuffix);
         }
-        else if (template.contains("dto.java.vm") && !template.contains("queryDTO") && !template.contains("sub-dto"))
+        else if (template.contains("dto.java.vm") && !template.contains("sub-dto"))
         {
             fileName = StringUtils.format("{}/domain/dto/{}DTO.java", javaPath, className);
         }
@@ -219,7 +220,7 @@ public class VelocityUtils
         }
         else if (template.contains("sub-domain.java.vm") && StringUtils.equals(GenConstants.TPL_SUB, genTable.getTplCategory()))
         {
-            fileName = StringUtils.format("{}/domain/{}.java", javaPath, genTable.getSubTable().getClassName());
+            fileName = StringUtils.format("{}/domain/entity/{}.java", javaPath, genTable.getSubTable().getClassName());
         }
         else if (template.contains("sub-dto.java.vm") && StringUtils.equals(GenConstants.TPL_SUB, genTable.getTplCategory()))
         {
@@ -299,11 +300,12 @@ public class VelocityUtils
         }
         
         // 对于特殊文件，使用更友好的名称
-        if (template.contains("queryDTO.java.vm"))
+        if (template.contains("reqBo.java.vm"))
         {
-            return genTable.getClassName() + "QueryDTO.java";
+            String reqBoSuffix = GenConstants.TPL_TREE.equals(genTable.getTplCategory()) ? "ReqBo" : "ReqPageBo";
+            return genTable.getClassName() + reqBoSuffix + ".java";
         }
-        else if (template.contains("dto.java.vm") && !template.contains("queryDTO") && !template.contains("sub-dto"))
+        else if (template.contains("dto.java.vm") && !template.contains("sub-dto"))
         {
             return genTable.getClassName() + "DTO.java";
         }
@@ -404,9 +406,10 @@ public class VelocityUtils
         }
         for (GenTableColumn column : columns)
         {
-            if (!column.isSuperColumn() && GenConstants.TYPE_DATE.equals(column.getJavaType()))
+            if (!column.isSuperColumn() && (GenConstants.TYPE_DATE.equals(column.getJavaType())
+                    || GenConstants.TYPE_LOCAL_DATE_TIME.equals(column.getJavaType())))
             {
-                importList.add("java.util.Date");
+                importList.add("java.time.LocalDateTime");
                 importList.add("com.fasterxml.jackson.annotation.JsonFormat");
             }
             else if (!column.isSuperColumn() && GenConstants.TYPE_BIGDECIMAL.equals(column.getJavaType()))

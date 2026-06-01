@@ -9,7 +9,7 @@ import java.util.List;
 import ${packageName}.domain.dto.${subClassName}DTO;
 #end
 #foreach ($column in $columns)
-#if($column.javaType == 'Date' || $column.javaField == 'createTime' || $column.javaField == 'updateTime')
+#if($column.javaType == 'LocalDateTime' || $column.javaType == 'Date' || $column.javaField == 'createTime' || $column.javaField == 'updateTime')
 import java.time.LocalDateTime;
 #break
 #end
@@ -48,7 +48,7 @@ public class ${ClassName}DTO {
     @NotNull(message = "$column.columnComment不能为空")
 #end
 #end
-#if($column.javaType == 'Date' || $column.javaField == 'createTime' || $column.javaField == 'updateTime')
+#if($column.javaType == 'LocalDateTime' || $column.javaType == 'Date' || $column.javaField == 'createTime' || $column.javaField == 'updateTime')
     private LocalDateTime $column.javaField;
 #else
     private $column.javaType $column.javaField;

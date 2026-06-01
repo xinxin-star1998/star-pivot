@@ -32,8 +32,10 @@ export interface ${subClassName}Sub {
  * ${functionName}搜索参数
  */
 export interface ${BusinessName}SearchParams {
+#if($table.crud || $table.sub)
   pageNum?: number
   pageSize?: number
+#end
 #foreach ($column in $columns)
 #if($column.query)
   $column.javaField?: $column.javaType
@@ -42,10 +44,14 @@ export interface ${BusinessName}SearchParams {
 }
 
 /**
- * 获取${functionName}列表（分页）
+ * 获取${functionName}列表#if($table.tree)（树形，不分页）#else（分页）#end
  */
 export function fetchGet${BusinessName}List(params: ${BusinessName}SearchParams) {
+#if($table.tree)
+  return request.post<${BusinessName}[]>({
+#else
   return request.post<Api.Common.PaginatedResponse<${BusinessName}>>({
+#end
     url: '/api/${moduleName}/${businessName}/list',
     data: params
   })
