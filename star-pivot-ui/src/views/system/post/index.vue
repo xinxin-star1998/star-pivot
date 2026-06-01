@@ -56,7 +56,7 @@
   import PostSearch from './modules/post-search.vue'
   import PostDialog from './modules/post-dialog.vue'
   import { ElMessageBox, ElSwitch, ElMessage } from 'element-plus'
-  import { DialogType } from '@/types'
+  import { DialogType, type ColumnOption } from '@/types'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
 
@@ -103,7 +103,7 @@
         pageSize: 20,
         ...searchForm.value
       },
-      columnsFactory: () => [
+      columnsFactory: (): ColumnOption<PostListItem>[] => [
         { type: 'selection' }, // 勾选列
         // { type: 'index', width: 60, label: '序号' }, // 序号
         {

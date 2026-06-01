@@ -2,13 +2,11 @@
   <div class="spu-image-upload">
     <ElUpload
       v-model:file-list="fileList"
-      :action="uploadAction"
-      :headers="uploadHeaders"
       list-type="picture-card"
       :multiple="multiple"
       :limit="limit"
-      accept="image/*"
-      :on-success="handleSuccess"
+      accept="image/jpeg,image/png,image/gif,image/webp"
+      :http-request="handleUpload"
       :on-remove="handleRemove"
       :on-exceed="handleExceed"
       :before-upload="beforeUpload"
@@ -20,17 +18,26 @@
 </template>
 
 <script setup lang="ts">
-import {Plus} from '@element-plus/icons-vue'
-import type {UploadProps, UploadUserFile} from 'element-plus'
-import {ElMessage} from 'element-plus'
-import {getApiBaseUrl} from '@/utils/http'
-import {useUserStore} from '@/store/modules/user'
+  import { Plus } from '@element-plus/icons-vue'
+  import type { UploadProps, UploadUserFile } from 'element-plus'
+  import { ElMessage } from 'element-plus'
+  import { ref, watch } from 'vue'
+  import { uploadGoodsImage, type GoodsImageUploadVO } from '@/api/mall/goods-image'
+  import {
+    isStorageObjectName,
+    normalizeToObjectName,
+    resolveGoodsImageDisplayUrl,
+    resolveGoodsImageDisplayUrls
+  } from '@/utils/mall/goods-image-url'
 
-defineOptions({ name: 'SpuImageUpload' })
+  defineOptions({ name: 'SpuImageUpload' })
 
   const props = withDefaults(
     defineProps<{
+      /** OSS 对象路径列表（goods/...），存库字段 */
       modelValue: string[]
+      /** 编辑中的商品 ID，用于 OSS 分目录 */
+      goodsId?: number
       multiple?: boolean
       limit?: number
       hint?: string
@@ -46,73 +53,101 @@ defineOptions({ name: 'SpuImageUpload' })
     (e: 'update:modelValue', value: string[]): void
   }>()
 
-  const userStore = useUserStore()
+  type SpuUploadFile = UploadUserFile & { response?: GoodsImageUploadVO }
 
-  const uploadAction = computed(() => {
-    const base = getApiBaseUrl().replace(/\/$/, '')
-    const path = '/common/upload/wangeditor'
-    if (!base || base === '/') return `/api${path}`
-    return `${base}${path}`
-  })
+  const fileList = ref<SpuUploadFile[]>([])
+  const uploading = ref(0)
+  const syncing = ref(false)
 
-  const uploadHeaders = computed(() => {
-    const t = userStore.accessToken
-    if (!t) return {}
-    return { Authorization: t.startsWith('Bearer ') ? t : `Bearer ${t}` }
-  })
+  const getObjectName = (file: SpuUploadFile): string | undefined => {
+    if (file.response?.objectName) return file.response.objectName
+    return normalizeToObjectName(file.url) || undefined
+  }
 
-  const fileList = ref<UploadUserFile[]>([])
+  const collectObjectNames = (): string[] =>
+    fileList.value
+      .map(getObjectName)
+      .filter((name): name is string => !!name && isStorageObjectName(name))
 
-  const syncFileListFromModel = (urls: string[]) => {
-    fileList.value = urls.map((url, index) => ({
-      name: `image-${index}`,
-      url,
-      status: 'success' as const,
-      uid: Date.now() + index
-    }))
+  const emitObjectNames = () => {
+    emit('update:modelValue', collectObjectNames())
+  }
+
+  const buildFileList = async (objectNames: string[]) => {
+    syncing.value = true
+    try {
+      const urlMap = await resolveGoodsImageDisplayUrls(objectNames)
+      fileList.value = objectNames.map((objectName, index) => ({
+        name: `image-${index + 1}`,
+        url: urlMap.get(objectName) || '',
+        status: 'success' as const,
+        uid: Date.now() + index,
+        response: { objectName, displayUrl: urlMap.get(objectName) || '' }
+      }))
+    } finally {
+      syncing.value = false
+    }
   }
 
   watch(
     () => props.modelValue,
-    (urls) => {
-      const next = urls ?? []
-      const current = fileList.value.map((f) => f.url).filter(Boolean)
-      if (next.join('|') !== current.join('|')) {
-        syncFileListFromModel(next)
-      }
+    async (objectNames) => {
+      if (uploading.value > 0 || syncing.value) return
+      const next = (objectNames ?? [])
+        .map(normalizeToObjectName)
+        .filter((name): name is string => isStorageObjectName(name))
+      const current = collectObjectNames()
+      if (next.join('|') === current.join('|')) return
+      await buildFileList(next)
     },
     { immediate: true }
   )
 
-  const emitUrls = () => {
-    const urls = fileList.value.map((f) => f.url).filter((u): u is string => !!u)
-    emit('update:modelValue', urls)
-  }
-
-  const beforeUpload: UploadProps['beforeUpload'] = (file) => {
-    if (!file.type.startsWith('image/')) {
-      ElMessage.warning('只能上传图片文件')
+  const beforeUpload: UploadProps['beforeUpload'] = (rawFile) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if (!allowed.includes(rawFile.type)) {
+      ElMessage.warning('仅支持 JPG、PNG、GIF、WEBP 格式')
+      return false
+    }
+    if (rawFile.size > 5 * 1024 * 1024) {
+      ElMessage.warning('单张图片不能超过 5MB')
       return false
     }
     return true
   }
 
-  const handleSuccess: UploadProps['onSuccess'] = (
-    response: { errno?: number; data?: { url?: string }; message?: string },
-    uploadFile
-  ) => {
-    if (response?.errno === 0 && response.data?.url) {
-      uploadFile.url = response.data.url
-      emitUrls()
-      return
+  const handleUpload: UploadProps['httpRequest'] = async ({ file, onSuccess, onError }) => {
+    uploading.value += 1
+    try {
+      const vo = await uploadGoodsImage(file as File, props.goodsId)
+      if (!vo?.objectName) {
+        throw new Error('上传响应无效')
+      }
+
+      const displayUrl =
+        vo.displayUrl || (await resolveGoodsImageDisplayUrl(vo.objectName, vo.displayUrl))
+
+      const payload: GoodsImageUploadVO = { ...vo, displayUrl }
+      onSuccess(payload)
+
+      const target = fileList.value.find((f) => f.uid === file.uid)
+      if (target && displayUrl) {
+        target.url = displayUrl
+      }
+
+      emitObjectNames()
+      ElMessage.success('图片上传成功')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '图片上传失败'
+      ElMessage.error(message)
+      onError({ message, name: 'UploadError', status: 500, method: 'POST', url: '' })
+    } finally {
+      uploading.value -= 1
     }
-    ElMessage.error(response?.message || '图片上传失败')
-    const idx = fileList.value.findIndex((f) => f.uid === uploadFile.uid)
-    if (idx >= 0) fileList.value.splice(idx, 1)
   }
 
   const handleRemove = () => {
-    emitUrls()
+    emitObjectNames()
   }
 
   const handleExceed = () => {

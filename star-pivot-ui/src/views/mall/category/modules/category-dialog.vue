@@ -32,7 +32,12 @@
         <ElInput v-model="formData.icon" placeholder="图标 URL" maxlength="512" show-word-limit />
       </ElFormItem>
       <ElFormItem label="计量单位" prop="productUnit">
-        <ElInput v-model="formData.productUnit" placeholder="如：件、箱" maxlength="32" show-word-limit />
+        <ElInput
+          v-model="formData.productUnit"
+          placeholder="如：件、箱"
+          maxlength="32"
+          show-word-limit
+        />
       </ElFormItem>
     </ElForm>
     <template #footer>

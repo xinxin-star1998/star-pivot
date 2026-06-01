@@ -9,7 +9,9 @@
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple v-auth="'mall:sku:add'">新增商品库存</ElButton>
+            <ElButton @click="showDialog('add')" v-ripple v-auth="'mall:sku:add'"
+              >新增商品库存</ElButton
+            >
             <ElButton
               type="danger"
               :disabled="selectedRows.length === 0"
@@ -47,18 +49,18 @@
 </template>
 
 <script setup lang="ts">
-import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-import {useTable} from '@/hooks/core/useTable'
-import {fetchDeleteSku, fetchGetSkuList, type WareSku} from '@/api/mall/ware-sku'
-import SkuSearch from './modules/sku-search.vue'
-import SkuDialog from './modules/sku-dialog.vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {DialogType} from '@/types'
-import ArtTable from '@/components/core/tables/art-table/index.vue'
-import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-import {useAuth} from '@/hooks/core/useAuth'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import { useTable } from '@/hooks/core/useTable'
+  import { fetchDeleteSku, fetchGetSkuList, type WareSku } from '@/api/mall/ware-sku'
+  import SkuSearch from './modules/sku-search.vue'
+  import SkuDialog from './modules/sku-dialog.vue'
+  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { DialogType } from '@/types'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import { useAuth } from '@/hooks/core/useAuth'
 
-defineOptions({ name: 'WareSku' })
+  defineOptions({ name: 'WareSku' })
 
   const { hasAuth } = useAuth()
 
@@ -76,7 +78,7 @@ defineOptions({ name: 'WareSku' })
     wareId: undefined,
     stock: undefined,
     skuName: undefined,
-    stockLocked: undefined,
+    stockLocked: undefined
   })
 
   const {
@@ -216,6 +218,10 @@ defineOptions({ name: 'WareSku' })
    * 删除商品库存
    */
   const deleteSku = async (row: WareSku): Promise<void> => {
+    if (row.id == null) {
+      ElMessage.warning('无效的记录')
+      return
+    }
     try {
       await ElMessageBox.confirm(`确定要删除该商品库存吗？`, '删除商品库存', {
         confirmButtonText: '确定',
@@ -248,7 +254,11 @@ defineOptions({ name: 'WareSku' })
       type: 'error'
     })
       .then(() => {
-        const ids = selectedRows.value.map((row) => row.id)
+        const ids = selectedRows.value.map((row) => row.id).filter((id): id is number => id != null)
+        if (!ids.length) {
+          ElMessage.warning('所选记录无效')
+          return
+        }
         fetchDeleteSku(ids)
         selectedRows.value = []
         refreshData()

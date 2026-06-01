@@ -65,7 +65,9 @@ function checkRolePermission(el: HTMLElement, binding: RolesBinding): void {
   const requiredRoles = Array.isArray(binding.value) ? binding.value : [binding.value]
 
   // 检查用户是否具有所需角色之一
-  const hasPermission = requiredRoles.some((role: string) => userRoles.includes(role))
+  const hasPermission = requiredRoles.some((roleKey: string) =>
+    userRoles.some((role) => role.roleKey === roleKey)
+  )
 
   // 如果没有权限，安全地移除元素
   if (!hasPermission) {

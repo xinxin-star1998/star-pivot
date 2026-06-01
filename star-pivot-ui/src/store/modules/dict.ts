@@ -30,8 +30,8 @@
  * @author Art Design Pro Team
  */
 
-import {defineStore} from 'pinia'
-import {fetchGetDictDataByType, type SysDictData} from '@/api/dict/data'
+import { defineStore } from 'pinia'
+import { fetchGetDictDataByType, type SysDictData } from '@/api/dict/data'
 
 /**
  * 字典数据存储结构
@@ -86,7 +86,11 @@ export const useDictStore = defineStore(
       await Promise.all(promises)
     }
 
-    const getDictLabel = (dictType: string, dictValue: string | number | undefined, defaultValue = '-'): string => {
+    const getDictLabel = (
+      dictType: string,
+      dictValue: string | number | undefined,
+      defaultValue = '-'
+    ): string => {
       if (dictValue === undefined || dictValue === null) {
         return defaultValue
       }
@@ -99,7 +103,10 @@ export const useDictStore = defineStore(
       return item?.dictLabel || defaultValue
     }
 
-    const getDictItem = (dictType: string, dictValue: string | number | undefined): SysDictData | undefined => {
+    const getDictItem = (
+      dictType: string,
+      dictValue: string | number | undefined
+    ): SysDictData | undefined => {
       if (dictValue === undefined || dictValue === null) {
         return undefined
       }
@@ -212,9 +219,11 @@ export const useDictStore = defineStore(
             if (parsed.dictCache) {
               Object.entries(parsed.dictCache).forEach(([dictType, dictMap]) => {
                 const map = new Map<string, SysDictData>()
-                Object.entries(dictMap).forEach(([dictValue, item]) => {
-                  map.set(dictValue, item)
-                })
+                Object.entries(dictMap as Record<string, SysDictData>).forEach(
+                  ([dictValue, item]) => {
+                    map.set(dictValue, item as SysDictData)
+                  }
+                )
                 dictCache.set(dictType, map)
               })
             }

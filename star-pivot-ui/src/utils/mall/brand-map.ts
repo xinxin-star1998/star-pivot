@@ -1,5 +1,5 @@
-import {fetchMallBrandList, type MallBrandVo} from '@/api/mall/brand'
-import {defaultResponseAdapter, extractTableData} from '@/utils/table/tableUtils'
+import { fetchMallBrandList, type MallBrandVo } from '@/api/mall/brand'
+import { defaultResponseAdapter, extractTableData } from '@/utils/table/tableUtils'
 
 /** 将品牌列表转为 brandId -> name */
 export function buildBrandNameMap(rows: MallBrandVo[]): Record<number, string> {

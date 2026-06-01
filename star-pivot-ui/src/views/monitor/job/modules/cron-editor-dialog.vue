@@ -44,7 +44,12 @@
               <div class="form-grid">
                 <div class="form-row">
                   <div class="form-row__label">每</div>
-                  <ElInputNumber v-model="minute.every" :min="1" :max="59" controls-position="right" />
+                  <ElInputNumber
+                    v-model="minute.every"
+                    :min="1"
+                    :max="59"
+                    controls-position="right"
+                  />
                   <div class="form-row__label">分钟执行（秒位固定为 0）</div>
                 </div>
               </div>
@@ -53,9 +58,19 @@
               <div class="form-grid">
                 <div class="form-row">
                   <div class="form-row__label">每</div>
-                  <ElInputNumber v-model="hour.every" :min="1" :max="23" controls-position="right" />
+                  <ElInputNumber
+                    v-model="hour.every"
+                    :min="1"
+                    :max="23"
+                    controls-position="right"
+                  />
                   <div class="form-row__label">小时，在第</div>
-                  <ElInputNumber v-model="hour.minute" :min="0" :max="59" controls-position="right" />
+                  <ElInputNumber
+                    v-model="hour.minute"
+                    :min="0"
+                    :max="59"
+                    controls-position="right"
+                  />
                   <div class="form-row__label">分钟执行</div>
                 </div>
               </div>
@@ -66,7 +81,12 @@
                   <div class="form-row__label">每天</div>
                   <ElInputNumber v-model="day.hour" :min="0" :max="23" controls-position="right" />
                   <div class="form-row__label">时</div>
-                  <ElInputNumber v-model="day.minute" :min="0" :max="59" controls-position="right" />
+                  <ElInputNumber
+                    v-model="day.minute"
+                    :min="0"
+                    :max="59"
+                    controls-position="right"
+                  />
                   <div class="form-row__label">分执行</div>
                 </div>
               </div>
@@ -76,12 +96,22 @@
                 <div class="form-row">
                   <div class="form-row__label">每周</div>
                   <ElSelect v-model="week.dow" style="width: 140px">
-                    <ElOption v-for="d in dowOptions" :key="d.value" :label="d.label" :value="d.value" />
+                    <ElOption
+                      v-for="d in dowOptions"
+                      :key="d.value"
+                      :label="d.label"
+                      :value="d.value"
+                    />
                   </ElSelect>
                   <div class="form-row__label">：</div>
                   <ElInputNumber v-model="week.hour" :min="0" :max="23" controls-position="right" />
                   <div class="form-row__label">时</div>
-                  <ElInputNumber v-model="week.minute" :min="0" :max="59" controls-position="right" />
+                  <ElInputNumber
+                    v-model="week.minute"
+                    :min="0"
+                    :max="59"
+                    controls-position="right"
+                  />
                   <div class="form-row__label">分执行</div>
                 </div>
               </div>
@@ -92,9 +122,19 @@
                   <div class="form-row__label">每月</div>
                   <ElInputNumber v-model="month.dom" :min="1" :max="31" controls-position="right" />
                   <div class="form-row__label">号</div>
-                  <ElInputNumber v-model="month.hour" :min="0" :max="23" controls-position="right" />
+                  <ElInputNumber
+                    v-model="month.hour"
+                    :min="0"
+                    :max="23"
+                    controls-position="right"
+                  />
                   <div class="form-row__label">时</div>
-                  <ElInputNumber v-model="month.minute" :min="0" :max="59" controls-position="right" />
+                  <ElInputNumber
+                    v-model="month.minute"
+                    :min="0"
+                    :max="59"
+                    controls-position="right"
+                  />
                   <div class="form-row__label">分执行</div>
                 </div>
               </div>
@@ -106,9 +146,17 @@
               <div class="advanced-title">高级模式</div>
               <div class="advanced-tip">支持直接输入 Cron，适合复杂任务编排</div>
             </div>
-            <ElInput v-model="draft" type="textarea" :rows="4" placeholder="请输入 Cron 表达式" maxlength="100" show-word-limit />
+            <ElInput
+              v-model="draft"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入 Cron 表达式"
+              maxlength="100"
+              show-word-limit
+            />
             <div class="advanced-hint">
-              字段顺序：<span class="mono">秒 分 时 日 月 周</span>，兼容 5 位和 6 位，推荐使用 6 位。
+              字段顺序：<span class="mono">秒 分 时 日 月 周</span>，兼容 5 位和 6 位，推荐使用 6
+              位。
             </div>
           </div>
         </div>
@@ -247,7 +295,21 @@
   }
 
   watch(
-    [mode, visualTab, () => minute.every, () => hour.every, () => hour.minute, () => day.hour, () => day.minute, () => week.dow, () => week.hour, () => week.minute, () => month.dom, () => month.hour, () => month.minute],
+    [
+      mode,
+      visualTab,
+      () => minute.every,
+      () => hour.every,
+      () => hour.minute,
+      () => day.hour,
+      () => day.minute,
+      () => week.dow,
+      () => week.hour,
+      () => week.minute,
+      () => month.dom,
+      () => month.hour,
+      () => month.minute
+    ],
     () => {
       if (mode.value === 'visual') draft.value = buildVisualCron()
     },
@@ -329,7 +391,14 @@
 
     // 0 0/5 * * * ?
     const minuteEvery = m?.match(/^0\/(\d{1,2})$/)
-    if (s === '0' && minuteEvery && h === '*' && dom === '*' && mon === '*' && (dow === '?' || dow === '*')) {
+    if (
+      s === '0' &&
+      minuteEvery &&
+      h === '*' &&
+      dom === '*' &&
+      mon === '*' &&
+      (dow === '?' || dow === '*')
+    ) {
       return `每 ${minuteEvery[1]} 分钟执行`
     }
 
@@ -340,13 +409,35 @@
     }
 
     // 0 m H * * ?
-    if (s === '0' && /^\d{1,2}$/.test(m) && /^\d{1,2}$/.test(h) && dom === '*' && mon === '*' && (dow === '?' || dow === '*')) {
+    if (
+      s === '0' &&
+      /^\d{1,2}$/.test(m) &&
+      /^\d{1,2}$/.test(h) &&
+      dom === '*' &&
+      mon === '*' &&
+      (dow === '?' || dow === '*')
+    ) {
       return `每天 ${timeText(h, m)} 执行`
     }
 
     // 0 m H ? * MON
-    if (s === '0' && /^\d{1,2}$/.test(m) && /^\d{1,2}$/.test(h) && dom === '?' && mon === '*' && /^[A-Z]{3}(-[A-Z]{3})?$/.test(dow)) {
-      const map: Record<string, string> = { MON: '周一', TUE: '周二', WED: '周三', THU: '周四', FRI: '周五', SAT: '周六', SUN: '周日' }
+    if (
+      s === '0' &&
+      /^\d{1,2}$/.test(m) &&
+      /^\d{1,2}$/.test(h) &&
+      dom === '?' &&
+      mon === '*' &&
+      /^[A-Z]{3}(-[A-Z]{3})?$/.test(dow)
+    ) {
+      const map: Record<string, string> = {
+        MON: '周一',
+        TUE: '周二',
+        WED: '周三',
+        THU: '周四',
+        FRI: '周五',
+        SAT: '周六',
+        SUN: '周日'
+      }
       if (dow.includes('-')) {
         const [a, b] = dow.split('-')
         return `${map[a] ?? a}至${map[b] ?? b} ${timeText(h, m)} 执行`
@@ -355,7 +446,14 @@
     }
 
     // 0 m H D * ?
-    if (s === '0' && /^\d{1,2}$/.test(m) && /^\d{1,2}$/.test(h) && /^\d{1,2}$/.test(dom) && mon === '*' && dow === '?') {
+    if (
+      s === '0' &&
+      /^\d{1,2}$/.test(m) &&
+      /^\d{1,2}$/.test(h) &&
+      /^\d{1,2}$/.test(dom) &&
+      mon === '*' &&
+      dow === '?'
+    ) {
       return `每月 ${dom} 号 ${timeText(h, m)} 执行`
     }
 
@@ -497,7 +595,9 @@
     color: var(--el-text-color-secondary);
   }
   .mono {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+      monospace;
   }
 
   .cron-side {
@@ -582,4 +682,3 @@
     color: var(--el-text-color-secondary);
   }
 </style>
-

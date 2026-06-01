@@ -42,7 +42,7 @@ import { useUserStore } from '@/store/modules/user'
 import { useMenuStore } from '@/store/modules/menu'
 import { setWorktab } from '@/utils/navigation'
 import { setPageTitle } from '@/utils/router'
-import { handleLoginStatus, handleRootPathRedirect, isStaticRoute } from './authGuard'
+import { handleLoginStatus, handleRootPathRedirect, handleRegisterRouteGuard, isStaticRoute } from './authGuard'
 import {
   setupRouteRegistry,
   handleDynamicRoutes,
@@ -94,6 +94,11 @@ async function handleRouteGuard(
   // 启动进度条
   if (settingStore.showNprogress) {
     NProgress.start()
+  }
+
+  // 0. 注册页开关校验（需在登录态检查之前，未登录也可拦截）
+  if (!(await handleRegisterRouteGuard(to, next))) {
+    return
   }
 
   // 1. 检查登录状态

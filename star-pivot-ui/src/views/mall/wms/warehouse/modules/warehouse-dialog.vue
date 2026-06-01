@@ -48,22 +48,22 @@
 </template>
 
 <script setup lang="ts">
-import type {CascaderInstance, FormInstance, FormRules} from 'element-plus'
-import {
-  fetchWmsWareInfoAdd,
-  fetchWmsWareInfoById,
-  fetchWmsWareInfoUpdate,
-  type WmsWareInfoSavePayload,
-  type WmsWareInfoVo
-} from '@/api/mall/wareinfo'
-import type {DialogType} from '@/types'
-import {
-  resolveAddressCodePath,
-  WAREHOUSE_MAX_AREA_LEVEL,
-  warehouseAddressCascaderProps
-} from '@/utils/mall/address-cascader'
+  import type { CascaderInstance, CascaderValue, FormInstance, FormRules } from 'element-plus'
+  import {
+    fetchWmsWareInfoAdd,
+    fetchWmsWareInfoById,
+    fetchWmsWareInfoUpdate,
+    type WmsWareInfoSavePayload,
+    type WmsWareInfoVo
+  } from '@/api/mall/wareinfo'
+  import type { DialogType } from '@/types'
+  import {
+    resolveAddressCodePath,
+    WAREHOUSE_MAX_AREA_LEVEL,
+    warehouseAddressCascaderProps
+  } from '@/utils/mall/address-cascader'
 
-interface Props {
+  interface Props {
     visible: boolean
     type: DialogType
     wareData?: Partial<WmsWareInfoVo>
@@ -103,8 +103,8 @@ interface Props {
     formData.areaPath = [...areaPath.value]
   }
 
-  const handleAreaChange = (path: string[] | undefined) => {
-    const codes = path ?? []
+  const handleAreaChange = (value: CascaderValue | null | undefined) => {
+    const codes = Array.isArray(value) ? value.map(String) : []
     areaPath.value = codes
     formData.areacode = codes.length ? codes[codes.length - 1] : ''
     syncAreaPathToForm()

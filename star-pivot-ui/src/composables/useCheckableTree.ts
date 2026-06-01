@@ -61,7 +61,7 @@ export function useCheckableTree<T extends AnyRecord>(options: UseCheckableTreeO
 
     const checkedKeys: any[] = tree.getCheckedKeys?.() || []
     const halfCheckedKeys: any[] = tree.getHalfCheckedKeys?.() || []
-    const allKeys = getAllKeys(data.value)
+    const allKeys = getAllKeys(data.value as T[])
 
     selectAll.value = checkedKeys.length === allKeys.length && allKeys.length > 0
     indeterminate.value = (checkedKeys.length > 0 || halfCheckedKeys.length > 0) && !selectAll.value
@@ -72,7 +72,7 @@ export function useCheckableTree<T extends AnyRecord>(options: UseCheckableTreeO
     if (!tree) return
 
     if (selectAll.value) {
-      tree.setCheckedKeys(getAllKeys(data.value))
+      tree.setCheckedKeys(getAllKeys(data.value as T[]))
       indeterminate.value = false
     } else {
       tree.setCheckedKeys([])

@@ -71,14 +71,15 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { useRouter } from 'vue-router'
+  import type { ColumnOption } from '@/types'
 
   const { hasAuth } = useAuth()
 
   defineOptions({ name: 'Role' })
 
-  const router = useRouter()
-
   type RoleListItem = Api.SystemManage.RoleListItem
+
+  const router = useRouter()
 
   // 搜索表单
   const searchForm = ref({
@@ -119,7 +120,7 @@
       },
       // 排除 apiParams 中的属性
       excludeParams: ['date range'],
-      columnsFactory: () => [
+      columnsFactory: (): ColumnOption<RoleListItem>[] => [
         {
           type: 'index',
           label: '序号',

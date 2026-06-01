@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { EChartsOption } from '@/plugins/echarts'
+  import type { EChartsOption, TooltipComponentOption } from '@/plugins/echarts'
   import { getCssVar } from '@/utils/ui'
   import { useChartOps, useChartComponent } from '@/hooks/core/useChart'
   import type { ScatterChartProps } from '@/types/component/chart'
@@ -68,10 +68,11 @@
         },
         tooltip: props.showTooltip
           ? getTooltipStyle('item', {
-              formatter: (params: { value: [number, number] }) => {
-                const [x, y] = params.value
+              formatter: ((params) => {
+                const point = params as { value: [number, number] }
+                const [x, y] = point.value
                 return `X: ${x}<br/>Y: ${y}`
-              }
+              }) as TooltipComponentOption['formatter']
             })
           : undefined,
         xAxis: {

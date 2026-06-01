@@ -98,7 +98,7 @@
       return props.itemKey(item, index)
     }
     if (typeof props.itemKey === 'string') {
-      return item[props.itemKey]
+      return item[props.itemKey] as string | number
     }
     return index
   }

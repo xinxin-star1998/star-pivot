@@ -68,7 +68,7 @@
       type: 'input',
       placeholder: '请输入锁定库存',
       clearable: true
-    },
+    }
   ])
 
   // 事件

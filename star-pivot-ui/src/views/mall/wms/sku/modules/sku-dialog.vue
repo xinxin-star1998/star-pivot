@@ -32,11 +32,11 @@
 </template>
 
 <script setup lang="ts">
-import type {FormInstance, FormRules} from 'element-plus'
-import {ElMessage} from 'element-plus'
-import {fetchAddSku, fetchGetSkuById, fetchUpdateSku, type WareSku} from '@/api/mall/ware-sku'
+  import type { FormInstance, FormRules } from 'element-plus'
+  import { ElMessage } from 'element-plus'
+  import { fetchAddSku, fetchGetSkuById, fetchUpdateSku, type WareSku } from '@/api/mall/ware-sku'
 
-interface Props {
+  interface Props {
     visible: boolean
     type: string
     skuData?: Partial<WareSku>
@@ -61,21 +61,17 @@ interface Props {
   // 表单实例
   const formRef = ref<FormInstance>()
 
-
   // 表单数据
   const formData = reactive({
     skuId: 0,
     wareId: 0,
     stock: 0,
     skuName: '',
-    stockLocked: 0,
+    stockLocked: 0
   })
 
-
   // 表单验证规则
-  const rules: FormRules = {
-  }
-
+  const rules: FormRules = {}
 
   /**
    * 初始化表单数据
@@ -95,7 +91,7 @@ interface Props {
             wareId: detail.wareId || 0,
             stock: detail.stock || 0,
             skuName: detail.skuName || '',
-            stockLocked: detail.stockLocked || 0,
+            stockLocked: detail.stockLocked || 0
           })
         }
       } catch (error) {
@@ -108,7 +104,7 @@ interface Props {
           wareId: row.wareId || 0,
           stock: row.stock || 0,
           skuName: row.skuName || '',
-          stockLocked: row.stockLocked || 0,
+          stockLocked: row.stockLocked || 0
         })
       }
     } else {
@@ -118,7 +114,7 @@ interface Props {
         wareId: 0,
         stock: 0,
         skuName: '',
-        stockLocked: 0,
+        stockLocked: 0
       })
     }
   }
@@ -155,7 +151,7 @@ interface Props {
             wareId: formData.wareId,
             stock: formData.stock,
             skuName: formData.skuName,
-            stockLocked: formData.stockLocked,
+            stockLocked: formData.stockLocked
           }
 
           if (dialogType.value === 'add') {
@@ -174,7 +170,6 @@ interface Props {
       }
     })
   }
-
 </script>
 
 <style scoped lang="scss">

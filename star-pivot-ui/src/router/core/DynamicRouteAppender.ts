@@ -20,8 +20,14 @@
  * @author Art Design Pro Team
  */
 
-import type {AppRouteRecord} from '@/types/router'
-import {safeLog, safeWarn} from '@/utils'
+import type { AppRouteRecord } from '@/types/router'
+import { safeLog, safeWarn } from '@/utils'
+
+interface RouteIndex {
+  names: Set<string>
+  paths: Set<string>
+  nestedPaths: Map<string, AppRouteRecord[]>
+}
 
 /**
  * 前端动态路由追加器
@@ -64,18 +70,14 @@ export class DynamicRouteAppender {
    * @param menuList 菜单列表
    * @returns 路由索引对象
    */
-  private static buildRouteIndex(menuList: AppRouteRecord[]): {
-    names: Set<string>
-    paths: Set<string>
-    nestedPaths: Map<string, AppRouteRecord[]>
-  } {
+  private static buildRouteIndex(menuList: AppRouteRecord[]): RouteIndex {
     const names = new Set<string>()
     const paths = new Set<string>()
     const nestedPaths = new Map<string, AppRouteRecord[]>()
 
     const traverseRoutes = (routes: AppRouteRecord[]) => {
       routes.forEach((route) => {
-        if (route.name) names.add(route.name)
+        if (route.name) names.add(String(route.name))
         if (route.path) paths.add(route.path)
 
         if (route.children && route.children.length > 0) {
@@ -96,7 +98,7 @@ export class DynamicRouteAppender {
    * @param menuList 菜单列表
    * @param routeIndex 路由索引
    */
-  static appendDashboardConsoleRoute(menuList: AppRouteRecord[], routeIndex: any): void {
+  static appendDashboardConsoleRoute(menuList: AppRouteRecord[], routeIndex: RouteIndex): void {
     // 检查是否已存在工作台路由
     if (routeIndex.names.has('Console') || routeIndex.paths.has('/dashboard/console')) {
       safeWarn('[DynamicRouteAppender] 工作台路由已存在，跳过追加')
@@ -184,7 +186,7 @@ export class DynamicRouteAppender {
    * @param menuList 菜单列表
    * @param routeIndex 路由索引
    */
-  static appendUserCenterRoute(menuList: AppRouteRecord[], routeIndex: any): void {
+  static appendUserCenterRoute(menuList: AppRouteRecord[], routeIndex: RouteIndex): void {
     if (routeIndex.names.has('UserCenter') || routeIndex.paths.has('/system/user-center')) {
       safeWarn('[DynamicRouteAppender] 个人中心路由已存在，跳过追加')
       return
@@ -215,7 +217,7 @@ export class DynamicRouteAppender {
    * @param menuList 菜单列表
    * @param routeIndex 路由索引
    */
-  static appendAssignUserRoute(menuList: AppRouteRecord[], routeIndex: any): void {
+  static appendAssignUserRoute(menuList: AppRouteRecord[], routeIndex: RouteIndex): void {
     if (
       routeIndex.names.has('AssignUser') ||
       Array.from(routeIndex.paths).some((path) => path.includes('/system/role/assign-user'))
@@ -253,7 +255,7 @@ export class DynamicRouteAppender {
    * @param menuList 菜单列表
    * @param routeIndex 路由索引
    */
-  static appendGenEditRoute(menuList: AppRouteRecord[], routeIndex: any): void {
+  static appendGenEditRoute(menuList: AppRouteRecord[], routeIndex: RouteIndex): void {
     if (
       routeIndex.names.has('GenEdit') ||
       Array.from(routeIndex.paths).some((path) => path.includes('/tool/gen/edit'))
@@ -290,7 +292,7 @@ export class DynamicRouteAppender {
    * 追加商城 SPU 发布向导（新增 / 编辑，数据库不存菜单）
    * 必须挂到已有 /mall 目录下，避免与商城根路由重复注册导致 addRoute 被跳过、访问 500。
    */
-  static appendMallProductSpuRoutes(menuList: AppRouteRecord[], routeIndex: any): void {
+  static appendMallProductSpuRoutes(menuList: AppRouteRecord[], routeIndex: RouteIndex): void {
     const mallRoot = this.findRouteNode(
       menuList,
       (r) => r.path === '/mall' || r.name === 'MallSystem'
@@ -306,10 +308,10 @@ export class DynamicRouteAppender {
 
     const hasAdd =
       routeIndex.names.has('MallProductAdd') ||
-      Array.from(routeIndex.paths).some((p: string) => String(p).includes('product/add'))
+      Array.from(routeIndex.paths).some((p) => String(p).includes('product/add'))
     const hasEdit =
       routeIndex.names.has('MallProductEdit') ||
-      Array.from(routeIndex.paths).some((p: string) => String(p).includes('product/edit'))
+      Array.from(routeIndex.paths).some((p) => String(p).includes('product/edit'))
 
     if (!hasAdd) {
       mallRoot.children.push({
@@ -375,7 +377,7 @@ export class DynamicRouteAppender {
    * @param menuList 菜单列表
    * @param routeIndex 路由索引
    */
-  static appendDruidIframeRoute(menuList: AppRouteRecord[], routeIndex: any): void {
+  static appendDruidIframeRoute(menuList: AppRouteRecord[], routeIndex: RouteIndex): void {
     if (routeIndex.names.has('DruidIframe') || routeIndex.paths.has('/monitor/druid-iframe')) {
       safeWarn('[DynamicRouteAppender] Druid 监控路由已存在，跳过追加')
       return

@@ -49,7 +49,13 @@
  * @author Art Design Pro Team
  */
 
-import { echarts, type EChartsOption } from '@/plugins/echarts'
+import {
+  echarts,
+  type EChartsOption,
+  type GridComponentOption,
+  type LegendComponentOption,
+  type TooltipComponentOption
+} from '@/plugins/echarts'
 import { storeToRefs } from 'pinia'
 import { useSettingStore } from '@/store/modules/setting'
 import { getCssVar } from '@/utils/ui'
@@ -272,8 +278,8 @@ export function useChart(options: UseChartOptions = {}) {
   // 获取统一的 tooltip 配置
   const getTooltipStyle = (
     trigger: 'item' | 'axis' = 'axis',
-    customOptions: Partial<echarts.EChartsCoreOption> = {}
-  ) => ({
+    customOptions: Partial<TooltipComponentOption> = {}
+  ): TooltipComponentOption => ({
     trigger,
     backgroundColor: isDark.value ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
     borderColor: isDark.value ? '#333' : '#ddd',
@@ -287,8 +293,8 @@ export function useChart(options: UseChartOptions = {}) {
   // 获取统一的图例配置
   const getLegendStyle = (
     position: 'bottom' | 'top' | 'left' | 'right' = 'bottom',
-    customOptions: Partial<echarts.EChartsCoreOption> = {}
-  ) => {
+    customOptions: Partial<LegendComponentOption> = {}
+  ): LegendComponentOption => {
     const baseConfig = {
       textStyle: {
         color: isDark.value ? '#fff' : '#333'
@@ -342,8 +348,8 @@ export function useChart(options: UseChartOptions = {}) {
   const getGridWithLegend = (
     showLegend: boolean,
     legendPosition: 'bottom' | 'top' | 'left' | 'right' = 'bottom',
-    baseGrid: Partial<echarts.EChartsCoreOption['GridComponentOption']> = {}
-  ) => {
+    baseGrid: Partial<GridComponentOption> = {}
+  ): GridComponentOption => {
     const defaultGrid = {
       top: 15,
       right: 15,

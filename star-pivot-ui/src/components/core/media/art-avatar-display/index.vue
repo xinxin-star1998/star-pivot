@@ -11,10 +11,11 @@
 
 <script setup lang="ts">
   import { fetchGetAvatarPresignedUrl } from '@/api/user/user'
+  import { extractOssObjectPath, needsOssPresignedDisplay } from '@/utils/storage/oss-object-path'
 
   const props = withDefaults(
     defineProps<{
-      /** 头像地址（可能是 OSS 私有桶永久地址，组件内部会请求临时 URL 用于展示） */
+      /** 头像地址（OSS 私有桶永久地址时，组件内部会请求临时 URL 用于展示） */
       avatarUrl?: string
       /** 尺寸（像素） */
       size?: number
@@ -30,48 +31,13 @@
 
   const displayUrl = ref('')
 
-  function extractFilePathFromUrl(url: string): string | null {
-    try {
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        return url
-      }
-      const urlObj = new URL(url)
-      let pathname = urlObj.pathname
-      if (pathname.startsWith('/')) {
-        pathname = pathname.slice(1)
-      }
-      const hostname = urlObj.hostname
-      const parts = pathname.split('/')
-      if (parts.length === 0 || (parts.length === 1 && parts[0] === '')) {
-        return null
-      }
-      if (hostname.includes('.oss-') || hostname.includes('.aliyuncs.com')) {
-        return pathname
-      }
-      if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-        if (parts.length > 1) {
-          return parts.slice(1).join('/')
-        }
-        return pathname
-      }
-      if (parts.length > 1) {
-        return parts.slice(1).join('/')
-      }
-      return pathname
-    } catch {
-      return url.includes('/') ? url : null
-    }
-  }
-
   async function resolveDisplayUrl(url: string) {
-    if (!url || url === '') {
+    if (!url) {
       displayUrl.value = ''
       return
     }
-    const isOssPermanent = url.includes('aliyuncs.com') || url.includes('.oss-')
-    const isMinioPermanent = url.includes('localhost') || url.includes('127.0.0.1')
-    const filePath = extractFilePathFromUrl(url)
-    if ((isOssPermanent || isMinioPermanent) && filePath) {
+    const filePath = extractOssObjectPath(url)
+    if (needsOssPresignedDisplay(url) && filePath) {
       try {
         const response = (await fetchGetAvatarPresignedUrl(filePath)) as any
         const presigned = response?.presignedUrl ?? response?.data?.presignedUrl

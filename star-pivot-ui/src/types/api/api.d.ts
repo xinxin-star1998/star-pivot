@@ -154,6 +154,11 @@ declare namespace Api {
       /** 昵称（可选） */
       nickName?: string
     }
+
+    /** 注册开关配置 */
+    interface RegisterConfigResponse {
+      registerEnabled: boolean
+    }
   }
 
   /** 系统管理类型 */

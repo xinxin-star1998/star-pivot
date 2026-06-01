@@ -82,7 +82,12 @@
                 <ElButton v-auth="'mall:category:edit'" link type="primary" @click="openEdit(data)">
                   编辑
                 </ElButton>
-                <ElButton v-auth="'mall:category:delete'" link type="danger" @click="handleRemove(data)">
+                <ElButton
+                  v-auth="'mall:category:delete'"
+                  link
+                  type="danger"
+                  @click="handleRemove(data)"
+                >
                   删除
                 </ElButton>
               </ElSpace>

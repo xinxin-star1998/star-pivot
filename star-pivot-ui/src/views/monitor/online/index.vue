@@ -93,6 +93,7 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import { usePageVisibility } from '@/hooks/core/usePageVisibility'
   import type { OnlineUser, OnlineUserQueryParams } from '@/types/api/monitor'
+  import type { ColumnOption } from '@/types'
 
   defineOptions({ name: 'OnlineUser' })
 
@@ -123,7 +124,7 @@
   const selectedRows = ref<OnlineUser[]>([])
 
   // 表格列
-  const columns = ref([
+  const columns = ref<ColumnOption[]>([
     { type: 'selection' },
     { type: 'index', width: 60, label: '序号' },
     { prop: 'userName', label: '用户名', width: 120 },
@@ -138,7 +139,7 @@
     // { prop: 'operation', label: '操作', width: 120, fixed: 'right', slot: 'operation' }
   ])
 
-  const columnChecks = ref(columns.value.map((col) => col.prop || col.type))
+  const columnChecks = ref<ColumnOption[]>([...columns.value])
 
   /**
    * 获取在线用户数据

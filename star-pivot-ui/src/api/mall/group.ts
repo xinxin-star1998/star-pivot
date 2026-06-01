@@ -19,10 +19,10 @@ export interface Group {
 export interface GroupSearchParams {
   pageNum?: number
   pageSize?: number
-  attrGroupName?: String
+  attrGroupName?: string
   sort?: number
-  descript?: String
-  icon?: String
+  descript?: string
+  icon?: string
   catelogId?: number
 }
 

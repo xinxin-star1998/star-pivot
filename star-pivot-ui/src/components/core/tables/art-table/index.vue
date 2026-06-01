@@ -18,58 +18,59 @@
         headerCellStyle
       }"
     >
-      <template v-for="col in columns" :key="col.prop || col.type">
-        <!-- 渲染全局序号列 -->
-        <ElTableColumn v-if="col.type === 'globalIndex'" v-bind="{ ...col }">
-          <template #default="{ $index }">
-            <span>{{ getGlobalIndex($index) }}</span>
-          </template>
-        </ElTableColumn>
-
-        <!-- 渲染展开行 -->
-        <ElTableColumn v-else-if="col.type === 'expand'" v-bind="cleanColumnProps(col)">
-          <template #default="{ row }">
-            <component :is="col.formatter ? col.formatter(row) : null" />
-          </template>
-        </ElTableColumn>
-
-        <!-- 渲染普通列 -->
-        <ElTableColumn v-else v-bind="cleanColumnProps(col)">
-          <template v-if="col.useHeaderSlot && col.prop" #header="headerScope">
-            <slot
-              :name="col.headerSlotName || `${col.prop}-header`"
-              v-bind="{ ...headerScope, prop: col.prop, label: col.label }"
-            >
-              {{ col.label }}
-            </slot>
-          </template>
-          <!-- 如果有formatter，使用formatter渲染 -->
-          <template v-if="col.formatter && !col.useSlot" #default="slotScope">
-            <template
-              v-if="
-                typeof col.formatter(slotScope.row) === 'string' ||
-                typeof col.formatter(slotScope.row) === 'number'
-              "
-            >
-              {{ col.formatter(slotScope.row) }}
+      <template #default>
+        <template v-for="col in columns" :key="col.prop || col.type">
+          <!-- 渲染全局序号列 -->
+          <ElTableColumn v-if="col.type === 'globalIndex'" v-bind="cleanColumnProps(col)">
+            <template #default="{ $index }">
+              <span>{{ getGlobalIndex($index) }}</span>
             </template>
-            <component v-else :is="col.formatter(slotScope.row)" />
-          </template>
-          <!-- 如果使用插槽 -->
-          <template v-else-if="col.useSlot && col.prop" #default="slotScope">
-            <slot
-              :name="col.slotName || col.prop"
-              v-bind="{
-                ...slotScope,
-                prop: col.prop,
-                value: col.prop ? slotScope.row[col.prop] : undefined
-              }"
-            />
-          </template>
-        </ElTableColumn>
-      </template>
+          </ElTableColumn>
 
-      <template v-if="$slots.default" #default><slot /></template>
+          <!-- 渲染展开行 -->
+          <ElTableColumn v-else-if="col.type === 'expand'" v-bind="cleanColumnProps(col)">
+            <template #default="{ row }">
+              <component :is="col.formatter ? col.formatter(row) : null" />
+            </template>
+          </ElTableColumn>
+
+          <!-- 渲染普通列 -->
+          <ElTableColumn v-else v-bind="cleanColumnProps(col)">
+            <template v-if="col.useHeaderSlot && col.prop" #header="headerScope">
+              <slot
+                :name="col.headerSlotName || `${col.prop}-header`"
+                v-bind="{ ...headerScope, prop: col.prop, label: col.label }"
+              >
+                {{ col.label }}
+              </slot>
+            </template>
+            <!-- 如果有formatter，使用formatter渲染 -->
+            <template v-if="col.formatter && !col.useSlot" #default="slotScope">
+              <template
+                v-if="
+                  typeof col.formatter(slotScope.row) === 'string' ||
+                  typeof col.formatter(slotScope.row) === 'number'
+                "
+              >
+                {{ col.formatter(slotScope.row) }}
+              </template>
+              <component v-else :is="col.formatter(slotScope.row)" />
+            </template>
+            <!-- 如果使用插槽 -->
+            <template v-else-if="col.useSlot && col.prop" #default="slotScope">
+              <slot
+                :name="col.slotName || col.prop"
+                v-bind="{
+                  ...slotScope,
+                  prop: col.prop,
+                  value: col.prop ? slotScope.row[col.prop] : undefined
+                }"
+              />
+            </template>
+          </ElTableColumn>
+        </template>
+        <slot />
+      </template>
 
       <template #empty>
         <div v-if="loading"></div>
@@ -97,15 +98,15 @@
 </template>
 
 <script setup lang="ts">
-import type {ElTable, TableProps} from 'element-plus'
-import {storeToRefs} from 'pinia'
-import {ColumnOption} from '@/types'
-import {useTableStore} from '@/store/modules/table'
-import {useCommon} from '@/hooks/core/useCommon'
-import {useTableHeight} from '@/hooks/core/useTableHeight'
-import {useResizeObserver, useWindowSize} from '@vueuse/core'
+  import type { ElTable, TableColumnCtx, TableProps } from 'element-plus'
+  import { storeToRefs } from 'pinia'
+  import { ColumnOption } from '@/types'
+  import { useTableStore } from '@/store/modules/table'
+  import { useCommon } from '@/hooks/core/useCommon'
+  import { useTableHeight } from '@/hooks/core/useTableHeight'
+  import { useResizeObserver, useWindowSize } from '@vueuse/core'
 
-defineOptions({ name: 'ArtTable' })
+  defineOptions({ name: 'ArtTable' })
 
   const { width } = useWindowSize()
   const elTableRef = ref<InstanceType<typeof ElTable> | null>(null)
@@ -277,16 +278,16 @@ defineOptions({ name: 'ArtTable' })
   const showPagination = computed(() => props.pagination && !isEmpty.value)
 
   // 清理列属性，移除插槽相关的自定义属性，确保它们不会被 ElTableColumn 错误解释
-  const cleanColumnProps = (col: ColumnOption) => {
-    const columnProps = { ...col }
-    // 删除自定义的插槽控制属性
+  const cleanColumnProps = (
+    col: ColumnOption
+  ): Partial<TableColumnCtx<Record<string, unknown>>> => {
+    const columnProps = { ...col } as Record<string, unknown>
     delete columnProps.useHeaderSlot
     delete columnProps.headerSlotName
     delete columnProps.useSlot
     delete columnProps.slotName
-    // ArtTable 自定义 formatter 走 #default 插槽，勿传给 ElTableColumn 避免与 EP 内置 formatter 冲突
     delete columnProps.formatter
-    return columnProps
+    return columnProps as Partial<TableColumnCtx<Record<string, unknown>>>
   }
 
   // 分页大小变化

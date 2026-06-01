@@ -1,4 +1,4 @@
-import {fetchMallCategoryTree, type MallCategoryTreeNode} from '@/api/mall/category'
+import { fetchMallCategoryTree, type MallCategoryTreeNode } from '@/api/mall/category'
 
 /** 将分类树展平为 catId -> name */
 export function buildCategoryNameMap(
