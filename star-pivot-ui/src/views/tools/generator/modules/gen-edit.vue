@@ -222,8 +222,13 @@
     moduleName: '',
     businessName: '',
     functionName: '',
-    genType: '0',
-    genPath: ''
+    genType: '0' as '0' | '1',
+    genPath: '',
+    treeCode: '',
+    treeParentCode: '',
+    treeName: '',
+    parentMenuId: undefined as number | string | undefined,
+    parentMenuName: ''
   })
 
   // 字段列表数据
@@ -276,7 +281,7 @@
       genInfoForm.moduleName = info.moduleName || ''
       genInfoForm.businessName = info.businessName || ''
       genInfoForm.functionName = info.functionName || ''
-      genInfoForm.genType = info.genType || '0'
+      genInfoForm.genType = (info.genType || '0') as '0' | '1'
       genInfoForm.genPath = info.genPath || ''
 
       // 树表与上级菜单等生成附加信息（用于编辑回显）

@@ -118,7 +118,7 @@
       await fetchCreateTable(formData.tableSql.trim())
       ElMessage.success('创建表成功')
       dialogVisible.value = false
-      emit('submit', formData.tableSql.trim())
+      emit('submit', { tableSql: formData.tableSql.trim() })
     } catch (error) {
       console.error('创建表失败:', error)
       ElMessage.error('创建表失败，请检查SQL语句是否正确')

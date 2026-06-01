@@ -56,6 +56,7 @@
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { fetchGetDbList, fetchImportTable } from '@/api/generator/gen-table'
+  import type { ColumnOption } from '@/types'
 
   interface ImportTableItem {
     /** 表名称 */
@@ -100,7 +101,7 @@
   const loading = ref(false)
 
   // 表格列配置
-  const columns = ref([
+  const columns = ref<ColumnOption[]>([
     {
       type: 'selection',
       width: 55

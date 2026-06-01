@@ -229,8 +229,8 @@
    * 监听弹窗显示状态和 tableId 变化
    */
   watch(
-    () => [props.visible, props.tableId],
-    ([newVisible, newTableId]: [boolean, number | undefined]) => {
+    [() => props.visible, () => props.tableId],
+    ([newVisible, newTableId]) => {
       if (newVisible && newTableId) {
         loadPreviewCode(newTableId)
         // 延迟设置滚轮监听，确保 DOM 已渲染
