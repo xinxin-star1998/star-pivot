@@ -22,9 +22,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 @Slf4j
 @Aspect
@@ -149,15 +151,24 @@ public class LogAspect {
         try {
             Object[] args = joinPoint.getArgs();
             if (args != null && args.length > 0) {
-                String params = objectMapper.writeValueAsString(args);
-                params = LogUtils.desensitizeParam(params);
-                params = truncateString(params, 2000);
-                operLog.setOperParam(params);
+                Object[] filteredArgs = filterMultipartFiles(args);
+                if (filteredArgs.length > 0) {
+                    String params = objectMapper.writeValueAsString(filteredArgs);
+                    params = LogUtils.desensitizeParam(params);
+                    params = truncateString(params, 2000);
+                    operLog.setOperParam(params);
+                }
             }
         } catch (Exception e) {
             log.warn("记录请求参数失败", e);
             operLog.setOperParam("参数解析失败");
         }
+    }
+
+    private Object[] filterMultipartFiles(Object[] args) {
+        return Arrays.stream(args)
+                .filter(arg -> !(arg instanceof MultipartFile))
+                .toArray();
     }
 
     private void setResponseInfo(SysOperLog operLog, Object result, Log logAnnotation) {

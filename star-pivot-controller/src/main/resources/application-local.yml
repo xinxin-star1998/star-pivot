@@ -53,18 +53,10 @@ logging:
     com.star.pivot: ${LOG_LEVEL:debug}
     org.springframework.security: ${SECURITY_LOG_LEVEL:debug}
     org.apache.ibatis: ${SQL_LOG_LEVEL:DEBUG}
-# -----------------------------------------------------------------------------
-# MinIO 配置（本地开发环境使用 MinIO）
-# -----------------------------------------------------------------------------
-file-storage:
-  type: minio
 
-minio:
-  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
-  access-key: ${MINIO_ACCESS_KEY:admin}
-  secret-key: ${MINIO_SECRET_KEY:admin123456}
-  bucket-name: ${MINIO_BUCKET_NAME:star-pivot-avatar}
-  url-prefix: ${MINIO_URL_PREFIX:http://localhost:9000/star-pivot-avatar}
+# -----------------------------------------------------------------------------
+# 文件存储：本地开发环境使用 OSS
+# -----------------------------------------------------------------------------
 
 # 本地环境：默认关闭 Redis 健康检查，避免未启动 Redis 时反复报 WARN
 # 启动 Redis 后可将 REDIS_HEALTH_ENABLED=true 或改为 true

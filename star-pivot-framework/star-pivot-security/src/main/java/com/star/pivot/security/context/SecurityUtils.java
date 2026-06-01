@@ -13,8 +13,4 @@ public class SecurityUtils {
     public static boolean matchesPassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
-
-    public static boolean isPasswordSame(String rawPassword, String encodedPassword) {
-        return matchesPassword(rawPassword, encodedPassword);
-    }
 }

@@ -125,13 +125,6 @@ public class GlobalExceptionHandler {
             .body(Result.error(ErrorCode.DATABASE_ERROR.getCode(), ErrorCode.DATABASE_ERROR.getMessage()));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Result<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
-        log.warn("参数非法：{}", e.getMessage());
-        return ResponseEntity.badRequest()
-            .body(Result.error(ErrorCode.CLIENT_ERROR.getCode(), "请求参数不合法"));
-    }
-
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<Result<Void>> handleBaseException(BaseException e) {
         ErrorCode errorCode = e.getErrorCode();
