@@ -50,6 +50,8 @@ jobs:
           cache-dependency-path: star-pivot-ui/pnpm-lock.yaml
 
       - name: Install dependencies
+        env:
+          HUSKY: 0
         run: pnpm install --frozen-lockfile
 
       - name: Type check
