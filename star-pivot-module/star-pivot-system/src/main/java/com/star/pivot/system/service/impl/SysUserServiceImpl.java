@@ -1,6 +1,7 @@
 package com.star.pivot.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -28,13 +29,12 @@ import com.star.pivot.system.service.interfaces.UserPermissionCacheService;
 import com.star.pivot.system.utils.DataScopeService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
-
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -59,11 +59,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private DataScopeService dataScopeService;
     @Autowired
     private UserVOAssembler userVOAssembler;
-
-    /** 自身代理，用于 importFromExcel 等场景经代理调用 @Transactional 方法，避免自调用导致事务不生效 */
-    @Lazy
     @Autowired
-    private SysUserService self;
+    private TransactionTemplate transactionTemplate;
+
+    
 
     /**
      * 用户分页查询
@@ -277,27 +276,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             return false;
         }
         
-        // 批量查询用户信息
-        List<SysUser> userList = this.listByIds(userIds);
-        if (userList.isEmpty()) {
-            return false;
-        }
-        
         String currentUser = SecurityContextUtils.getUsername();
-        LocalDateTime now = LocalDateTime.now();
         
-        // 更新用户状态
-        userList.forEach(user -> {
-            if (!AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
-                user.setDelFlag(AppConstants.DelFlag.DELETE);
-                user.setUpdateBy(currentUser);
-                user.setUpdateTime(now);
-            }
-        });
-        
-        // 批量更新
-        this.updateBatchById(userList);
-        return true;
+        // 使用 LambdaUpdateWrapper 进行批量更新，避免先查询再更新的额外开销
+        return this.update(new LambdaUpdateWrapper<SysUser>()
+                .in(SysUser::getUserId, userIds)
+                .eq(SysUser::getDelFlag, AppConstants.DelFlag.NORMAL)
+                .set(SysUser::getDelFlag, AppConstants.DelFlag.DELETE)
+                .set(SysUser::getUpdateBy, currentUser)
+                .set(SysUser::getUpdateTime, LocalDateTime.now()));
     }
 
     /**
@@ -357,28 +344,35 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         List<SysUserExcel> exportList = new ArrayList<>(userList.size());
         for (UserVO user : userList) {
             SysUserExcel row = new SysUserExcel();
-            row.setUserName(user.getUserName() != null ? user.getUserName() : "");
-            row.setNickName(user.getNickName() != null ? user.getNickName() : "");
-            row.setEmail(user.getEmail() != null ? user.getEmail() : "");
-            row.setPhonenumber(user.getPhonenumber() != null ? user.getPhonenumber() : "");
-            if (user.getSex() != null) {
-                if ("0".equals(user.getSex())) {
-                    row.setSex("男");
-                } else if ("1".equals(user.getSex())) {
-                    row.setSex("女");
-                } else {
-                    row.setSex("未知");
-                }
-            } else {
-                row.setSex("未知");
-            }
+            row.setUserName(StringUtils.hasText(user.getUserName()) ? user.getUserName() : "");
+            row.setNickName(StringUtils.hasText(user.getNickName()) ? user.getNickName() : "");
+            row.setEmail(StringUtils.hasText(user.getEmail()) ? user.getEmail() : "");
+            row.setPhonenumber(StringUtils.hasText(user.getPhonenumber()) ? user.getPhonenumber() : "");
+            row.setSex(convertSexCodeToText(user.getSex()));
             row.setStatus(AppConstants.Status.NORMAL.equals(user.getStatus()) ? "正常" : "停用");
             row.setDeptId(user.getDeptId());
-            row.setDeptName(user.getDeptName() != null ? user.getDeptName() : "");
-            row.setRemark(user.getRemark() != null ? user.getRemark() : "");
+            row.setDeptName(StringUtils.hasText(user.getDeptName()) ? user.getDeptName() : "");
+            row.setRemark(StringUtils.hasText(user.getRemark()) ? user.getRemark() : "");
             exportList.add(row);
         }
         return exportList;
+    }
+
+    /**
+     * 将性别编码转换为文本
+     *
+     * @param sexCode 性别编码：0-男，1-女，其他-未知
+     * @return 性别文本
+     */
+    private String convertSexCodeToText(String sexCode) {
+        if (!StringUtils.hasText(sexCode)) {
+            return "未知";
+        }
+        return switch (sexCode) {
+            case "0" -> "男";
+            case "1" -> "女";
+            default -> "未知";
+        };
     }
 
     @Override
@@ -492,22 +486,75 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             UserDTO userDTO, boolean updateSupport, int rowIndex, ExcelImportResult result) {
         boolean success;
         if (updateSupport) {
-            SysUser existing = self.getUserByUsername(userDTO.getUserName());
+            SysUser existing = getUserByUsername(userDTO.getUserName());
             if (existing != null) {
                 userDTO.setUserId(existing.getUserId());
-                success = self.updateUser(userDTO);
+                success = transactionTemplate.execute(status -> updateUser(userDTO));
             } else {
-                success = self.addUser(userDTO);
+                success = transactionTemplate.execute(status -> addUser(userDTO));
             }
         } else {
-            success = self.addUser(userDTO);
+            success = transactionTemplate.execute(status -> addUser(userDTO));
         }
-        if (success) {
+        if (Boolean.TRUE.equals(success)) {
             result.setSuccessCount(result.getSuccessCount() + 1);
         } else {
             result.setFailCount(result.getFailCount() + 1);
             result.addError("第 " + rowIndex + " 行" + (updateSupport ? "更新" : "新增") + "失败");
         }
+    }
+
+    @Override
+    public boolean isCurrentUserSuperAdmin() {
+        Long currentUserId = SecurityContextUtils.getUserId();
+        if (currentUserId == null) {
+            return false;
+        }
+        // 超级管理员用户ID
+        if (AppConstants.ADMIN_USER_ID.equals(currentUserId)) {
+            return true;
+        }
+        // 拥有 admin 角色的用户
+        List<SysRole> roles = getRolesByUserId(currentUserId);
+        return roles != null && roles.stream()
+                .anyMatch(role -> AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
+    }
+
+    @Override
+    public boolean canUpdateUser(Long targetUserId) {
+        Long currentUserId = SecurityContextUtils.getUserId();
+        if (currentUserId == null) {
+            return false;
+        }
+        // 超级管理员可以修改所有用户
+        if (isCurrentUserSuperAdmin()) {
+            return true;
+        }
+        // 普通用户只能修改自己
+        return currentUserId.equals(targetUserId);
+    }
+
+    @Override
+    public String canDeleteUsers(List<Long> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return "删除ID不能为空";
+        }
+        Long currentUserId = SecurityContextUtils.getUserId();
+        for (Long userId : userIds) {
+            if (userId.equals(currentUserId)) {
+                return "不能删除当前登录用户";
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String canResetPassword(Long targetUserId) {
+        Long currentUserId = SecurityContextUtils.getUserId();
+        if (currentUserId != null && currentUserId.equals(targetUserId)) {
+            return "不能重置当前登录用户密码";
+        }
+        return null;
     }
 }
 

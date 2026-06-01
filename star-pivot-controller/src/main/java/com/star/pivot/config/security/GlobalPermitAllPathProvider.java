@@ -11,7 +11,8 @@ public class GlobalPermitAllPathProvider implements PermitAllPathProvider {
     @Override
     public List<String> permitAllPaths() {
         return List.of(
-                "/auth/register"
+                "/auth/register",
+                "/api/auth/register"
         );
     }
 }

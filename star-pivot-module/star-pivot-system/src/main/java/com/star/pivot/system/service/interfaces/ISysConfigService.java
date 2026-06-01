@@ -61,4 +61,17 @@ public interface ISysConfigService extends IService<SysConfig> {
      * @return 是否成功
      */
     boolean deleteSysConfigByConfigIds(Long[] configIds);
+
+    /**
+     * 根据参数键名读取配置值（带缓存）
+     *
+     * @param configKey 参数键名
+     * @return 配置值，不存在时返回 null
+     */
+    String selectConfigValueByKey(String configKey);
+
+    /**
+     * 是否开启用户自助注册
+     */
+    boolean isRegisterUserEnabled();
 }

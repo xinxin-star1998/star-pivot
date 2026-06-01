@@ -58,6 +58,36 @@ public class LoginRateLimitService {
     private boolean rateLimitEnabled;
 
     /**
+     * 注册限流是否启用
+     */
+    @Value("${auth.register.rate-limit.enabled:true}")
+    private boolean registerRateLimitEnabled;
+
+    /**
+     * 注册 IP 维度：窗口内最大次数
+     */
+    @Value("${auth.register.rate-limit.ip.max-attempts:5}")
+    private int registerIpMaxAttempts;
+
+    /**
+     * 注册 IP 维度：时间窗口（分钟）
+     */
+    @Value("${auth.register.rate-limit.ip.window-minutes:1}")
+    private int registerIpWindowMinutes;
+
+    /**
+     * 注册 IP+用户名维度：窗口内最大次数
+     */
+    @Value("${auth.register.rate-limit.ip-username.max-attempts:3}")
+    private int registerIpUsernameMaxAttempts;
+
+    /**
+     * 注册 IP+用户名维度：时间窗口（分钟）
+     */
+    @Value("${auth.register.rate-limit.ip-username.window-minutes:1}")
+    private int registerIpUsernameWindowMinutes;
+
+    /**
      * 检查IP维度的登录限流
      * 
      * @param ip 客户端IP地址
@@ -137,6 +167,54 @@ public class LoginRateLimitService {
         String key = "login:rate-limit:ip-username:" + ip + ":" + username;
         redisCache.deleteObject(key);
         log.debug("已清除IP {} 用户 {} 的登录限流计数", ip, username);
+    }
+
+    /**
+     * 检查 IP 维度的注册限流
+     */
+    public void checkRegisterIpRateLimit(String ip) {
+        if (!registerRateLimitEnabled) {
+            return;
+        }
+
+        String key = "register:rate-limit:ip:" + ip;
+        long windowSeconds = registerIpWindowMinutes * 60L;
+        long currentCount = incrementAndGet(key, windowSeconds);
+
+        if (currentCount > registerIpMaxAttempts) {
+            log.warn("IP {} 注册请求过于频繁，已触发限流（{}分钟内超过{}次）", ip, registerIpWindowMinutes, registerIpMaxAttempts);
+            throw new BizException(
+                    ErrorCode.RATE_LIMIT_EXCEEDED,
+                    String.format("注册请求过于频繁，请%d分钟后再试", registerIpWindowMinutes)
+            );
+        }
+
+        log.debug("IP {} 注册限流检查通过，当前计数: {}/{}", ip, currentCount, registerIpMaxAttempts);
+    }
+
+    /**
+     * 检查 IP+用户名 维度的注册限流
+     */
+    public void checkRegisterIpUsernameRateLimit(String ip, String username) {
+        if (!registerRateLimitEnabled) {
+            return;
+        }
+
+        String key = "register:rate-limit:ip-username:" + ip + ":" + username;
+        long windowSeconds = registerIpUsernameWindowMinutes * 60L;
+        long currentCount = incrementAndGet(key, windowSeconds);
+
+        if (currentCount > registerIpUsernameMaxAttempts) {
+            log.warn("IP {} 用户 {} 注册请求过于频繁，已触发限流（{}分钟内超过{}次）",
+                    ip, username, registerIpUsernameWindowMinutes, registerIpUsernameMaxAttempts);
+            throw new BizException(
+                    ErrorCode.RATE_LIMIT_EXCEEDED,
+                    String.format("注册请求过于频繁，请%d分钟后再试", registerIpUsernameWindowMinutes)
+            );
+        }
+
+        log.debug("IP {} 用户 {} 注册限流检查通过，当前计数: {}/{}",
+                ip, username, currentCount, registerIpUsernameMaxAttempts);
     }
 
     /**
