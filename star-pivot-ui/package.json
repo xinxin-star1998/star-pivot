@@ -10,7 +10,7 @@
     "dev": "vite --open",
     "build": "vite build",
     "serve": "vite preview",
-    "prepare": "cd .. && star-pivot-ui\\node_modules\\.bin\\husky.cmd .husky",
+    "prepare": "cd .. && husky",
     "lint": "eslint",
     "fix": "eslint --fix",
     "commitlint": "commitlint --config commitlint.config.cjs --from HEAD~1 --to HEAD --verbose",
