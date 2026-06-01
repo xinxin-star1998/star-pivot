@@ -1,8 +1,8 @@
 package com.star.pivot.framework.utils;
 
 import com.aliyun.oss.OSS;
-import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
  * 用于文件上传、删除、获取预签名URL等操作
  */
 @Component
+@RequiredArgsConstructor
 public class OssUtil {
 
     /** 头像大小限制 2MB */
@@ -30,6 +31,8 @@ public class OssUtil {
     private static final String[] ALLOWED_AVATAR_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"};
     /** userId 仅允许数字，防止路径穿越 */
     private static final Pattern USER_ID_PATTERN = Pattern.compile("^[0-9]+$");
+
+    private final OSS ossClient;
 
     @Value("${oss.endpoint}")
     private String endpoint;
@@ -45,13 +48,6 @@ public class OssUtil {
 
     @Value("${oss.url-prefix}")
     private String urlPrefix;
-
-    /**
-     * 创建 OSS 客户端
-     */
-    private OSS getOssClient() {
-        return new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
-    }
 
     /**
      * 校验 userId 格式，仅允许纯数字，防止路径穿越
@@ -135,34 +131,29 @@ public class OssUtil {
         String suffix = getSafeImageSuffix(file.getOriginalFilename());
         String objectName = "avatar/" + userId + suffix;
 
-        OSS ossClient = getOssClient();
-        try {
-            // 先上传新文件（避免先删后传导致上传失败时丢失旧头像）
-            ObjectMetadata metadata = new ObjectMetadata();
-            String contentType = file.getContentType();
-            metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "image/png");
-            metadata.setContentLength(file.getSize());
-            PutObjectRequest putObjectRequest = new PutObjectRequest(
-                    bucketName,
-                    objectName,
-                    file.getInputStream()
-            );
-            putObjectRequest.setMetadata(metadata);
-            ossClient.putObject(putObjectRequest);
+        // 先上传新文件（避免先删后传导致上传失败时丢失旧头像）
+        ObjectMetadata metadata = new ObjectMetadata();
+        String contentType = file.getContentType();
+        metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "image/png");
+        metadata.setContentLength(file.getSize());
+        PutObjectRequest putObjectRequest = new PutObjectRequest(
+                bucketName,
+                objectName,
+                file.getInputStream()
+        );
+        putObjectRequest.setMetadata(metadata);
+        ossClient.putObject(putObjectRequest);
 
-            // 再删除该用户下其它旧头像（不同后缀的旧文件）
-            String prefix = "avatar/" + userId;
-            ListObjectsV2Request listRequest = new ListObjectsV2Request()
-                    .withBucketName(bucketName)
-                    .withPrefix(prefix);
-            ListObjectsV2Result listResult = ossClient.listObjectsV2(listRequest);
-            for (OSSObjectSummary summary : listResult.getObjectSummaries()) {
-                if (!objectName.equals(summary.getKey())) {
-                    ossClient.deleteObject(bucketName, summary.getKey());
-                }
+        // 再删除该用户下其它旧头像（不同后缀的旧文件）
+        String prefix = "avatar/" + userId;
+        ListObjectsV2Request listRequest = new ListObjectsV2Request()
+                .withBucketName(bucketName)
+                .withPrefix(prefix);
+        ListObjectsV2Result listResult = ossClient.listObjectsV2(listRequest);
+        for (OSSObjectSummary summary : listResult.getObjectSummaries()) {
+            if (!objectName.equals(summary.getKey())) {
+                ossClient.deleteObject(bucketName, summary.getKey());
             }
-        } finally {
-            ossClient.shutdown();
         }
         return objectName;
     }
@@ -180,25 +171,20 @@ public class OssUtil {
         String day = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         String objectName = "editor/" + day + "/" + UUID.randomUUID() + suffix;
 
-        OSS ossClient = getOssClient();
-        try {
-            ObjectMetadata metadata = new ObjectMetadata();
-            String contentType = file.getContentType();
-            metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "image/png");
-            metadata.setContentLength(file.getSize());
-            PutObjectRequest putObjectRequest = new PutObjectRequest(
-                    bucketName,
-                    objectName,
-                    file.getInputStream()
-            );
-            putObjectRequest.setMetadata(metadata);
-            ossClient.putObject(putObjectRequest);
-        } finally {
-            ossClient.shutdown();
-        }
+        ObjectMetadata metadata = new ObjectMetadata();
+        String contentType = file.getContentType();
+        metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "image/png");
+        metadata.setContentLength(file.getSize());
+        PutObjectRequest putObjectRequest = new PutObjectRequest(
+                bucketName,
+                objectName,
+                file.getInputStream()
+        );
+        putObjectRequest.setMetadata(metadata);
+        ossClient.putObject(putObjectRequest);
         return getPresignedUrl(objectName);
     }
-    
+
     /**
      * 上传头像文件并返回完整访问URL
      * @param file 头像文件
@@ -220,7 +206,7 @@ public class OssUtil {
             return "https://" + bucketName + "." + endpointWithoutProtocol + "/" + objectName;
         }
     }
-    
+
     /**
      * 上传头像文件并返回临时访问链接
      * @param file 头像文件
@@ -238,22 +224,15 @@ public class OssUtil {
      */
     public void deleteAvatar(String userId) throws Exception {
         validateUserId(userId);
-        OSS ossClient = getOssClient();
-        try {
-            String prefix = "avatar/" + userId;
-            ListObjectsV2Request listObjectsRequest = new ListObjectsV2Request()
-                    .withBucketName(bucketName)
-                    .withPrefix(prefix);
-            
-            ListObjectsV2Result result = ossClient.listObjectsV2(listObjectsRequest);
-            
-            // 遍历删除
-            for (OSSObjectSummary objectSummary : result.getObjectSummaries()) {
-                ossClient.deleteObject(bucketName, objectSummary.getKey());
-            }
-        } finally {
-            // 关闭OSSClient
-            ossClient.shutdown();
+        String prefix = "avatar/" + userId;
+        ListObjectsV2Request listObjectsRequest = new ListObjectsV2Request()
+                .withBucketName(bucketName)
+                .withPrefix(prefix);
+
+        ListObjectsV2Result result = ossClient.listObjectsV2(listObjectsRequest);
+
+        for (OSSObjectSummary objectSummary : result.getObjectSummaries()) {
+            ossClient.deleteObject(bucketName, objectSummary.getKey());
         }
     }
 
@@ -266,8 +245,11 @@ public class OssUtil {
         if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
             throw new IllegalArgumentException("无效的对象路径");
         }
-        if (!objectName.startsWith("avatar/") && !objectName.startsWith("editor/")) {
-            throw new IllegalArgumentException("仅支持头像或富文本图片路径");
+        if (!StringUtils.hasText(endpoint)) {
+            throw new IllegalStateException("OSS endpoint 未配置，请设置环境变量 OSS_ENDPOINT");
+        }
+        if (!StringUtils.hasText(bucketName)) {
+            throw new IllegalStateException("OSS bucketName 未配置，请设置环境变量 OSS_BUCKET_NAME");
         }
         if (urlPrefix != null && !urlPrefix.isEmpty()) {
             String prefix = urlPrefix.endsWith("/") ? urlPrefix.substring(0, urlPrefix.length() - 1) : urlPrefix;
@@ -280,26 +262,53 @@ public class OssUtil {
 
     /**
      * 生成文件临时访问链接（私有桶可用，有效期默认7天）
-     * @param objectName 文件路径（仅允许 avatar/ 或 editor/ 下对象，禁止 .. 等路径穿越）
+     * @param objectName 文件路径（禁止 .. 等路径穿越）
      * @return 临时URL
      */
     public String getPresignedUrl(String objectName) throws Exception {
         if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
             throw new IllegalArgumentException("无效的对象路径");
         }
-        if (!objectName.startsWith("avatar/") && !objectName.startsWith("editor/")) {
-            throw new IllegalArgumentException("仅支持头像或富文本图片路径");
+        if (!StringUtils.hasText(endpoint)) {
+            throw new IllegalStateException("OSS endpoint 未配置，请设置环境变量 OSS_ENDPOINT");
         }
-        OSS ossClient = getOssClient();
-        try {
-            // 设置URL过期时间为7天
-            Date expiration = new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000L);
-            // 生成预签名URL
-            URL url = ossClient.generatePresignedUrl(bucketName, objectName, expiration);
-            return url.toString();
-        } finally {
-            // 关闭OSSClient
-            ossClient.shutdown();
+        if (!StringUtils.hasText(bucketName)) {
+            throw new IllegalStateException("OSS bucketName 未配置，请设置环境变量 OSS_BUCKET_NAME");
         }
+        if (!StringUtils.hasText(accessKeyId)) {
+            throw new IllegalStateException("OSS accessKeyId 未配置，请设置环境变量 OSS_ACCESS_KEY_ID");
+        }
+        if (!StringUtils.hasText(accessKeySecret)) {
+            throw new IllegalStateException("OSS accessKeySecret 未配置，请设置环境变量 OSS_ACCESS_KEY_SECRET");
+        }
+        Date expiration = new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000L);
+        URL url = ossClient.generatePresignedUrl(bucketName, objectName, expiration);
+        return url.toString();
+    }
+
+    /**
+     * 通用文件上传方法
+     * @param file 上传文件
+     * @param objectName 对象路径
+     * @throws Exception 上传失败时抛出异常
+     */
+    public void uploadFile(MultipartFile file, String objectName) throws Exception {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("上传文件不能为空");
+        }
+        if (!StringUtils.hasText(objectName)) {
+            throw new IllegalArgumentException("对象路径不能为空");
+        }
+        ObjectMetadata metadata = new ObjectMetadata();
+        String contentType = file.getContentType();
+        metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "application/octet-stream");
+        metadata.setContentLength(file.getSize());
+        PutObjectRequest putObjectRequest = new PutObjectRequest(
+                bucketName,
+                objectName,
+                file.getInputStream()
+        );
+        putObjectRequest.setMetadata(metadata);
+        ossClient.putObject(putObjectRequest);
     }
 }

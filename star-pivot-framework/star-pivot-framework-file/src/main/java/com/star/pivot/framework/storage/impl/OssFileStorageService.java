@@ -4,20 +4,17 @@ import com.star.pivot.framework.storage.FileStorageService;
 import com.star.pivot.framework.utils.OssUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 阿里云 OSS 文件存储服务实现
- * 当配置 file-storage.type=oss 时启用
  *
  * @author stardust
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "file-storage.type", havingValue = "oss")
 public class OssFileStorageService implements FileStorageService {
 
     private final OssUtil ossUtil;
@@ -62,5 +59,11 @@ public class OssFileStorageService implements FileStorageService {
     public String uploadEditorImageWithUrl(MultipartFile file) throws Exception {
         log.debug("使用 OSS 上传富文本图片");
         return ossUtil.uploadEditorImageWithUrl(file);
+    }
+
+    @Override
+    public void uploadFileInternal(MultipartFile file, String objectName) throws Exception {
+        log.debug("使用 OSS 通用文件上传，objectName={}", objectName);
+        ossUtil.uploadFile(file, objectName);
     }
 }
