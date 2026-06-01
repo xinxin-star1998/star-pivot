@@ -42,6 +42,7 @@ public class GenConstants
     public static final String TYPE_DOUBLE = "Double";
     public static final String TYPE_BIGDECIMAL = "BigDecimal";
     public static final String TYPE_DATE = "Date";
+    public static final String TYPE_LOCAL_DATE_TIME = "LocalDateTime";
     public static final String QUERY_LIKE = "LIKE";
     public static final String QUERY_EQ = "EQ";
     public static final String REQUIRE = "1";
