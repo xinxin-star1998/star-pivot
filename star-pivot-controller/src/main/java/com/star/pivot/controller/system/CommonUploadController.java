@@ -2,20 +2,21 @@ package com.star.pivot.controller.system;
 
 import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.annotation.NoResponseWrapper;
+import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.storage.FileStorageService;
+import com.star.pivot.framework.storage.StoragePathValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * 通用上传（如 WangEditor 富文本图片），返回第三方组件约定 JSON，不走统一 Result 包装。
+ * 通用上传接口（富文本、预签名 URL 等）
  */
 @Slf4j
 @RestController
@@ -53,6 +54,46 @@ public class CommonUploadController {
             String msg = e.getMessage();
             return errorBody(msg != null && !msg.isEmpty() ? msg : "上传失败");
         }
+    }
+
+    /**
+     * 获取单个文件的预签名 URL
+     */
+    @GetMapping("/presigned-url")
+    public Result<Map<String, String>> getPresignedUrl(@RequestParam("objectName") String objectName) throws Exception {
+        if (!StringUtils.hasText(objectName)) {
+            return Result.error("对象路径不能为空");
+        }
+        if (!StoragePathValidator.isAllowedPresignedPath(objectName)) {
+            log.warn("尝试获取未授权路径的预签名URL: {}", objectName);
+            return Result.error("无权访问该路径的临时访问链接");
+        }
+        String presignedUrl = fileStorageService.getPresignedUrl(objectName);
+        return Result.success("获取成功", Map.of(
+                "objectName", objectName,
+                "url", presignedUrl
+        ));
+    }
+
+    /**
+     * 批量获取预签名 URL（商品图集回显、列表封面等）
+     *
+     * @param objectNames OSS 对象路径列表
+     * @return key=objectName, value=预签名 URL
+     */
+    @PostMapping("/presigned-urls")
+    public Result<Map<String, String>> getPresignedUrls(@RequestBody List<String> objectNames) throws Exception {
+        if (objectNames == null || objectNames.isEmpty()) {
+            return Result.success(Map.of());
+        }
+        Map<String, String> urls = new LinkedHashMap<>();
+        for (String objectName : objectNames) {
+            if (!StringUtils.hasText(objectName) || !StoragePathValidator.isAllowedPresignedPath(objectName)) {
+                continue;
+            }
+            urls.put(objectName, fileStorageService.getPresignedUrl(objectName));
+        }
+        return Result.success(urls);
     }
 
     private static Map<String, Object> errorBody(String message) {
