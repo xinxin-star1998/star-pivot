@@ -45,30 +45,61 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.trace("成功提取Token，长度: {}", token.length());
             }
 
-            if (jwtBlackListManager.isBlackListed(token)) {
-                log.info("Token在黑名单中，拒绝访问");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"code\":401,\"msg\":\"Token已失效，请重新登录\"}");
+            // 检查Token是否在黑名单中
+            if (isTokenBlacklisted(token)) {
+                handleBlacklistedToken(response);
                 return;
             }
 
-            if (jwtUtil.validateToken(token)) {
-                String username = jwtUtil.getUsernameFromToken(token);
-                log.debug("Token验证成功，用户: {}", username);
-
-                if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-            } else {
-                log.warn("Token验证失败或已过期");
-            }
+            // 验证Token并设置认证上下文
+            authenticateToken(token);
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * 检查Token是否在黑名单中
+     *
+     * @param token JWT Token
+     * @return 是否在黑名单中
+     */
+    private boolean isTokenBlacklisted(String token) {
+        return jwtBlackListManager.isBlackListed(token);
+    }
+
+    /**
+     * 处理黑名单Token
+     *
+     * @param response HTTP响应对象
+     * @throws IOException 写入响应异常
+     */
+    private void handleBlacklistedToken(HttpServletResponse response) throws IOException {
+        log.info("Token在黑名单中，拒绝访问");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"code\":401,\"message\":\"Token已失效，请重新登录\"}");
+    }
+
+    /**
+     * 验证Token并设置认证上下文
+     *
+     * @param token JWT Token
+     */
+    private void authenticateToken(String token) {
+        if (jwtUtil.validateToken(token)) {
+            String username = jwtUtil.getUsernameFromToken(token);
+            log.debug("Token验证成功，用户: {}", username);
+
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } else {
+            log.warn("Token验证失败或已过期");
+        }
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {
