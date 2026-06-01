@@ -78,10 +78,25 @@ Controller
 | `POST /auth/login` | 用户名密码登录，返回 accessToken、refreshToken |
 | `POST /auth/refresh` | 使用 refreshToken 换取新 accessToken |
 | `GET/POST /auth/captcha`、`/auth/captcha/verify` | 验证码 |
-| `POST /auth/register` | 注册（由 `GlobalPermitAllPathProvider` 追加） |
+| `GET /auth/register/enabled` | 查询注册开关（`SecurityConfig` 内置放行，供登录页展示注册入口） |
+| `POST /auth/register` | 用户注册（由 `GlobalPermitAllPathProvider` 追加放行） |
 | `POST /auth/logout` | 登出（需携带 Token，将 Access Token 加入黑名单） |
 
-登录、刷新、发 Token 等逻辑见 `AuthServiceImpl`、`TokenServiceImpl`；security 模块不负责业务校验（验证码、限流、账户锁定在 system 模块）。
+登录、刷新、发 Token 等逻辑见 `AuthServiceImpl`、`TokenServiceImpl`；security 模块不负责业务校验（验证码、登录/注册限流、账户锁定在 system 模块）。
+
+### 用户注册（业务在 system 模块）
+
+注册接口虽匿名放行，**是否允许注册**由系统参数控制，默认关闭：
+
+| 项 | 说明 |
+|----|------|
+| 开关 | `sys_config` 键 `sys.account.registerUser`（`true` / `false`），SQL 初始化默认为 `false` |
+| 查询开关 | `GET /api/auth/register/enabled` → `{ enabled: boolean }`，前端登录页据此决定是否展示「注册」 |
+| 注册接口 | `POST /api/auth/register`，请求体 `username`、`password`；成功返回用户信息，**不自动登录** |
+| 默认角色 | 新用户分配 `auth.register.default-role-id`（默认 `5`，普通角色），以便登录后有菜单 |
+| 限流 | 见下文 `auth.register.rate-limit.*`，与登录限流独立 |
+
+业务校验顺序（`AuthServiceImpl.register`）：开关 → IP 限流 → IP+用户名限流 → 用户名唯一 → 创建用户并绑定角色。
 
 ---
 
@@ -135,14 +150,43 @@ cors:
 | `*` | 允许任意来源，`Allow-Credentials=false` |
 | 逗号分隔域名 | 仅允许列表内来源，`Allow-Credentials=true` |
 
-### 3.4 内置匿名路径（代码写死）
+**生产环境（`prod` profile）**：`ProdSecurityValidator` 在启动时校验 `cors.allowed-origins` 必须非空、不得为 `*`、不得含空项；未配置 `CORS_ALLOWED_ORIGINS` 时应用**无法启动**。详见第七节。
+
+### 3.4 用户注册（`auth.register.*`）
+
+在 `application.yml` 中配置（与登录限流 `login.rate-limit` 独立）：
+
+```yaml
+auth:
+  register:
+    default-role-id: ${AUTH_REGISTER_DEFAULT_ROLE_ID:5}
+    rate-limit:
+      enabled: true
+      ip:
+        max-attempts: 5
+        window-minutes: 1
+      ip-username:
+        max-attempts: 3
+        window-minutes: 1
+```
+
+| 配置项 | 说明 |
+|--------|------|
+| `auth.register.default-role-id` | 新注册用户绑定的角色 ID，须与 `sys_role` 中存在且已配置菜单 |
+| `auth.register.rate-limit.enabled` | 是否启用注册限流 |
+| `auth.register.rate-limit.ip.*` | 同一 IP 在时间窗口内的最大注册次数 |
+| `auth.register.rate-limit.ip-username.*` | 同一 IP + 用户名组合在时间窗口内的最大尝试次数 |
+
+开启注册：在「系统管理 → 参数设置」将 `sys.account.registerUser` 改为 `true`，或直接更新 `sys_config` 表。
+
+### 3.5 内置匿名路径（代码写死）
 
 `SecurityConfig` 已内置（含带 `/api` 前缀的副本，兼容网关或前端代理）：
 
-- `/auth/login`、`/auth/refresh`、`/auth/captcha`、`/auth/captcha/verify`
+- `/auth/login`、`/auth/refresh`、`/auth/captcha`、`/auth/captcha/verify`、`/auth/register/enabled`
 - 以及对应的 `/api/auth/...`
 
-此外会合并：`security.permit-all-paths`、所有 `PermitAllPathProvider` 实现。
+此外会合并：`security.permit-all-paths`、所有 `PermitAllPathProvider` 实现（如 `GlobalPermitAllPathProvider` 追加 `/auth/register`）。
 
 ---
 
@@ -287,6 +331,7 @@ Redis Key 前缀：`jwt:logout:`（黑名单）、`jwt:refresh:user:{userId}`（
 2. Access Token 过期时调用 `POST /api/auth/refresh`，请求体含 `username`、`refreshToken`。
 3. 登出调用 `POST /api/auth/logout`，并携带当前 Token，确保服务端拉黑。
 4. 收到 401 时清除本地 Token 并跳转登录；403 提示无权限即可。
+5. **注册页**：进入登录页时调用 `GET /api/auth/register/enabled`；`enabled === true` 时再展示注册入口。提交 `POST /api/auth/register` 成功后引导用户登录（不写入 Token）。
 
 ---
 
@@ -296,10 +341,22 @@ Redis Key 前缀：`jwt:logout:`（黑名单）、`jwt:refresh:user:{userId}`（
 |----|------|
 | `security.swagger-permit-all` | 设为 `false`，或通过网关限制文档访问 |
 | `DevToolsPermitAllPathProvider` | 生产 profile 不激活（已用 `@Profile({"local","dev","test"})`） |
-| `cors.allowed-origins` | 配置明确前端域名，避免 `*` |
+| `cors.allowed-origins` | 通过 `CORS_ALLOWED_ORIGINS` 配置明确前端域名，**禁止 `*`** |
+| `ProdSecurityValidator` | `prod` 启动时强制校验 CORS；缺省或误配会直接抛 `IllegalStateException` |
 | `jwt.secret` | 环境变量注入，定期轮换并配置 `previous-secret` |
 | Redis | 黑名单与刷新令牌依赖 Redis，需保证高可用 |
+| 用户注册 | 默认关闭；生产若开放注册，确认默认角色权限范围与限流阈值 |
 | 敏感路径 | 回调、健康检查等通过 `permit-all-paths` 最小化放行范围 |
+
+### 生产 CORS 启动校验
+
+`star-pivot-controller` 中的 `ProdSecurityValidator`（`@Profile("prod")`）在 `@PostConstruct` 阶段检查：
+
+- `cors.allowed-origins` 为空 → 启动失败，提示配置 `CORS_ALLOWED_ORIGINS`
+- 包含 `*` → 启动失败
+- 逗号分隔项中有空字符串 → 启动失败
+
+本地 / dev 可使用 `CORS_ALLOWED_ORIGINS:*`；生产须为具体域名，例如 `https://admin.example.com`。
 
 示例（生产 profile 片段）：
 
@@ -309,7 +366,7 @@ security:
   permit-all-paths: []
 
 cors:
-  allowed-origins: https://admin.example.com
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}   # 必填，不可为 *
 
 jwt:
   secret: ${JWT_SECRET}
@@ -352,13 +409,25 @@ jwt:
 - 模块只需依赖 `star-pivot-framework-core` 等业务包；**运行态**由 `star-pivot-controller` 引入 `star-pivot-framework-boot-starter` 即可。
 - 若独立启动某模块，需显式依赖 `star-pivot-security` 或 boot-starter。
 
+**7. prod 环境启动失败，提示 CORS_ALLOWED_ORIGINS**
+
+- 设置环境变量 `CORS_ALLOWED_ORIGINS` 为前端实际访问源（多个用英文逗号分隔）。
+- 勿使用 `*`；与 `application-prod.yml` 中 `cors.allowed-origins: ${CORS_ALLOWED_ORIGINS}` 一致。
+- 部署说明见 [`阿里云ECS部署说明.md`](阿里云ECS部署说明.md) 第五章。
+
+**8. 注册接口 403「当前未开放用户注册」**
+
+- 检查 `sys.account.registerUser` 是否为 `true`。
+- 注册接口本身匿名可访问；403 来自业务开关而非 Security 拦截。
+
 ---
 
 ## 九、对接检查清单
 
 - [ ] 敏感接口使用 `@PreAuthorize`，权限码已录入菜单
 - [ ] 匿名接口通过 `permit-all-paths` 或 `PermitAllPathProvider` 登记，未误放行业务写操作
-- [ ] 生产关闭 Swagger 匿名、限制 CORS、JWT 密钥走环境变量
+- [ ] 生产关闭 Swagger 匿名、配置 `CORS_ALLOWED_ORIGINS`（非 `*`）、JWT 密钥走环境变量
+- [ ] 若开放注册：默认角色与限流已评估，`register/enabled` 与注册页联动
 - [ ] 登出/改密流程调用 `TokenService` 拉黑 Token
 - [ ] 业务代码取当前用户使用 `SecurityContextUtils`，密码使用 `SecurityUtils`
 

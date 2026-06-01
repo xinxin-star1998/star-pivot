@@ -130,7 +130,7 @@ export REDIS_DATABASE="0"
 # JWT（必须与生成 token 的密钥一致）
 export JWT_SECRET="你的JWT密钥，建议足够长且随机"
 
-# CORS 允许的前端访问来源（前端页面访问的域名或 IP）
+# CORS 允许的前端访问来源（前端页面访问的域名或 IP；prod 必填，不可为 *）
 export CORS_ALLOWED_ORIGINS="http://你的ECS公网IP"
 # 若有域名：export CORS_ALLOWED_ORIGINS="https://www.yourdomain.com"
 
@@ -140,6 +140,8 @@ export CORS_ALLOWED_ORIGINS="http://你的ECS公网IP"
 # export OSS_ACCESS_KEY_SECRET="..."
 # export OSS_URL_PREFIX="..."
 ```
+
+> **注意**：使用 `--spring.profiles.active=prod` 时，`ProdSecurityValidator` 会在启动阶段校验 `CORS_ALLOWED_ORIGINS` 已设置且不为 `*`。未配置时 JAR 会直接启动失败并提示配置 CORS。详见 [`star-pivot-security-使用说明.md`](star-pivot-security-使用说明.md) 第七节。
 
 可将以上写入脚本，例如 `start.sh`，再用 `source start.sh` 后启动 JAR。
 
@@ -284,7 +286,13 @@ pause
   3. **检查安全组与防火墙**：若 Redis 在另一台机器，需放行 6379 端口；同机部署一般无需放行。
   4. **查看后端日志**：启动时或请求验证码时若出现 `Connection refused`、`io.lettuce.core.RedisConnectionException` 等，说明连接 Redis 失败，按上面步骤排查。
 
-### 9.4 验证码接口报错：Fontconfig head is null / 服务器未安装字体
+### 9.4 prod 启动失败：CORS_ALLOWED_ORIGINS
+
+- **现象**：`java -jar ... --spring.profiles.active=prod` 启动即退出，日志含 `生产环境必须配置 CORS_ALLOWED_ORIGINS` 或 `不可使用 *`。
+- **原因**：`ProdSecurityValidator` 强制校验生产 CORS 配置。
+- **处理**：在启动前 `export CORS_ALLOWED_ORIGINS="https://你的前端域名"`（或 ECS 公网 IP 的完整 origin，含协议与端口），多个来源用英文逗号分隔，**不要使用 `*`**。配置后重新启动 JAR。
+
+### 9.5 验证码接口报错：Fontconfig head is null / 服务器未安装字体
 
 - **原因**：验证码需要绘制文字图片，依赖系统字体。阿里云 ECS 等 minimal Linux 默认未安装 **fontconfig** 和字体包，Java AWT 会报错：`Fontconfig head is null, check your fonts or fonts configuration`，导致 `/api/auth/captcha` 返回 500。
 - **处理**：在 ECS 上安装 fontconfig 与至少一种字体后，重启后端服务即可。

@@ -41,6 +41,8 @@ StarPivot 面向企业后台管理场景，提供一套可快速落地的权限�
 - 动态菜单、动态路由、按钮级权限控制
 - 部门（树）、岗位、字典、文件上传（阿里云 OSS）
 - EasyExcel 模块化导入导出（各业务独立 `/export`、`/import`、`/importTemplate`）
+- 可配置用户注册（系统参数开关 + 独立限流 + 默认角色）
+- 商城商品图片 OSS 上传（存 `objectName`，展示走预签名 URL）
 - MyBatis-Plus + 代码生成器，提升开发效率
 - Vue 3 + TypeScript + Element Plus，支持主题和国际化
 - 集成 SpringDoc OpenAPI，便于接口联调
@@ -147,12 +149,26 @@ pnpm dev
 
 ## 文档与接口
 
+### 架构与规范
+
 - 架构与流程文档：[`doc/架构图与流程图.md`](doc/架构图与流程图.md)
 - 依赖与模块分层：[`doc/项目依赖引用梳理.md`](doc/项目依赖引用梳理.md)
-- 用户头像逻辑：[`doc/用户头像功能前后端逻辑文档.md`](doc/用户头像功能前后端逻辑文档.md)
-- 安全模块说明：[`doc/star-pivot-security-使用说明.md`](doc/star-pivot-security-使用说明.md)（JWT 鉴权、放行扩展、配置项与生产建议）
+- 安全模块说明：[`doc/star-pivot-security-使用说明.md`](doc/star-pivot-security-使用说明.md)（JWT 鉴权、用户注册、生产 CORS 校验、放行扩展）
 - 权限规范：[`doc/权限编码与数据权限规范.md`](doc/权限编码与数据权限规范.md)
-- 导入导出说明：[`doc/通用导入导出使用说明.md`](doc/通用导入导出使用说明.md)（EasyExcel + `ExcelBizHandler`，对接步骤与示例见该文档）
+- 权限设计说明：[`doc/权限控制可放宽说明.md`](doc/权限控制可放宽说明.md)
+
+### 业务与组件
+
+- 用户头像逻辑：[`doc/用户头像功能前后端逻辑文档.md`](doc/用户头像功能前后端逻辑文档.md)
+- 商城商品图片：[`doc/商城商品图片前后端逻辑文档.md`](doc/商城商品图片前后端逻辑文档.md)
+- 导入导出说明：[`doc/通用导入导出使用说明.md`](doc/通用导入导出使用说明.md)（EasyExcel + `ExcelBizHandler`）
+- 字典 Hook：[`doc/useDict.md`](doc/useDict.md)（Pinia 缓存与持久化）
+- 代码生成器迁移：[`doc/生成器模板迁移指南.md`](doc/生成器模板迁移指南.md)（QueryDTO → ReqBo）
+
+### 部署
+
+- 阿里云 ECS：[`doc/阿里云ECS部署说明.md`](doc/阿里云ECS部署说明.md)
+- CentOS 7 环境：[`doc/centos7安装环境.md`](doc/centos7安装环境.md)
 
 本地 OpenAPI 地址（默认）：
 
