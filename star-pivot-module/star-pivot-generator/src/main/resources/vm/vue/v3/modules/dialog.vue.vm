@@ -229,7 +229,7 @@
    */
   const load${BusinessName}Tree = async (): Promise<void> => {
     try {
-      const res = await fetchGet${BusinessName}List({ pageNum: 1, pageSize: 1000 })
+      const res = await fetchGet${BusinessName}List({})
       ${businessName}TreeData.value = res.records || res.rows || []
     } catch (error) {
       console.error('获取${functionName}树数据失败:', error)

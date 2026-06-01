@@ -1,12 +1,17 @@
 package ${packageName}.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.List;
 #if($table.crud || $table.sub)
 import com.star.pivot.framework.domain.PageResponse;
-import ${packageName}.domain.dto.${ClassName}QueryDTO;
-import ${packageName}.domain.bo.${ClassName}VO;
+import ${packageName}.domain.bo.${ClassName}ReqPageBo;
 #end
-import ${packageName}.domain.${ClassName};
+#if($table.tree)
+import ${packageName}.domain.bo.${ClassName}ReqBo;
+#end
+import ${packageName}.domain.bo.${ClassName}VO;
+import ${packageName}.domain.entity.${ClassName};
+import ${packageName}.domain.dto.${ClassName}DTO;
 #if($table.sub)
 import ${packageName}.domain.dto.${subClassName}DTO;
 #end
@@ -23,10 +28,19 @@ public interface I${ClassName}Service extends IService<${ClassName}>
     /**
      * 分页查询${functionName}列表
      * 
-     * @param queryDTO 查询条件
+     * @param ${className}ReqPageBo 查询条件
      * @return 分页结果
      */
-    PageResponse<${ClassName}VO> select${ClassName}Page(${ClassName}QueryDTO queryDTO);
+    PageResponse<${ClassName}VO> select${ClassName}Page(${ClassName}ReqPageBo ${className}ReqPageBo);
+#end
+#if($table.tree)
+    /**
+     * 查询${functionName}树形列表（不分页）
+     *
+     * @param ${className}ReqBo 查询条件
+     * @return 树形列表
+     */
+    List<${ClassName}VO> select${ClassName}TreeList(${ClassName}ReqBo ${className}ReqBo);
 #end
 
     /**
