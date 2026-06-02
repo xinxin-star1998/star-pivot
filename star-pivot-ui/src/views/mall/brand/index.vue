@@ -51,19 +51,19 @@
 </template>
 
 <script setup lang="ts">
-import {h} from 'vue'
-import {useTable} from '@/hooks/core/useTable'
-import {fetchMallBrandList, fetchMallBrandRemove, type MallBrandVo} from '@/api/mall/brand'
+import { h } from 'vue'
+import { useTable } from '@/hooks/core/useTable'
+import { fetchMallBrandList, fetchMallBrandRemove, type MallBrandVo } from '@/api/mall/brand'
 import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
 import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
 import ArtTable from '@/components/core/tables/art-table/index.vue'
 import BrandSearch from './modules/brand-search.vue'
 import BrandDialog from './modules/brand-dialog.vue'
 import BrandCategoryBindDialog from './modules/brand-category-bind-dialog.vue'
-import {ElImage, ElMessage, ElMessageBox, ElTag} from 'element-plus'
-import type {DialogType} from '@/types'
-import {useAuth} from '@/hooks/core/useAuth'
-import {getCoverDisplayUrl, resolveGoodsImageDisplayUrls} from '@/utils/mall/goods-image-url'
+import { ElImage, ElMessage, ElMessageBox, ElTag } from 'element-plus'
+import type { DialogType } from '@/types'
+import { useAuth } from '@/hooks/core/useAuth'
+import { getCoverDisplayUrl, resolveGoodsImageDisplayUrls } from '@/utils/mall/goods-image-url'
 
 defineOptions({ name: 'MallBrand' })
 

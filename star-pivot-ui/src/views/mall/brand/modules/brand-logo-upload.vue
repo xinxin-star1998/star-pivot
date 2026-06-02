@@ -1,8 +1,8 @@
 <template>
   <div class="brand-logo-upload">
     <div
-      class="brand-logo-upload__box"
       :class="{ 'is-filled': !!previewUrl, 'is-uploading': uploading }"
+      class="brand-logo-upload__box"
       @click="handleBoxClick"
     >
       <img v-if="previewUrl" :src="previewUrl" alt="品牌 Logo" class="brand-logo-upload__img" />
@@ -10,13 +10,13 @@
         <ElIcon><Plus /></ElIcon>
       </div>
       <div v-if="previewUrl && !uploading" class="brand-logo-upload__actions" @click.stop>
-        <button type="button" class="brand-logo-upload__action" title="更换" @click="triggerSelect">
+        <button class="brand-logo-upload__action" title="更换" type="button" @click="triggerSelect">
           <ArtSvgIcon icon="ri:pencil-line" />
         </button>
         <button
-          type="button"
           class="brand-logo-upload__action brand-logo-upload__action--danger"
           title="删除"
+          type="button"
           @click="handleRemove"
         >
           <ArtSvgIcon icon="ri:delete-bin-line" />
@@ -28,24 +28,24 @@
     </div>
     <input
       ref="fileInputRef"
-      type="file"
       accept="image/jpeg,image/png,image/gif,image/webp"
       class="brand-logo-upload__input"
+      type="file"
       @change="handleFileChange"
     />
     <p class="brand-logo-upload__hint">仅支持 1 张 Logo，JPG / PNG / GIF / WEBP，不超过 2MB</p>
   </div>
 </template>
 
-<script setup lang="ts">
-import {Loading, Plus} from '@element-plus/icons-vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {computed, onUnmounted, ref, watch} from 'vue'
-import {uploadBrandLogo} from '@/api/mall/brand-image'
-import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-import {resolveGoodsImageDisplayUrl} from '@/utils/mall/goods-image-url'
+<script lang="ts" setup>
+  import { Loading, Plus } from '@element-plus/icons-vue'
+  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { computed, onUnmounted, ref, watch } from 'vue'
+  import { uploadBrandLogo } from '@/api/mall/brand-image'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import { resolveGoodsImageDisplayUrl } from '@/utils/mall/goods-image-url'
 
-defineOptions({ name: 'BrandLogoUpload' })
+  defineOptions({ name: 'BrandLogoUpload' })
 
   const props = defineProps<{
     modelValue?: string
@@ -170,7 +170,7 @@ defineOptions({ name: 'BrandLogoUpload' })
   defineExpose({ resolveLogo })
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
   .brand-logo-upload__box {
     position: relative;
     display: flex;

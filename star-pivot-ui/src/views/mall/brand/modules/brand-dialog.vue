@@ -2,28 +2,32 @@
   <ElDialog
     v-model="dialogVisible"
     :title="type === 'add' ? '新增品牌' : '编辑品牌'"
-    width="560px"
     align-center
     destroy-on-close
+    width="560px"
   >
     <ElForm
       ref="formRef"
       :model="formData"
       :rules="rules"
-      label-width="110px"
       aria-label="品牌信息表单"
+      label-width="110px"
     >
       <ElFormItem label="品牌名称" prop="name">
-        <ElInput v-model="formData.name" placeholder="名称" maxlength="128" show-word-limit />
+        <ElInput v-model="formData.name" maxlength="128" placeholder="名称" show-word-limit />
       </ElFormItem>
       <ElFormItem label="Logo" prop="logo">
-        <BrandLogoUpload ref="logoUploadRef" :model-value="formData.logo" :brand-id="formData.brandId" />
+        <BrandLogoUpload
+          ref="logoUploadRef"
+          :brand-id="formData.brandId"
+          :model-value="formData.logo"
+        />
       </ElFormItem>
       <ElFormItem label="介绍" prop="descript">
-        <ElInput v-model="formData.descript" type="textarea" :rows="3" placeholder="品牌介绍" />
+        <ElInput v-model="formData.descript" :rows="3" placeholder="品牌介绍" type="textarea" />
       </ElFormItem>
       <ElFormItem label="排序" prop="sort">
-        <ElInputNumber v-model="formData.sort" :min="0" :max="99999" style="width: 100%" />
+        <ElInputNumber v-model="formData.sort" :max="99999" :min="0" style="width: 100%" />
       </ElFormItem>
       <ElFormItem label="显示状态" prop="showStatus">
         <ElRadioGroup v-model="formData.showStatus">
@@ -42,24 +46,24 @@
     </ElForm>
     <template #footer>
       <ElButton @click="dialogVisible = false">取消</ElButton>
-      <ElButton type="primary" :loading="submitting" @click="handleSubmit">提交</ElButton>
+      <ElButton :loading="submitting" type="primary" @click="handleSubmit">提交</ElButton>
     </template>
   </ElDialog>
 </template>
 
-<script setup lang="ts">
-import type {FormInstance, FormRules} from 'element-plus'
-import {
-  fetchMallBrandAdd,
-  fetchMallBrandById,
-  fetchMallBrandUpdate,
-  type MallBrandSavePayload,
-  type MallBrandVo
-} from '@/api/mall/brand'
-import type {DialogType} from '@/types'
-import BrandLogoUpload from './brand-logo-upload.vue'
+<script lang="ts" setup>
+  import type { FormInstance, FormRules } from 'element-plus'
+  import {
+    fetchMallBrandAdd,
+    fetchMallBrandById,
+    fetchMallBrandUpdate,
+    type MallBrandSavePayload,
+    type MallBrandVo
+  } from '@/api/mall/brand'
+  import type { DialogType } from '@/types'
+  import BrandLogoUpload from './brand-logo-upload.vue'
 
-interface Props {
+  interface Props {
     visible: boolean
     type: DialogType
     brandData?: Partial<MallBrandVo>
