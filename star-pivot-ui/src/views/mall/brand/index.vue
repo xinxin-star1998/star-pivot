@@ -1,21 +1,21 @@
 <!-- 商城-品牌管理（pms_brand） -->
 <template>
   <div class="mall-brand-page art-full-height">
-    <BrandSearch v-model="searchForm" @search="handleSearch" @reset="resetSearchParams" />
+    <BrandSearch v-model="searchForm" @reset="resetSearchParams" @search="handleSearch" />
 
     <ElCard class="art-table-card" shadow="never" style="margin-top: 12px">
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElSpace wrap>
-            <ElButton v-auth="'mall:brand:add'" type="primary" @click="showDialog('add')" v-ripple>
+            <ElButton v-auth="'mall:brand:add'" v-ripple type="primary" @click="showDialog('add')">
               新增品牌
             </ElButton>
             <ElButton
               v-auth="'mall:brand:delete'"
-              type="danger"
-              :disabled="selectedRows.length === 0"
-              @click="handleBatchDelete"
               v-ripple
+              :disabled="selectedRows.length === 0"
+              type="danger"
+              @click="handleBatchDelete"
             >
               批量删除
             </ElButton>
@@ -24,9 +24,9 @@
       </ArtTableHeader>
 
       <ArtTable
-        :loading="loading"
-        :data="data"
         :columns="columns"
+        :data="data"
+        :loading="loading"
         :pagination="pagination"
         @selection-change="handleSelectionChange"
         @pagination:size-change="handleSizeChange"
@@ -36,8 +36,8 @@
 
     <BrandDialog
       v-model:visible="dialogVisible"
-      :type="dialogType"
       :brand-data="currentBrand"
+      :type="dialogType"
       @submit="handleDialogSubmit"
     />
 
@@ -50,7 +50,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import { h } from 'vue'
 import { useTable } from '@/hooks/core/useTable'
 import { fetchMallBrandList, fetchMallBrandRemove, type MallBrandVo } from '@/api/mall/brand'
@@ -282,7 +282,7 @@ defineOptions({ name: 'MallBrand' })
   }
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
   .mall-brand-page {
     padding: var(--art-page-padding);
     background-color: var(--default-bg-color);
