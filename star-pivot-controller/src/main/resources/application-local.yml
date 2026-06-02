@@ -64,3 +64,13 @@ management:
   health:
     redis:
       enabled: ${REDIS_HEALTH_ENABLED:false}
+
+# -----------------------------------------------------------------------------
+# 外部库代码生成：本地写盘默认路径（可按本机项目修改或通过环境变量覆盖）
+# -----------------------------------------------------------------------------
+gen:
+  external:
+    default-output-root: ${GEN_EXTERNAL_OUTPUT_ROOT:E:/star-pivot/project0422/StarPivot}
+    allowed-write-paths:
+      - ${GEN_EXTERNAL_OUTPUT_ROOT:E:/star-pivot/project0422/StarPivot}
+    backup-before-write: true

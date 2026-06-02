@@ -80,3 +80,14 @@ management:
   health:
     redis:
       enabled: true
+
+# 外部库代码生成（生产 ECS：仅 ZIP 下载，禁止服务端写盘）
+gen:
+  external:
+    enabled: true
+    write-to-disk-enabled: false
+    allowed-hosts:
+      - 127.0.0.1
+      - localhost
+    session-ttl-minutes: 15
+    max-tables-per-download: 10

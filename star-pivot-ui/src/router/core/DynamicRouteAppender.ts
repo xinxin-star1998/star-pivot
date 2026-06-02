@@ -20,8 +20,8 @@
  * @author Art Design Pro Team
  */
 
-import type {AppRouteRecord} from '@/types/router'
-import {safeLog, safeWarn} from '@/utils'
+import type { AppRouteRecord } from '@/types/router'
+import { safeLog, safeWarn } from '@/utils'
 
 interface RouteIndex {
   names: Set<string>
@@ -264,6 +264,15 @@ export class DynamicRouteAppender {
       return
     }
 
+    const parentGen = this.findRouteNode(
+      menuList,
+      (r) =>
+        r.component === '/tools/generator/index' ||
+        r.name === 'GenerateTools' ||
+        String(r.path).includes('/tools/generator')
+    )
+    const parentPath = parentGen?.path || '/tools/generator'
+
     const genEditRoute: AppRouteRecord = {
       // 编辑页路径，带上动态参数 tableId
       path: '/tool/gen/edit/:tableId',
@@ -275,9 +284,10 @@ export class DynamicRouteAppender {
         // 不在菜单树中显示，只通过代码生成列表页跳转进入
         isHide: true,
         // 指定父级菜单路径，用于面包屑、高亮等
-        parentPath: '/tool/gen',
+        parentPath,
         keepAlive: true,
-        isHideTab: true
+        isHideTab: true,
+        authList: this.resolveGeneratorAuthList(menuList)
       },
       menuType: 'C',
       status: '0',
@@ -286,6 +296,23 @@ export class DynamicRouteAppender {
 
     menuList.push(genEditRoute)
     safeLog('[DynamicRouteAppender] 已动态追加代码生成编辑页路由')
+  }
+
+  /**
+   * 从代码生成菜单继承按钮权限，供 v-auth / useAuth 使用
+   */
+  private static resolveGeneratorAuthList(
+    menuList: AppRouteRecord[]
+  ): AppRouteRecord['meta']['authList'] {
+    const parent = this.findRouteNode(
+      menuList,
+      (r) =>
+        r.component === '/tools/generator/index' ||
+        r.name === 'GenerateTools' ||
+        String(r.path).includes('/tools/generator')
+    )
+    const authList = parent?.meta?.authList
+    return authList?.length ? [...authList] : undefined
   }
 
   /**

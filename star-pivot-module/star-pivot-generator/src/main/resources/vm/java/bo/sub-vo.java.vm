@@ -1,4 +1,4 @@
-package ${packageName}.domain.bo;
+package ${voPackage};
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

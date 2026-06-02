@@ -1,4 +1,4 @@
-package ${packageName}.domain.entity;
+package ${entityPackage};
 
 #foreach ($import in $importList)
 import ${import};
@@ -14,7 +14,7 @@ import com.star.pivot.framework.domain.BaseEntity;
 #end
 
 #if($table.sub)
-import ${packageName}.domain.entity.${subClassName};
+import ${entityPackage}.${subClassName};
 #end
 
 /**

@@ -1,4 +1,4 @@
-package ${packageName}.controller;
+package ${controllerPackage};
 
 import java.util.List;
 import com.star.pivot.framework.domain.PageResponse;
@@ -16,15 +16,15 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.validation.Valid;
-import ${packageName}.service.I${ClassName}Service;
+import ${servicePackage}.I${ClassName}Service;
 #if($table.crud || $table.sub)
-import ${packageName}.domain.bo.${ClassName}ReqPageBo;
+import ${boPackage}.${ClassName}ReqPageBo;
 #end
 #if($table.tree)
-import ${packageName}.domain.bo.${ClassName}ReqBo;
+import ${boPackage}.${ClassName}ReqBo;
 #end
-import ${packageName}.domain.bo.${ClassName}VO;
-import ${packageName}.domain.dto.${ClassName}DTO;
+import ${voPackage}.${ClassName}VO;
+import ${dtoPackage}.${ClassName}DTO;
 
 /**
  * ${functionName}控制器

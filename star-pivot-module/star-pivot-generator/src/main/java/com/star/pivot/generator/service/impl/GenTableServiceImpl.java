@@ -9,9 +9,9 @@ import com.star.pivot.framework.constants.GenConstants;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.generator.config.GenConfig;
-import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.bo.GenTableVO;
 import com.star.pivot.generator.domain.dto.GenTableQueryDTO;
+import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.entity.GenTableColumn;
 import com.star.pivot.generator.mapper.GenTableColumnMapper;
 import com.star.pivot.generator.mapper.GenTableMapper;
@@ -138,9 +138,9 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             StringWriter sw = new StringWriter();
             Template tpl = Velocity.getTemplate(template, Constants.UTF8);
             tpl.merge(context, sw);
-            // 使用简化的文件名作为 key
-            String displayName = VelocityUtils.getDisplayName(template, table);
-            dataMap.put(displayName, sw.toString());
+            // 与 ZIP 下载一致，使用完整路径作为 key，便于前端文件树展示
+            String filePath = VelocityUtils.getFileName(template, table);
+            dataMap.put(filePath, sw.toString());
         }
         return dataMap;
     }

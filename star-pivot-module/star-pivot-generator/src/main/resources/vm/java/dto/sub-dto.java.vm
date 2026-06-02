@@ -1,4 +1,4 @@
-package ${packageName}.domain.dto;
+package ${dtoPackage};
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

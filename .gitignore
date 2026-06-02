@@ -64,3 +64,7 @@ Icon?
 # Logs
 logs/
 log/
+
+# 外部库代码生成写盘备份
+.star-pivot-gen-backup/
+**/.star-pivot-gen-backup/

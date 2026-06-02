@@ -1,4 +1,4 @@
-package ${packageName}.service.impl;
+package ${serviceImplPackage};
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -12,23 +12,23 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 #if($table.crud || $table.sub)
-import ${packageName}.domain.bo.${ClassName}ReqPageBo;
+import ${boPackage}.${ClassName}ReqPageBo;
 #end
 #if($table.tree)
-import ${packageName}.domain.bo.${ClassName}ReqBo;
+import ${boPackage}.${ClassName}ReqBo;
 #end
-import ${packageName}.domain.bo.${ClassName}VO;
+import ${voPackage}.${ClassName}VO;
 #if($table.sub)
 import java.util.ArrayList;
-import ${packageName}.domain.entity.${subClassName};
-import ${packageName}.domain.dto.${subClassName}DTO;
+import ${entityPackage}.${subClassName};
+import ${dtoPackage}.${subClassName}DTO;
 #end
-import ${packageName}.mapper.${ClassName}Mapper;
-import ${packageName}.domain.entity.${ClassName};
-import ${packageName}.domain.dto.${ClassName}DTO;
-import ${packageName}.service.I${ClassName}Service;
+import ${mapperPackage}.${ClassName}Mapper;
+import ${entityPackage}.${ClassName};
+import ${dtoPackage}.${ClassName}DTO;
+import ${servicePackage}.I${ClassName}Service;
 #if($table.sub)
-import ${packageName}.mapper.${subClassName}Mapper;
+import ${mapperPackage}.${subClassName}Mapper;
 #end
 
 /**

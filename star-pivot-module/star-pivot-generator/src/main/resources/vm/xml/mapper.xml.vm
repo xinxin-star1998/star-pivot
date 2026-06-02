@@ -55,13 +55,13 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="${packageName}.mapper.${ClassName}Mapper">
+<mapper namespace="${mapperPackage}.${ClassName}Mapper">
 
-    <resultMap type="${packageName}.domain.entity.${ClassName}" id="${ClassName}Result">
+    <resultMap type="${entityPackage}.${ClassName}" id="${ClassName}Result">
 #columnMappings($columns)
     </resultMap>
 #if($table.sub)
-    <resultMap type="${packageName}.domain.entity.${subClassName}" id="${subClassName}Result">
+    <resultMap type="${entityPackage}.${subClassName}" id="${subClassName}Result">
 #columnMappings($subTable.columns)
     </resultMap>
 #end

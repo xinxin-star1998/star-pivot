@@ -1,4 +1,4 @@
-package ${packageName}.domain.dto;
+package ${dtoPackage};
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 #if($table.sub)
 import java.util.List;
-import ${packageName}.domain.dto.${subClassName}DTO;
+import ${dtoPackage}.${subClassName}DTO;
 #end
 #foreach ($column in $columns)
 #if($column.javaType == 'LocalDateTime' || $column.javaType == 'Date' || $column.javaField == 'createTime' || $column.javaField == 'updateTime')

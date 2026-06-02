@@ -102,6 +102,22 @@ gen:
   autoRemovePre: false
   tablePrefix: sys_
   allowOverwrite: false
+  external:
+    enabled: true
+    session-ttl-minutes: 30
+    connect-timeout-ms: 5000
+    query-timeout-seconds: 30
+    max-tables-per-download: 20
+    # 连接主机白名单，空则不限。示例: 127.0.0.1, localhost, 192.168.
+    allowed-hosts: []
+    write-to-disk-enabled: true
+    # 写盘根目录默认值（页面未填时使用）；空则使用 Java 进程 user.dir
+    default-output-root: ''
+    # 写盘/浏览允许的路径前缀；非空时仅允许此列表下目录。生产环境建议配置
+    allowed-write-paths: []
+    # 覆盖已有文件前自动备份到 {outputRoot}/.star-pivot-gen-backup/
+    backup-before-write: true
+    template-dir: ''
 
 # -----------------------------------------------------------------------------
 # 登录限流与账户锁定

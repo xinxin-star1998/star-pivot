@@ -1,19 +1,19 @@
-package ${packageName}.service;
+package ${servicePackage};
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.List;
 #if($table.crud || $table.sub)
 import com.star.pivot.framework.domain.PageResponse;
-import ${packageName}.domain.bo.${ClassName}ReqPageBo;
+import ${boPackage}.${ClassName}ReqPageBo;
 #end
 #if($table.tree)
-import ${packageName}.domain.bo.${ClassName}ReqBo;
+import ${boPackage}.${ClassName}ReqBo;
 #end
-import ${packageName}.domain.bo.${ClassName}VO;
-import ${packageName}.domain.entity.${ClassName};
-import ${packageName}.domain.dto.${ClassName}DTO;
+import ${voPackage}.${ClassName}VO;
+import ${entityPackage}.${ClassName};
+import ${dtoPackage}.${ClassName}DTO;
 #if($table.sub)
-import ${packageName}.domain.dto.${subClassName}DTO;
+import ${dtoPackage}.${subClassName}DTO;
 #end
 
 /**

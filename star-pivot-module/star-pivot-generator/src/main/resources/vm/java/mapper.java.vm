@@ -1,4 +1,4 @@
-package ${packageName}.mapper;
+package ${mapperPackage};
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
@@ -6,15 +6,15 @@ import org.apache.ibatis.annotations.Param;
 #if($table.crud || $table.sub)
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import ${packageName}.domain.bo.${ClassName}ReqPageBo;
+import ${boPackage}.${ClassName}ReqPageBo;
 #end
 #if($table.tree)
 import java.util.List;
-import ${packageName}.domain.bo.${ClassName}ReqBo;
+import ${boPackage}.${ClassName}ReqBo;
 #end
-import ${packageName}.domain.entity.${ClassName};
+import ${entityPackage}.${ClassName};
 #if($table.sub)
-import ${packageName}.domain.entity.${subClassName};
+import ${entityPackage}.${subClassName};
 #end
 
 /**

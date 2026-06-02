@@ -6,6 +6,7 @@ import com.star.pivot.framework.constants.GenConstants;
 import com.star.pivot.framework.utils.date.DateUtils;
 import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.entity.GenTableColumn;
+import com.star.pivot.generator.domain.external.GenPathProfile;
 import org.apache.velocity.VelocityContext;
 
 import java.util.ArrayList;
@@ -35,6 +36,11 @@ public class VelocityUtils
      */
     public static VelocityContext prepareContext(GenTable genTable)
     {
+        return prepareContext(genTable, null);
+    }
+
+    public static VelocityContext prepareContext(GenTable genTable, GenPathProfile pathProfile)
+    {
         String moduleName = genTable.getModuleName();
         String businessName = genTable.getBusinessName();
         String packageName = genTable.getPackageName();
@@ -52,6 +58,7 @@ public class VelocityUtils
         velocityContext.put("businessName", genTable.getBusinessName());
         velocityContext.put("basePackage", getPackagePrefix(packageName));
         velocityContext.put("packageName", packageName);
+        applyPathPackages(velocityContext, genTable, pathProfile);
         velocityContext.put("author", genTable.getFunctionAuthor());
         velocityContext.put("datetime", DateUtils.getDate());
         velocityContext.put("pkColumn", genTable.getPkColumn());
@@ -70,6 +77,59 @@ public class VelocityUtils
             setSubVelocityContext(velocityContext, genTable);
         }
         return velocityContext;
+    }
+
+    /**
+     * 注入分层包路径变量，供模板 import / package 使用
+     */
+    private static void applyPathPackages(VelocityContext context, GenTable genTable, GenPathProfile profile) {
+        String pkg = genTable.getPackageName();
+        String entityPackage = pkg + ".domain.entity";
+        String dtoPackage = pkg + ".domain.dto";
+        String voPackage = pkg + ".domain.bo";
+        String boPackage = pkg + ".domain.bo";
+        String mapperPackage = pkg + ".mapper";
+        String servicePackage = pkg + ".service";
+        String serviceImplPackage = pkg + ".service.impl";
+        String controllerPackage = pkg + ".controller";
+        if (profile != null) {
+            if (StringUtils.isNotEmpty(profile.getEntityPackage())) {
+                entityPackage = profile.getEntityPackage();
+            }
+            if (StringUtils.isNotEmpty(profile.getDtoPackage())) {
+                dtoPackage = profile.getDtoPackage();
+            }
+            if (StringUtils.isNotEmpty(profile.getVoPackage())) {
+                voPackage = profile.getVoPackage();
+            }
+            if (StringUtils.isNotEmpty(profile.getBoPackage())) {
+                boPackage = profile.getBoPackage();
+            }
+            if (StringUtils.isNotEmpty(profile.getMapperPackage())) {
+                mapperPackage = profile.getMapperPackage();
+            }
+            if (StringUtils.isNotEmpty(profile.getServicePackage())) {
+                servicePackage = profile.getServicePackage();
+            }
+            if (StringUtils.isNotEmpty(profile.getServiceImplPackage())) {
+                serviceImplPackage = profile.getServiceImplPackage();
+            }
+            if (StringUtils.isNotEmpty(profile.getControllerPackage())) {
+                controllerPackage = profile.getControllerPackage();
+            }
+            context.put("apiPath", profile.getApiPath());
+            context.put("vuePagePath", profile.getVuePagePath());
+            context.put("vueModulesPath", profile.resolveVueModulesPath());
+            context.put("mapperXmlPath", profile.getMapperXmlPath());
+        }
+        context.put("entityPackage", entityPackage);
+        context.put("dtoPackage", dtoPackage);
+        context.put("voPackage", voPackage);
+        context.put("boPackage", boPackage);
+        context.put("mapperPackage", mapperPackage);
+        context.put("servicePackage", servicePackage);
+        context.put("serviceImplPackage", serviceImplPackage);
+        context.put("controllerPackage", controllerPackage);
     }
 
     public static void setMenuVelocityContext(VelocityContext context, GenTable genTable)

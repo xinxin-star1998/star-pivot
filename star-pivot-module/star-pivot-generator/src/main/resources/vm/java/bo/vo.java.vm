@@ -1,4 +1,4 @@
-package ${packageName}.domain.bo;
+package ${voPackage};
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 #end
 #if($table.sub)
-import ${packageName}.domain.bo.${subClassName}VO;
+import ${voPackage}.${subClassName}VO;
 #end
 #foreach ($column in $columns)
 #if($column.javaType == 'LocalDateTime' || $column.javaType == 'Date' || $column.javaField == 'createTime' || $column.javaField == 'updateTime')
