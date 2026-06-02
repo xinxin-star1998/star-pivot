@@ -23,7 +23,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- 仅构建插件使用，依赖版本在 star-pivot-dependencies 中统一管理 -->
-        <spring-boot.version>3.2.10</spring-boot.version>
+        <spring-boot.version>3.5.9</spring-boot.version>
     </properties>
 
     <!-- 依赖版本统一由 star-pivot-dependencies BOM 管理。首次/清理后构建需先安装 BOM：mvn install -f star-pivot-dependencies/pom.xml -->

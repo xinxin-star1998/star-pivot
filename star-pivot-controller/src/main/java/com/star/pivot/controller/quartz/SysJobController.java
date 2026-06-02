@@ -5,8 +5,8 @@ import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
-import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.exception.BizException;
+import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.quartz.domain.bo.SysJobLogVO;
 import com.star.pivot.quartz.domain.bo.SysJobVO;
 import com.star.pivot.quartz.domain.dto.SysJobCommonDto;
@@ -28,7 +28,7 @@ import java.util.List;
  *
  * @author StarPivot
  */
-@Tag(name = "定时任务")
+@Tag(name = "定时任务", description = "定时任务的增删改查、启停控制与执行日志查询等接口")
 @RestController
 @RequestMapping("/monitor/job")
 @RequiredArgsConstructor

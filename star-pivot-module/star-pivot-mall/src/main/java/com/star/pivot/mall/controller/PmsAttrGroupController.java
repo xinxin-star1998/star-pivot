@@ -16,6 +16,7 @@ import com.star.pivot.mall.domain.vo.GroupAttrRelationVO;
 import com.star.pivot.mall.domain.vo.PmsAttrGroupVO;
 import com.star.pivot.mall.excel.PmsAttrGroupExcelHandler;
 import com.star.pivot.mall.service.IPmsAttrGroupService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/mall/group")
 @RequiredArgsConstructor
+@Tag(name = "商城-属性分组", description = "商品属性分组的增删改查、导入导出及属性关联等接口")
 public class PmsAttrGroupController
 {
     private final IPmsAttrGroupService pmsAttrGroupService;

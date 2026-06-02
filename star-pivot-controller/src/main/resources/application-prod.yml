@@ -44,7 +44,10 @@ cors:
 security:
   swagger-permit-all: false
 
-# 关闭 OpenAPI / Swagger UI
+# 关闭 OpenAPI / Knife4j / Swagger UI
+knife4j:
+  enable: false
+
 springdoc:
   api-docs:
     enabled: false

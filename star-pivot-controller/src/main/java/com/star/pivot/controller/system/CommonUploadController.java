@@ -5,6 +5,7 @@ import com.star.pivot.framework.annotation.NoResponseWrapper;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.storage.FileStorageService;
 import com.star.pivot.framework.storage.StoragePathValidator;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
@@ -22,6 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/common/upload")
 @RequiredArgsConstructor
+@Tag(name = "通用上传", description = "富文本图片上传、预签名 URL 等通用文件接口")
 public class CommonUploadController {
 
     private final FileStorageService fileStorageService;

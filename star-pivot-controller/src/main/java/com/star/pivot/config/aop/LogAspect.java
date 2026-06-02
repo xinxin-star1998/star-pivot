@@ -2,7 +2,12 @@ package com.star.pivot.config.aop;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.utils.LogUtils;
+import com.star.pivot.system.domain.bo.LoginRequest;
+import com.star.pivot.system.domain.bo.LoginResponse;
+import com.star.pivot.system.domain.bo.RegisterRequest;
+import com.star.pivot.system.domain.bo.RegisterResponse;
 import com.star.pivot.system.domain.entity.SysDept;
 import com.star.pivot.system.domain.entity.SysOperLog;
 import com.star.pivot.system.domain.entity.SysUser;
@@ -17,6 +22,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -32,6 +38,8 @@ import java.util.Arrays;
 @Aspect
 @Component
 public class LogAspect {
+
+    private static final String ANONYMOUS_PRINCIPAL = "anonymousUser";
 
     private final AsyncOperLogService asyncOperLogService;
     private final SysDeptMapper sysDeptMapper;
@@ -51,7 +59,7 @@ public class LogAspect {
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTime = System.currentTimeMillis();
         SysOperLog operLog = new SysOperLog();
-        Object result;
+        Object result = null;
 
         try {
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -75,6 +83,7 @@ public class LogAspect {
             operLog.setErrorMsg(errorMsg);
             throw e;
         } finally {
+            resolveOperatorIfAnonymous(operLog, joinPoint, result);
             long endTime = System.currentTimeMillis();
             operLog.setCostTime(endTime - startTime);
             operLog.setOperTime(LocalDateTime.now());
@@ -119,9 +128,19 @@ public class LogAspect {
                 operLog.setOperatorType(0);
                 return;
             }
+            if (auth instanceof AnonymousAuthenticationToken) {
+                operLog.setOperName(ANONYMOUS_PRINCIPAL);
+                operLog.setOperatorType(0);
+                return;
+            }
             Object principal = auth.getPrincipal();
             if (!(principal instanceof LoginUser loginUser)) {
-                operLog.setOperName(principal instanceof String ? (String) principal : "未知");
+                String name = principal instanceof String ? (String) principal : "未知";
+                if (ANONYMOUS_PRINCIPAL.equals(name)) {
+                    operLog.setOperName(ANONYMOUS_PRINCIPAL);
+                } else {
+                    operLog.setOperName(name);
+                }
                 operLog.setOperatorType(0);
                 return;
             }
@@ -145,6 +164,63 @@ public class LogAspect {
             operLog.setOperName("未知");
             operLog.setOperatorType(0);
         }
+    }
+
+    /**
+     * 登录/注册等未认证接口在记录操作日志时 SecurityContext 仍为匿名用户，
+     * 从请求参数或响应结果中补全实际操作账号。
+     */
+    private void resolveOperatorIfAnonymous(SysOperLog operLog, JoinPoint joinPoint, Object result) {
+        if (!isAnonymousOperName(operLog.getOperName())) {
+            return;
+        }
+        String username = extractUsernameFromArgs(joinPoint.getArgs());
+        if (!StringUtils.hasText(username)) {
+            username = extractUsernameFromResult(result);
+        }
+        if (StringUtils.hasText(username)) {
+            operLog.setOperName(truncateString(username, 50));
+            operLog.setOperatorType(0);
+        }
+    }
+
+    private boolean isAnonymousOperName(String operName) {
+        return !StringUtils.hasText(operName)
+                || ANONYMOUS_PRINCIPAL.equals(operName)
+                || "匿名用户".equals(operName)
+                || "未知".equals(operName);
+    }
+
+    private String extractUsernameFromArgs(Object[] args) {
+        if (args == null) {
+            return null;
+        }
+        for (Object arg : args) {
+            if (arg instanceof LoginRequest loginRequest) {
+                return loginRequest.getUsername();
+            }
+            if (arg instanceof RegisterRequest registerRequest) {
+                return registerRequest.getUsername();
+            }
+        }
+        return null;
+    }
+
+    private String extractUsernameFromResult(Object result) {
+        if (result == null) {
+            return null;
+        }
+        Object data = result;
+        if (result instanceof Result<?> wrapped && wrapped.getData() != null) {
+            data = wrapped.getData();
+        }
+        if (data instanceof LoginResponse loginResponse) {
+            return loginResponse.getUsername();
+        }
+        if (data instanceof RegisterResponse registerResponse) {
+            return registerResponse.getUsername();
+        }
+        return null;
     }
 
     private void setRequestParams(SysOperLog operLog, JoinPoint joinPoint) {

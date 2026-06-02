@@ -22,6 +22,7 @@ class FileUploadIntegrationTest {
         assertTrue(StoragePathValidator.isAllowedPresignedPath("avatar/1.png"));
         assertTrue(StoragePathValidator.isAllowedPresignedPath("goods/2026/01/spu.png"));
         assertTrue(StoragePathValidator.isAllowedPresignedPath("editor/2026/note.png"));
+        assertTrue(StoragePathValidator.isAllowedPresignedPath("brand/2026/01/logo.png"));
     }
 
     @Test

@@ -2,8 +2,9 @@ package com.star.pivot.framework.utils;
 
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.model.*;
+import com.star.pivot.framework.config.OssProperties;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,7 @@ import java.util.regex.Pattern;
  * 用于文件上传、删除、获取预签名URL等操作
  */
 @Component
+@ConditionalOnBean(OSS.class)
 @RequiredArgsConstructor
 public class OssUtil {
 
@@ -33,21 +35,27 @@ public class OssUtil {
     private static final Pattern USER_ID_PATTERN = Pattern.compile("^[0-9]+$");
 
     private final OSS ossClient;
+    private final OssProperties ossProperties;
 
-    @Value("${oss.endpoint}")
-    private String endpoint;
+    private String endpoint() {
+        return ossProperties.getEndpoint();
+    }
 
-    @Value("${oss.access-key-id}")
-    private String accessKeyId;
+    private String accessKeyId() {
+        return ossProperties.getAccessKeyId();
+    }
 
-    @Value("${oss.access-key-secret}")
-    private String accessKeySecret;
+    private String accessKeySecret() {
+        return ossProperties.getAccessKeySecret();
+    }
 
-    @Value("${oss.bucket-name}")
-    private String bucketName;
+    private String bucketName() {
+        return ossProperties.getBucketName();
+    }
 
-    @Value("${oss.url-prefix}")
-    private String urlPrefix;
+    private String urlPrefix() {
+        return ossProperties.getUrlPrefix();
+    }
 
     /**
      * 校验 userId 格式，仅允许纯数字，防止路径穿越
@@ -137,7 +145,7 @@ public class OssUtil {
         metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "image/png");
         metadata.setContentLength(file.getSize());
         PutObjectRequest putObjectRequest = new PutObjectRequest(
-                bucketName,
+                bucketName(),
                 objectName,
                 file.getInputStream()
         );
@@ -147,12 +155,12 @@ public class OssUtil {
         // 再删除该用户下其它旧头像（不同后缀的旧文件）
         String prefix = "avatar/" + userId;
         ListObjectsV2Request listRequest = new ListObjectsV2Request()
-                .withBucketName(bucketName)
+                .withBucketName(bucketName())
                 .withPrefix(prefix);
         ListObjectsV2Result listResult = ossClient.listObjectsV2(listRequest);
         for (OSSObjectSummary summary : listResult.getObjectSummaries()) {
             if (!objectName.equals(summary.getKey())) {
-                ossClient.deleteObject(bucketName, summary.getKey());
+                ossClient.deleteObject(bucketName(), summary.getKey());
             }
         }
         return objectName;
@@ -176,7 +184,7 @@ public class OssUtil {
         metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "image/png");
         metadata.setContentLength(file.getSize());
         PutObjectRequest putObjectRequest = new PutObjectRequest(
-                bucketName,
+                bucketName(),
                 objectName,
                 file.getInputStream()
         );
@@ -195,6 +203,7 @@ public class OssUtil {
         String objectName = uploadAvatar(file, userId);
         // 阿里云 OSS 的 URL 格式：https://{bucket-name}.{endpoint}/{object-name}
         // 如果配置了 url-prefix，则使用配置的前缀
+        String urlPrefix = urlPrefix();
         if (urlPrefix != null && !urlPrefix.isEmpty()) {
             // 确保 urlPrefix 不以 / 结尾，objectName 不以 / 开头
             String prefix = urlPrefix.endsWith("/") ? urlPrefix.substring(0, urlPrefix.length() - 1) : urlPrefix;
@@ -202,8 +211,8 @@ public class OssUtil {
             return prefix + object;
         } else {
             // 默认格式：https://{bucket-name}.{endpoint}/{object-name}
-            String endpointWithoutProtocol = endpoint.replace("https://", "").replace("http://", "");
-            return "https://" + bucketName + "." + endpointWithoutProtocol + "/" + objectName;
+            String endpointWithoutProtocol = endpoint().replace("https://", "").replace("http://", "");
+            return "https://" + bucketName() + "." + endpointWithoutProtocol + "/" + objectName;
         }
     }
 
@@ -226,13 +235,13 @@ public class OssUtil {
         validateUserId(userId);
         String prefix = "avatar/" + userId;
         ListObjectsV2Request listObjectsRequest = new ListObjectsV2Request()
-                .withBucketName(bucketName)
+                .withBucketName(bucketName())
                 .withPrefix(prefix);
 
         ListObjectsV2Result result = ossClient.listObjectsV2(listObjectsRequest);
 
         for (OSSObjectSummary objectSummary : result.getObjectSummaries()) {
-            ossClient.deleteObject(bucketName, objectSummary.getKey());
+            ossClient.deleteObject(bucketName(), objectSummary.getKey());
         }
     }
 
@@ -245,19 +254,20 @@ public class OssUtil {
         if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
             throw new IllegalArgumentException("无效的对象路径");
         }
-        if (!StringUtils.hasText(endpoint)) {
+        if (!StringUtils.hasText(endpoint())) {
             throw new IllegalStateException("OSS endpoint 未配置，请设置环境变量 OSS_ENDPOINT");
         }
-        if (!StringUtils.hasText(bucketName)) {
+        if (!StringUtils.hasText(bucketName())) {
             throw new IllegalStateException("OSS bucketName 未配置，请设置环境变量 OSS_BUCKET_NAME");
         }
+        String urlPrefix = urlPrefix();
         if (urlPrefix != null && !urlPrefix.isEmpty()) {
             String prefix = urlPrefix.endsWith("/") ? urlPrefix.substring(0, urlPrefix.length() - 1) : urlPrefix;
             String object = objectName.startsWith("/") ? objectName : "/" + objectName;
             return prefix + object;
         }
-        String endpointWithoutProtocol = endpoint.replace("https://", "").replace("http://", "");
-        return "https://" + bucketName + "." + endpointWithoutProtocol + "/" + objectName;
+        String endpointWithoutProtocol = endpoint().replace("https://", "").replace("http://", "");
+        return "https://" + bucketName() + "." + endpointWithoutProtocol + "/" + objectName;
     }
 
     /**
@@ -269,20 +279,20 @@ public class OssUtil {
         if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
             throw new IllegalArgumentException("无效的对象路径");
         }
-        if (!StringUtils.hasText(endpoint)) {
+        if (!StringUtils.hasText(endpoint())) {
             throw new IllegalStateException("OSS endpoint 未配置，请设置环境变量 OSS_ENDPOINT");
         }
-        if (!StringUtils.hasText(bucketName)) {
+        if (!StringUtils.hasText(bucketName())) {
             throw new IllegalStateException("OSS bucketName 未配置，请设置环境变量 OSS_BUCKET_NAME");
         }
-        if (!StringUtils.hasText(accessKeyId)) {
+        if (!StringUtils.hasText(accessKeyId())) {
             throw new IllegalStateException("OSS accessKeyId 未配置，请设置环境变量 OSS_ACCESS_KEY_ID");
         }
-        if (!StringUtils.hasText(accessKeySecret)) {
+        if (!StringUtils.hasText(accessKeySecret())) {
             throw new IllegalStateException("OSS accessKeySecret 未配置，请设置环境变量 OSS_ACCESS_KEY_SECRET");
         }
         Date expiration = new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000L);
-        URL url = ossClient.generatePresignedUrl(bucketName, objectName, expiration);
+        URL url = ossClient.generatePresignedUrl(bucketName(), objectName, expiration);
         return url.toString();
     }
 
@@ -304,7 +314,7 @@ public class OssUtil {
         metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "application/octet-stream");
         metadata.setContentLength(file.getSize());
         PutObjectRequest putObjectRequest = new PutObjectRequest(
-                bucketName,
+                bucketName(),
                 objectName,
                 file.getInputStream()
         );

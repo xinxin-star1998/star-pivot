@@ -14,6 +14,7 @@ import com.star.pivot.mall.domain.excel.PmsAttrExcel;
 import com.star.pivot.mall.domain.vo.PmsAttrVO;
 import com.star.pivot.mall.excel.PmsAttrExcelHandler;
 import com.star.pivot.mall.service.IPmsAttrService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +36,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/mall/attr")
 @RequiredArgsConstructor
+@Tag(name = "商城-商品属性", description = "基本属性、销售属性的增删改查与导入导出等接口")
 public class PmsAttrController {
 
     private final IPmsAttrService pmsAttrService;

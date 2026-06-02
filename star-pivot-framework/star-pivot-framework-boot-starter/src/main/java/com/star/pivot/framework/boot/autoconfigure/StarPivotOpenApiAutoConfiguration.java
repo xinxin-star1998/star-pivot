@@ -13,9 +13,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 /**
- * SpringDoc OpenAPI 通用配置。
+ * Knife4j + SpringDoc OpenAPI 通用配置。
  *
- * <p>默认开启（由 springdoc.* 控制），可通过 star-pivot.openapi.enabled=false 关闭该默认 Bean。
+ * <p>默认开启（由 springdoc.* / knife4j.* 控制），可通过 star-pivot.openapi.enabled=false 关闭该默认 Bean。
  */
 @AutoConfiguration
 @ConditionalOnClass(OpenAPI.class)

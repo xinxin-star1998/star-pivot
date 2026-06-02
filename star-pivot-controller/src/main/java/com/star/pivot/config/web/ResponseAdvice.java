@@ -25,7 +25,9 @@ public class ResponseAdvice implements ResponseBodyAdvice<Object> {
         Class<?> containingClass = returnType.getContainingClass();
         if (containingClass != null) {
             String pkg = containingClass.getPackageName();
-            if (pkg.startsWith("org.springdoc") || pkg.startsWith("org.springframework.boot.actuate")) {
+            if (pkg.startsWith("org.springdoc")
+                    || pkg.startsWith("com.github.xiaoymin")
+                    || pkg.startsWith("org.springframework.boot.actuate")) {
                 return false;
             }
         }

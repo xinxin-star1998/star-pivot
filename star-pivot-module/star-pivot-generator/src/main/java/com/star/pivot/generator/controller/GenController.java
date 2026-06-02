@@ -19,6 +19,7 @@ import com.star.pivot.generator.service.GenTableColumnService;
 import com.star.pivot.generator.service.GenTableService;
 import com.star.pivot.generator.utils.Convert;
 import com.star.pivot.security.context.SecurityContextUtils;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/tool/gen")
 @RequiredArgsConstructor
+@Tag(name = "代码生成", description = "数据库表导入、代码生成配置与预览下载等接口")
 public class GenController {
     
     private final GenTableService genTableService;

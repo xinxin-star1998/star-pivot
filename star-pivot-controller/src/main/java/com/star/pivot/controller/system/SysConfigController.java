@@ -13,6 +13,7 @@ import com.star.pivot.system.domain.dto.SysConfigQueryDTO;
 import com.star.pivot.system.domain.excel.SysConfigExcel;
 import com.star.pivot.system.excel.SysConfigExcelHandler;
 import com.star.pivot.system.service.interfaces.ISysConfigService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/system/config")
 @RequiredArgsConstructor
+@Tag(name = "参数配置", description = "系统参数配置的增删改查、导入导出等接口")
 public class SysConfigController {
 
     private final ISysConfigService sysConfigService;

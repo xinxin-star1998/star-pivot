@@ -5,24 +5,18 @@ import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
-import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.exception.BizException;
-import com.star.pivot.system.service.interfaces.ISysNoticeService;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import jakarta.validation.Valid;
-import com.star.pivot.system.domain.dto.SysNoticeQueryDTO;
+import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.bo.SysNoticeVO;
 import com.star.pivot.system.domain.dto.SysNoticeDTO;
+import com.star.pivot.system.domain.dto.SysNoticeQueryDTO;
+import com.star.pivot.system.service.interfaces.ISysNoticeService;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -36,6 +30,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/system/notice")
 @RequiredArgsConstructor
+@Tag(name = "通知公告", description = "系统通知公告的增删改查等接口")
 public class SysNoticeController
 {
     private final ISysNoticeService sysNoticeService;

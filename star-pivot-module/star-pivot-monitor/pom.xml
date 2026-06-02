@@ -50,7 +50,7 @@
         <!-- MyBatis Plus -->
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
 
         <!-- 框架层：仅依赖 boot-starter，不直接引用 framework 内部子模块 -->
@@ -78,7 +78,11 @@
             <scope>compile</scope>
         </dependency>
 
-        <!-- Swagger/OpenAPI 3.0 -->
+        <!-- Knife4j + SpringDoc -->
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>

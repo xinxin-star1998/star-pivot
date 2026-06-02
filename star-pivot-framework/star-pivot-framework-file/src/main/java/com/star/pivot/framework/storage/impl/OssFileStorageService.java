@@ -4,6 +4,7 @@ import com.star.pivot.framework.storage.FileStorageService;
 import com.star.pivot.framework.utils.OssUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnBean(OssUtil.class)
 public class OssFileStorageService implements FileStorageService {
 
     private final OssUtil ossUtil;

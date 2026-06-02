@@ -60,9 +60,10 @@ import ArtTable from '@/components/core/tables/art-table/index.vue'
 import BrandSearch from './modules/brand-search.vue'
 import BrandDialog from './modules/brand-dialog.vue'
 import BrandCategoryBindDialog from './modules/brand-category-bind-dialog.vue'
-import {ElMessage, ElMessageBox, ElTag} from 'element-plus'
+import {ElImage, ElMessage, ElMessageBox, ElTag} from 'element-plus'
 import type {DialogType} from '@/types'
 import {useAuth} from '@/hooks/core/useAuth'
+import {getCoverDisplayUrl, resolveGoodsImageDisplayUrls} from '@/utils/mall/goods-image-url'
 
 defineOptions({ name: 'MallBrand' })
 
@@ -80,6 +81,18 @@ defineOptions({ name: 'MallBrand' })
   const bindDialogVisible = ref(false)
   const bindBrand = ref<{ brandId?: number; name?: string }>({})
   const selectedRows = ref<MallBrandVo[]>([])
+
+  const logoDisplayUrls = ref<Map<string, string>>(new Map())
+  const logoImgVersion = ref(0)
+
+  const preloadLogoImages = async (rows: MallBrandVo[]) => {
+    if (!rows?.length) return
+    const logos = rows.map((row) => row.logo?.trim()).filter((url): url is string => !!url)
+    if (!logos.length) return
+    const resolved = await resolveGoodsImageDisplayUrls(logos)
+    resolved.forEach((url, key) => logoDisplayUrls.value.set(key, url))
+    logoImgVersion.value++
+  }
 
   const {
     columns,
@@ -113,8 +126,25 @@ defineOptions({ name: 'MallBrand' })
         {
           prop: 'logo',
           label: 'Logo',
-          minWidth: 140,
-          showOverflowTooltip: true
+          width: 88,
+          formatter: (row: MallBrandVo) => {
+            void logoImgVersion.value
+            const raw = row.logo?.trim()
+            if (!raw) return '-'
+            const displayUrl = getCoverDisplayUrl(raw, logoDisplayUrls.value)
+            if (!displayUrl) return '-'
+            return h(
+              'div',
+              { class: 'brand-logo-cell' },
+              h(ElImage, {
+                src: displayUrl,
+                fit: 'contain',
+                previewSrcList: [displayUrl],
+                previewTeleported: true,
+                class: 'brand-logo-cell__img'
+              })
+            )
+          }
         },
         { prop: 'descript', label: '介绍', minWidth: 160, showOverflowTooltip: true },
         { prop: 'sort', label: '排序', width: 80 },
@@ -174,6 +204,14 @@ defineOptions({ name: 'MallBrand' })
           }
         }
       ]
+    },
+    hooks: {
+      onSuccess: (rows) => {
+        preloadLogoImages(rows)
+      },
+      onCacheHit: (rows) => {
+        preloadLogoImages(rows)
+      }
     }
   })
 
@@ -254,5 +292,22 @@ defineOptions({ name: 'MallBrand' })
     border: 1px solid var(--art-card-border);
     border-radius: 12px;
     box-shadow: var(--art-shadow-card);
+  }
+
+  :deep(.brand-logo-cell) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    overflow: hidden;
+    background: var(--el-fill-color-lighter);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 4px;
+
+    .brand-logo-cell__img {
+      width: 100%;
+      height: 100%;
+    }
   }
 </style>

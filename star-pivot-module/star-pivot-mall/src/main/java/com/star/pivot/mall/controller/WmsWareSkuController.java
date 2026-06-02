@@ -7,6 +7,7 @@ import com.star.pivot.mall.domain.dto.WmsWareSkuDTO;
 import com.star.pivot.mall.domain.dto.WmsWareSkuQueryDTO;
 import com.star.pivot.mall.domain.vo.WmsWareSkuVO;
 import com.star.pivot.mall.service.IWmsWareSkuService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/mall/ware-sku")
 @RequiredArgsConstructor
+@Tag(name = "商城-库存", description = "仓库 SKU 库存的增删改查等接口")
 public class WmsWareSkuController
 {
     private final IWmsWareSkuService wmsWareSkuService;

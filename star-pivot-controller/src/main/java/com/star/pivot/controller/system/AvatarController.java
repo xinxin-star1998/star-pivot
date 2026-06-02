@@ -9,6 +9,7 @@ import com.star.pivot.framework.storage.FileStorageService;
 import com.star.pivot.security.context.SecurityContextUtils;
 import com.star.pivot.system.service.interfaces.PermissionService;
 import com.star.pivot.system.service.interfaces.SysUserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,6 +34,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/avatar")
 @RequiredArgsConstructor
+@Tag(name = "头像管理", description = "用户头像上传、查询、删除等接口")
 public class AvatarController {
 
     private final FileStorageService fileStorageService;

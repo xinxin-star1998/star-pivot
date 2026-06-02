@@ -84,7 +84,8 @@ public class SecurityConfig {
                     }
 
                     if (securityProperties.isSwaggerPermitAll()) {
-                        auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
+                        auth.requestMatchers("/doc.html", "/doc.html/**",
+                                        "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
                                         "/swagger-resources/**", "/webjars/**")
                                 .permitAll();
                     }

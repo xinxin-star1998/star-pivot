@@ -17,7 +17,7 @@
         <ElInput v-model="formData.name" placeholder="名称" maxlength="128" show-word-limit />
       </ElFormItem>
       <ElFormItem label="Logo" prop="logo">
-        <ElInput v-model="formData.logo" placeholder="Logo URL" maxlength="512" show-word-limit />
+        <BrandLogoUpload ref="logoUploadRef" :model-value="formData.logo" :brand-id="formData.brandId" />
       </ElFormItem>
       <ElFormItem label="介绍" prop="descript">
         <ElInput v-model="formData.descript" type="textarea" :rows="3" placeholder="品牌介绍" />
@@ -42,23 +42,24 @@
     </ElForm>
     <template #footer>
       <ElButton @click="dialogVisible = false">取消</ElButton>
-      <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+      <ElButton type="primary" :loading="submitting" @click="handleSubmit">提交</ElButton>
     </template>
   </ElDialog>
 </template>
 
 <script setup lang="ts">
-  import type { FormInstance, FormRules } from 'element-plus'
-  import {
-    fetchMallBrandAdd,
-    fetchMallBrandById,
-    fetchMallBrandUpdate,
-    type MallBrandSavePayload,
-    type MallBrandVo
-  } from '@/api/mall/brand'
-  import type { DialogType } from '@/types'
+import type {FormInstance, FormRules} from 'element-plus'
+import {
+  fetchMallBrandAdd,
+  fetchMallBrandById,
+  fetchMallBrandUpdate,
+  type MallBrandSavePayload,
+  type MallBrandVo
+} from '@/api/mall/brand'
+import type {DialogType} from '@/types'
+import BrandLogoUpload from './brand-logo-upload.vue'
 
-  interface Props {
+interface Props {
     visible: boolean
     type: DialogType
     brandData?: Partial<MallBrandVo>
@@ -78,6 +79,8 @@
   })
 
   const formRef = ref<FormInstance>()
+  const logoUploadRef = ref<InstanceType<typeof BrandLogoUpload>>()
+  const submitting = ref(false)
 
   const formData = reactive({
     brandId: undefined as number | undefined,
@@ -155,15 +158,17 @@
     } catch {
       return
     }
-    const payload: MallBrandSavePayload = {
-      name: formData.name,
-      logo: formData.logo || undefined,
-      descript: formData.descript || undefined,
-      sort: formData.sort,
-      showStatus: formData.showStatus,
-      firstLetter: formData.firstLetter || undefined
-    }
+    submitting.value = true
     try {
+      const logo = await logoUploadRef.value?.resolveLogo()
+      const payload: MallBrandSavePayload = {
+        name: formData.name,
+        logo,
+        descript: formData.descript || undefined,
+        sort: formData.sort,
+        showStatus: formData.showStatus,
+        firstLetter: formData.firstLetter || undefined
+      }
       if (props.type === 'add') {
         await fetchMallBrandAdd(payload)
       } else {
@@ -173,7 +178,9 @@
       dialogVisible.value = false
       emit('submit')
     } catch {
-      // http 拦截器提示
+      // http 拦截器提示或 Logo 上传失败
+    } finally {
+      submitting.value = false
     }
   }
 </script>
