@@ -101,7 +101,6 @@ gen:
   packageName: com.star.pivot.system
   autoRemovePre: false
   tablePrefix: sys_
-  allowOverwrite: false
   external:
     enabled: true
     session-ttl-minutes: 30

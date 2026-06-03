@@ -169,31 +169,31 @@
 </template>
 
 <script setup lang="ts">
-/**
- * 代码生成配置编辑逻辑
- * 从后端接口获取表的基本信息、字段信息、生成信息
- */
-import {useRoute, useRouter} from 'vue-router'
-import {
-  ElButton,
-  ElCard,
-  ElCheckbox,
-  ElForm,
-  ElFormItem,
-  ElInput,
-  ElMessage,
-  ElOption,
-  ElSelect,
-  ElTable,
-  ElTableColumn,
-  ElTabPane,
-  ElTabs
-} from 'element-plus'
-import {fetchEditSave, fetchGetGenTableInfo} from '@/api/generator/gen-table'
-import {fetchGetDictTypeSelectList, type SysDictType} from '@/api/dict/type'
-import {fetchGetParentMenu} from '@/api/menu/menu'
+  /**
+   * 代码生成配置编辑逻辑
+   * 从后端接口获取表的基本信息、字段信息、生成信息
+   */
+  import { useRoute, useRouter } from 'vue-router'
+  import {
+    ElButton,
+    ElCard,
+    ElCheckbox,
+    ElForm,
+    ElFormItem,
+    ElInput,
+    ElMessage,
+    ElOption,
+    ElSelect,
+    ElTable,
+    ElTableColumn,
+    ElTabPane,
+    ElTabs
+  } from 'element-plus'
+  import { fetchEditSave, fetchGetGenTableInfo } from '@/api/generator/gen-table'
+  import { fetchGetDictTypeSelectList, type SysDictType } from '@/api/dict/type'
+  import { fetchGetParentMenu } from '@/api/menu/menu'
 
-const GenInfoForm = defineAsyncComponent(
+  const GenInfoForm = defineAsyncComponent(
     () => import('@views/tools/generator/modules/genInfoForm.vue')
   )
 
@@ -222,8 +222,6 @@ const GenInfoForm = defineAsyncComponent(
     moduleName: '',
     businessName: '',
     functionName: '',
-    genType: '0' as '0' | '1',
-    genPath: '',
     treeCode: '',
     treeParentCode: '',
     treeName: '',
@@ -281,9 +279,6 @@ const GenInfoForm = defineAsyncComponent(
       genInfoForm.moduleName = info.moduleName || ''
       genInfoForm.businessName = info.businessName || ''
       genInfoForm.functionName = info.functionName || ''
-      genInfoForm.genType = (info.genType || '0') as '0' | '1'
-      genInfoForm.genPath = info.genPath || ''
-
       // 树表与上级菜单等生成附加信息（用于编辑回显）
       // 这些字段在后端从 options 中解析后，已经设置回 GenTable 对象
       genInfoForm.treeCode = info.treeCode || ''
@@ -321,7 +316,8 @@ const GenInfoForm = defineAsyncComponent(
     // 组合基础信息 + 生成信息 + 字段信息，组装为 genTable 对象
     const genTable: any = {
       ...baseForm, // 包含表的基础信息（tableId, tableName, tableComment, className, functionAuthor, remark）
-      ...genInfoForm, // 包含生成信息（tplCategory, tplWebType, packageName, moduleName, businessName, functionName, genType, genPath 等）
+      ...genInfoForm,
+      genType: '0',
       columns: columnList.value // 当前页面维护的字段列表
     }
 

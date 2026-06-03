@@ -2,9 +2,9 @@ package com.star.pivot.generator.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.star.pivot.framework.domain.PageResponse;
-import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.bo.GenTableVO;
 import com.star.pivot.generator.domain.dto.GenTableQueryDTO;
+import com.star.pivot.generator.domain.entity.GenTable;
 
 import java.util.List;
 import java.util.Map;
@@ -100,12 +100,6 @@ public interface GenTableService extends IService<GenTable> {
      * @return 数据
      */
     byte[] downloadCode(String tableName);
-    /**
-     * 生成代码（自定义路径）
-     *
-     * @param tableName 表名称
-     */
-    void generatorCode(String tableName);
     /**
      * 同步数据库
      *

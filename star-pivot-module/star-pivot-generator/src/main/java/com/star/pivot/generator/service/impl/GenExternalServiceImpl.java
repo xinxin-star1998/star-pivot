@@ -600,7 +600,7 @@ public class GenExternalServiceImpl implements GenExternalService {
         sb.append("\n使用说明:\n");
         sb.append("1. Java 文件按 main/java/... 目录合并到对应模块\n");
         sb.append("2. Mapper XML 合并到 main/resources/mapper/...\n");
-        sb.append("3. 前端 api/vue 文件合并到 star-pivot-ui/src/...\n");
+        sb.append("3. 前端 api/vue 文件位于 vue/ 目录，合并到 star-pivot-ui/src/ 对应位置\n");
         sb.append("4. 执行 *Menu.sql 导入菜单（注意 parentMenuId）\n");
         sb.append("5. 检查权限前缀、路由 path 与现有模块是否冲突\n");
         zip.putNextEntry(new ZipEntry("README.txt"));

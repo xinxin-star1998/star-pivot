@@ -27,7 +27,4 @@ public class GenConfig {
 
     /** 表前缀 */
     private String tablePrefix;
-
-    /** 是否允许生成文件覆盖到本地（自定义路径） */
-    private boolean allowOverwrite;
 }

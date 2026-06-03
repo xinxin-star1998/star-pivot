@@ -13,31 +13,24 @@ import com.star.pivot.generator.domain.bo.GenTableVO;
 import com.star.pivot.generator.domain.dto.GenTableQueryDTO;
 import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.entity.GenTableColumn;
+import com.star.pivot.generator.external.GenTableCodegenHelper;
 import com.star.pivot.generator.mapper.GenTableColumnMapper;
 import com.star.pivot.generator.mapper.GenTableMapper;
 import com.star.pivot.generator.service.GenTableService;
-import com.star.pivot.generator.utils.*;
+import com.star.pivot.generator.utils.GenUtils;
+import com.star.pivot.generator.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -119,30 +112,10 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
     @Override
     public Map<String, String> previewCode(Long tableId)
     {
-        Map<String, String> dataMap = new LinkedHashMap<>();
-        // 查询表信息
         GenTable table = genTableMapper.selectGenTableById(tableId);
-        // 设置主子表信息
         setSubTable(table);
-        // 设置主键列信息
         setPkColumn(table);
-        VelocityInitializer.initVelocity();
-
-        VelocityContext context = VelocityUtils.prepareContext(table);
-
-        // 获取模板列表
-        List<String> templates = VelocityUtils.getTemplateList(table.getTplCategory(), table.getTplWebType());
-        for (String template : templates)
-        {
-            // 渲染模板
-            StringWriter sw = new StringWriter();
-            Template tpl = Velocity.getTemplate(template, Constants.UTF8);
-            tpl.merge(context, sw);
-            // 与 ZIP 下载一致，使用完整路径作为 key，便于前端文件树展示
-            String filePath = VelocityUtils.getFileName(template, table);
-            dataMap.put(filePath, sw.toString());
-        }
-        return dataMap;
+        return GenTableCodegenHelper.renderPrepared(table);
     }
     /**
      * 生成代码（下载方式）
@@ -163,51 +136,6 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
         return outputStream.toByteArray();
     }
 
-    /**
-     * 生成代码（自定义路径）
-     *
-     * @param tableName 表名称
-     */
-    @Override
-    public void generatorCode(String tableName)
-    {
-        // 查询表信息
-        GenTable table = genTableMapper.selectGenTableByName(tableName);
-        if (StringUtils.isNull(table))
-        {
-            throw new BizException("生成代码失败，代码生成表不存在");
-        }
-        // 设置主子表信息
-        setSubTable(table);
-        // 设置主键列信息
-        setPkColumn(table);
-
-        VelocityInitializer.initVelocity();
-
-        VelocityContext context = VelocityUtils.prepareContext(table);
-
-        // 获取模板列表
-        List<String> templates = VelocityUtils.getTemplateList(table.getTplCategory(), table.getTplWebType());
-        for (String template : templates)
-        {
-            if (!StringUtils.containsAny(template, "sql.vm", "api.js.vm", "index.vue.vm", "index-tree.vue.vm"))
-            {
-                // 渲染模板
-                StringWriter sw = new StringWriter();
-                Template tpl = Velocity.getTemplate(template, Constants.UTF8);
-                tpl.merge(context, sw);
-                try
-                {
-                    String path = getGenPath(table, template);
-                    FileUtils.writeStringToFile(new File(path), sw.toString(), CharsetKit.UTF_8);
-                }
-                catch (IOException e)
-                {
-                    throw new BizException("渲染模板失败，表名：" + table.getTableName());
-                }
-            }
-        }
-    }
     /**
      * 同步数据库
      *
@@ -294,38 +222,16 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
     /**
      * 查询表信息并生成代码
      */
-    private void generatorCode(String tableName, ZipOutputStream zip)
+    private void generatorCode(String tableName, ZipOutputStream zip) throws IOException
     {
-        // 查询表信息
         GenTable table = genTableMapper.selectGenTableByName(tableName);
         if (StringUtils.isNull(table))
         {
             throw new BizException("生成代码失败，代码生成表不存在");
         }
-        // 设置主子表信息
         setSubTable(table);
-        // 设置主键列信息
         setPkColumn(table);
-
-        VelocityInitializer.initVelocity();
-
-        VelocityContext context = VelocityUtils.prepareContext(table);
-
-        // 获取模板列表
-        List<String> templates = VelocityUtils.getTemplateList(table.getTplCategory(), table.getTplWebType());
-        for (String template : templates)
-        {
-            try (StringWriter sw = new StringWriter()) {
-                Template tpl = Velocity.getTemplate(template, Constants.UTF8);
-                tpl.merge(context, sw);
-                zip.putNextEntry(new ZipEntry(VelocityUtils.getFileName(template, table)));
-                IOUtils.write(sw.toString(), zip, CharsetKit.CHARSET_UTF_8);
-                zip.flush();
-                zip.closeEntry();
-            } catch (IOException e) {
-                log.error("渲染模板失败，表名: {}", table.getTableName(), e);
-            }
-        }
+        GenTableCodegenHelper.writeZipPrepared(table, zip);
     }
     /**
      * 查询所有表信息
@@ -478,42 +384,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
      */
     public void setPkColumn(GenTable table)
     {
-        List<GenTableColumn> columns = table.getColumns();
-        if (StringUtils.isEmpty(columns))
-        {
-            throw new BizException("表字段列表不能为空，表名：" + table.getTableName());
-        }
-        for (GenTableColumn column : columns)
-        {
-            if (column.isPk())
-            {
-                table.setPkColumn(column);
-                break;
-            }
-        }
-        if (StringUtils.isNull(table.getPkColumn()))
-        {
-            table.setPkColumn(columns.get(0));
-        }
-        if (GenConstants.TPL_SUB.equals(table.getTplCategory()) && StringUtils.isNotNull(table.getSubTable()))
-        {
-            List<GenTableColumn> subColumns = table.getSubTable().getColumns();
-            if (StringUtils.isNotEmpty(subColumns))
-            {
-                for (GenTableColumn column : subColumns)
-                {
-                    if (column.isPk())
-                    {
-                        table.getSubTable().setPkColumn(column);
-                        break;
-                    }
-                }
-                if (StringUtils.isNull(table.getSubTable().getPkColumn()))
-                {
-                    table.getSubTable().setPkColumn(subColumns.get(0));
-                }
-            }
-        }
+        GenTableCodegenHelper.setPkColumn(table);
     }
 
     /**
@@ -556,21 +427,5 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
             genTable.setParentMenuId(parentMenuId);
             genTable.setParentMenuName(parentMenuName);
         }
-    }
-    /**
-     * 获取代码生成地址
-     *
-     * @param table 业务表信息
-     * @param template 模板文件路径
-     * @return 生成地址
-     */
-    public static String getGenPath(GenTable table, String template)
-    {
-        String genPath = table.getGenPath();
-        if (StringUtils.equals(genPath, "/"))
-        {
-            return System.getProperty("user.dir") + File.separator + "src" + File.separator + VelocityUtils.getFileName(template, table);
-        }
-        return genPath + File.separator + VelocityUtils.getFileName(template, table);
     }
 }

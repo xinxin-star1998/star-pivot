@@ -1,75 +1,41 @@
 import request from '@/utils/http'
 
-/**
- * ${functionName}实体类型
- */
-export interface ${BusinessName} {
-  ${pkColumn.javaField}?: number
-#foreach ($column in $columns)
-    #if(!$table.isSuperColumn($column.javaField) && !$column.pk)
-  $column.javaField?: $column.javaType
-#end
-#end
-#if($table.sub)
-  ${subclassName}List?: ${subClassName}Sub[]
-#end
+/** 适配分页响应为 Vue2 列表页期望的 { rows, total } */
+function adaptPage(res) {
+  return {
+    rows: (res && res.rows) || [],
+    total: (res && res.total) || 0
+  }
 }
 
-#if($table.sub)
-/**
- * ${subTable.functionName}实体类型
- */
-export interface ${subClassName}Sub {
-#foreach ($column in $subTable.columns)
-#if(!$table.isSuperColumn($column.javaField))
-  $column.javaField?: $column.javaType
-#end
-#end
-}
-#end
-
-/**
- * ${functionName}搜索参数
- */
-export interface ${BusinessName}SearchParams {
-#if($table.crud || $table.sub)
-  pageNum?: number
-  pageSize?: number
-#end
-#foreach ($column in $columns)
-#if($column.query)
-  $column.javaField?: $column.javaType
-#end
-#end
+/** 适配详情/树形响应为 Vue2 页面期望的 { data } */
+function adaptData(res) {
+  return { data: res }
 }
 
 /**
- * 获取${functionName}列表#if($table.tree)（树形，不分页）#else（分页）#end
+ * 查询${functionName}列表
  */
-export function fetchGet${BusinessName}List(params: ${BusinessName}SearchParams) {
-#if($table.tree)
-  return request.post<${BusinessName}[]>({
-#else
-  return request.post<Api.Common.PaginatedResponse<${BusinessName}>>({
-#end
+export function list${BusinessName}(query) {
+  return request.post({
     url: '/api/${moduleName}/${businessName}/list',
-    data: params
-  })
+    data: query
+  }).then(#if($table.tree)adaptData#else adaptPage#end)
 }
 
 /**
- * 根据ID获取${functionName}详情
+ * 查询${functionName}详细
  */
-export function fetchGet${BusinessName}ById(${pkColumn.javaField}: number) {
-  return request.get<${BusinessName}>({
+export function get${BusinessName}(${pkColumn.javaField}) {
+  return request.get({
     url: `/api/${moduleName}/${businessName}/\${${pkColumn.javaField}}`
-  })
+  }).then(adaptData)
 }
 
 /**
  * 新增${functionName}
  */
-export function fetchAdd${BusinessName}(data: ${BusinessName}) {
+export function add${BusinessName}(data) {
   return request.post({
     url: '/api/${moduleName}/${businessName}',
     data
@@ -79,7 +45,7 @@ export function fetchAdd${BusinessName}(data: ${BusinessName}) {
 /**
  * 修改${functionName}
  */
-export function fetchUpdate${BusinessName}(data: ${BusinessName}) {
+export function update${BusinessName}(data) {
   return request.put({
     url: '/api/${moduleName}/${businessName}',
     data
@@ -89,9 +55,10 @@ export function fetchUpdate${BusinessName}(data: ${BusinessName}) {
 /**
  * 删除${functionName}（支持单删和批量删除，请求体 ids）
  */
-export function fetchDelete${BusinessName}(${pkColumn.javaField}s: number[]) {
+export function del${BusinessName}(${pkColumn.javaField}s) {
+  const ids = Array.isArray(${pkColumn.javaField}s) ? ${pkColumn.javaField}s : [${pkColumn.javaField}s]
   return request.del({
     url: '/api/${moduleName}/${businessName}/delete',
-    data: { ids: ${pkColumn.javaField}s }
+    data: { ids }
   })
 }

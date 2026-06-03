@@ -7,9 +7,10 @@ import com.star.pivot.framework.utils.date.DateUtils;
 import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.domain.entity.GenTableColumn;
 import com.star.pivot.generator.domain.external.GenPathProfile;
+import com.star.pivot.generator.path.GenPathContext;
+import com.star.pivot.generator.path.GenTemplateRegistry;
 import org.apache.velocity.VelocityContext;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,12 +21,6 @@ import java.util.Set;
  */
 public class VelocityUtils
 {
-    /** 项目空间路径 */
-    private static final String PROJECT_PATH = "main/java";
-
-    /** mybatis空间路径 */
-    private static final String MYBATIS_PATH = "main/resources/mapper";
-
     /** 默认上级菜单，系统工具 */
     private static final String DEFAULT_PARENT_MENU_ID = "3";
 
@@ -80,56 +75,10 @@ public class VelocityUtils
     }
 
     /**
-     * 注入分层包路径变量，供模板 import / package 使用
+     * 注入分层包路径变量，与 {@link GenPathContext} / ZIP 路径解析保持一致
      */
     private static void applyPathPackages(VelocityContext context, GenTable genTable, GenPathProfile profile) {
-        String pkg = genTable.getPackageName();
-        String entityPackage = pkg + ".domain.entity";
-        String dtoPackage = pkg + ".domain.dto";
-        String voPackage = pkg + ".domain.bo";
-        String boPackage = pkg + ".domain.bo";
-        String mapperPackage = pkg + ".mapper";
-        String servicePackage = pkg + ".service";
-        String serviceImplPackage = pkg + ".service.impl";
-        String controllerPackage = pkg + ".controller";
-        if (profile != null) {
-            if (StringUtils.isNotEmpty(profile.getEntityPackage())) {
-                entityPackage = profile.getEntityPackage();
-            }
-            if (StringUtils.isNotEmpty(profile.getDtoPackage())) {
-                dtoPackage = profile.getDtoPackage();
-            }
-            if (StringUtils.isNotEmpty(profile.getVoPackage())) {
-                voPackage = profile.getVoPackage();
-            }
-            if (StringUtils.isNotEmpty(profile.getBoPackage())) {
-                boPackage = profile.getBoPackage();
-            }
-            if (StringUtils.isNotEmpty(profile.getMapperPackage())) {
-                mapperPackage = profile.getMapperPackage();
-            }
-            if (StringUtils.isNotEmpty(profile.getServicePackage())) {
-                servicePackage = profile.getServicePackage();
-            }
-            if (StringUtils.isNotEmpty(profile.getServiceImplPackage())) {
-                serviceImplPackage = profile.getServiceImplPackage();
-            }
-            if (StringUtils.isNotEmpty(profile.getControllerPackage())) {
-                controllerPackage = profile.getControllerPackage();
-            }
-            context.put("apiPath", profile.getApiPath());
-            context.put("vuePagePath", profile.getVuePagePath());
-            context.put("vueModulesPath", profile.resolveVueModulesPath());
-            context.put("mapperXmlPath", profile.getMapperXmlPath());
-        }
-        context.put("entityPackage", entityPackage);
-        context.put("dtoPackage", dtoPackage);
-        context.put("voPackage", voPackage);
-        context.put("boPackage", boPackage);
-        context.put("mapperPackage", mapperPackage);
-        context.put("servicePackage", servicePackage);
-        context.put("serviceImplPackage", serviceImplPackage);
-        context.put("controllerPackage", controllerPackage);
+        GenPathContext.of(genTable, profile).applyToVelocityContext(context);
     }
 
     public static void setMenuVelocityContext(VelocityContext context, GenTable genTable)
@@ -181,260 +130,31 @@ public class VelocityUtils
     }
 
     /**
-     * 获取模板信息
+     * 获取模板信息（委托 {@link GenTemplateRegistry}）
+     *
      * @param tplCategory 生成的模板
      * @param tplWebType 前端类型
      * @return 模板列表
      */
     public static List<String> getTemplateList(String tplCategory, String tplWebType)
     {
-        // 默认使用 art-design-pro 版本的 Vue 模板（Element Plus）
-        String useWebType = "vm/vue/art-design-pro";
-        // 如果明确指定了其他类型，可以使用旧版本
-        if (("vue2".equals(tplWebType) || "element-ui".equals(tplWebType)))
-        {
-            useWebType = "vm/vue/v2";
-        }else if("vue3".equals(tplWebType) || "element-plus".equals(tplWebType)){
-            useWebType = "vm/vue/v3";
-        }
-        List<String> templates = new ArrayList<String>();
-        templates.add("vm/java/domain.java.vm");
-        templates.add("vm/java/bo/reqBo.java.vm");
-        templates.add("vm/java/dto/dto.java.vm");
-        templates.add("vm/java/bo/vo.java.vm");
-        templates.add("vm/java/mapper.java.vm");
-        templates.add("vm/java/service.java.vm");
-        templates.add("vm/java/serviceImpl.java.vm");
-        templates.add("vm/java/controller.java.vm");
-        templates.add("vm/xml/mapper.xml.vm");
-        templates.add("vm/sql/sql.vm");
-        templates.add("vm/js/api.js.vm");
-        // Element UI (vue2) 仅存在 index/index-tree 单文件模板，无 modules 子目录
-        boolean isVue2 = "vm/vue/v2".equals(useWebType);
-        if (GenConstants.TPL_CRUD.equals(tplCategory))
-        {
-            templates.add(useWebType + "/index.vue.vm");
-            if(!isVue2){
-                templates.add(useWebType + "/modules/search.vue.vm");
-                templates.add(useWebType + "/modules/dialog.vue.vm");
-            }
-        }
-        else if (GenConstants.TPL_TREE.equals(tplCategory))
-        {
-            templates.add(useWebType + "/index-tree.vue.vm");
-            if(!isVue2){
-                templates.add(useWebType + "/modules/search.vue.vm");
-                templates.add(useWebType + "/modules/dialog.vue.vm");
-            }
-        }
-        else if (GenConstants.TPL_SUB.equals(tplCategory))
-        {
-            templates.add(useWebType + "/index.vue.vm");
-            if(!isVue2){
-                templates.add(useWebType + "/modules/search.vue.vm");
-                templates.add(useWebType + "/modules/dialog.vue.vm");
-            }
-            templates.add("vm/java/sub-domain.java.vm");
-            templates.add("vm/java/dto/sub-dto.java.vm");
-            templates.add("vm/java/bo/sub-vo.java.vm");
-        }
-        return templates;
+        return GenTemplateRegistry.getTemplateList(tplCategory, tplWebType);
     }
 
     /**
-     * 获取文件名
+     * 获取 ZIP 内文件路径（委托 {@link GenTemplateRegistry}）
      */
     public static String getFileName(String template, GenTable genTable)
     {
-        // 文件名称
-        String fileName = "";
-        // 包路径
-        String packageName = genTable.getPackageName();
-        // 模块名
-        String moduleName = genTable.getModuleName();
-        // 大写类名
-        String className = genTable.getClassName();
-        // 业务名称
-        String businessName = genTable.getBusinessName();
-
-        String javaPath = PROJECT_PATH + "/" + StringUtils.replace(packageName, ".", "/");
-        String mybatisPath = MYBATIS_PATH + "/" + moduleName;
-        String vuePath = "vue";
-
-        if (template.contains("domain.java.vm"))
-        {
-            fileName = StringUtils.format("{}/domain/entity/{}.java", javaPath, className);
-        }
-        else if (template.contains("reqBo.java.vm"))
-        {
-            String reqBoSuffix = GenConstants.TPL_TREE.equals(genTable.getTplCategory()) ? "ReqBo" : "ReqPageBo";
-            fileName = StringUtils.format("{}/domain/bo/{}{}.java", javaPath, className, reqBoSuffix);
-        }
-        else if (template.contains("dto.java.vm") && !template.contains("sub-dto"))
-        {
-            fileName = StringUtils.format("{}/domain/dto/{}DTO.java", javaPath, className);
-        }
-        else if (template.contains("vo.java.vm"))
-        {
-            fileName = StringUtils.format("{}/domain/bo/{}VO.java", javaPath, className);
-        }
-        else if (template.contains("sub-domain.java.vm") && StringUtils.equals(GenConstants.TPL_SUB, genTable.getTplCategory()))
-        {
-            fileName = StringUtils.format("{}/domain/entity/{}.java", javaPath, genTable.getSubTable().getClassName());
-        }
-        else if (template.contains("sub-dto.java.vm") && StringUtils.equals(GenConstants.TPL_SUB, genTable.getTplCategory()))
-        {
-            fileName = StringUtils.format("{}/domain/dto/{}DTO.java", javaPath, genTable.getSubTable().getClassName());
-        }
-        else if (template.contains("sub-vo.java.vm") && StringUtils.equals(GenConstants.TPL_SUB, genTable.getTplCategory()))
-        {
-            fileName = StringUtils.format("{}/domain/bo/{}VO.java", javaPath, genTable.getSubTable().getClassName());
-        }
-        else if (template.contains("mapper.java.vm"))
-        {
-            fileName = StringUtils.format("{}/mapper/{}Mapper.java", javaPath, className);
-        }
-        else if (template.contains("service.java.vm"))
-        {
-            fileName = StringUtils.format("{}/service/I{}Service.java", javaPath, className);
-        }
-        else if (template.contains("serviceImpl.java.vm"))
-        {
-            fileName = StringUtils.format("{}/service/impl/{}ServiceImpl.java", javaPath, className);
-        }
-        else if (template.contains("controller.java.vm"))
-        {
-            fileName = StringUtils.format("{}/controller/{}Controller.java", javaPath, className);
-        }
-        else if (template.contains("mapper.xml.vm"))
-        {
-            fileName = StringUtils.format("{}/{}Mapper.xml", mybatisPath, className);
-        }
-        else if (template.contains("sql.vm"))
-        {
-            fileName = businessName + "Menu.sql";
-        }
-        else if (template.contains("api.js.vm"))
-        {
-            fileName = StringUtils.format("{}/api/{}/{}.ts", vuePath, moduleName, businessName);
-        }
-        else if (template.contains("api.ts.vm"))
-        {
-            fileName = StringUtils.format("{}/api/{}/{}.ts", vuePath, moduleName, businessName);
-        }
-        else if (template.contains("search.vue.vm"))
-        {
-            fileName = StringUtils.format("{}/views/{}/{}/modules/{}-search.vue", vuePath, moduleName, businessName, businessName);
-        }
-        else if (template.contains("dialog.vue.vm"))
-        {
-            fileName = StringUtils.format("{}/views/{}/{}/modules/{}-dialog.vue", vuePath, moduleName, businessName, businessName);
-        }
-        else if (template.contains("index.vue.vm"))
-        {
-            fileName = StringUtils.format("{}/views/{}/{}/index.vue", vuePath, moduleName, businessName);
-        }
-        else if (template.contains("index-tree.vue.vm"))
-        {
-            fileName = StringUtils.format("{}/views/{}/{}/index.vue", vuePath, moduleName, businessName);
-        }
-        return fileName;
+        return GenTemplateRegistry.resolveZipEntryPath(template, genTable, null);
     }
 
     /**
      * 获取预览显示的文件名（简化版）
-     * 
-     * @param template 模板路径
-     * @param genTable 生成表信息
-     * @return 简化的文件名
      */
     public static String getDisplayName(String template, GenTable genTable)
     {
-        // 从模板路径中提取文件名
-        String fileName = template.substring(template.lastIndexOf("/") + 1);
-        
-        // 移除 .vm 后缀
-        if (fileName.endsWith(".vm"))
-        {
-            fileName = fileName.substring(0, fileName.length() - 3);
-        }
-        
-        // 对于特殊文件，使用更友好的名称
-        if (template.contains("reqBo.java.vm"))
-        {
-            String reqBoSuffix = GenConstants.TPL_TREE.equals(genTable.getTplCategory()) ? "ReqBo" : "ReqPageBo";
-            return genTable.getClassName() + reqBoSuffix + ".java";
-        }
-        else if (template.contains("dto.java.vm") && !template.contains("sub-dto"))
-        {
-            return genTable.getClassName() + "DTO.java";
-        }
-        else if (template.contains("vo.java.vm") && !template.contains("sub-vo"))
-        {
-            return genTable.getClassName() + "VO.java";
-        }
-        else if (template.contains("sub-domain.java.vm"))
-        {
-            return genTable.getSubTable().getClassName() + ".java";
-        }
-        else if (template.contains("sub-dto.java.vm"))
-        {
-            return genTable.getSubTable().getClassName() + "DTO.java";
-        }
-        else if (template.contains("sub-vo.java.vm"))
-        {
-            return genTable.getSubTable().getClassName() + "VO.java";
-        }
-        else if (template.contains("domain.java.vm"))
-        {
-            return genTable.getClassName() + ".java";
-        }
-        else if (template.contains("mapper.java.vm"))
-        {
-            return genTable.getClassName() + "Mapper.java";
-        }
-        else if (template.contains("service.java.vm"))
-        {
-            return "I" + genTable.getClassName() + "Service.java";
-        }
-        else if (template.contains("serviceImpl.java.vm"))
-        {
-            return genTable.getClassName() + "ServiceImpl.java";
-        }
-        else if (template.contains("controller.java.vm"))
-        {
-            return genTable.getClassName() + "Controller.java";
-        }
-        else if (template.contains("mapper.xml.vm"))
-        {
-            return genTable.getClassName() + "Mapper.xml";
-        }
-        else if (template.contains("sql.vm"))
-        {
-            return genTable.getBusinessName() + "Menu.sql";
-        }
-        else if (template.contains("api.js.vm") || template.contains("api.ts.vm"))
-        {
-            return genTable.getBusinessName() + ".ts";
-        }
-        else if (template.contains("search.vue.vm"))
-        {
-            return genTable.getBusinessName() + "-search.vue";
-        }
-        else if (template.contains("dialog.vue.vm"))
-        {
-            return genTable.getBusinessName() + "-dialog.vue";
-        }
-        else if (template.contains("index-tree.vue.vm"))
-        {
-            return "index.vue";
-        }
-        else if (template.contains("index.vue.vm"))
-        {
-            return "index.vue";
-        }
-        
-        return fileName;
+        return GenTemplateRegistry.resolveDisplayName(template, genTable);
     }
 
     /**

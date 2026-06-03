@@ -29,7 +29,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/tool/gen/external")
 @RequiredArgsConstructor
-@Tag(name = "外部库代码生成", description = "动态数据源连接、选表、自定义路径生成与预览")
+@Tag(name = "外部库代码生成", description = "动态数据源连接、选表、ZIP 下载与预览")
 public class GenExternalController {
 
     private final GenExternalService genExternalService;

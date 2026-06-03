@@ -81,10 +81,10 @@ public class GenTable implements Serializable
     @NotBlank(message = "作者不能为空")
     private String functionAuthor;
 
-    /** 生成代码方式（0zip压缩包 1自定义路径） */
+    /** 生成代码方式（固定为 0：zip 压缩包） */
     private String genType;
 
-    /** 生成路径（不填默认项目路径） */
+    /** 生成路径（历史字段，已废弃） */
     private String genPath;
 
     /** 主键信息 */

@@ -14,6 +14,8 @@ import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.mapper.SysDeptMapper;
 import com.star.pivot.system.service.impl.AsyncOperLogService;
 import com.star.pivot.system.utils.LoginUser;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -227,9 +229,10 @@ public class LogAspect {
         try {
             Object[] args = joinPoint.getArgs();
             if (args != null && args.length > 0) {
-                Object[] filteredArgs = filterMultipartFiles(args);
+                Object[] filteredArgs = filterLoggableArgs(args);
                 if (filteredArgs.length > 0) {
-                    String params = objectMapper.writeValueAsString(filteredArgs);
+                    Object toSerialize = filteredArgs.length == 1 ? filteredArgs[0] : filteredArgs;
+                    String params = objectMapper.writeValueAsString(toSerialize);
                     params = LogUtils.desensitizeParam(params);
                     params = truncateString(params, 2000);
                     operLog.setOperParam(params);
@@ -241,9 +244,12 @@ public class LogAspect {
         }
     }
 
-    private Object[] filterMultipartFiles(Object[] args) {
+    private Object[] filterLoggableArgs(Object[] args) {
         return Arrays.stream(args)
+                .filter(arg -> arg != null)
                 .filter(arg -> !(arg instanceof MultipartFile))
+                .filter(arg -> !(arg instanceof ServletRequest))
+                .filter(arg -> !(arg instanceof ServletResponse))
                 .toArray();
     }
 

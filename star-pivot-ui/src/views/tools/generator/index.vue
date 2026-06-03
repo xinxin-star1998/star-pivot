@@ -85,7 +85,6 @@
   import {
     fetchBatchGenerateCode,
     fetchDeleteTable,
-    fetchGenCode,
     fetchGenerateCode,
     fetchGetGenTableList,
     fetchSyncDatabase
@@ -489,12 +488,9 @@
    */
   const handleGenerateCode = async (row: GenTableListItem): Promise<void> => {
     const tableName = row.tableName
-    // genType: "0" 表示下载方式（zip压缩包），"1" 表示自定义路径
-    const isDownload = row.genType !== '1'
-    const type = isDownload ? 'zip 压缩包' : '自定义路径'
     try {
       await ElMessageBox.confirm(
-        `确定要生成表"${tableName}"的代码吗？\n代码将以 ${type} 形式${isDownload ? '下载' : '生成到指定路径'}。`,
+        `确定要生成表"${tableName}"的代码吗？\n代码将以 zip 压缩包形式下载。`,
         '生成代码确认',
         {
           confirmButtonText: '确定',
@@ -503,43 +499,15 @@
         }
       )
 
-      if (isDownload) {
-        // 下载方式：调用 download 接口获取 zip 文件
-        const blob = await fetchGenerateCode(tableName)
-        // 下载 zip 文件
-        const fileName = `${tableName}_${new Date().getTime()}.zip`
-        FileSaver.saveAs(blob, fileName)
-        ElMessage.success('代码生成成功，文件已下载')
-      } else {
-        // 自定义路径方式：调用 genCode 接口生成到指定路径
-        await fetchGenCode(tableName)
-        ElMessage.success('代码生成成功')
-      }
+      const blob = await fetchGenerateCode(tableName)
+      const fileName = `${tableName}_${new Date().getTime()}.zip`
+      FileSaver.saveAs(blob, fileName)
+      ElMessage.success('代码生成成功，文件已下载')
     } catch (error: any) {
-      // 用户取消时不显示错误
       if (error !== 'cancel') {
         console.error('生成代码失败:', error)
-        // 检查是否是系统不允许覆盖的错误
         const errorMessage = error?.message || error?.msg || ''
-        if (
-          errorMessage.includes('不允许生成文件覆盖到本地') ||
-          errorMessage.includes('不允许覆盖') ||
-          errorMessage.includes('系统预设')
-        ) {
-          // 显示友好的警告提示，并建议使用下载方式
-          ElMessageBox.alert(
-            '系统配置不允许生成文件覆盖到本地。\n\n建议：请将生成方式改为"下载方式（zip压缩包）"后重试。',
-            '生成代码失败',
-            {
-              confirmButtonText: '我知道了',
-              type: 'warning',
-              dangerouslyUseHTMLString: false
-            }
-          )
-        } else {
-          // 其他错误显示通用错误提示
-          ElMessage.error(errorMessage || '生成代码失败，请稍后重试')
-        }
+        ElMessage.error(errorMessage || '生成代码失败，请稍后重试')
       }
     }
   }

@@ -109,12 +109,3 @@ export function fetchBatchGenerateCode(tableNames: string[]) {
     responseType: 'blob'
   })
 }
-/**
- * 生成代码（自定义路径方式）
- * @param tableName 表名称
- */
-export function fetchGenCode(tableName: string) {
-  return request.get<ApiResult<void>>({
-    url: `/api/tool/gen/genCode/${tableName}`
-  })
-}

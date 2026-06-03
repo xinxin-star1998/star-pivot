@@ -137,10 +137,6 @@
   import {ElMessage} from 'element-plus'
 
   import {fetchAdd${BusinessName}, fetchUpdate${BusinessName}, type ${subClassName}Sub} from '@/api/'
-      #if($table.tree)
-  #end
-  #if($table.tree)
-  #end
 
   interface Props {
     visible: boolean

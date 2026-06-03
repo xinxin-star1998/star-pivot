@@ -1,6 +1,7 @@
 package com.star.pivot.generator.domain.external;
 
 import com.star.pivot.framework.exception.BizException;
+import com.star.pivot.generator.domain.entity.GenTable;
 import com.star.pivot.generator.utils.StringUtils;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -21,6 +22,15 @@ public class GenPathProfile implements Serializable {
     private static final Pattern PACKAGE_PATTERN = Pattern.compile("^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)*$");
     private static final Pattern SAFE_PATH_PATTERN = Pattern.compile("^[a-zA-Z0-9_./\\-]+$");
 
+    /** ZIP 内 Java 源码根目录 */
+    public static final String JAVA_SRC_ROOT = "main/java/";
+    /** ZIP 内 MyBatis XML 目录前缀 */
+    public static final String MAPPER_XML_DIR_PREFIX = "main/resources/mapper/";
+    /** 内置下载 ZIP 的前端根目录 */
+    public static final String BUILTIN_VUE_ROOT = "vue";
+    /** 外部写盘默认 API 目录前缀 */
+    public static final String EXTERNAL_API_DIR_PREFIX = "star-pivot-ui/src/api/";
+
     @NotBlank(message = "基础包名不能为空")
     private String basePackage;
 
@@ -34,13 +44,13 @@ public class GenPathProfile implements Serializable {
     private String serviceImplPackage;
     private String controllerPackage;
 
-    /** ZIP 内 Mapper XML 目录，如 main/resources/mapper/mall */
+    /** 写盘/API 预览：Mapper XML 相对路径，如 main/resources/mapper/mall */
     private String mapperXmlPath;
 
-    /** ZIP 内 API 目录，如 star-pivot-ui/src/api/mall */
+    /** 写盘/API 预览：API 相对路径，如 star-pivot-ui/src/api/mall */
     private String apiPath;
 
-    /** ZIP 内页面目录，如 star-pivot-ui/src/views/mall/brand */
+    /** 写盘/API 预览：页面相对路径，如 star-pivot-ui/src/views/mall/brand */
     private String vuePagePath;
 
     /** ZIP 内子组件目录，默认可由 {@link #resolveVueModulesPath()} 推导 */
@@ -79,11 +89,48 @@ public class GenPathProfile implements Serializable {
             controllerPackage = basePackage + ".controller";
         }
         if (StringUtils.isEmpty(mapperXmlPath)) {
-            mapperXmlPath = "main/resources/mapper/" + module;
+            mapperXmlPath = MAPPER_XML_DIR_PREFIX + module;
         }
         if (StringUtils.isEmpty(apiPath)) {
-            apiPath = "star-pivot-ui/src/api/" + module;
+            apiPath = EXTERNAL_API_DIR_PREFIX + module;
         }
+    }
+
+    /**
+     * 库内（ZIP 下载）生成：Java 包走 {@link #fillDefaults}，前端路径使用 {@link #BUILTIN_VUE_ROOT} 布局
+     */
+    public static GenPathProfile forBuiltinTable(GenTable table) {
+        if (StringUtils.isEmpty(table.getPackageName())) {
+            throw new BizException("生成包名不能为空");
+        }
+        GenPathProfile profile = new GenPathProfile();
+        profile.setBasePackage(table.getPackageName());
+        profile.fillDefaults(table.getModuleName());
+        applyBuiltinFrontendZipLayout(table, profile);
+        return profile;
+    }
+
+    /**
+     * 外部 ZIP 下载：保留 pathProfile 中的 Java 包配置，前端 ZIP 条目与库内下载一致（vue/ 布局）
+     */
+    public static GenPathProfile forZipExport(GenTable table, GenPathProfile source) {
+        if (source == null) {
+            return forBuiltinTable(table);
+        }
+        GenPathProfile profile = source.copy();
+        if (StringUtils.isEmpty(profile.getBasePackage())) {
+            profile.setBasePackage(table.getPackageName());
+        }
+        profile.fillDefaults(table.getModuleName());
+        applyBuiltinFrontendZipLayout(table, profile);
+        return profile;
+    }
+
+    static void applyBuiltinFrontendZipLayout(GenTable table, GenPathProfile profile) {
+        profile.setApiPath(BUILTIN_VUE_ROOT + "/api/" + table.getModuleName());
+        profile.setVuePagePath(null);
+        profile.setVueModulesPath(BUILTIN_VUE_ROOT + "/views/" + table.getModuleName()
+                + "/" + table.getBusinessName() + "/modules");
     }
 
     public String resolveVueModulesPath() {

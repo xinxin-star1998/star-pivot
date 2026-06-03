@@ -9,6 +9,7 @@ import com.star.pivot.generator.domain.external.ExternalGenScope;
 import com.star.pivot.generator.domain.external.GenPathProfile;
 import com.star.pivot.generator.path.GenPathResolver;
 import com.star.pivot.generator.utils.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.velocity.Template;
@@ -26,6 +27,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * 基于 GenTable 草稿渲染 Velocity 模板
  */
+@Slf4j
 public final class GenTableCodegenHelper {
 
     public static final String DIFF_NEW = "NEW";
@@ -49,6 +51,34 @@ public final class GenTableCodegenHelper {
         if (StringUtils.isNull(table.getPkColumn())) {
             table.setPkColumn(columns.get(0));
         }
+        if (GenConstants.TPL_SUB.equals(table.getTplCategory()) && StringUtils.isNotNull(table.getSubTable())) {
+            List<GenTableColumn> subColumns = table.getSubTable().getColumns();
+            if (StringUtils.isNotEmpty(subColumns)) {
+                for (GenTableColumn column : subColumns) {
+                    if (column.isPk()) {
+                        table.getSubTable().setPkColumn(column);
+                        break;
+                    }
+                }
+                if (StringUtils.isNull(table.getSubTable().getPkColumn())) {
+                    table.getSubTable().setPkColumn(subColumns.get(0));
+                }
+            }
+        }
+    }
+
+    /**
+     * 内置（库内）代码生成：调用方已完成主子表、主键列等准备，渲染失败直接抛 {@link BizException}
+     */
+    public static Map<String, String> renderPrepared(GenTable table) {
+        return doRender(table, null, null, null, false);
+    }
+
+    /**
+     * 内置（库内）ZIP 写入：任一模板渲染失败则抛异常，不产生不完整 ZIP
+     */
+    public static void writeZipPrepared(GenTable table, ZipOutputStream zip) throws IOException {
+        writeCodeMapToZip(renderPrepared(table), zip);
     }
 
     public static Map<String, String> preview(GenTable table, GenPathProfile pathProfile) {
@@ -61,7 +91,7 @@ public final class GenTableCodegenHelper {
 
     public static Map<String, String> preview(GenTable table, GenPathProfile pathProfile, ExternalGenScope scope,
             String templateDir) {
-        return renderCodeMap(table, pathProfile, scope, templateDir);
+        return renderCodeMap(table, resolveZipProfile(table, pathProfile), scope, templateDir);
     }
 
     public static void writeZip(GenTable table, GenPathProfile pathProfile, ZipOutputStream zip) throws IOException {
@@ -75,7 +105,10 @@ public final class GenTableCodegenHelper {
 
     public static void writeZip(GenTable table, GenPathProfile pathProfile, ZipOutputStream zip, ExternalGenScope scope,
             String templateDir) throws IOException {
-        Map<String, String> codeMap = renderCodeMap(table, pathProfile, scope, templateDir);
+        writeCodeMapToZip(renderCodeMap(table, resolveZipProfile(table, pathProfile), scope, templateDir), zip);
+    }
+
+    private static void writeCodeMapToZip(Map<String, String> codeMap, ZipOutputStream zip) throws IOException {
         for (Map.Entry<String, String> entry : codeMap.entrySet()) {
             zip.putNextEntry(new ZipEntry(entry.getKey()));
             IOUtils.write(entry.getValue(), zip, CharsetKit.CHARSET_UTF_8);
@@ -230,20 +263,37 @@ public final class GenTableCodegenHelper {
 
     private static Map<String, String> renderCodeMap(GenTable table, GenPathProfile pathProfile, ExternalGenScope scope,
             String templateDir) {
-        prepareTable(table);
+        return doRender(table, pathProfile, scope, templateDir, true);
+    }
+
+    /** 预览 / ZIP 下载：与内置生成器一致的便携路径布局 */
+    private static GenPathProfile resolveZipProfile(GenTable table, GenPathProfile pathProfile) {
+        return pathProfile != null ? GenPathProfile.forZipExport(table, pathProfile) : null;
+    }
+
+    private static Map<String, String> doRender(GenTable table, GenPathProfile pathProfile, ExternalGenScope scope,
+            String templateDir, boolean prepare) {
+        if (prepare) {
+            prepareTable(table);
+        }
         VelocityInitializer.initVelocity(templateDir);
         VelocityContext context = VelocityUtils.prepareContext(table, pathProfile);
         Map<String, String> dataMap = new LinkedHashMap<>();
         List<String> templates = filterTemplates(
                 VelocityUtils.getTemplateList(table.getTplCategory(), table.getTplWebType()), scope);
         for (String template : templates) {
-            StringWriter sw = new StringWriter();
-            Template tpl = Velocity.getTemplate(template, Constants.UTF8);
-            tpl.merge(context, sw);
-            String key = pathProfile != null
-                    ? GenPathResolver.resolveZipEntryPath(template, table, pathProfile)
-                    : VelocityUtils.getDisplayName(template, table);
-            dataMap.put(key, sw.toString());
+            try (StringWriter sw = new StringWriter()) {
+                Template tpl = Velocity.getTemplate(template, Constants.UTF8);
+                tpl.merge(context, sw);
+                String key = GenPathResolver.resolveZipEntryPath(template, table, pathProfile);
+                dataMap.put(key, sw.toString());
+            } catch (BizException e) {
+                throw e;
+            } catch (Exception e) {
+                String message = String.format("渲染模板失败，表名：%s，模板：%s", table.getTableName(), template);
+                log.error(message, e);
+                throw new BizException(message + "：" + e.getMessage());
+            }
         }
         return dataMap;
     }
@@ -278,7 +328,7 @@ public final class GenTableCodegenHelper {
         if (template.contains("vm/java/") || template.contains("vm/xml/")) {
             return scope.isGenBackend();
         }
-        if (template.contains("vm/vue/") || template.contains("api.js.vm")) {
+        if (template.contains("vm/vue/") || template.contains("vm/ts/") || template.contains("vm/js/")) {
             return scope.isGenFrontend();
         }
         return true;

@@ -69,21 +69,6 @@
       </ElCol>
 
       <ElCol :span="12">
-        <ElFormItem prop="genType">
-          <template #label>
-            生成代码方式
-            <ElTooltip content="默认为 zip 压缩包下载，也可以自定义生成路径" placement="top">
-              <ArtSvgIcon icon="ri:question-line" class="ml-1" />
-            </ElTooltip>
-          </template>
-          <ElRadioGroup v-model="form.genType">
-            <ElRadio :value="'0'">zip压缩包</ElRadio>
-            <ElRadio :value="'1'">自定义路径</ElRadio>
-          </ElRadioGroup>
-        </ElFormItem>
-      </ElCol>
-
-      <ElCol :span="12">
         <ElFormItem>
           <template #label>
             上级菜单
@@ -98,21 +83,6 @@
             :render-after-expand="false"
             placeholder="请选择系统菜单"
           />
-        </ElFormItem>
-      </ElCol>
-
-      <ElCol :span="24" v-if="form.genType === '1'">
-        <ElFormItem prop="genPath">
-          <template #label>
-            自定义路径
-            <ElTooltip
-              content="填写磁盘绝对路径，若不填写，则生成到当前 Web 项目下"
-              placement="top"
-            >
-              <ArtSvgIcon icon="ri:question-line" class="ml-1" />
-            </ElTooltip>
-          </template>
-          <ElInput v-model="form.genPath" placeholder="磁盘绝对路径，不填则生成到当前项目" />
         </ElFormItem>
       </ElCol>
     </ElRow>
@@ -238,8 +208,6 @@
     moduleName?: string
     businessName?: string
     functionName?: string
-    genType?: '0' | '1'
-    genPath?: string
     // 树表相关
     treeCode?: string
     treeParentCode?: string

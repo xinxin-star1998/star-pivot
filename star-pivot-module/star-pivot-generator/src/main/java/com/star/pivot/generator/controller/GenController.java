@@ -10,7 +10,6 @@ import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.PageResponse;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.sql.SqlUtil;
-import com.star.pivot.generator.config.GenConfig;
 import com.star.pivot.generator.domain.bo.GenTableVO;
 import com.star.pivot.generator.domain.dto.GenTableQueryDTO;
 import com.star.pivot.generator.domain.entity.GenTable;
@@ -49,7 +48,6 @@ public class GenController {
     
     private final GenTableService genTableService;
     private final GenTableColumnService genTableColumnService;
-    private final GenConfig genConfig;
 
     /**
      * 分页查询代码生成表列表接口
@@ -217,22 +215,6 @@ public class GenController {
     {
         byte[] data = genTableService.downloadCode(tableName);
         genCode(response, data);
-    }
-
-    /**
-     * 生成代码（自定义路径）
-     */
-    @Log(title = "生成代码到本地", businessType = AppConstants.BusinessType.GENCODE)
-    @PreAuthorize("hasAuthority('tool:gen:create')")
-    @GetMapping("/genCode/{tableName}")
-    public Result<?> genCode(@PathVariable("tableName") String tableName)
-    {
-        if (!genConfig.isAllowOverwrite())
-        {
-            return Result.error("【系统预设】不允许生成文件覆盖到本地");
-        }
-        genTableService.generatorCode(tableName);
-        return Result.success();
     }
 
     /**

@@ -51,11 +51,11 @@
 <script setup lang="ts">
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import {useTable} from '@/hooks/core/useTable'
+  import {useAuth} from '@/hooks/core/useAuth'
 
   import {fetchDelete${BusinessName}} from '@/api/'
   import {ElMessage, ElMessageBox} from 'element-plus'
   import {DialogType} from '@/types'
-  import {useAuth} from '@/hooks/core/useAuth'
 
   defineOptions({ name: '${BusinessName}' })
 
