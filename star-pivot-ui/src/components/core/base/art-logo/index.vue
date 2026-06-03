@@ -9,7 +9,6 @@
 import logoSrc from '@imgs/svg/star-pivot-logo.svg'
 
 defineOptions({ name: 'ArtLogo' })
-
   interface Props {
     /** logo 大小（px） */
     size?: number | string
