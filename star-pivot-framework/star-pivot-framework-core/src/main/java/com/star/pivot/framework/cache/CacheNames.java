@@ -123,4 +123,12 @@ public final class CacheNames {
      * <p>过期时间: 1分钟
      */
     public static final String RATE_LIMIT = "rateLimit";
+
+    /**
+     * 流程定义缓存
+     * <p>key: processCode
+     * <p>value: WfProcessDef 流程定义
+     * <p>过期时间: 1小时
+     */
+    public static final String WORKFLOW_DEF = "workflowDef";
 }
