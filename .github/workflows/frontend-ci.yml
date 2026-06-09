@@ -7,11 +7,11 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, master]
     paths:
       - 'star-pivot-ui/**'
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, master]
     paths:
       - 'star-pivot-ui/**'
   workflow_dispatch:
