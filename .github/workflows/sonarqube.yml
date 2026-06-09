@@ -1,0 +1,76 @@
+# ============================================
+# SonarQube 代码质量分析
+# ============================================
+# 触发条件：push 到 main/develop，PR 到 main，或手动触发
+# 功能：运行测试 → JaCoCo 覆盖率 → SonarQube 静态分析 → 上传质量报告
+# 需要在 GitHub Secrets 中配置：
+#   SONAR_HOST_URL  - SonarQube 服务地址（如 https://sonarcloud.io 或自建地址）
+#   SONAR_TOKEN     - SonarQube 认证 Token
+name: SonarQube Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sonarqube:
+    name: SonarQube Scan
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root123456
+          MYSQL_DATABASE: star_pivot_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarQube 需要完整的 git 历史用于分析
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Install BOM first
+        run: mvn install -f star-pivot-dependencies/pom.xml -B
+
+      - name: Build & Test with Coverage
+        run: mvn clean verify -B
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/star_pivot_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: root123456
+
+      - name: SonarQube Scan
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.qualitygate.wait=true \
+            -B
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: SonarQube Quality Gate check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        if: always()
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

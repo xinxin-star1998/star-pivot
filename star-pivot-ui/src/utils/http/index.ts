@@ -14,13 +14,13 @@
  * @author Art Design Pro Team
  */
 
-import axios, {AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from 'axios'
-import {useUserStore} from '@/store/modules/user'
-import {ApiStatus} from './status'
-import {handleError, HttpError, showError, showSuccess} from './error'
-import {$t} from '@/locales'
-import {BaseResponse} from '@/types'
-import {fetchRefreshToken} from '@/api/auth'
+import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import { useUserStore } from '@/store/modules/user'
+import { ApiStatus } from './status'
+import { handleError, HttpError, showError, showSuccess } from './error'
+import { $t } from '@/locales'
+import { BaseResponse } from '@/types'
+import { fetchRefreshToken } from '@/api/auth'
 
 /** 请求配置常量 */
 const REQUEST_TIMEOUT = 15000
@@ -148,16 +148,24 @@ const axiosInstance = axios.create({
 })
 
 /**
- * 规范化请求 URL，避免出现 /api/api 重复前缀
- * - 当 baseURL 已包含 /api（或使用 Vite 代理 /api）时，业务层仍然写 /api/xxx 会导致重复
+ * 规范化请求 URL，避免出现 /api/api 或 /api/v1/api 等重复前缀
+ *
+ * - 当 baseURL 已包含 /api/v1（生产）或 /api（旧配置）时，业务层写 /api/xxx 会被剥离为 /xxx
+ * - 仅处理以 /api/ 开头的相对路径；绝对 URL 与非 /api 路径原样返回
  */
 function normalizeRequestUrl(url: string): string {
   if (!url) return url
-  // 只处理以 /api/ 开头的相对路径
   if (!url.startsWith('/api/')) return url
 
   const base = (getApiBaseUrl() || '').trim()
-  const baseHasApi = base === '/api' || base.endsWith('/api') || base.includes('/api/')
+  // 匹配带版本的 /api/v1 以及旧版 /api 的 baseURL
+  const baseHasApi =
+    base === '/api/v1' ||
+    base.endsWith('/api/v1') ||
+    base.includes('/api/v1/') ||
+    base === '/api' ||
+    base.endsWith('/api') ||
+    base.includes('/api/')
 
   return baseHasApi ? url.replace(/^\/api/, '') : url
 }

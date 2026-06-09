@@ -15,8 +15,9 @@ import com.star.pivot.system.service.interfaces.OnlineUserService;
 import com.star.pivot.system.service.interfaces.SysDeptService;
 import com.star.pivot.system.service.interfaces.SysUserService;
 import com.star.pivot.system.service.interfaces.TokenService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,7 +29,6 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
 
     private final JwtUtil jwtUtil;
@@ -36,7 +36,22 @@ public class TokenServiceImpl implements TokenService {
     private final JwtBlackListManager jwtBlackListManager;
     private final SysUserService sysUserService;
     private final SysDeptService sysDeptService;
-    private final OnlineUserService onlineUserService;
+
+    @Autowired
+    @Lazy
+    private OnlineUserService onlineUserService;
+
+    public TokenServiceImpl(JwtUtil jwtUtil,
+                            RefreshTokenManager refreshTokenManager,
+                            JwtBlackListManager jwtBlackListManager,
+                            SysUserService sysUserService,
+                            SysDeptService sysDeptService) {
+        this.jwtUtil = jwtUtil;
+        this.refreshTokenManager = refreshTokenManager;
+        this.jwtBlackListManager = jwtBlackListManager;
+        this.sysUserService = sysUserService;
+        this.sysDeptService = sysDeptService;
+    }
 
     @Override
     public TokenPair createTokenPair(SysUser user,
@@ -54,12 +69,14 @@ public class TokenServiceImpl implements TokenService {
         claims.put("userId", user.getUserId());
         String accessToken = jwtUtil.generateToken(username, claims);
 
+        // 传入 Access Token，以便存储其哈希值
         String refreshToken = refreshTokenManager.generateAndStoreRefreshToken(
             user.getUserId(),
             ipaddr,
             browser,
             os,
-            loginLocation
+            loginLocation,
+            accessToken
         );
 
         return new TokenPair(accessToken, refreshToken);
@@ -94,15 +111,25 @@ public class TokenServiceImpl implements TokenService {
 
         String newRefreshToken;
         if (oldTokenValue != null) {
+            // 传入新的 Access Token
             newRefreshToken = refreshTokenManager.generateAndStoreRefreshToken(
                 userId,
                 oldTokenValue.getIpaddr(),
                 oldTokenValue.getBrowser(),
                 oldTokenValue.getOs(),
-                oldTokenValue.getLoginLocation()
+                oldTokenValue.getLoginLocation(),
+                newAccessToken
             );
         } else {
-            newRefreshToken = refreshTokenManager.generateAndStoreRefreshToken(userId);
+            // 传入新的 Access Token
+            newRefreshToken = refreshTokenManager.generateAndStoreRefreshToken(
+                userId,
+                null,
+                null,
+                null,
+                null,
+                newAccessToken
+            );
         }
 
         LoginResponse response = new LoginResponse();
@@ -162,9 +189,14 @@ public class TokenServiceImpl implements TokenService {
         if (userId == null) {
             return;
         }
-        // 仅依赖 userId，即可完成刷新令牌吊销与在线历史记录，适用于监控强制下线等无访问令牌场景
+        
+        // 保存在线用户历史记录（基于当前刷新令牌信息）
         saveOnlineUserHistory(userId, logoutType);
-        refreshTokenManager.revokeRefreshToken(userId);
+        
+        // 吊销该用户的所有会话（包括所有设备的刷新令牌和 Access Token 黑名单）
+        refreshTokenManager.revokeAllUserSessions(userId);
+        
+        log.info("已强制用户 {} 下线，类型: {}", userId, logoutType);
     }
 
     /**

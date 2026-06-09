@@ -14,18 +14,22 @@ export const useAuthStore = defineStore('authStore', () => {
   const isLogin = computed(() => userStore.isLogin)
   const accessToken = computed(() => userStore.accessToken)
   const refreshToken = computed(() => userStore.refreshToken)
+  const sessionId = computed(() => userStore.sessionId)
   const userInfo = computed(() => userStore.getUserInfo)
 
-  const setToken = (token: string, refresh?: string) => {
-    userStore.setToken(token, refresh)
+  const setToken = (token: string, refresh?: string, session?: string) => {
+    userStore.setToken(token, refresh, session)
   }
-
   const setUserInfo = (info: Partial<Api.Auth.UserInfo>) => {
     userStore.setUserInfo(info)
   }
 
   const setLoginStatus = (status: boolean) => {
     userStore.setLoginStatus(status)
+  }
+
+  const setSessionId = (session: string) => {
+    userStore.setSessionId(session)
   }
 
   const logOut = () => {
@@ -37,11 +41,13 @@ export const useAuthStore = defineStore('authStore', () => {
     isLogin,
     accessToken,
     refreshToken,
+    sessionId,
     userInfo,
     // 行为
     setToken,
     setUserInfo,
     setLoginStatus,
+    setSessionId,
     logOut
   }
 })

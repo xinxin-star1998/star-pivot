@@ -81,7 +81,12 @@
         <ArtSvgIcon icon="ri:group-line" />
         选择角色
       </label>
-      <ElSelect v-model="assigneeValue" filterable placeholder="选择角色" class="assignee-picker__select">
+      <ElSelect
+        v-model="assigneeValue"
+        filterable
+        placeholder="选择角色"
+        class="assignee-picker__select"
+      >
         <ElOption
           v-for="role in roleList"
           :key="role.roleId"
@@ -96,7 +101,12 @@
         <ArtSvgIcon icon="ri:briefcase-line" />
         选择岗位
       </label>
-      <ElSelect v-model="assigneeValue" filterable placeholder="选择岗位" class="assignee-picker__select">
+      <ElSelect
+        v-model="assigneeValue"
+        filterable
+        placeholder="选择岗位"
+        class="assignee-picker__select"
+      >
         <ElOption
           v-for="post in postList"
           :key="post.postId"

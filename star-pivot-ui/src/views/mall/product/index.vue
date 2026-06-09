@@ -98,29 +98,29 @@
 </template>
 
 <script setup lang="ts">
-import {h, nextTick} from 'vue'
-import {useRouter} from 'vue-router'
-import {watchDebounced} from '@vueuse/core'
-import {RefreshRight} from '@element-plus/icons-vue'
-import {useTable} from '@/hooks/core/useTable'
-import {
-  fetchMallProductList,
-  fetchMallProductPublishStatus,
-  fetchMallProductRemove,
-  type MallProductVo
-} from '@/api/mall/product'
-import {fetchMallCategoryChildren, type MallCategoryTreeNode} from '@/api/mall/category'
-import {fetchCategoryNameMap, getCategoryDisplayName} from '@/utils/mall/category-tree'
-import {fetchBrandNameMap, getBrandDisplayName} from '@/utils/mall/brand-map'
-import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-import ArtTable from '@/components/core/tables/art-table/index.vue'
-import ProductSearch from './modules/product-search.vue'
-import {ElImage, ElMessage, ElMessageBox, ElTag} from 'element-plus'
-import {useAuth} from '@/hooks/core/useAuth'
-import {getCoverDisplayUrl, resolveGoodsImageDisplayUrls} from '@/utils/mall/goods-image-url'
+  import { h, nextTick } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { watchDebounced } from '@vueuse/core'
+  import { RefreshRight } from '@element-plus/icons-vue'
+  import { useTable } from '@/hooks/core/useTable'
+  import {
+    fetchMallProductList,
+    fetchMallProductPublishStatus,
+    fetchMallProductRemove,
+    type MallProductVo
+  } from '@/api/mall/product'
+  import { fetchMallCategoryChildren, type MallCategoryTreeNode } from '@/api/mall/category'
+  import { fetchCategoryNameMap, getCategoryDisplayName } from '@/utils/mall/category-tree'
+  import { fetchBrandNameMap, getBrandDisplayName } from '@/utils/mall/brand-map'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import ProductSearch from './modules/product-search.vue'
+  import { ElImage, ElMessage, ElMessageBox, ElTag } from 'element-plus'
+  import { useAuth } from '@/hooks/core/useAuth'
+  import { getCoverDisplayUrl, resolveGoodsImageDisplayUrls } from '@/utils/mall/goods-image-url'
 
-defineOptions({ name: 'MallProduct' })
+  defineOptions({ name: 'MallProduct' })
 
   const coverImgDisplayUrls = ref<Map<string, string>>(new Map())
   const coverImgVersion = ref(0)

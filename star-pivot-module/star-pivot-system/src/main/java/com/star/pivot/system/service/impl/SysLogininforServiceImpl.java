@@ -10,13 +10,16 @@ import com.star.pivot.system.domain.bo.LogininforVO;
 import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.mapper.SysLogininforMapper;
 import com.star.pivot.system.service.interfaces.SysLogininforService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -27,7 +30,10 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class SysLogininforServiceImpl extends ServiceImpl<SysLogininforMapper, SysLogininfor> implements SysLogininforService {
+
+    private final SysLogininforMapper sysLogininforMapper;
 
     /**
      * 保存登录日志
@@ -101,6 +107,19 @@ public class SysLogininforServiceImpl extends ServiceImpl<SysLogininforMapper, S
         pageResponse.setPageCount(pageList.getPages());
         
         return pageResponse;
+    }
+
+    @Override
+    public List<Map<String, Object>> countByMonthRange(LocalDateTime start, LocalDateTime end) {
+        return sysLogininforMapper.countByMonthRange(start, end);
+    }
+
+    @Override
+    public List<Map<String, Object>> countByUserNames(List<String> userNames, LocalDateTime startTime) {
+        if (userNames == null || userNames.isEmpty()) {
+            return List.of();
+        }
+        return sysLogininforMapper.countByUserNames(userNames, startTime);
     }
 
     /**

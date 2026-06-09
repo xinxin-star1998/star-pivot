@@ -223,7 +223,7 @@
             phonenumber: userDetail.phonenumber || '',
             sex: userDetail.sex || '0',
             status: userDetail.status || '0',
-            password: userDetail.password || '',
+            password: '',
             roleIds,
             postIds,
             remark: userDetail.remark || ''
@@ -316,8 +316,9 @@
               }
             }
           } else {
-            // 编辑用户，直接更新
-            await fetchUpdateUser(formData)
+            // 编辑用户，不传密码字段
+            const { password: _, ...updateData } = formData
+            await fetchUpdateUser(updateData)
             // 编辑时如果修改了头像，autoUpload为true会自动上传
             // 若编辑的是当前登录用户，同步头像到 store，便于顶部下拉立即展示最新头像
             const cur = userStore.getUserInfo as any

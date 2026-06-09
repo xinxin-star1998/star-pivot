@@ -76,9 +76,12 @@
     viewProgress: []
   }>()
 
-  const { loading: progressLoading, progress, loadProgress, resetProgress } = useWorkflowProgressLoader(
-    () => props.instanceId
-  )
+  const {
+    loading: progressLoading,
+    progress,
+    loadProgress,
+    resetProgress
+  } = useWorkflowProgressLoader(() => props.instanceId)
 
   const nodeStatusMap = computed(() => toNodeStatusMap(progress.value?.nodeStatuses))
 

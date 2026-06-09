@@ -79,6 +79,8 @@ declare namespace Api {
       nickname: string
       /** 刷新令牌，用于在访问令牌过期后无感刷新 */
       refreshToken?: string
+      /** 当前设备会话ID，用于会话管理 */
+      deviceSessionId?: string
     }
 
     /** 用户信息 */
@@ -158,6 +160,25 @@ declare namespace Api {
     /** 注册开关配置 */
     interface RegisterConfigResponse {
       registerEnabled: boolean
+    }
+    /** 设备会话信息 */
+    interface DeviceSession {
+      /** 设备会话ID */
+      deviceSessionId: string
+      /** IP地址 */
+      ipaddr?: string
+      /** 浏览器 */
+      browser?: string
+      /** 操作系统 */
+      os?: string
+      /** 创建时间 */
+      createdAt?: string
+      /** 最后访问时间 */
+      lastAccessTime?: string
+      /** 会话持续时间（格式化后的字符串，如"2小时30分钟"） */
+      sessionDuration?: string
+      /** 是否为当前会话 */
+      isCurrent?: boolean
     }
   }
 
@@ -368,4 +389,5 @@ declare namespace Api {
         endTime?: string
       }
   }
+
 }

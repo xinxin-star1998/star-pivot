@@ -27,17 +27,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * 用户信息表(SysUser)表控制层
- *
- * @author xinxin
- * @since 2025-12-28 17:28:11
- */
+@Slf4j
 @RestController
 @RequestMapping("/sys/user")
 @Tag(name = "用户管理", description = "用户信息的增删改查、密码重置、状态修改、账户解锁等接口")
@@ -71,8 +67,16 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:query')")
     @PostMapping("/pageList")
     public Result<PageResponse<UserVO>> pageList(@RequestBody UserReqBo userReqBo) {
-        PageResponse<UserVO> pageResponse = sysUserService.pageList(userReqBo);
-        return Result.success(pageResponse);
+        try {
+            log.debug("分页查询用户请求: pageNum={}, pageSize={}", 
+                    userReqBo.getPageNum(), userReqBo.getPageSize());
+            PageResponse<UserVO> pageResponse = sysUserService.pageList(userReqBo);
+            log.debug("分页查询用户成功: total={}", pageResponse.getTotal());
+            return Result.success(pageResponse);
+        } catch (Exception e) {
+            log.error("分页查询用户失败: params={}", userReqBo, e);
+            throw e;
+        }
     }
 
     /**
@@ -89,8 +93,19 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:query')")
     @GetMapping("/{userId}")
     public Result<UserVO> getUserById(@Parameter(description = "用户ID") @PathVariable("userId") Long userId) {
-        UserVO userVO = sysUserService.selectByUserId(userId);
-        return Result.success(userVO);
+        try {
+            log.debug("查询用户详情: userId={}", userId);
+            UserVO userVO = sysUserService.selectByUserId(userId);
+            if (userVO == null) {
+                log.warn("用户不存在: userId={}", userId);
+                return Result.error("用户不存在");
+            }
+            log.debug("查询用户详情成功: userId={}", userId);
+            return Result.success(userVO);
+        } catch (Exception e) {
+            log.error("查询用户详情失败: userId={}", userId, e);
+            throw e;
+        }
     }
 
     /**
@@ -107,9 +122,24 @@ public class SysUserController {
     })
     @PreAuthorize("hasAuthority('system:user:add')")
     @PostMapping("/add")
-    public Result<?> addUser(@RequestBody UserDTO userDTO) {
-        boolean success = sysUserService.addUser(userDTO);
-        return success ? Result.success("新增用户成功") : Result.error("新增用户失败");
+    public Result<?> addUser(@Valid @RequestBody UserDTO userDTO) {
+        try {
+            log.info("新增用户请求: userName={}, nickName={}", userDTO.getUserName(), userDTO.getNickName());
+            boolean success = sysUserService.addUser(userDTO);
+            if (success) {
+                log.info("新增用户成功: userName={}", userDTO.getUserName());
+                return Result.success("新增用户成功");
+            } else {
+                log.warn("新增用户失败: userName={}", userDTO.getUserName());
+                return Result.error("新增用户失败，用户名可能已存在");
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn("新增用户参数校验失败: userName={}, message={}", userDTO.getUserName(), e.getMessage());
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("新增用户异常: userName={}", userDTO.getUserName(), e);
+            return Result.error("系统异常，请联系管理员");
+        }
     }
 
     /**
@@ -127,15 +157,34 @@ public class SysUserController {
             @ApiResponse(responseCode = "404", description = "用户不存在"),
             @ApiResponse(responseCode = "403", description = "无权修改其他用户信息")
     })
+    @PreAuthorize("hasAuthority('system:user:update') or @sysUserService.canUpdateUser(#userDTO.userId)")
     @PostMapping("/update")
-    public Result<?> updateUser(@RequestBody UserDTO userDTO) {
-        // 权限校验：只能修改自己的用户信息，超级管理员可以修改所有用户信息
-        if (!sysUserService.canUpdateUser(userDTO.getUserId())) {
-            return Result.error("无权修改该用户信息");
-        }
+    public Result<?> updateUser(@Valid @RequestBody UserDTO userDTO) {
+        try {
+            Long currentUserId = SecurityContextUtils.getUserId();
+            log.info("修改用户请求: targetUserId={}, currentUserId={}", userDTO.getUserId(), currentUserId);
+            
+            if (!sysUserService.canUpdateUser(userDTO.getUserId())) {
+                log.warn("无权修改用户: targetUserId={}, currentUserId={}", 
+                        userDTO.getUserId(), currentUserId);
+                return Result.error("无权修改该用户信息");
+            }
 
-        boolean success = sysUserService.updateUser(userDTO);
-        return success ? Result.success("修改用户成功") : Result.error("修改用户失败");
+            boolean success = sysUserService.updateUser(userDTO);
+            if (success) {
+                log.info("修改用户成功: userId={}", userDTO.getUserId());
+                return Result.success("修改用户成功");
+            } else {
+                log.warn("修改用户失败: userId={}", userDTO.getUserId());
+                return Result.error("修改用户失败");
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn("修改用户参数校验失败: userId={}, message={}", userDTO.getUserId(), e.getMessage());
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("修改用户异常: userId={}", userDTO.getUserId(), e);
+            return Result.error("系统异常，请联系管理员");
+        }
     }
 
     /**
@@ -150,14 +199,27 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:delete')")
     @DeleteMapping("/delete")
     public Result<?> remove(@RequestBody DeleteRequest deleteRequest) {
-        // 权限校验：不能删除当前登录用户
-        String errorMsg = sysUserService.canDeleteUsers(deleteRequest.getIds());
-        if (errorMsg != null) {
-            return Result.error(errorMsg);
-        }
+        try {
+            log.info("删除用户请求: userIds={}", deleteRequest.getIds());
+            
+            String errorMsg = sysUserService.canDeleteUsers(deleteRequest.getIds());
+            if (errorMsg != null) {
+                log.warn("删除用户权限校验失败: {}", errorMsg);
+                return Result.error(errorMsg);
+            }
 
-        boolean success = sysUserService.deleteUserByIds(deleteRequest.getIds());
-        return success ? Result.success("删除用户成功") : Result.error("删除用户失败");
+            boolean success = sysUserService.deleteUserByIds(deleteRequest.getIds());
+            if (success) {
+                log.info("删除用户成功: userIds={}", deleteRequest.getIds());
+                return Result.success("删除用户成功");
+            } else {
+                log.warn("删除用户失败: userIds={}", deleteRequest.getIds());
+                return Result.error("删除用户失败");
+            }
+        } catch (Exception e) {
+            log.error("删除用户异常: userIds={}", deleteRequest.getIds(), e);
+            return Result.error("系统异常，请联系管理员");
+        }
     }
 
     /**
@@ -172,16 +234,30 @@ public class SysUserController {
     @PreAuthorize("hasAuthority('system:user:resetPwd')")
     @PostMapping("/resetPwd")
     public Result<?> resetPwd(@Valid @RequestBody ResetPasswordDTO resetPasswordDTO) {
-        // 权限校验：不能重置当前登录用户密码
-        String errorMsg = sysUserService.canResetPassword(resetPasswordDTO.getUserId());
-        if (errorMsg != null) {
-            return Result.error(errorMsg);
+        try {
+            log.info("重置密码请求: userId={}", resetPasswordDTO.getUserId());
+            
+            String errorMsg = sysUserService.canResetPassword(resetPasswordDTO.getUserId());
+            if (errorMsg != null) {
+                log.warn("重置密码权限校验失败: {}", errorMsg);
+                return Result.error(errorMsg);
+            }
+            
+            boolean success = sysUserService.resetUserPassword(
+                    resetPasswordDTO.getUserId(),
+                    resetPasswordDTO.getPassword()
+            );
+            if (success) {
+                log.info("重置密码成功: userId={}", resetPasswordDTO.getUserId());
+                return Result.success("重置密码成功");
+            } else {
+                log.warn("重置密码失败: userId={}", resetPasswordDTO.getUserId());
+                return Result.error("重置密码失败");
+            }
+        } catch (Exception e) {
+            log.error("重置密码异常: userId={}", resetPasswordDTO.getUserId(), e);
+            return Result.error("系统异常，请联系管理员");
         }
-        boolean success = sysUserService.resetUserPassword(
-                resetPasswordDTO.getUserId(),
-                resetPasswordDTO.getPassword()
-        );
-        return success ? Result.success("重置密码成功") : Result.error("重置密码失败");
     }
 
     /**
@@ -194,18 +270,36 @@ public class SysUserController {
             @ApiResponse(responseCode = "400", description = "旧密码错误或参数不合法"),
             @ApiResponse(responseCode = "401", description = "用户未登录")
     })
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/updatePwd")
     public Result<?> updatePwd(@Valid @RequestBody UpdatePasswordDTO updatePasswordDTO) {
-        Long currentUserId = SecurityContextUtils.getUserId();
-        if (currentUserId == null) {
-            return Result.error("用户未登录");
+        try {
+            Long currentUserId = SecurityContextUtils.getUserId();
+            if (currentUserId == null) {
+                log.warn("修改密码失败：用户未登录");
+                return Result.error("用户未登录");
+            }
+            
+            log.info("修改密码请求: userId={}", currentUserId);
+            boolean success = sysUserService.updateUserPassword(
+                    currentUserId,
+                    updatePasswordDTO.getOldPassword(),
+                    updatePasswordDTO.getNewPassword()
+            );
+            if (success) {
+                log.info("修改密码成功: userId={}", currentUserId);
+                return Result.success("修改密码成功，请重新登录");
+            } else {
+                log.warn("修改密码失败: userId={}，可能是旧密码错误", currentUserId);
+                return Result.error("修改密码失败，请检查旧密码是否正确");
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn("修改密码参数校验失败: message={}", e.getMessage());
+            return Result.error(e.getMessage());
+        } catch (Exception e) {
+            log.error("修改密码异常", e);
+            return Result.error("系统异常，请联系管理员");
         }
-        boolean success = sysUserService.updateUserPassword(
-                currentUserId,
-                updatePasswordDTO.getOldPassword(),
-                updatePasswordDTO.getNewPassword()
-        );
-        return success ? Result.success("修改密码成功") : Result.error("修改密码失败");
     }
 
     /**

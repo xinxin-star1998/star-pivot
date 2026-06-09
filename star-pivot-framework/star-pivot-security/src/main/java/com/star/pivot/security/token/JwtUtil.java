@@ -88,4 +88,20 @@ public class JwtUtil {
             return true;
         }
     }
+
+    /**
+     * 从Token中获取签发时间
+     *
+     * @param token JWT Token
+     * @return 签发时间
+     */
+    public Date getIssueDateFromToken(String token) {
+        try {
+            Claims claims = getClaimsFromToken(token);
+            return claims.getIssuedAt();
+        } catch (Exception e) {
+            log.debug("从Token中获取签发时间时发生异常：{}", e.getMessage());
+            return null;
+        }
+    }
 }

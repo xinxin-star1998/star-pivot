@@ -6,12 +6,9 @@ import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.domain.entity.SysNotice;
 import com.star.pivot.system.domain.entity.SysOperLog;
 import com.star.pivot.system.domain.entity.SysUser;
-import com.star.pivot.system.service.interfaces.ConsoleDashboardService;
-import com.star.pivot.system.service.interfaces.ISysNoticeService;
-import com.star.pivot.system.service.interfaces.SysLogininforService;
-import com.star.pivot.system.service.interfaces.SysOperLogService;
-import com.star.pivot.system.service.interfaces.SysUserService;
+import com.star.pivot.system.service.interfaces.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -22,6 +19,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 工作台首页聚合服务实现
@@ -32,21 +31,31 @@ public class ConsoleDashboardServiceImpl implements ConsoleDashboardService {
 
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("M月" );
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm" );
+    private static final String CACHE_KEY = "dashboard:console:data";
+    private static final long CACHE_EXPIRE_MINUTES = 5;
 
     private final SysUserService sysUserService;
     private final SysLogininforService sysLogininforService;
     private final SysOperLogService sysOperLogService;
     private final ISysNoticeService sysNoticeService;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public ConsoleDashboardVO getConsoleData() {
+        ConsoleDashboardVO cached = (ConsoleDashboardVO) redisTemplate.opsForValue().get(CACHE_KEY);
+        if (cached != null) {
+            return cached;
+        }
+
         ConsoleDashboardVO vo = new ConsoleDashboardVO();
         vo.setCardList(buildCards());
-        vo.setVisitTrend(buildVisitTrend());
-        vo.setUserTrend(buildUserTrend());
+        vo.setVisitTrend(buildVisitTrendOptimized());
+        vo.setUserTrend(buildUserTrendOptimized());
         vo.setTodoList(buildTodoList());
         vo.setDynamicList(buildDynamicList());
-        vo.setNewUserList(buildNewUserList());
+        vo.setNewUserList(buildNewUserListOptimized());
+        
+        redisTemplate.opsForValue().set(CACHE_KEY, vo, CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES);
         return vo;
     }
 
@@ -82,38 +91,105 @@ public class ConsoleDashboardServiceImpl implements ConsoleDashboardService {
         return cards;
     }
 
-    private ConsoleDashboardVO.TrendData buildVisitTrend() {
+    private ConsoleDashboardVO.TrendData buildVisitTrendOptimized() {
         List<String> xAxis = new ArrayList<>(12);
         List<Long> data = new ArrayList<>(12);
         LocalDate firstDayOfCurrentMonth = LocalDate.now().withDayOfMonth(1);
-        for (int i = 11; i >= 0; i--) {
-            LocalDate month = firstDayOfCurrentMonth.minusMonths(i);
-            LocalDateTime start = month.atStartOfDay();
-            LocalDateTime end = month.plusMonths(1).atStartOfDay();
+        
+        LocalDateTime start = firstDayOfCurrentMonth.minusMonths(11).atStartOfDay();
+        LocalDateTime end = LocalDateTime.now();
+        
+        List<Map<String, Object>> results = sysLogininforService.countByMonthRange(start, end);
+        
+        for (int i = 0; i < 12; i++) {
+            LocalDate month = firstDayOfCurrentMonth.minusMonths(11 - i);
             xAxis.add(month.format(MONTH_FORMATTER));
-            data.add(countLoginBetween(start, end));
+            
+            long count = 0L;
+            if (results != null && !results.isEmpty()) {
+                String monthKey = month.getYear() + "-" + String.format("%02d", month.getMonthValue());
+                for (Map<String, Object> row : results) {
+                    if (monthKey.equals(row.get("yearMonth"))) {
+                        count = ((Number) row.get("count")).longValue();
+                        break;
+                    }
+                }
+            }
+            data.add(count);
         }
+        
         ConsoleDashboardVO.TrendData trendData = new ConsoleDashboardVO.TrendData();
         trendData.setXAxisData(xAxis);
         trendData.setData(data);
         return trendData;
     }
 
-    private ConsoleDashboardVO.TrendData buildUserTrend() {
+    private ConsoleDashboardVO.TrendData buildUserTrendOptimized() {
         List<String> xAxis = new ArrayList<>(12);
         List<Long> data = new ArrayList<>(12);
         LocalDate firstDayOfCurrentMonth = LocalDate.now().withDayOfMonth(1);
-        for (int i = 11; i >= 0; i--) {
-            LocalDate month = firstDayOfCurrentMonth.minusMonths(i);
-            LocalDateTime start = month.atStartOfDay();
-            LocalDateTime end = month.plusMonths(1).atStartOfDay();
+        
+        LocalDateTime start = firstDayOfCurrentMonth.minusMonths(11).atStartOfDay();
+        LocalDateTime end = LocalDateTime.now();
+        
+        List<Map<String, Object>> results = sysUserService.countByMonthRange(start, end);
+        
+        for (int i = 0; i < 12; i++) {
+            LocalDate month = firstDayOfCurrentMonth.minusMonths(11 - i);
             xAxis.add(month.format(MONTH_FORMATTER));
-            data.add(countUserBetween(start, end));
+            
+            long count = 0L;
+            if (results != null && !results.isEmpty()) {
+                String monthKey = month.getYear() + "-" + String.format("%02d", month.getMonthValue());
+                for (Map<String, Object> row : results) {
+                    if (monthKey.equals(row.get("yearMonth"))) {
+                        count = ((Number) row.get("count")).longValue();
+                        break;
+                    }
+                }
+            }
+            data.add(count);
         }
+        
         ConsoleDashboardVO.TrendData trendData = new ConsoleDashboardVO.TrendData();
         trendData.setXAxisData(xAxis);
         trendData.setData(data);
         return trendData;
+    }
+
+    private List<ConsoleDashboardVO.NewUserItem> buildNewUserListOptimized() {
+        List<SysUser> users = sysUserService.lambdaQuery()
+                .eq(SysUser::getDelFlag, AppConstants.DelFlag.NORMAL)
+                .orderByDesc(SysUser::getCreateTime)
+                .last("limit 6" )
+                .list();
+
+        List<String> userNames = users.stream()
+                .map(SysUser::getUserName)
+                .filter(StringUtils::hasText)
+                .toList();
+
+        Map<String, Long> loginCountMap = new java.util.HashMap<>();
+        if (!userNames.isEmpty()) {
+            LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+            List<Map<String, Object>> loginCounts = sysLogininforService.countByUserNames(userNames, monthStart);
+            for (Map<String, Object> row : loginCounts) {
+                loginCountMap.put((String) row.get("userName"), ((Number) row.get("count")).longValue());
+            }
+        }
+
+        List<ConsoleDashboardVO.NewUserItem> newUserList = new ArrayList<>(users.size());
+        for (SysUser user : users) {
+            ConsoleDashboardVO.NewUserItem item = new ConsoleDashboardVO.NewUserItem();
+            item.setUsername(StringUtils.hasText(user.getNickName()) ? user.getNickName() : user.getUserName());
+            item.setProvince("--" );
+            item.setSex(parseSex(user.getSex()));
+            
+            long loginCount = loginCountMap.getOrDefault(user.getUserName(), 0L);
+            item.setPercentage((int) Math.min(loginCount * 10, 100));
+            newUserList.add(item);
+        }
+        return newUserList;
     }
 
     private List<ConsoleDashboardVO.TodoItem> buildTodoList() {
@@ -149,25 +225,6 @@ public class ConsoleDashboardServiceImpl implements ConsoleDashboardService {
             dynamicList.add(item);
         }
         return dynamicList;
-    }
-
-    private List<ConsoleDashboardVO.NewUserItem> buildNewUserList() {
-        List<SysUser> users = sysUserService.lambdaQuery()
-                .eq(SysUser::getDelFlag, AppConstants.DelFlag.NORMAL)
-                .orderByDesc(SysUser::getCreateTime)
-                .last("limit 6" )
-                .list();
-
-        List<ConsoleDashboardVO.NewUserItem> newUserList = new ArrayList<>(users.size());
-        for (SysUser user : users) {
-            ConsoleDashboardVO.NewUserItem item = new ConsoleDashboardVO.NewUserItem();
-            item.setUsername(StringUtils.hasText(user.getNickName()) ? user.getNickName() : user.getUserName());
-            item.setProvince("--" );
-            item.setSex(parseSex(user.getSex()));
-            item.setPercentage(calculateUserActivity(user.getUserName()));
-            newUserList.add(item);
-        }
-        return newUserList;
     }
 
     private long countLoginBetween(LocalDateTime start, LocalDateTime end) {
@@ -236,18 +293,6 @@ public class ConsoleDashboardServiceImpl implements ConsoleDashboardService {
             return 1;
         }
         return 0;
-    }
-
-    private int calculateUserActivity(String userName) {
-        if (!StringUtils.hasText(userName)) {
-            return 0;
-        }
-        LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
-        long loginCount = sysLogininforService.lambdaQuery()
-                .eq(SysLogininfor::getUserName, userName)
-                .ge(SysLogininfor::getLoginTime, monthStart)
-                .count();
-        return (int) Math.min(loginCount * 10, 100);
     }
 
     private String formatDateTime(LocalDateTime dateTime) {

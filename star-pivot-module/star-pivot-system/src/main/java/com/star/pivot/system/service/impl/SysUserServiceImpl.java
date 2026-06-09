@@ -25,16 +25,22 @@ import com.star.pivot.system.mapper.SysUserMapper;
 import com.star.pivot.system.mapper.UserPostMapper;
 import com.star.pivot.system.mapper.UserRoleMapper;
 import com.star.pivot.system.service.interfaces.SysUserService;
+import com.star.pivot.system.service.interfaces.TokenService;
 import com.star.pivot.system.service.interfaces.UserPermissionCacheService;
 import com.star.pivot.system.utils.DataScopeService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,12 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-/**
- * 用户信息表(SysUser)表服务实现类
- *
- * @author makejava
- * @since 2025-12-28 17:28:24
- */
+@Slf4j
 @Service("sysUserService")
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
     @Autowired
@@ -64,8 +65,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private UserVOAssembler userVOAssembler;
     @Autowired
     private TransactionTemplate transactionTemplate;
-
-    
+    @Lazy
+    @Autowired
+    private TokenService tokenService;
 
     /**
      * 用户分页查询
@@ -92,123 +94,137 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "userPermissions", key = "'roles:' + #userId", unless = "#result == null")
     public List<SysRole> getRolesByUserId(Long userId) {
+        log.debug("从数据库查询用户角色: userId={}", userId);
         return sysUserMapper.getRolesByUserId(userId);
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "userPermissions", key = "'userWithRoles:' + #userId", unless = "#result == null")
     public SysUser getUserWithRoles(Long userId) {
-        // 使用 LEFT JOIN 一次性查询用户及其角色信息，避免 N+1 查询问题
+        log.debug("从数据库查询用户及角色: userId={}", userId);
         return sysUserMapper.selectUserWithRoles(userId);
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "userPermissions", key = "'menus:' + #userId", unless = "#result == null || #result.isEmpty()")
     public List<SysMenu> getMenuByUserId(Long userId) {
+        log.debug("从数据库查询用户菜单: userId={}", userId);
         return sysUserMapper.getMenuByUserId(userId);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    @CacheEvict(value = {"userPermissions", "menuTree"}, allEntries = true)
     public boolean addUser(UserDTO userDTO) {
-        AssertUtils.isNull(getUserByUsername(userDTO.getUserName()), ErrorCode.USER_USERNAME_EXISTS);
-        SysUser sysUser = new SysUser();
-        BeanUtils.copyProperties(userDTO, sysUser);
-        sysUser.setUserType("00");
-        sysUser.setStatus(StringUtils.hasText(userDTO.getStatus()) ? userDTO.getStatus() : AppConstants.Status.NORMAL);
-        sysUser.setDelFlag(AppConstants.DelFlag.NORMAL);
+        try {
+            log.info("开始新增用户: userName={}", userDTO.getUserName());
+            AssertUtils.isNull(getUserByUsername(userDTO.getUserName()), ErrorCode.USER_USERNAME_EXISTS);
+            SysUser sysUser = new SysUser();
+            BeanUtils.copyProperties(userDTO, sysUser);
+            sysUser.setUserType("00");
+            sysUser.setStatus(StringUtils.hasText(userDTO.getStatus()) ? userDTO.getStatus() : AppConstants.Status.NORMAL);
+            sysUser.setDelFlag(AppConstants.DelFlag.NORMAL);
 
-        // 密码加密  如前端传密码，则进行加密处理，没有传，则使用默认密码123456
-        if (StringUtils.hasText(userDTO.getPassword())) {
-            sysUser.setPassword(SecurityUtils.encryptPassword(userDTO.getPassword()));
-        } else {
-            sysUser.setPassword(SecurityUtils.encryptPassword("123456"));
-        }
-        //创建人 当前登录人
-        String currentUser = SecurityContextUtils.getUsername();
-        sysUser.setCreateBy(currentUser);
-        sysUser.setCreateTime(LocalDateTime.now());
+            if (StringUtils.hasText(userDTO.getPassword())) {
+                sysUser.setPassword(SecurityUtils.encryptPassword(userDTO.getPassword()));
+            } else {
+                sysUser.setPassword(SecurityUtils.encryptPassword("Star123456"));
+            }
+            
+            String currentUser = SecurityContextUtils.getUsername();
+            sysUser.setCreateBy(currentUser);
+            sysUser.setCreateTime(LocalDateTime.now());
 
-        boolean success = this.save(sysUser);
-        //用户添加成功后，添加角色关联信息、岗位关联信息
-        if (success && userDTO.getRoleIds() != null && !userDTO.getRoleIds().isEmpty()) {
-            // 分配角色
-            insertUserRoles(sysUser.getUserId(), userDTO.getRoleIds());
+            boolean success = this.save(sysUser);
+            if (success && userDTO.getRoleIds() != null && !userDTO.getRoleIds().isEmpty()) {
+                insertUserRoles(sysUser.getUserId(), userDTO.getRoleIds());
+            }
+            if (success && userDTO.getPostIds() != null && !userDTO.getPostIds().isEmpty()) {
+                insertUserPosts(sysUser.getUserId(), userDTO.getPostIds());
+            }
+            
+            log.info("新增用户成功: userId={}, userName={}", sysUser.getUserId(), sysUser.getUserName());
+            return success;
+        } catch (Exception e) {
+            log.error("新增用户失败: userName={}", userDTO.getUserName(), e);
+            throw e;
         }
-        if (success && userDTO.getPostIds() != null && !userDTO.getPostIds().isEmpty()) {
-            // 分配岗位
-            insertUserPosts(sysUser.getUserId(), userDTO.getPostIds());
-        }
-        return success;
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "userPermissions", key = "'userVO:' + #userId", unless = "#result == null")
     public UserVO selectByUserId(Long userId) {
+        log.debug("查询用户详情: userId={}", userId);
         SysUser user = this.getById(userId);
         return user == null ? null : userVOAssembler.convertToVO(user);
     }
-    /*
-    * 修改用户信息
-     */
+    
     @Override
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    @CacheEvict(value = {"userPermissions", "menuTree"}, allEntries = true)
     public boolean updateUser(UserDTO userDTO) {
-        SysUser user = this.getById(userDTO.getUserId());
-        AssertUtils.notNull(user, ErrorCode.USER_NOT_FOUND);
-        if (AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
-            throw new BizException(ErrorCode.USER_NOT_FOUND);
-        }
+        try {
+            log.info("开始修改用户: userId={}", userDTO.getUserId());
+            SysUser user = this.getById(userDTO.getUserId());
+            AssertUtils.notNull(user, ErrorCode.USER_NOT_FOUND);
+            if (AppConstants.DelFlag.DELETE.equals(user.getDelFlag())) {
+                throw new BizException(ErrorCode.USER_NOT_FOUND);
+            }
 
-        SysUser existUser = getUserByUsername(userDTO.getUserName());
-        if (existUser != null && !existUser.getUserId().equals(userDTO.getUserId())) {
-            throw new BizException(ErrorCode.USER_USERNAME_USED);
-        }
+            SysUser existUser = getUserByUsername(userDTO.getUserName());
+            if (existUser != null && !existUser.getUserId().equals(userDTO.getUserId())) {
+                throw new BizException(ErrorCode.USER_USERNAME_USED);
+            }
 
-        // 更新用户信息
-        BeanUtils.copyProperties(userDTO, user, "password", "userId");
-        String currentUser = SecurityContextUtils.getUsername();
-        user.setUpdateBy(currentUser);
-        user.setUpdateTime(LocalDateTime.now());
+            BeanUtils.copyProperties(userDTO, user, "password", "userId");
+            String currentUser = SecurityContextUtils.getUsername();
+            user.setUpdateBy(currentUser);
+            user.setUpdateTime(LocalDateTime.now());
 
-        boolean success = this.updateById(user);
+            boolean success = this.updateById(user);
 
-        if (success) {
-            // 更新角色关联
-            if (userDTO.getRoleIds() != null) {
-                // 删除旧的角色关联
-                LambdaQueryWrapper<UserRole> roleWrapper = new LambdaQueryWrapper<>();
-                roleWrapper.eq(UserRole::getUserId, userDTO.getUserId());
-                userRoleMapper.delete(roleWrapper);
+            if (success) {
+                if (userDTO.getRoleIds() != null) {
+                    LambdaQueryWrapper<UserRole> roleWrapper = new LambdaQueryWrapper<>();
+                    roleWrapper.eq(UserRole::getUserId, userDTO.getUserId());
+                    userRoleMapper.delete(roleWrapper);
 
-                // 添加新的角色关联
-                if (!userDTO.getRoleIds().isEmpty()) {
-                    insertUserRoles(userDTO.getUserId(), userDTO.getRoleIds());
+                    if (!userDTO.getRoleIds().isEmpty()) {
+                        insertUserRoles(userDTO.getUserId(), userDTO.getRoleIds());
+                    }
+                    
+                    userPermissionCacheService.clearUserPermissionCache(userDTO.getUserName());
+                }
+
+                if (userDTO.getPostIds() != null) {
+                    LambdaQueryWrapper<UserPost> postWrapper = new LambdaQueryWrapper<>();
+                    postWrapper.eq(UserPost::getUserId, userDTO.getUserId());
+                    userPostMapper.delete(postWrapper);
+
+                    if (!userDTO.getPostIds().isEmpty()) {
+                        insertUserPosts(userDTO.getUserId(), userDTO.getPostIds());
+                    }
                 }
                 
-                // 清除用户权限缓存（角色变更会影响权限）
-                userPermissionCacheService.clearUserPermissionCache(userDTO.getUserName());
+                log.info("修改用户成功: userId={}", userDTO.getUserId());
+            } else {
+                log.warn("修改用户失败: userId={}", userDTO.getUserId());
             }
-
-            // 更新岗位关联
-            if (userDTO.getPostIds() != null) {
-                // 删除旧的岗位关联
-                LambdaQueryWrapper<UserPost> postWrapper = new LambdaQueryWrapper<>();
-                postWrapper.eq(UserPost::getUserId, userDTO.getUserId());
-                userPostMapper.delete(postWrapper);
-
-                // 添加新的岗位关联
-                if (!userDTO.getPostIds().isEmpty()) {
-                    insertUserPosts(userDTO.getUserId(), userDTO.getPostIds());
-                }
-            }
+            
+            return success;
+        } catch (Exception e) {
+            log.error("修改用户失败: userId={}", userDTO.getUserId(), e);
+            throw e;
         }
-
-        return success;
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public boolean changeUserStatus(Long userId, String status) {
         SysUser user = this.getById(userId);
         AssertUtils.notNull(user, ErrorCode.USER_NOT_FOUND);
@@ -240,7 +256,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
         boolean success = this.updateById(user);
         if (success) {
+            // 清除权限缓存
             userPermissionCacheService.clearUserPermissionCache(user.getUserName());
+            
+            // 强制该用户的所有会话下线（使旧的 JWT Token 和 RefreshToken 失效）
+            // logoutType: 0-正常登出, 1-强制下线, 2-过期下线
+            try {
+                tokenService.forceLogout(userId, "1");
+                log.info("重置密码成功，已强制用户 {} 下线: userId={}", user.getUserName(), userId);
+            } catch (Exception e) {
+                log.warn("重置密码后强制下线失败: userId={}", userId, e);
+            }
         }
         return success;
     }
@@ -268,6 +294,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         boolean success = this.updateById(user);
         if (success) {
             userPermissionCacheService.clearUserPermissionCache(user.getUserName());
+            // 强制该用户的所有会话下线（使旧的 JWT Token 和 RefreshToken 失效）
+            try {
+                tokenService.forceLogout(userId, "1");
+                log.info("修改密码成功，已强制用户 {} 下线: userId={}", user.getUserName(), userId);
+            } catch (Exception e) {
+                log.warn("修改密码后强制下线失败: userId={}", userId, e);
+            }
         }
         return success;
     }
@@ -281,7 +314,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         
         String currentUser = SecurityContextUtils.getUsername();
         
-        // 使用 LambdaUpdateWrapper 进行批量更新，避免先查询再更新的额外开销
         return this.update(new LambdaUpdateWrapper<SysUser>()
                 .in(SysUser::getUserId, userIds)
                 .eq(SysUser::getDelFlag, AppConstants.DelFlag.NORMAL)
@@ -454,7 +486,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             return;
         }
 
-        // 构建用户角色关联集合，使用批量插入提升性能
         List<UserRole> userRoles = new ArrayList<>(roleIds.size());
         for (Long roleId : roleIds) {
             UserRole userRole = new UserRole();
@@ -473,7 +504,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             return;
         }
 
-        // 构建用户岗位关联集合，使用批量插入提升性能
         List<UserPost> userPosts = new ArrayList<>(postIds.size());
         for (Long postId : postIds) {
             UserPost userPost = new UserPost();
@@ -513,11 +543,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (currentUserId == null) {
             return false;
         }
-        // 超级管理员用户ID
         if (AppConstants.ADMIN_USER_ID.equals(currentUserId)) {
             return true;
         }
-        // 拥有 admin 角色的用户
         List<SysRole> roles = getRolesByUserId(currentUserId);
         return roles != null && roles.stream()
                 .anyMatch(role -> AppConstants.ADMIN_ROLE_KEY.equals(role.getRoleKey()));
@@ -529,11 +557,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (currentUserId == null) {
             return false;
         }
-        // 超级管理员可以修改所有用户
         if (isCurrentUserSuperAdmin()) {
             return true;
         }
-        // 普通用户只能修改自己
         return currentUserId.equals(targetUserId);
     }
 
@@ -558,6 +584,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             return "不能重置当前登录用户密码";
         }
         return null;
+    }
+
+    @Override
+    public List<Map<String, Object>> countByMonthRange(java.time.LocalDateTime start, java.time.LocalDateTime end) {
+        return sysUserMapper.countByMonthRange(start, end);
     }
 }
 

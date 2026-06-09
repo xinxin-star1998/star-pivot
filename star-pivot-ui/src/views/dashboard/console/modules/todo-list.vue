@@ -2,9 +2,10 @@
   <div class="art-card h-128 p-5 mb-5 max-sm:mb-4">
     <div class="art-card-header">
       <div class="title">
-        <h4>待办事项</h4>
+        <h4>{{ t('dashboard.todoList.title') }}</h4>
         <p
-          >待处理<span class="text-danger">{{ pendingCount }}</span></p
+          >{{ t('dashboard.todoList.pending')
+          }}<span class="text-danger">{{ pendingCount }}</span></p
         >
       </div>
     </div>
@@ -28,6 +29,9 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
+  const { t } = useI18n()
   interface TodoItem {
     username: string
     date: string

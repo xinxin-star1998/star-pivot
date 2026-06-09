@@ -1,6 +1,6 @@
 <!-- 工作台页面 -->
 <template>
-  <div>
+  <div v-loading="loading" element-loading-text="加载中...">
     <CardList :data-list="dashboardData.cardList" />
 
     <ElRow :gutter="20">
@@ -34,6 +34,7 @@
 
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import { fetchGetConsoleDashboardData } from '@/api/dashboard/console'
   import type { ConsoleDashboardData } from '@/types/api/dashboard'
   import CardList from './modules/card-list.vue'
@@ -45,6 +46,10 @@
   // import AboutProject from './modules/about-project.vue'
 
   defineOptions({ name: 'Console' })
+
+  const { t } = useI18n()
+
+  const loading = ref(false)
 
   const createDefaultData = (): ConsoleDashboardData => ({
     cardList: [],
@@ -58,12 +63,15 @@
   const dashboardData = ref<ConsoleDashboardData>(createDefaultData())
 
   const loadDashboardData = async () => {
+    loading.value = true
     try {
       dashboardData.value = await fetchGetConsoleDashboardData()
     } catch (error) {
       dashboardData.value = createDefaultData()
-      ElMessage.error('加载首页数据失败，请稍后重试')
+      ElMessage.error(t('dashboard.loadFailed'))
       console.error('加载首页数据失败', error)
+    } finally {
+      loading.value = false
     }
   }
 

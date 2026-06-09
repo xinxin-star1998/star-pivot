@@ -261,6 +261,84 @@
       "menu": "菜单管理"
     }
   },
+  "dashboard": {
+    "loadFailed": "加载首页数据失败，请稍后重试",
+    "cardList": {
+      "compareLastWeek": "较上周"
+    },
+    "activeUser": {
+      "title": "用户概述",
+      "subtitle": "近 12 个月新增用户趋势",
+      "description": "我们为您创建了多个选项，可将它们组合在一起并定制为像素完美的页面",
+      "statDimension": "统计维度",
+      "statNewUsers": "新增用户",
+      "statPeriod": "周期",
+      "statPeriodValue": "近12个月",
+      "statSource": "数据来源",
+      "statStatus": "状态",
+      "statRealtime": "实时"
+    },
+    "salesOverview": {
+      "title": "访问量",
+      "growth": "今年增长"
+    },
+    "newUser": {
+      "title": "新用户",
+      "growth": "这个月增长",
+      "thisMonth": "本月",
+      "lastMonth": "上月",
+      "thisYear": "今年",
+      "avatar": "头像",
+      "region": "地区",
+      "gender": "性别",
+      "male": "男",
+      "female": "女",
+      "progress": "进度"
+    },
+    "dynamic": {
+      "title": "动态",
+      "newCount": "新增"
+    },
+    "todoList": {
+      "title": "待办事项",
+      "pending": "待处理"
+    }
+  },
+  "system": {
+    "user": {
+      "addUser": "新增用户",
+      "batchDelete": "批量删除",
+      "importUser": "导入用户",
+      "exportUser": "导出用户",
+      "importTitle": "用户导入",
+      "importOverwriteLabel": "是否更新已经存在的用户数据",
+      "deptTree": "组织机构",
+      "searchDept": "搜索部门名称",
+      "collapseDept": "收起部门树",
+      "expandDept": "展开部门树",
+      "refreshDept": "刷新部门树",
+      "expandPanel": "展开",
+      "collapsePanel": "收起",
+      "expandDeptPanel": "展开部门树面板",
+      "collapseDeptPanel": "收起部门树面板",
+      "index": "序号",
+      "userInfo": "用户信息"
+    },
+    "role": {
+      "addRole": "新增角色",
+      "index": "序号",
+      "roleName": "角色名称",
+      "roleKey": "角色编码",
+      "roleDesc": "角色描述",
+      "roleStatus": "角色状态",
+      "statusEnabled": "启用",
+      "statusDisabled": "禁用",
+      "createDate": "创建日期",
+      "operation": "操作",
+      "dataScope": "数据权限",
+      "assignUser": "分配用户"
+    }
+  },
   "table": {
     "form": {
       "reset": "重置",

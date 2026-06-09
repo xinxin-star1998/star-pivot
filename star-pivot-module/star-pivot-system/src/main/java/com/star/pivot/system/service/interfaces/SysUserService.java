@@ -13,6 +13,7 @@ import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.domain.excel.SysUserExcel;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户信息表(SysUser)表服务接口
@@ -115,5 +116,13 @@ public interface SysUserService extends IService<SysUser> {
      * @return 是否允许重置（null表示允许，非null表示不允许的原因）
      */
     String canResetPassword(Long targetUserId);
+
+    /**
+     * 按月份统计新增用户数
+     * @param start 开始时间
+     * @param end 结束时间
+     * @return List<Object[]> 每个元素为 [yearMonth, count]
+     */
+    List<Map<String, Object>> countByMonthRange(java.time.LocalDateTime start, java.time.LocalDateTime end);
 }
 

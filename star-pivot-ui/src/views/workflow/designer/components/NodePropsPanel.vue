@@ -6,7 +6,12 @@
 
   const NODE_TYPE_META: Record<
     FlowNodeType,
-    { label: string; tag: '' | 'success' | 'danger' | 'warning' | 'primary'; icon: string; color: string }
+    {
+      label: string
+      tag: '' | 'success' | 'danger' | 'warning' | 'primary'
+      icon: string
+      color: string
+    }
   > = {
     start: { label: '开始', tag: 'success', icon: 'ri:play-circle-line', color: '#22c55e' },
     end: { label: '结束', tag: 'danger', icon: 'ri:stop-circle-line', color: '#ef4444' },
@@ -184,12 +189,12 @@
           </ElFormItem>
 
           <div v-if="selectedEdge.length" class="edge-list">
-            <div
-              v-for="edge in selectedEdge"
-              :key="edge.id"
-              class="edge-list-item"
-            >
-              <button type="button" class="edge-list-item__main" @click="emit('selectEdge', edge.id)">
+            <div v-for="edge in selectedEdge" :key="edge.id" class="edge-list-item">
+              <button
+                type="button"
+                class="edge-list-item__main"
+                @click="emit('selectEdge', edge.id)"
+              >
                 <ArtSvgIcon icon="ri:arrow-right-line" />
                 <span>{{ nodeNameById(edge.target) }}</span>
               </button>
@@ -224,7 +229,11 @@
             </ElButton>
           </ElFormItem>
           <ElFormItem label="审批模式">
-            <ElRadioGroup v-model="node.data.approveMode" class="mode-radio" @change="emit('commit')">
+            <ElRadioGroup
+              v-model="node.data.approveMode"
+              class="mode-radio"
+              @change="emit('commit')"
+            >
               <ElRadioButton label="OR">或签</ElRadioButton>
               <ElRadioButton label="AND">会签</ElRadioButton>
             </ElRadioGroup>
@@ -236,7 +245,13 @@
         <div class="props-section__head">
           <ArtSvgIcon icon="ri:git-branch-line" />
           <span>分支条件</span>
-          <ElButton size="small" type="primary" plain class="section-action" @click="addConditionBranch">
+          <ElButton
+            size="small"
+            type="primary"
+            plain
+            class="section-action"
+            @click="addConditionBranch"
+          >
             <ArtSvgIcon icon="ri:add-line" />
             添加分支
           </ElButton>
@@ -279,9 +294,7 @@
             </div>
           </template>
         </div>
-        <p v-if="!selectedEdge.length" class="section-tip">
-          从画布拖拽连线，或点击「添加分支」
-        </p>
+        <p v-if="!selectedEdge.length" class="section-tip"> 从画布拖拽连线，或点击「添加分支」 </p>
       </section>
     </div>
   </div>

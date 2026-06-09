@@ -389,37 +389,41 @@
 </template>
 
 <script setup lang="ts">
-import type {FormInstance, FormRules} from 'element-plus'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {useRoute, useRouter} from 'vue-router'
-import {
-  fetchMallProductAdd,
-  fetchMallProductById,
-  fetchMallProductUpdate,
-  type MallProductSku
-} from '@/api/mall/product'
-import {fetchMallBrandList, type MallBrandVo} from '@/api/mall/brand'
-import {fetchMallCategoryTree, type MallCategoryTreeNode} from '@/api/mall/category'
-import type {MallAttr} from '@/api/mall/attr'
-import {filterVisibleCategoryTree, findCategoryPath, mapCategoryCascaderOptions} from '@/utils/mall/category-tree'
-import {parseValueSelect} from '@/utils/mall/attr-value-select'
-import {cartesianProduct} from '@/utils/mall/spu-descartes'
-import {
-  fetchCatalogBaseAttrGroups,
-  fetchCatalogSaleAttrs,
-  pageRows,
-  type SpuAttrGroupWithAttrs
-} from '@/utils/mall/spu-wizard-attr'
-import {
-  buildSpuSavePayload,
-  type SpuWizardBaseAttrCell,
-  type SpuWizardSaleDraft,
-  type SpuWizardSkuRow
-} from '@/utils/mall/spu-wizard-payload'
-import SpuImageUpload from './spu-image-upload.vue'
-import {resolveGoodsImageDisplayUrls} from '@/utils/mall/goods-image-url'
+  import type { FormInstance, FormRules } from 'element-plus'
+  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { useRoute, useRouter } from 'vue-router'
+  import {
+    fetchMallProductAdd,
+    fetchMallProductById,
+    fetchMallProductUpdate,
+    type MallProductSku
+  } from '@/api/mall/product'
+  import { fetchMallBrandList, type MallBrandVo } from '@/api/mall/brand'
+  import { fetchMallCategoryTree, type MallCategoryTreeNode } from '@/api/mall/category'
+  import type { MallAttr } from '@/api/mall/attr'
+  import {
+    filterVisibleCategoryTree,
+    findCategoryPath,
+    mapCategoryCascaderOptions
+  } from '@/utils/mall/category-tree'
+  import { parseValueSelect } from '@/utils/mall/attr-value-select'
+  import { cartesianProduct } from '@/utils/mall/spu-descartes'
+  import {
+    fetchCatalogBaseAttrGroups,
+    fetchCatalogSaleAttrs,
+    pageRows,
+    type SpuAttrGroupWithAttrs
+  } from '@/utils/mall/spu-wizard-attr'
+  import {
+    buildSpuSavePayload,
+    type SpuWizardBaseAttrCell,
+    type SpuWizardSaleDraft,
+    type SpuWizardSkuRow
+  } from '@/utils/mall/spu-wizard-payload'
+  import SpuImageUpload from './spu-image-upload.vue'
+  import { resolveGoodsImageDisplayUrls } from '@/utils/mall/goods-image-url'
 
-defineOptions({ name: 'MallProductAddSpu' })
+  defineOptions({ name: 'MallProductAddSpu' })
 
   const imageDisplayUrls = ref<Map<string, string>>(new Map())
 

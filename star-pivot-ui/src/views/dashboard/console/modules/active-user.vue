@@ -9,9 +9,9 @@
       :xAxisData="xAxisLabels"
     />
     <div class="ml-1">
-      <h3 class="mt-5 text-lg font-medium">用户概述</h3>
-      <p class="mt-1 text-sm">近 12 个月新增用户趋势</p>
-      <p class="mt-1 text-sm">我们为您创建了多个选项，可将它们组合在一起并定制为像素完美的页面</p>
+      <h3 class="mt-5 text-lg font-medium">{{ t('dashboard.activeUser.title') }}</h3>
+      <p class="mt-1 text-sm">{{ t('dashboard.activeUser.subtitle') }}</p>
+      <p class="mt-1 text-sm">{{ t('dashboard.activeUser.description') }}</p>
     </div>
     <div class="flex-b mt-2">
       <div class="flex-1" v-for="(item, index) in list" :key="index">
@@ -23,7 +23,10 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import type { DashboardTrendData } from '@/types/api/dashboard'
+
+  const { t } = useI18n()
 
   interface UserStatItem {
     name: string
@@ -46,10 +49,10 @@
    * 用户统计数据列表
    * 包含总用户量、总访问量、日访问量和周同比等关键指标
    */
-  const list: UserStatItem[] = [
-    { name: '统计维度', num: '新增用户' },
-    { name: '周期', num: '近12个月' },
-    { name: '数据来源', num: 'sys_user' },
-    { name: '状态', num: '实时' }
-  ]
+  const list = computed<UserStatItem[]>(() => [
+    { name: t('dashboard.activeUser.statDimension'), num: t('dashboard.activeUser.statNewUsers') },
+    { name: t('dashboard.activeUser.statPeriod'), num: t('dashboard.activeUser.statPeriodValue') },
+    { name: t('dashboard.activeUser.statSource'), num: 'sys_user' },
+    { name: t('dashboard.activeUser.statStatus'), num: t('dashboard.activeUser.statRealtime') }
+  ])
 </script>

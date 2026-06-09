@@ -34,17 +34,29 @@ export function validateFlowDefinitionDetailed(def: SpfDefinition): FlowValidati
       errors.push(`审批节点「${node.data?.name || node.id}」${msg}`)
       pushNodeError(nodeErrors, node.id, msg)
     }
-    if (node.type === 'approval' && node.data?.assigneeRule?.type === 'ROLE' && !node.data.assigneeRule.value) {
+    if (
+      node.type === 'approval' &&
+      node.data?.assigneeRule?.type === 'ROLE' &&
+      !node.data.assigneeRule.value
+    ) {
       const msg = '需选择角色'
       errors.push(`审批节点「${node.data?.name || node.id}」${msg}`)
       pushNodeError(nodeErrors, node.id, msg)
     }
-    if (node.type === 'approval' && node.data?.assigneeRule?.type === 'POST' && !node.data.assigneeRule.value) {
+    if (
+      node.type === 'approval' &&
+      node.data?.assigneeRule?.type === 'POST' &&
+      !node.data.assigneeRule.value
+    ) {
       const msg = '需选择岗位'
       errors.push(`审批节点「${node.data?.name || node.id}」${msg}`)
       pushNodeError(nodeErrors, node.id, msg)
     }
-    if (node.type === 'approval' && node.data?.assigneeRule?.type === 'USER' && !node.data.assigneeRule.value) {
+    if (
+      node.type === 'approval' &&
+      node.data?.assigneeRule?.type === 'USER' &&
+      !node.data.assigneeRule.value
+    ) {
       const msg = '需选择用户'
       errors.push(`审批节点「${node.data?.name || node.id}」${msg}`)
       pushNodeError(nodeErrors, node.id, msg)

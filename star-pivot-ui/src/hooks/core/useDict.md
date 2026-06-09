@@ -36,14 +36,15 @@ const loadDict = async (dictType: string, force?: boolean): Promise<boolean>
 
 **参数说明**：
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `dictType` | `string` | 字典类型标识（如 `sys_notice_type`） |
-| `force` | `boolean` | 是否强制刷新，跳过缓存（默认 `false`） |
+| 参数       | 类型      | 说明                                   |
+| ---------- | --------- | -------------------------------------- |
+| `dictType` | `string`  | 字典类型标识（如 `sys_notice_type`）   |
+| `force`    | `boolean` | 是否强制刷新，跳过缓存（默认 `false`） |
 
 **返回值**：`boolean` - 是否加载成功
 
 **特性**：
+
 - 如果字典已缓存且 `force=false`，直接返回 `true`
 - 支持持久化，页面刷新后自动从 localStorage 恢复
 - 防止重复请求，同一字典类型同时只能有一个加载请求
@@ -58,10 +59,10 @@ const loadDicts = async (dictTypes: string[], force?: boolean): Promise<void>
 
 **参数说明**：
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `dictTypes` | `string[]` | 字典类型标识数组 |
-| `force` | `boolean` | 是否强制刷新（默认 `false`） |
+| 参数        | 类型       | 说明                         |
+| ----------- | ---------- | ---------------------------- |
+| `dictTypes` | `string[]` | 字典类型标识数组             |
+| `force`     | `boolean`  | 是否强制刷新（默认 `false`） |
 
 ### 3. getDictLabel
 
@@ -73,11 +74,11 @@ const getDictLabel = (dictType: string, dictValue: string | number | undefined, 
 
 **参数说明**：
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `dictType` | `string` | 字典类型标识 |
-| `dictValue` | `string \| number \| undefined` | 字典值 |
-| `defaultValue` | `string` | 默认值（默认 `-`） |
+| 参数           | 类型                            | 说明               |
+| -------------- | ------------------------------- | ------------------ |
+| `dictType`     | `string`                        | 字典类型标识       |
+| `dictValue`    | `string \| number \| undefined` | 字典值             |
+| `defaultValue` | `string`                        | 默认值（默认 `-`） |
 
 **返回值**：`string` - 字典标签文本
 
@@ -91,10 +92,10 @@ const getDictItem = (dictType: string, dictValue: string | number | undefined): 
 
 **参数说明**：
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `dictType` | `string` | 字典类型标识 |
-| `dictValue` | `string \| number \| undefined` | 字典值 |
+| 参数        | 类型                            | 说明         |
+| ----------- | ------------------------------- | ------------ |
+| `dictType`  | `string`                        | 字典类型标识 |
+| `dictValue` | `string \| number \| undefined` | 字典值       |
 
 **返回值**：`SysDictData \| undefined` - 字典项对象
 
@@ -108,15 +109,16 @@ const getDictOptions = (dictType: string, addEmpty?: boolean, emptyLabel?: strin
 
 **参数说明**：
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `dictType` | `string` | 字典类型标识 |
-| `addEmpty` | `boolean` | 是否添加空选项（默认 `false`） |
-| `emptyLabel` | `string` | 空选项标签（默认 `请选择`） |
+| 参数         | 类型      | 说明                           |
+| ------------ | --------- | ------------------------------ |
+| `dictType`   | `string`  | 字典类型标识                   |
+| `addEmpty`   | `boolean` | 是否添加空选项（默认 `false`） |
+| `emptyLabel` | `string`  | 空选项标签（默认 `请选择`）    |
 
 **返回值**：`{ label: string; value: string }[]` - 选项数组
 
 **特性**：
+
 - 自动按 `dictSort` 字段排序
 - 支持添加空选项
 
@@ -130,20 +132,20 @@ const getTagType = (cssClass?: string): string
 
 **参数说明**：
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
+| 参数       | 类型     | 说明                       |
+| ---------- | -------- | -------------------------- |
 | `cssClass` | `string` | 字典项的 `cssClass` 字段值 |
 
 **映射关系**：
 
-| cssClass | Tag 类型 |
-|----------|----------|
+| cssClass  | Tag 类型  |
+| --------- | --------- |
 | `primary` | `primary` |
 | `success` | `success` |
 | `warning` | `warning` |
-| `danger` | `danger` |
-| `info` | `info` |
-| 其他 | `default` |
+| `danger`  | `danger`  |
+| `info`    | `info`    |
+| 其他      | `default` |
 
 ### 7. isDictLoaded
 
@@ -171,8 +173,8 @@ const clearDictCache = (dictType?: string): void
 
 **参数说明**：
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
+| 参数       | 类型     | 说明                                         |
+| ---------- | -------- | -------------------------------------------- |
 | `dictType` | `string` | 可选，指定清除的字典类型；不传则清除所有缓存 |
 
 **注意**：清除缓存会同时清除 localStorage 中的持久化数据
@@ -238,12 +240,7 @@ export default {
 
     onMounted(async () => {
       // 一次性加载多个字典
-      await loadDicts([
-        'sys_notice_type',
-        'sys_notice_status',
-        'sys_user_status',
-        'sys_dept_type'
-      ])
+      await loadDicts(['sys_notice_type', 'sys_notice_status', 'sys_user_status', 'sys_dept_type'])
     })
   }
 }
@@ -409,12 +406,8 @@ import { useDictStore } from '@/store/modules/dict'
 
 async function initApp() {
   const dictStore = useDictStore()
-  await dictStore.loadDicts([
-    'sys_notice_type',
-    'sys_notice_status',
-    'sys_user_status'
-  ])
-  
+  await dictStore.loadDicts(['sys_notice_type', 'sys_notice_status', 'sys_user_status'])
+
   createApp(App).mount('#app')
 }
 
@@ -468,8 +461,9 @@ import { useDict } from '@/hooks/core/useDict'
 
 export default {
   setup() {
-    const { loadDicts, getDictLabel, getDictItem, getDictOptions, getTagType, isLoading } = useDict()
-    
+    const { loadDicts, getDictLabel, getDictItem, getDictOptions, getTagType, isLoading } =
+      useDict()
+
     const form = ref({
       noticeType: '1',
       status: '0'
@@ -526,12 +520,14 @@ export default {
 如果你之前使用的是模块级别的 `useDict` hook，迁移到 Pinia 版本非常简单：
 
 **旧版本**：
+
 ```typescript
 import { useDict } from '@/hooks/core/useDict'
 const { loadDict, getDictLabel } = useDict()
 ```
 
 **新版本**：
+
 ```typescript
 import { useDict } from '@/hooks/core/useDict'
 const { loadDict, getDictLabel } = useDict()

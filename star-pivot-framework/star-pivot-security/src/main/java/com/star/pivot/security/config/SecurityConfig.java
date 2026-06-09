@@ -5,6 +5,7 @@ import com.star.pivot.security.extension.PermitAllPathProvider;
 import com.star.pivot.security.filter.JwtAuthenticationFilter;
 import com.star.pivot.security.filter.JwtSecurityExceptionHandler;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,10 +29,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -102,18 +105,13 @@ public class SecurityConfig {
     }
 
     private String[] resolvePermitAllPaths() {
+        // 路径均相对于 context-path（/api/v1），无需再写 /api 前缀
         List<String> paths = new ArrayList<>(List.of(
                 "/auth/login",
                 "/auth/refresh",
                 "/auth/captcha",
                 "/auth/captcha/verify",
-                // 前端/网关常用的 /api 前缀（如 dev server proxy / nginx location /api）
-                "/api/auth/login",
-                "/api/auth/refresh",
-                "/api/auth/captcha",
-                "/api/auth/captcha/verify",
-                "/auth/register/enabled",
-                "/api/auth/register/enabled"
+                "/auth/register/enabled"
         ));
 
         if (securityProperties.getPermitAllPaths() != null) {
@@ -141,22 +139,24 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         String allowedOrigins = corsProperties.getAllowedOrigins();
-        if ("*".equals(allowedOrigins)) {
+        
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .collect(Collectors.toList());
+
+        if (origins.isEmpty()) {
+            log.warn("CORS 配置警告：未配置允许的域名，将拒绝所有跨域请求");
+            configuration.setAllowedOrigins(Collections.emptyList());
+        } else if (origins.contains("*")) {
+            log.warn("⚠️ 生产环境不建议使用 '*' 作为 allowedOrigins，这会导致严重的安全风险！");
+            log.warn("建议在 application.yml 中明确指定允许的域名列表");
             configuration.addAllowedOriginPattern("*");
             configuration.setAllowCredentials(false);
         } else {
-            List<String> origins = Arrays.stream(allowedOrigins.split(","))
-                    .map(String::trim)
-                    .filter(origin -> !origin.isEmpty())
-                    .collect(Collectors.toList());
-
-            if (origins.isEmpty()) {
-                configuration.addAllowedOriginPattern("*");
-                configuration.setAllowCredentials(false);
-            } else {
-                configuration.setAllowedOrigins(origins);
-                configuration.setAllowCredentials(true);
-            }
+            configuration.setAllowedOrigins(origins);
+            configuration.setAllowCredentials(true);
+            log.info("CORS 配置已加载，允许的域名: {}", origins);
         }
 
         configuration.addAllowedMethod("*");

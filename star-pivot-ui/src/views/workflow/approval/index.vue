@@ -100,9 +100,7 @@
   } = useTable({
     core: {
       apiFn: (params: any) =>
-        activeTab.value === 'todo'
-          ? fetchWorkflowTodoList(params)
-          : fetchWorkflowDoneList(params),
+        activeTab.value === 'todo' ? fetchWorkflowTodoList(params) : fetchWorkflowDoneList(params),
       apiParams: {
         pageNum: 1,
         pageSize: 20,

@@ -107,3 +107,34 @@ export async function fetchRegisterEnabled(): Promise<boolean> {
   })
   return response.registerEnabled
 }
+
+/**
+ * 获取用户活跃会话列表
+ * @param userId 用户ID
+ */
+export function fetchUserSessions(userId: number) {
+  return request.get<Api.Auth.DeviceSession[]>({
+    url: `/api/auth/sessions/user/${userId}`
+  })
+}
+
+/**
+ * 强制下线指定会话
+ * @param userId 用户ID
+ * @param deviceSessionId 设备会话ID
+ */
+export function forceLogoutSession(userId: number, deviceSessionId: string) {
+  return request.del({
+    url: `/api/auth/sessions/${userId}/${deviceSessionId}`
+  })
+}
+
+/**
+ * 强制下线用户所有会话
+ * @param userId 用户ID
+ */
+export function forceLogoutAllSessions(userId: number) {
+  return request.del({
+    url: `/api/auth/sessions/all/${userId}`
+  })
+}

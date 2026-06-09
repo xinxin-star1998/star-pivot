@@ -32,11 +32,11 @@
 </template>
 
 <script setup lang="ts">
-import type {FormInstance, FormRules} from 'element-plus'
-import {ElMessage} from 'element-plus'
-import {fetchAddSku, fetchGetSkuById, fetchUpdateSku, type WareSku} from '@/api/mall/ware-sku'
+  import type { FormInstance, FormRules } from 'element-plus'
+  import { ElMessage } from 'element-plus'
+  import { fetchAddSku, fetchGetSkuById, fetchUpdateSku, type WareSku } from '@/api/mall/ware-sku'
 
-interface Props {
+  interface Props {
     visible: boolean
     type: string
     skuData?: Partial<WareSku>

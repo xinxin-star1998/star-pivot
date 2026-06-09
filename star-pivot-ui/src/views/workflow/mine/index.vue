@@ -144,11 +144,15 @@
   async function handleCancel(row: TaskVo) {
     if (!row.instanceId) return
     try {
-      await ElMessageBox.confirm(`确定要撤销流程「${row.title || row.businessKey}」吗？`, '撤销流程', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
+      await ElMessageBox.confirm(
+        `确定要撤销流程「${row.title || row.businessKey}」吗？`,
+        '撤销流程',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      )
       await fetchWorkflowCancel(row.instanceId)
       refreshData()
       ElMessage.success('已撤销')

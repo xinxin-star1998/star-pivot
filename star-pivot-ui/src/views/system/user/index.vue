@@ -15,11 +15,13 @@
                 <el-icon class="dept-title-icon">
                   <OfficeBuilding />
                 </el-icon>
-                <span>组织机构</span>
+                <span>{{ t('system.user.deptTree') }}</span>
               </div>
               <div class="dept-tools">
                 <ElButton
-                  :aria-label="deptTreeExpandAll ? '收起部门树' : '展开部门树'"
+                  :aria-label="
+                    deptTreeExpandAll ? t('system.user.collapseDept') : t('system.user.expandDept')
+                  "
                   class="dept-tool-btn"
                   text
                   @click="toggleDeptTreeExpand"
@@ -30,7 +32,7 @@
                 </ElButton>
                 <ElButton
                   :loading="deptLoading"
-                  aria-label="刷新部门树"
+                  :aria-label="t('system.user.refreshDept')"
                   class="dept-tool-btn"
                   text
                   @click="handleRefreshDeptTree"
@@ -44,7 +46,7 @@
             <div class="dept-search-box">
               <ElInput
                 v-model="deptSearchText"
-                placeholder="搜索部门名称"
+                :placeholder="t('system.user.searchDept')"
                 size="small"
                 clearable
                 @input="handleDeptSearch"
@@ -77,14 +79,20 @@
           </div>
         </ElCard>
         <ElTooltip
-          :content="deptPanelCollapsed ? '展开' : '收起'"
+          :content="
+            deptPanelCollapsed ? t('system.user.expandPanel') : t('system.user.collapsePanel')
+          "
           :show-arrow="true"
           effect="dark"
           placement="right"
           popper-class="panel-toggle-tooltip"
         >
           <ElButton
-            :aria-label="deptPanelCollapsed ? '展开部门树面板' : '收起部门树面板'"
+            :aria-label="
+              deptPanelCollapsed
+                ? t('system.user.expandDeptPanel')
+                : t('system.user.collapseDeptPanel')
+            "
             class="panel-toggle-btn"
             text
             @click="toggleDeptPanel"
@@ -110,9 +118,9 @@
           <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
             <template #left>
               <ElSpace wrap>
-                <ElButton @click="showDialog('add')" v-ripple v-auth="'system:user:add'"
-                  >新增用户</ElButton
-                >
+                <ElButton @click="showDialog('add')" v-ripple v-auth="'system:user:add'">{{
+                  t('system.user.addUser')
+                }}</ElButton>
                 <ElButton
                   type="danger"
                   :disabled="selectedRows.length === 0"
@@ -120,7 +128,7 @@
                   v-ripple
                   v-auth="'system:user:delete'"
                 >
-                  批量删除
+                  {{ t('system.user.batchDelete') }}
                 </ElButton>
                 <ElButton
                   type="primary"
@@ -129,7 +137,7 @@
                   v-auth="'system:user:import'"
                   @click="importDialogVisible = true"
                 >
-                  导入用户
+                  {{ t('system.user.importUser') }}
                 </ElButton>
                 <ElButton
                   type="primary"
@@ -138,7 +146,7 @@
                   v-auth="'system:user:export'"
                   @click="handleExportUsers"
                 >
-                  导出用户
+                  {{ t('system.user.exportUser') }}
                 </ElButton>
               </ElSpace>
             </template>
@@ -146,9 +154,9 @@
 
           <ExcelImportDialog
             v-model="importDialogVisible"
-            title="用户导入"
+            :title="t('system.user.importTitle')"
             :show-overwrite="true"
-            overwrite-label="是否更新已经存在的用户数据"
+            :overwrite-label="t('system.user.importOverwriteLabel')"
             :import-fn="doImportUser"
             :download-template-fn="fetchDownloadUserImportTemplate"
             @success="refreshData"
@@ -188,6 +196,7 @@
     fetchImportUserExcel
   } from '@/api/user/user'
   import { useTable } from '@/hooks/core/useTable'
+  import { useI18n } from 'vue-i18n'
   import {
     fetchDeleteUser,
     fetchGetUserList,
@@ -224,6 +233,7 @@
 
   defineOptions({ name: 'User' })
 
+  const { t } = useI18n()
   const { hasAuth } = useAuth()
   const userStore = useUserStore()
   const currentUserId = computed(() => {
@@ -732,6 +742,29 @@
    * 管理员重置用户密码
    */
   const resetPwd = async (row: UserListItem): Promise<void> => {
+    // 使用 MutationObserver 阻止浏览器自动填充已保存的密码
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of Array.from(mutation.addedNodes)) {
+          if (!(node instanceof HTMLElement)) continue
+          const input =
+            node instanceof HTMLInputElement
+              ? node
+              : (node.querySelector('input[type="password"]') as HTMLInputElement | null)
+          if (input && input.type === 'password') {
+            input.setAttribute('autocomplete', 'new-password')
+            if (input.value) {
+              input.value = ''
+              input.dispatchEvent(new Event('input', { bubbles: true }))
+            }
+            observer.disconnect()
+            return
+          }
+        }
+      }
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
+
     try {
       const { value } = await ElMessageBox.prompt(
         `请输入用户 "${row.userName}" 的新密码`,
@@ -739,8 +772,8 @@
         {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          inputPattern: /^.{5,20}$/,
-          inputErrorMessage: '密码长度必须在 5-20 位',
+          inputPattern: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{6,20}$/,
+          inputErrorMessage: '密码长度 6-20 位，必须包含字母和数字',
           inputPlaceholder: '请输入新密码',
           inputType: 'password'
         }
@@ -748,10 +781,26 @@
       if (!value) return
       await fetchResetUserPassword(row.userId, value)
       ElMessage.success('重置密码成功')
+
+      // 清除登录页“记住密码”存储的旧密码，防止下次登录时自动填充旧密码
+      try {
+        const saved = localStorage.getItem('login-info')
+        if (saved) {
+          const info = JSON.parse(saved)
+          if (info.username === row.userName) {
+            delete info.password
+            localStorage.setItem('login-info', JSON.stringify(info))
+          }
+        }
+      } catch {
+        /* ignore */
+      }
     } catch (error: any) {
       if (error === 'cancel' || error === 'close') return
       console.error('重置密码失败:', error)
       ElMessage.error(error?.message || '重置密码失败')
+    } finally {
+      observer.disconnect()
     }
   }
 

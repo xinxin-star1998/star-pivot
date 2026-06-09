@@ -21,9 +21,9 @@
       >
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:role:add'"
-              >新增角色</ElButton
-            >
+            <ElButton @click="showDialog('add')" v-ripple v-auth="'system:role:add'">{{
+              t('system.role.addRole')
+            }}</ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -57,21 +57,25 @@
 </template>
 
 <script setup lang="ts">
-import {useTable} from '@/hooks/core/useTable'
-import {useAuth} from '@/hooks/core/useAuth'
-import {fetchDeleteRole, fetchGetRoleList} from '@/api/role/role'
-import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-import ArtButtonMore, {type ButtonMoreItem} from '@/components/core/forms/art-button-more/index.vue'
-import RoleSearch from './modules/role-search.vue'
-import RoleEditDialog from './modules/role-edit-dialog.vue'
-import AssignDataScopeDialog from './modules/assign-dataScope-dialog.vue'
-import {ElMessageBox, ElTag} from 'element-plus'
-import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-import ArtTable from '@/components/core/tables/art-table/index.vue'
-import {useRouter} from 'vue-router'
-import type {ColumnOption} from '@/types'
+  import { useTable } from '@/hooks/core/useTable'
+  import { useAuth } from '@/hooks/core/useAuth'
+  import { useI18n } from 'vue-i18n'
+  import { fetchDeleteRole, fetchGetRoleList } from '@/api/role/role'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtButtonMore, {
+    type ButtonMoreItem
+  } from '@/components/core/forms/art-button-more/index.vue'
+  import RoleSearch from './modules/role-search.vue'
+  import RoleEditDialog from './modules/role-edit-dialog.vue'
+  import AssignDataScopeDialog from './modules/assign-dataScope-dialog.vue'
+  import { ElMessageBox, ElTag } from 'element-plus'
+  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import { useRouter } from 'vue-router'
+  import type { ColumnOption } from '@/types'
 
-const { hasAuth } = useAuth()
+  const { hasAuth } = useAuth()
+  const { t } = useI18n()
 
   defineOptions({ name: 'Role' })
 
@@ -121,7 +125,7 @@ const { hasAuth } = useAuth()
       columnsFactory: (): ColumnOption<RoleListItem>[] => [
         {
           type: 'index',
-          label: '序号',
+          label: t('system.role.index'),
           width: 70,
           index: (index: number) => {
             return (pagination.current - 1) * pagination.size + index + 1
@@ -129,41 +133,43 @@ const { hasAuth } = useAuth()
         },
         {
           prop: 'roleName',
-          label: '角色名称',
+          label: t('system.role.roleName'),
           minWidth: 100
         },
         {
           prop: 'roleKey',
-          label: '角色编码',
+          label: t('system.role.roleKey'),
           minWidth: 100
         },
         {
           prop: 'remark',
-          label: '角色描述',
+          label: t('system.role.roleDesc'),
           minWidth: 50,
           showOverflowTooltip: true
         },
         {
           prop: 'status',
-          label: '角色状态',
+          label: t('system.role.roleStatus'),
           width: 100,
           formatter: (row: Api.SystemManage.RoleListItem) => {
             const status = Number(row.status)
             const isEnabled = status === 0
             const tagType = isEnabled ? 'success' : 'danger'
-            const text = isEnabled ? '启用' : '禁用'
+            const text = isEnabled
+              ? t('system.role.statusEnabled')
+              : t('system.role.statusDisabled')
             return h(ElTag, { type: tagType }, () => text)
           }
         },
         {
           prop: 'createTime',
-          label: '创建日期',
+          label: t('system.role.createDate'),
           width: 180,
           sortable: true
         },
         {
           prop: 'operation',
-          label: '操作',
+          label: t('system.role.operation'),
           width: 180,
           fixed: 'right',
           formatter: (row: Api.SystemManage.RoleListItem) => {
@@ -196,14 +202,14 @@ const { hasAuth } = useAuth()
             const moreList: ButtonMoreItem[] = [
               {
                 key: 'assignDataScope',
-                label: '数据权限',
+                label: t('system.role.dataScope'),
                 icon: 'ri:shield-keyhole-line',
                 color: 'var(--el-color-primary)',
                 auth: 'system:role:assignDataScope'
               },
               {
                 key: 'assignUser',
-                label: '分配用户',
+                label: t('system.role.assignUser'),
                 icon: 'ri:user-line',
                 color: 'var(--el-color-primary)',
                 auth: 'system:role:allocatedList'
@@ -258,9 +264,9 @@ const { hasAuth } = useAuth()
   }
 
   const deleteRole = (row: RoleListItem) => {
-    ElMessageBox.confirm(`确定删除角色"${row.roleName}"吗？此操作不可恢复！`, '删除确认', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    ElMessageBox.confirm(`确定删除角色"${row.roleName}"吗？此操作不可恢复！`, t('common.tips'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       type: 'warning'
     })
       .then(async () => {

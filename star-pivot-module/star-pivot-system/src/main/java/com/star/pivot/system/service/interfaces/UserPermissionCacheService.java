@@ -29,7 +29,7 @@ public class UserPermissionCacheService {
      * 
      * @param username 用户名
      */
-    @CacheEvict(cacheNames = "userPermissions", key = "#username")
+    @CacheEvict(cacheNames = "userPermissions", key = "'user:' + #username")
     public void clearUserPermissionCache(String username) {
         // 通过 @CacheEvict 注解自动清除缓存
         // 无需额外实现，Spring Cache 会自动处理

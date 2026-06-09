@@ -69,7 +69,8 @@ public class LogUtils {
         if (!StringUtils.hasText(param)) return param;
         try {
             Object obj = objectMapper.readValue(param, Object.class);
-            return desensitizeJson(objectMapper.writeValueAsString(obj));
+            String jsonStr = objectMapper.writeValueAsString(obj);
+            return desensitizeJson(jsonStr);
         } catch (JsonProcessingException e) {
             return desensitizeString(param);
         }

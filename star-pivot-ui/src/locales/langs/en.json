@@ -142,7 +142,8 @@
     "placeholder": {
       "username": "Please enter your account",
       "password": "Please enter your password",
-      "slider": "Please slide to verify"
+      "slider": "Please slide to verify",
+      "captcha": "Please enter the captcha"
     },
     "sliderText": "Please slide to verify",
     "sliderSuccessText": "Verification successful",
@@ -258,6 +259,84 @@
       "role": "Role Manage",
       "userCenter": "User Center",
       "menu": "Menu Manage"
+    }
+  },
+  "dashboard": {
+    "loadFailed": "Failed to load dashboard data, please try again later",
+    "cardList": {
+      "compareLastWeek": "vs last week"
+    },
+    "activeUser": {
+      "title": "User Overview",
+      "subtitle": "New user trend over the past 12 months",
+      "description": "We have created multiple options for you, which can be combined and customized into pixel-perfect pages",
+      "statDimension": "Dimension",
+      "statNewUsers": "New Users",
+      "statPeriod": "Period",
+      "statPeriodValue": "Last 12 months",
+      "statSource": "Data Source",
+      "statStatus": "Status",
+      "statRealtime": "Realtime"
+    },
+    "salesOverview": {
+      "title": "Visits",
+      "growth": "Growth this year"
+    },
+    "newUser": {
+      "title": "New Users",
+      "growth": "Growth this month",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month",
+      "thisYear": "This Year",
+      "avatar": "Avatar",
+      "region": "Region",
+      "gender": "Gender",
+      "male": "Male",
+      "female": "Female",
+      "progress": "Progress"
+    },
+    "dynamic": {
+      "title": "Activities",
+      "newCount": "New"
+    },
+    "todoList": {
+      "title": "Todo List",
+      "pending": "Pending"
+    }
+  },
+  "system": {
+    "user": {
+      "addUser": "Add User",
+      "batchDelete": "Batch Delete",
+      "importUser": "Import Users",
+      "exportUser": "Export Users",
+      "importTitle": "Import Users",
+      "importOverwriteLabel": "Overwrite existing user data",
+      "deptTree": "Organization",
+      "searchDept": "Search department name",
+      "collapseDept": "Collapse tree",
+      "expandDept": "Expand tree",
+      "refreshDept": "Refresh tree",
+      "expandPanel": "Expand",
+      "collapsePanel": "Collapse",
+      "expandDeptPanel": "Expand department panel",
+      "collapseDeptPanel": "Collapse department panel",
+      "index": "Index",
+      "userInfo": "User Info"
+    },
+    "role": {
+      "addRole": "Add Role",
+      "index": "Index",
+      "roleName": "Role Name",
+      "roleKey": "Role Key",
+      "roleDesc": "Description",
+      "roleStatus": "Status",
+      "statusEnabled": "Enabled",
+      "statusDisabled": "Disabled",
+      "createDate": "Created At",
+      "operation": "Actions",
+      "dataScope": "Data Scope",
+      "assignUser": "Assign Users"
     }
   },
   "table": {

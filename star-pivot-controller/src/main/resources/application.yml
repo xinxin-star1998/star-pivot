@@ -10,6 +10,15 @@ spring:
   sql:
     init:
       mode: never
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 4
+    validate-on-migrate: true
+    out-of-order: false
+    table: flyway_schema_history
+    encoding: UTF-8
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -45,7 +54,8 @@ spring:
 server:
   port: 8080
   servlet:
-    context-path: /api
+    # API 版本化：所有 Controller 映射到 /api/v1/*；Actuator 独立走 /actuator
+    context-path: /api/v1
   compression:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/xml,text/plain,text/css,text/javascript,application/javascript
@@ -71,6 +81,9 @@ mybatis-plus:
 # -----------------------------------------------------------------------------
 jwt:
   expiration: ${JWT_EXPIRATION:86400000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+  max-concurrent-sessions: ${JWT_MAX_CONCURRENT_SESSIONS:5}
+  refresh-token-rotation: ${JWT_REFRESH_TOKEN_ROTATION:true}
 
 # -----------------------------------------------------------------------------
 # CORS（各环境配置 allowed-origins）
@@ -164,6 +177,9 @@ star-pivot:
 # Actuator
 # -----------------------------------------------------------------------------
 management:
+  server:
+    # 与 API context-path 解耦，监控端点独立走 /actuator，便于运维/网关访问
+    base-path: /actuator
   endpoints:
     web:
       exposure:

@@ -1,5 +1,6 @@
 package com.star.pivot.security.filter;
 
+import com.star.pivot.security.service.PasswordUpdateCheckService;
 import com.star.pivot.security.token.JwtBlackListManager;
 import com.star.pivot.security.token.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -25,6 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
     private final JwtBlackListManager jwtBlackListManager;
+    private final PasswordUpdateCheckService passwordUpdateCheckService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -90,6 +92,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (jwtUtil.validateToken(token)) {
             String username = jwtUtil.getUsernameFromToken(token);
             log.debug("Token验证成功，用户: {}", username);
+
+            // 检查JWT是否在密码更新之前签发
+            if (!passwordUpdateCheckService.isTokenValidAfterPasswordUpdate(token, username)) {
+                log.warn("JWT在密码更新之前签发，拒绝访问: {}", username);
+                return;
+            }
 
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);

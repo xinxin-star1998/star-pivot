@@ -18,7 +18,6 @@ export interface Menu {
   updateDate?: LocalDateTime
 }
 
-
 /**
  * 菜单管理搜索参数
  */

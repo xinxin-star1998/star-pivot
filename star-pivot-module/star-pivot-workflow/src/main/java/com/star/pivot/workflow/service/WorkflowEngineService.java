@@ -54,7 +54,7 @@ public class WorkflowEngineService {
     @Autowired
     private ConditionEvaluator conditionEvaluator;
 
-    @Autowired
+    @Autowired(required = false)
     private List<WorkflowCompletedListener> completedListeners;
 
     @Transactional(rollbackFor = Exception.class)

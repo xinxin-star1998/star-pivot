@@ -125,7 +125,9 @@ export const FLOW_TEMPLATES: FlowTemplate[] = [
   }
 ]
 
-export function applyFlowTemplate(templateId: string): Pick<SpfDefinition, 'nodes' | 'edges'> | null {
+export function applyFlowTemplate(
+  templateId: string
+): Pick<SpfDefinition, 'nodes' | 'edges'> | null {
   const tpl = FLOW_TEMPLATES.find((t) => t.id === templateId)
   if (!tpl) return null
   return JSON.parse(JSON.stringify(tpl.build()))

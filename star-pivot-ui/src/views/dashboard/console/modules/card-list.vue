@@ -5,7 +5,7 @@
         <span class="text-g-700 text-sm">{{ item.des }}</span>
         <ArtCountTo class="text-[26px] font-medium mt-2" :target="item.num" :duration="1300" />
         <div class="flex-c mt-1">
-          <span class="text-xs text-g-600">较上周</span>
+          <span class="text-xs text-g-600">{{ t('dashboard.cardList.compareLastWeek') }}</span>
           <span
             class="ml-1 text-xs font-semibold"
             :class="[item.change.indexOf('+') === -1 ? 'text-danger' : 'text-success']"
@@ -24,6 +24,9 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
+  const { t } = useI18n()
   interface CardDataItem {
     des: string
     icon: string

@@ -44,7 +44,6 @@
                 :placeholder="t('login.placeholder.password')"
                 v-model.trim="formData.password"
                 type="password"
-                autocomplete="off"
                 show-password
               >
                 <template #prefix>
@@ -127,18 +126,18 @@
 </template>
 
 <script setup lang="ts">
-import AppConfig from '@/config'
-import {useUserStore} from '@/store/modules/user'
-import {useSettingStore} from '@/store/modules/setting'
-import {useI18n} from 'vue-i18n'
-import {HttpError} from '@/utils/http/error'
-import {fetchCaptcha, fetchLogin, fetchVerifyCaptcha} from '@/api/auth'
-import {isRegisterEnabled} from '@/utils/auth/register-config'
-import {ElNotification, type FormInstance, type FormRules} from 'element-plus'
-import {useCommon} from '@/hooks'
-import {useRoute, useRouter} from 'vue-router'
+  import AppConfig from '@/config'
+  import { useUserStore } from '@/store/modules/user'
+  import { useSettingStore } from '@/store/modules/setting'
+  import { useI18n } from 'vue-i18n'
+  import { HttpError } from '@/utils/http/error'
+  import { fetchCaptcha, fetchLogin, fetchVerifyCaptcha } from '@/api/auth'
+  import { isRegisterEnabled } from '@/utils/auth/register-config'
+  import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
+  import { useCommon } from '@/hooks'
+  import { useRoute, useRouter } from 'vue-router'
 
-defineOptions({ name: 'Login' })
+  defineOptions({ name: 'Login' })
 
   const { t, locale } = useI18n()
   const formKey = ref(0)
@@ -224,7 +223,7 @@ defineOptions({ name: 'Login' })
         rememberPassword: formData.rememberPassword
       })
 
-      const { token, refreshToken, username: returnedUsername, nickname } = response
+      const { token, refreshToken, username: returnedUsername, nickname, deviceSessionId } = response
 
       // 验证token
       if (!token) {
@@ -240,7 +239,7 @@ defineOptions({ name: 'Login' })
       }
 
       // 存储 token、refreshToken 和登录状态
-      userStore.setToken(token, refreshToken)
+      userStore.setToken(token, refreshToken, deviceSessionId)
       userStore.setLoginStatus(true)
 
       // 设置用户信息
@@ -356,9 +355,9 @@ defineOptions({ name: 'Login' })
 
   // 组件挂载时获取验证码并加载保存的登录信息
   onMounted(async () => {
-    refreshCaptcha()
     loadSavedLoginInfo()
     registerEnabled.value = await isRegisterEnabled()
+    refreshCaptcha()
   })
 
   // 登录成功提示

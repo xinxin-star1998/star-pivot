@@ -70,7 +70,11 @@
     allowedFileTypes: ['image/*']
   } as const
 
-  /** 与 Axios 一致：VITE_API_URL 为 /api 时不应再拼 /api，否则会出现 /api/api/... */
+  /**
+   * 富文本图片上传地址：
+   * - 生产环境（VITE_API_URL=/api/v1）：${base}/common/upload/wangeditor → /api/v1/common/upload/wangeditor
+   * - 开发环境（VITE_API_URL=/）：使用 Vite 代理 /api → /api/common/upload/wangeditor
+   */
   const uploadServer = computed(() => {
     if (props.uploadConfig?.server) return props.uploadConfig.server
     const base = getApiBaseUrl().replace(/\/$/, '')

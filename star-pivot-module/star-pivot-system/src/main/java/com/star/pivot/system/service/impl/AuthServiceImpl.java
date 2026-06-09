@@ -57,8 +57,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
+        validateLoginRequest(request);
+        
         HttpServletRequest httpRequest = getRequest();
+        if (httpRequest == null) {
+            throw new BizException(ErrorCode.INTERNAL_ERROR, "无法获取请求上下文");
+        }
+        
         String ipaddr = LogUtils.getClientIp(httpRequest);
+        if (ipaddr == null || ipaddr.isEmpty()) {
+            ipaddr = "unknown";
+        }
         String browser = LogUtils.getBrowser(httpRequest);
         String os = LogUtils.getOs(httpRequest);
         String loginLocation = LogUtils.getLoginLocation(ipaddr);
@@ -68,62 +77,78 @@ public class AuthServiceImpl implements AuthService {
         try {
             preCheckBeforeAuthentication(request, ipaddr, logininfor);
             
-            // 5. 使用 AuthenticationManager 进行认证
             UsernamePasswordAuthenticationToken authenticationToken = 
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
             
-            // 6. 从认证结果中获取用户信息（避免重复查询数据库）
-            // 认证过程中 CustomerUserDetailService.loadUserByUsername() 已经查询了用户信息
-            // 并封装在 LoginUser 对象中，这里直接从 Authentication 中获取即可
-            SysUser user = null;
-            if (authentication != null && authentication.getPrincipal() instanceof LoginUser loginUser) {
-                user = loginUser.getUser();
-            }
+            SysUser user = extractUserFromAuthentication(authentication, request.getUsername());
             
-            // 如果无法从认证对象中获取用户信息，则降级查询数据库（理论上不应该发生）
-            if (user == null) {
-                log.warn("无法从认证对象中获取用户信息，降级查询数据库: {}", request.getUsername());
-                user = userService.getUserByUsername(request.getUsername());
-                if (user == null) {
-                    log.error("用户不存在: {}", request.getUsername());
-                    recordLoginFailure(logininfor, "用户不存在");
-                    throw new BizException(ErrorCode.USER_NOT_FOUND);
-                }
-            }
-            
-            // 7. 生成访问令牌与刷新令牌
             com.star.pivot.system.domain.bo.TokenPair tokenPair =
                 tokenService.createTokenPair(user, request.getUsername(), ipaddr, browser, os, loginLocation);
 
-            // 8. 返回登录响应
             LoginResponse response = new LoginResponse();
             response.setToken(tokenPair.getAccessToken());
             response.setRefreshToken(tokenPair.getRefreshToken());
             response.setUsername(request.getUsername());
             response.setNickname(user.getNickName());
 
-            // 9. 登录成功，清除失败记录和限流计数
             accountLockService.clearLoginFailures(request.getUsername());
             rateLimitService.clearIpRateLimit(ipaddr);
             rateLimitService.clearIpUsernameRateLimit(ipaddr, request.getUsername());
 
-            // 10. 记录登录成功日志
             recordLoginSuccess(logininfor);
-            log.info("用户登录成功: {}", request.getUsername());
+            log.info("用户登录成功: {}, IP: {}", request.getUsername(), ipaddr);
             return response;
         } catch (AuthenticationException e) {
-            log.error("认证失败: {}", e.getMessage());
+            log.error("认证失败: {}, IP: {}", e.getMessage(), ipaddr);
             accountLockService.recordLoginFailure(request.getUsername());
             recordLoginFailure(logininfor, "用户名或密码错误");
             throw new BizException(ErrorCode.LOGIN_FAILED);
         } catch (BizException e) {
             throw e;
         } catch (Exception e) {
-            log.error("登录异常: {}", e.getMessage(), e);
+            log.error("登录异常: {}, IP: {}", e.getMessage(), ipaddr, e);
             recordLoginFailure(logininfor, "登录异常: " + (e.getMessage() != null ? LogUtils.truncateString(e.getMessage(), 255) : "未知错误"));
             throw new BizException(ErrorCode.INTERNAL_ERROR, "登录失败");
         }
+    }
+
+    private void validateLoginRequest(LoginRequest request) {
+        AssertUtils.notNull(request, ErrorCode.PARAM_NOT_NULL, "登录请求不能为空");
+        AssertUtils.notEmpty(request.getUsername(), ErrorCode.PARAM_NOT_NULL, "用户名不能为空");
+        AssertUtils.notEmpty(request.getPassword(), ErrorCode.PARAM_NOT_NULL, "密码不能为空");
+        AssertUtils.notEmpty(request.getCaptchaProof(), ErrorCode.PARAM_NOT_NULL, "验证码凭证不能为空");
+        
+        String username = request.getUsername().trim();
+        if (username.length() > 100) {
+            throw new BizException(ErrorCode.PARAM_INVALID, "用户名长度不能超过100个字符");
+        }
+        
+        String password = request.getPassword();
+        if (password.length() < 6 || password.length() > 100) {
+            throw new BizException(ErrorCode.PARAM_INVALID, "密码长度必须在6-100个字符之间");
+        }
+    }
+
+    private SysUser extractUserFromAuthentication(Authentication authentication, String username) {
+        if (authentication == null || authentication.getPrincipal() == null) {
+            log.error("认证对象或principal为空，用户: {}", username);
+            throw new BizException(ErrorCode.LOGIN_FAILED, "认证失败");
+        }
+        
+        if (!(authentication.getPrincipal() instanceof LoginUser loginUser)) {
+            log.error("认证principal类型错误，期望LoginUser，实际: {}, 用户: {}", 
+                authentication.getPrincipal().getClass().getName(), username);
+            throw new BizException(ErrorCode.LOGIN_FAILED, "认证数据格式错误");
+        }
+        
+        SysUser user = loginUser.getUser();
+        if (user == null) {
+            log.error("LoginUser中的用户信息为空，用户: {}", username);
+            throw new BizException(ErrorCode.USER_NOT_FOUND, "用户信息不存在");
+        }
+        
+        return user;
     }
 
     /**

@@ -49,18 +49,18 @@
 </template>
 
 <script setup lang="ts">
-import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-import {useTable} from '@/hooks/core/useTable'
-import {fetchDeleteSku, fetchGetSkuList, type WareSku} from '@/api/mall/ware-sku'
-import SkuSearch from './modules/sku-search.vue'
-import SkuDialog from './modules/sku-dialog.vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
-import {DialogType} from '@/types'
-import ArtTable from '@/components/core/tables/art-table/index.vue'
-import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-import {useAuth} from '@/hooks/core/useAuth'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import { useTable } from '@/hooks/core/useTable'
+  import { fetchDeleteSku, fetchGetSkuList, type WareSku } from '@/api/mall/ware-sku'
+  import SkuSearch from './modules/sku-search.vue'
+  import SkuDialog from './modules/sku-dialog.vue'
+  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { DialogType } from '@/types'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import { useAuth } from '@/hooks/core/useAuth'
 
-defineOptions({ name: 'WareSku' })
+  defineOptions({ name: 'WareSku' })
 
   const { hasAuth } = useAuth()
 

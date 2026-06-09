@@ -9,6 +9,7 @@ import com.star.pivot.system.domain.entity.SysUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +22,15 @@ import java.util.Map;
 @Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
 
-//    IPage<SysUser> selectPageList(Page<SysUser> page, @Param("userReqBo") UserReqBo userReqBo);
+    IPage<SysUser> selectPageList(Page<SysUser> page, @Param("param") Map<String, Object> param);
+
+    /**
+     * 按月份统计新增用户数
+     * @param start 开始时间
+     * @param end 结束时间
+     * @return List<Object[]> 每个元素为 [yearMonth, count]
+     */
+    List<Map<String, Object>> countByMonthRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     List<SysRole> getRolesByUserId(@Param("userId") Long userId);
 
@@ -41,6 +50,5 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
     /** 根据用户ID查询所属部门ID */
     Long selectDeptIdByUserId(@Param("userId") Long userId);
 
-    IPage<SysUser> selectPageList(Page<SysUser> page, @Param("param") Map<String, Object> param);
 }
 

@@ -83,6 +83,8 @@ export const useUserStore = defineStore(
     const accessToken = ref('')
     // 刷新令牌
     const refreshToken = ref('')
+    // 当前设备会话ID
+    const sessionId = ref('')
 
     // 计算属性：获取用户信息
     const getUserInfo = computed(() => info.value)
@@ -90,6 +92,8 @@ export const useUserStore = defineStore(
     const getSettingState = computed(() => useSettingStore().$state)
     // 计算属性：获取工作台状态
     const getWorktabState = computed(() => useWorktabStore().$state)
+    // 计算属性：获取当前会话ID
+    const getSessionId = computed(() => sessionId.value)
 
     /**
      * 设置用户信息
@@ -144,12 +148,24 @@ export const useUserStore = defineStore(
      * 设置令牌
      * @param newAccessToken 访问令牌
      * @param newRefreshToken 刷新令牌（可选）
+     * @param newSessionId 设备会话ID（可选）
      */
-    const setToken = (newAccessToken: string, newRefreshToken?: string) => {
+    const setToken = (newAccessToken: string, newRefreshToken?: string, newSessionId?: string) => {
       accessToken.value = newAccessToken
       if (newRefreshToken) {
         refreshToken.value = newRefreshToken
       }
+      if (newSessionId) {
+        sessionId.value = newSessionId
+      }
+    }
+
+    /**
+     * 设置设备会话ID
+     * @param newSessionId 设备会话ID
+     */
+    const setSessionId = (newSessionId: string) => {
+      sessionId.value = newSessionId
     }
 
     /**
@@ -196,6 +212,8 @@ export const useUserStore = defineStore(
       accessToken.value = ''
       // 清空刷新令牌
       refreshToken.value = ''
+      // 清空设备会话ID
+      sessionId.value = ''
       // 清除会话存储中的登录信息（兼容清除旧版 localStorage）
       sessionStorage.removeItem('login-info')
       localStorage.removeItem('login-info')
@@ -251,9 +269,11 @@ export const useUserStore = defineStore(
       searchHistory,
       accessToken,
       refreshToken,
+      sessionId,
       getUserInfo,
       getSettingState,
       getWorktabState,
+      getSessionId,
       setUserInfo,
       setLoginStatus,
       setLanguage,
@@ -261,6 +281,7 @@ export const useUserStore = defineStore(
       setLockStatus,
       setLockPassword,
       setToken,
+      setSessionId,
       logOut,
       checkAndClearWorktabs
     }

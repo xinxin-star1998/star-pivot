@@ -4,8 +4,8 @@
     <VueFlow
       :nodes="displayNodes"
       :edges="displayEdges"
-      :node-types="(nodeTypes as any)"
-      :edge-types="(edgeTypes as any)"
+      :node-types="nodeTypes as any"
+      :edge-types="edgeTypes as any"
       :nodes-draggable="false"
       :nodes-connectable="false"
       :elements-selectable="false"
@@ -28,7 +28,12 @@
   import FlowCanvasHelper from '../designer/components/FlowCanvasHelper.vue'
   import { layoutFlowNodes } from '../utils/flow-layout'
   import { toVueFlowEdge, WF_EDGE_TYPE, isValidSpfEdge } from '../utils/flow-vue-flow'
-  import { NODE_DIMENSIONS, type SpfDefinition, type SpfEdge, type SpfNode } from '../utils/flow-types'
+  import {
+    NODE_DIMENSIONS,
+    type SpfDefinition,
+    type SpfEdge,
+    type SpfNode
+  } from '../utils/flow-types'
   import type { FlowNodeProgressStatus } from '../utils/flow-progress-types'
 
   import '@vue-flow/core/dist/style.css'

@@ -3,8 +3,8 @@ package com.star.pivot.config.web;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.BaseException;
 import com.star.pivot.framework.exception.BizException;
+import com.star.pivot.framework.exception.EnhancedExceptionProcessor;
 import com.star.pivot.framework.exception.ErrorCode;
-import com.star.pivot.framework.utils.string.StringUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
@@ -36,13 +38,13 @@ public class GlobalExceptionHandler {
         int code = errorCode.getCode();
         String message = e.getDisplayMessage();
 
+        // 记录异常日志
         if (errorCode == ErrorCode.INTERNAL_ERROR) {
-            log.error("系统异常：code={}, message={}", code, message, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Result.error(ErrorCode.SERVICE_UNAVAILABLE.getCode(), "服务暂时不可用，请稍后重试"));
+            log.error("系统内部异常：code={}, message={}", code, message, e);
+        } else {
+            log.warn("业务异常：code={}, message={}", code, message);
         }
 
-        log.warn("业务异常：code={}, message={}", code, message);
         return ResponseEntity.status(mapToHttpStatus(code)).body(Result.error(code, message));
     }
 
@@ -50,44 +52,80 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Result<Void>> handleAuthenticationException(AuthenticationException e) {
         log.warn("认证异常：{}", e.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(Result.error(ErrorCode.UNAUTHORIZED.getCode(), ErrorCode.UNAUTHORIZED.getMessage()));
+            .body(Result.error(ErrorCode.UNAUTHORIZED.getCode(), "登录凭证无效或已过期，请重新登录"));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Result<Void>> handleAccessDeniedException(AccessDeniedException e) {
         log.warn("访问拒绝：{}", e.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-            .body(Result.error(ErrorCode.FORBIDDEN.getCode(), ErrorCode.FORBIDDEN.getMessage()));
+            .body(Result.error(ErrorCode.FORBIDDEN.getCode(), "权限不足，无法执行此操作"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Result<Void>> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        Map<String, String> fieldErrors = e.getBindingResult().getFieldErrors().stream()
+            .collect(Collectors.toMap(
+                FieldError::getField,
+                FieldError::getDefaultMessage
+            ));
+
         String message = e.getBindingResult().getFieldErrors().stream()
-            .map(FieldError::getDefaultMessage)
+            .map(error -> error.getField() + ": " + error.getDefaultMessage())
             .collect(Collectors.joining(", "));
-        log.warn("参数校验异常：{}", message);
+
+        log.warn("参数校验失败：{}", message);
+
+        // 使用增强的异常处理器
         return ResponseEntity.badRequest()
-            .body(Result.error(ErrorCode.VALIDATE_ERROR.getCode(), message));
+            .body(EnhancedExceptionProcessor.processValidationException(fieldErrors, "handleMethodArgumentNotValidException", "GlobalExceptionHandler"));
     }
 
     @ExceptionHandler(BindException.class)
     public ResponseEntity<Result<Void>> handleBindException(BindException e) {
+        Map<String, String> fieldErrors = e.getFieldErrors().stream()
+            .collect(Collectors.toMap(
+                FieldError::getField,
+                FieldError::getDefaultMessage
+            ));
+
         String message = e.getFieldErrors().stream()
             .map(FieldError::getDefaultMessage)
             .collect(Collectors.joining(", "));
+
         log.warn("参数绑定异常：{}", message);
+
+        // 使用增强的异常处理器
         return ResponseEntity.badRequest()
-            .body(Result.error(ErrorCode.VALIDATE_ERROR.getCode(), message));
+            .body(EnhancedExceptionProcessor.processValidationException(fieldErrors, "handleBindException", "GlobalExceptionHandler"));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Result<Void>> handleConstraintViolationException(ConstraintViolationException e) {
+        Map<String, String> violations = e.getConstraintViolations().stream()
+            .collect(Collectors.toMap(
+                v -> v.getPropertyPath().toString(),
+                ConstraintViolation::getMessage
+            ));
+
         String message = e.getConstraintViolations().stream()
             .map(ConstraintViolation::getMessage)
             .collect(Collectors.joining(", "));
+
         log.warn("约束校验异常：{}", message);
+
+        // 构造字段错误信息
+        Map<String, String> fieldErrors = new HashMap<>();
+        for (ConstraintViolation<?> violation : e.getConstraintViolations()) {
+            String propertyPath = violation.getPropertyPath().toString();
+            if (propertyPath.isEmpty()) {
+                propertyPath = "parameter";
+            }
+            fieldErrors.put(propertyPath, violation.getMessage());
+        }
+
         return ResponseEntity.badRequest()
-            .body(Result.error(ErrorCode.VALIDATE_ERROR.getCode(), message));
+            .body(EnhancedExceptionProcessor.processValidationException(fieldErrors, "handleConstraintViolationException", "GlobalExceptionHandler"));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
@@ -120,9 +158,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<Result<Void>> handleDataAccessException(DataAccessException e) {
-        log.error("数据库访问异常：", e);
+        log.error("数据库访问异常：{}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(Result.error(ErrorCode.DATABASE_ERROR.getCode(), ErrorCode.DATABASE_ERROR.getMessage()));
+            .body(Result.error(ErrorCode.DATABASE_ERROR.getCode(), "数据库操作失败，请稍后重试"));
     }
 
     @ExceptionHandler(BaseException.class)
@@ -136,30 +174,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Result<Void>> handleException(Exception e) {
-        log.error("系统未处理的异常：", e);
+        // 使用增强的异常处理器
+        Result<Void> result = EnhancedExceptionProcessor.processSystemException(e, "handleException", "GlobalExceptionHandler");
 
-        // 根据异常类型进行分类处理
-        if (e instanceof NullPointerException) {
-            log.error("空指针异常：", e);
-            return ResponseEntity.badRequest()
-                .body(Result.error(ErrorCode.CLIENT_ERROR.getCode(), "请求参数错误"));
-        } else if (e instanceof ClassCastException) {
-            log.error("类型转换异常：", e);
-            return ResponseEntity.badRequest()
-                .body(Result.error(ErrorCode.CLIENT_ERROR.getCode(), "数据类型不匹配"));
-        } else if (e instanceof IllegalArgumentException) {
-            log.warn("参数非法异常：{}", e.getMessage());
-            return ResponseEntity.badRequest()
-                .body(Result.error(ErrorCode.CLIENT_ERROR.getCode(), e.getMessage()));
-        } else if (e instanceof NoSuchElementException) {
-            log.warn("元素不存在异常：", e);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Result.error(ErrorCode.NOT_FOUND.getCode(), "请求的资源不存在"));
+        // 获取HTTP状态码
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        if (e instanceof org.springframework.web.HttpRequestMethodNotSupportedException) {
+            status = HttpStatus.METHOD_NOT_ALLOWED;
+        } else if (e instanceof org.springframework.web.servlet.NoHandlerFoundException) {
+            status = HttpStatus.NOT_FOUND;
+        } else if (e instanceof IllegalArgumentException || e instanceof org.springframework.web.bind.MissingServletRequestParameterException
+                || e instanceof org.springframework.web.method.annotation.MethodArgumentTypeMismatchException) {
+            status = HttpStatus.BAD_REQUEST;
         }
 
-        // 其他未处理异常
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(Result.error(ErrorCode.INTERNAL_ERROR.getCode(), "系统内部错误"));
+        return ResponseEntity.status(status).body(result);
     }
 
     private HttpStatus mapToHttpStatus(int code) {
@@ -173,25 +202,5 @@ public class GlobalExceptionHandler {
             return HttpStatus.BAD_REQUEST;
         }
         return HttpStatus.INTERNAL_SERVER_ERROR;
-    }
-
-    /**
-     * 记录异常详情到日志
-     */
-    private void logException(Exception e, String message) {
-        if (log.isDebugEnabled()) {
-            log.debug("异常详情: {}", e.getMessage(), e);
-        }
-        log.error("异常: {}", message, e);
-    }
-
-    /**
-     * 构建详细的错误信息
-     */
-    private String buildDetailMessage(String defaultMessage, String customMessage) {
-        if (StringUtils.isNotBlank(customMessage)) {
-            return customMessage;
-        }
-        return defaultMessage;
     }
 }

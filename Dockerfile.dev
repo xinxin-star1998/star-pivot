@@ -1,0 +1,27 @@
+# 开发环境 Dockerfile
+FROM maven:3.9.6-eclipse-temurin-17
+
+WORKDIR /app
+
+# 安装调试工具
+RUN apt-get update && apt-get install -y \
+    vim \
+    curl \
+    net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# 复制项目文件
+COPY . .
+
+# 下载依赖
+RUN mvn dependency:go-offline -B
+
+# 暴露应用端口和调试端口
+EXPOSE 8080
+EXPOSE 5005
+
+# JVM 调试参数
+ENV JAVA_OPTS="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=*:5005 -Xms256m -Xmx512m"
+
+# 启动命令（可通过 docker-compose override 覆盖）
+CMD mvn spring-boot:run -pl star-pivot-controller -am

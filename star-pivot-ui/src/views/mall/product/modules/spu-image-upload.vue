@@ -18,19 +18,19 @@
 </template>
 
 <script setup lang="ts">
-import {Plus} from '@element-plus/icons-vue'
-import type {UploadProps, UploadUserFile} from 'element-plus'
-import {ElMessage} from 'element-plus'
-import {ref, watch} from 'vue'
-import {type GoodsImageUploadVO, uploadGoodsImage} from '@/api/mall/goods-image'
-import {
-  isStorageObjectName,
-  normalizeToObjectName,
-  resolveGoodsImageDisplayUrl,
-  resolveGoodsImageDisplayUrls
-} from '@/utils/mall/goods-image-url'
+  import { Plus } from '@element-plus/icons-vue'
+  import type { UploadProps, UploadUserFile } from 'element-plus'
+  import { ElMessage } from 'element-plus'
+  import { ref, watch } from 'vue'
+  import { type GoodsImageUploadVO, uploadGoodsImage } from '@/api/mall/goods-image'
+  import {
+    isStorageObjectName,
+    normalizeToObjectName,
+    resolveGoodsImageDisplayUrl,
+    resolveGoodsImageDisplayUrls
+  } from '@/utils/mall/goods-image-url'
 
-defineOptions({ name: 'SpuImageUpload' })
+  defineOptions({ name: 'SpuImageUpload' })
 
   const props = withDefaults(
     defineProps<{

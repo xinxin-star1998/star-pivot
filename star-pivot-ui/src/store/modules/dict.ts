@@ -30,8 +30,8 @@
  * @author Art Design Pro Team
  */
 
-import {defineStore} from 'pinia'
-import {fetchGetDictDataByType, type SysDictData} from '@/api/dict/data'
+import { defineStore } from 'pinia'
+import { fetchGetDictDataByType, type SysDictData } from '@/api/dict/data'
 
 /**
  * 字典数据存储结构
@@ -159,7 +159,7 @@ export const useDictStore = defineStore(
         danger: 'danger',
         info: 'info'
       }
-      return typeMap[cssClass || ''] || 'default'
+      return typeMap[cssClass || ''] || 'info'
     }
 
     const clearDictCache = (dictType?: string): void => {

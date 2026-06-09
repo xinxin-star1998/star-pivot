@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.star.pivot.system.mapper.SysLogininforMapper">
+
+    <!-- 按月份统计登录次数 -->
+    <select id="countByMonthRange" resultType="java.util.HashMap">
+        SELECT
+        DATE_FORMAT(login_time, '%Y-%m') as yearMonth,
+        COUNT(*) as count
+        FROM sys_logininfor
+        WHERE login_time &gt;= #{start}
+        AND login_time &lt; #{end}
+        GROUP BY DATE_FORMAT(login_time, '%Y-%m')
+        ORDER BY yearMonth
+    </select>
+
+    <!-- 批量统计用户登录次数 -->
+    <select id="countByUserNames" resultType="java.util.HashMap">
+        SELECT
+        user_name,
+        COUNT(*) as count
+        FROM sys_logininfor
+        WHERE user_name IN
+        <foreach collection="userNames" item="userName" open="(" separator="," close=")">
+            #{userName}
+        </foreach>
+        AND login_time &gt;= #{startTime}
+        GROUP BY user_name
+    </select>
+
+</mapper>

@@ -2,13 +2,13 @@
   <div class="art-card p-5 h-128 overflow-hidden mb-5 max-sm:mb-4">
     <div class="art-card-header">
       <div class="title">
-        <h4>新用户</h4>
-        <p>这个月增长<span class="text-success">+20%</span></p>
+        <h4>{{ t('dashboard.newUser.title') }}</h4>
+        <p>{{ t('dashboard.newUser.growth') }}<span class="text-success">+20%</span></p>
       </div>
-      <ElRadioGroup v-model="radio2">
-        <ElRadioButton value="本月" label="本月"></ElRadioButton>
-        <ElRadioButton value="上月" label="上月"></ElRadioButton>
-        <ElRadioButton value="今年" label="今年"></ElRadioButton>
+      <ElRadioGroup v-model="radioPeriod">
+        <ElRadioButton value="thisMonth" :label="t('dashboard.newUser.thisMonth')"></ElRadioButton>
+        <ElRadioButton value="lastMonth" :label="t('dashboard.newUser.lastMonth')"></ElRadioButton>
+        <ElRadioButton value="thisYear" :label="t('dashboard.newUser.thisYear')"></ElRadioButton>
       </ElRadioGroup>
     </div>
     <ArtTable
@@ -21,7 +21,7 @@
       :header-cell-style="{ background: 'transparent' }"
     >
       <template #default>
-        <ElTableColumn label="头像" prop="avatar" width="150px">
+        <ElTableColumn :label="t('dashboard.newUser.avatar')" prop="avatar" width="150px">
           <template #default="scope">
             <div style="display: flex; align-items: center">
               <img class="size-9 rounded-lg" :src="scope.row.avatar" alt="avatar" />
@@ -29,21 +29,23 @@
             </div>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="地区" prop="province" />
-        <ElTableColumn label="性别" prop="avatar">
+        <ElTableColumn :label="t('dashboard.newUser.region')" prop="province" />
+        <ElTableColumn :label="t('dashboard.newUser.gender')" prop="avatar">
           <template #default="scope">
             <div style="display: flex; align-items: center">
-              <span style="margin-left: 10px">{{ scope.row.sex === 1 ? '男' : '女' }}</span>
+              <span style="margin-left: 10px">{{
+                scope.row.sex === 1 ? t('dashboard.newUser.male') : t('dashboard.newUser.female')
+              }}</span>
             </div>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="进度" width="240">
+        <ElTableColumn :label="t('dashboard.newUser.progress')" width="240">
           <template #default="scope">
             <ElProgress
               :percentage="scope.row.pro"
               :color="scope.row.color"
               :stroke-width="4"
-              :aria-label="`${scope.row.username}的完成进度: ${scope.row.pro}%`"
+              :aria-label="`${scope.row.username} ${t('dashboard.newUser.progress')}: ${scope.row.pro}%`"
             />
           </template>
         </ElTableColumn>
@@ -53,12 +55,15 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import avatar1 from '@/assets/images/avatar/avatar1.webp'
   import avatar2 from '@/assets/images/avatar/avatar2.webp'
   import avatar3 from '@/assets/images/avatar/avatar3.webp'
   import avatar4 from '@/assets/images/avatar/avatar4.webp'
   import avatar5 from '@/assets/images/avatar/avatar5.webp'
   import avatar6 from '@/assets/images/avatar/avatar6.webp'
+
+  const { t } = useI18n()
 
   interface UserTableItem {
     username: string
@@ -80,7 +85,7 @@
 
   const ANIMATION_DELAY = 100
 
-  const radio2 = ref('本月')
+  const radioPeriod = ref('thisMonth')
 
   const props = withDefaults(
     defineProps<{

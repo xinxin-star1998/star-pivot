@@ -284,6 +284,99 @@
                 </ElFormItem>
               </ElForm>
             </ElTabPane>
+            <ElTabPane label="会话管理" name="session">
+              <div class="session-management pt-4">
+                <!-- 操作按钮 -->
+                <div class="flex items-center gap-3 mb-4">
+                  <el-button
+                    type="danger"
+                    :loading="logoutAllLoading"
+                    :disabled="sessionList.length === 0"
+                    @click="handleLogoutAll"
+                  >
+                    <el-icon><SwitchButton /></el-icon>
+                    强制下线所有会话
+                  </el-button>
+                  <el-button :loading="sessionLoading" @click="loadSessions">
+                    <el-icon><Refresh /></el-icon>
+                    刷新
+                  </el-button>
+                  <el-tag v-if="sessionList.length > 0" type="info" size="small" class="ml-2">
+                    共 {{ sessionList.length }} 个活跃会话
+                  </el-tag>
+                </div>
+
+                <!-- 会话列表 -->
+                <el-table
+                  v-loading="sessionLoading"
+                  :data="sessionList"
+                  style="width: 100%"
+                  empty-text="暂无活跃会话"
+                  :row-class-name="sessionRowClassName"
+                >
+                  <el-table-column type="index" label="序号" width="60" align="center" />
+                  <el-table-column label="设备信息" min-width="200">
+                    <template #default="{ row }">
+                      <div class="device-info">
+                        <span class="font-medium">{{ getDeviceText(row) }}</span>
+                        <div class="text-xs text-g-500">
+                          <el-icon><Location /></el-icon>
+                          {{ row.ipaddr || '未知IP' }}
+                        </div>
+                      </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    label="浏览器"
+                    prop="browser"
+                    min-width="120"
+                    show-overflow-tooltip
+                  />
+                  <el-table-column
+                    label="操作系统"
+                    prop="os"
+                    min-width="100"
+                    show-overflow-tooltip
+                  />
+                  <el-table-column label="登录时间" min-width="160">
+                    <template #default="{ row }">
+                      {{ formatDateTime(row.createdAt) }}
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="最后访问" min-width="160">
+                    <template #default="{ row }">
+                      {{ formatDateTime(row.lastAccessTime) }}
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="会话时长" width="110" align="center">
+                    <template #default="{ row }">
+                      <el-tag type="info" size="small">{{ row.sessionDuration || '-' }}</el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="当前会话" width="90" align="center">
+                    <template #default="{ row }">
+                      <el-tag v-if="isCurrentSession(row)" type="success" size="small">当前</el-tag>
+                      <el-tag v-else type="info" size="small">其他</el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="操作" width="90" fixed="right" align="center">
+                    <template #default="{ row }">
+                      <el-button
+                        v-if="!isCurrentSession(row)"
+                        type="danger"
+                        size="small"
+                        link
+                        :loading="row.logoutLoading"
+                        @click="handleLogoutSession(row)"
+                      >
+                        下线
+                      </el-button>
+                      <el-text v-else type="info" size="small">-</el-text>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </ElTabPane>
           </ElTabs>
         </div>
       </div>
@@ -292,17 +385,30 @@
 </template>
 
 <script setup lang="ts">
-import {useUserStore} from '@/store/modules/user'
-import {fetchGetAvatarPresignedUrl, fetchGetUserById, fetchUpdateUser, fetchUpdateUserPassword} from '@/api/user/user'
-import {fetchGetUserInfo, fetchLogout} from '@/api/auth'
-import {ElMessage, type FormInstance, type FormRules} from 'element-plus'
-import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
-import defaultAvatarImg from '@imgs/user/avatar.webp'
-import bgImageImg from '@imgs/user/bg.webp'
-import {useSettingStore} from '@/store/modules/setting'
-import {extractOssObjectPath, needsOssPresignedDisplay} from '@/utils/storage/oss-object-path'
+  import { useUserStore } from '@/store/modules/user'
+  import {
+    fetchGetAvatarPresignedUrl,
+    fetchGetUserById,
+    fetchUpdateUser,
+    fetchUpdateUserPassword
+  } from '@/api/user/user'
+  import {
+    fetchGetUserInfo,
+    fetchLogout,
+    fetchUserSessions,
+    forceLogoutSession,
+    forceLogoutAllSessions
+  } from '@/api/auth'
+  import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+  import { Refresh, SwitchButton, Location } from '@element-plus/icons-vue'
+  import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
+  import defaultAvatarImg from '@imgs/user/avatar.webp'
+  import bgImageImg from '@imgs/user/bg.webp'
+  import { useSettingStore } from '@/store/modules/setting'
+  import { extractOssObjectPath, needsOssPresignedDisplay } from '@/utils/storage/oss-object-path'
+  import dayjs from 'dayjs'
 
-defineOptions({ name: 'UserCenter' })
+  defineOptions({ name: 'UserCenter' })
 
   // 主题状态
   const settingStore = useSettingStore()
@@ -365,6 +471,11 @@ defineOptions({ name: 'UserCenter' })
       { required: true, message: '请输入新密码', trigger: 'blur' },
       { min: 6, max: 20, message: '密码长度应为 6-20 位', trigger: 'blur' },
       {
+        pattern: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{6,20}$/,
+        message: '密码必须包含字母和数字，且仅允许字母和数字',
+        trigger: 'blur'
+      },
+      {
         validator: (_rule, value, callback) => {
           if (!value) {
             callback()
@@ -406,6 +517,124 @@ defineOptions({ name: 'UserCenter' })
     { value: '1', label: '女' },
     { value: '2', label: '未知' }
   ]
+
+  // ==================== 会话管理 ====================
+  const sessionLoading = ref(false)
+  const logoutAllLoading = ref(false)
+  const sessionList = ref<Array<Api.Auth.DeviceSession & { logoutLoading?: boolean }>>([])
+
+  const loadSessions = async () => {
+    sessionLoading.value = true
+    try {
+      const userId = userStore.getUserInfo?.user?.userId
+      if (!userId) {
+        ElMessage.warning('用户未登录')
+        return
+      }
+      const res = await fetchUserSessions(userId)
+      sessionList.value = (res || []).map((session) => ({
+        ...session,
+        logoutLoading: false
+      }))
+    } catch (error: any) {
+      ElMessage.error(error.message || '获取会话列表失败')
+    } finally {
+      sessionLoading.value = false
+    }
+  }
+
+  const isCurrentSession = (session: Api.Auth.DeviceSession) => {
+    return session.isCurrent === true
+  }
+
+  const sessionRowClassName = ({ row }: { row: Api.Auth.DeviceSession }) => {
+    return isCurrentSession(row) ? 'current-session-row' : ''
+  }
+
+  const getDeviceText = (session: Api.Auth.DeviceSession) => {
+    const parts: string[] = []
+    if (session.browser) parts.push(session.browser)
+    if (session.os) parts.push(session.os)
+    return parts.length > 0 ? parts.join(' / ') : '未知设备'
+  }
+
+  const formatDateTime = (dateStr?: string) => {
+    if (!dateStr) return '-'
+    return dayjs(dateStr).format('YYYY-MM-DD HH:mm:ss')
+  }
+
+  const handleLogoutSession = async (
+    session: Api.Auth.DeviceSession & { logoutLoading?: boolean }
+  ) => {
+    try {
+      await ElMessageBox.confirm(
+        `确定要强制下线该会话吗？<br/>设备：${getDeviceText(session)}<br/>IP：${session.ipaddr || '未知'}`,
+        '警告',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+          dangerouslyUseHTMLString: true
+        }
+      )
+
+      const index = sessionList.value.findIndex(
+        (s) => s.deviceSessionId === session.deviceSessionId
+      )
+      if (index > -1) {
+        sessionList.value[index].logoutLoading = true
+      }
+
+      const userId = userStore.getUserInfo?.user?.userId
+      if (!userId) return
+
+      await forceLogoutSession(userId, session.deviceSessionId)
+      ElMessage.success('会话已强制下线')
+
+      if (index > -1) {
+        sessionList.value.splice(index, 1)
+      }
+    } catch (error: any) {
+      if (error !== 'cancel') {
+        ElMessage.error(error.message || '强制下线失败')
+      }
+    } finally {
+      const idx = sessionList.value.findIndex((s) => s.deviceSessionId === session.deviceSessionId)
+      if (idx > -1) {
+        sessionList.value[idx].logoutLoading = false
+      }
+    }
+  }
+
+  const handleLogoutAll = async () => {
+    try {
+      await ElMessageBox.confirm(
+        '确定要强制下线所有会话吗？这将导致所有设备上的账户退出登录。',
+        '警告',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      )
+
+      logoutAllLoading.value = true
+      const userId = userStore.getUserInfo?.user?.userId
+      if (!userId) return
+
+      await forceLogoutAllSessions(userId)
+      ElMessage.success('所有会话已强制下线')
+
+      userStore.logOut()
+    } catch (error: any) {
+      if (error !== 'cancel') {
+        ElMessage.error(error.message || '操作失败')
+      }
+    } finally {
+      logoutAllLoading.value = false
+    }
+  }
+  // ==================== 会话管理 END ====================
 
   /** 根据 userDetail.avatar 更新顶部头像展示 URL（私有桶时用 presigned 避免 403） */
   const updateTopAvatarDisplayUrl = async () => {
@@ -516,6 +745,13 @@ defineOptions({ name: 'UserCenter' })
 
   onMounted(() => {
     getUserDetail()
+  })
+
+  // 切换到会话管理标签页时自动加载会话列表
+  watch(activeTab, (val) => {
+    if (val === 'session') {
+      loadSessions()
+    }
   })
 
   const submitPassword = async () => {
@@ -674,5 +910,26 @@ defineOptions({ name: 'UserCenter' })
 
   .hover\:scale-105:hover {
     transform: scale(1.05);
+  }
+
+  .session-management {
+    .device-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    :deep(.el-table) {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    :deep(.current-session-row) {
+      background-color: var(--el-color-success-light-9) !important;
+
+      td {
+        background-color: transparent !important;
+      }
+    }
   }
 </style>

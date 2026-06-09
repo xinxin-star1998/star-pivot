@@ -2,8 +2,8 @@
   <div class="art-card h-128 p-5 mb-5 max-sm:mb-4">
     <div class="art-card-header">
       <div class="title">
-        <h4>动态</h4>
-        <p>新增<span class="text-success">+6</span></p>
+        <h4>{{ t('dashboard.dynamic.title') }}</h4>
+        <p>{{ t('dashboard.dynamic.newCount') }}<span class="text-success">+6</span></p>
       </div>
     </div>
 
@@ -24,6 +24,9 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
+  const { t } = useI18n()
   interface DynamicItem {
     username: string
     type: string

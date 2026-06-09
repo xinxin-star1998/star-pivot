@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.star.pivot.framework.annotation.Log;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.utils.LogUtils;
+import com.star.pivot.framework.utils.StructuredLogUtils;
 import com.star.pivot.system.domain.bo.LoginRequest;
 import com.star.pivot.system.domain.bo.LoginResponse;
 import com.star.pivot.system.domain.bo.RegisterRequest;
@@ -35,6 +36,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Aspect
@@ -59,9 +62,13 @@ public class LogAspect {
 
     @Around("logPointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+        // 开始新的跟踪上下文
+        String traceId = StructuredLogUtils.startTrace();
+
         long startTime = System.currentTimeMillis();
         SysOperLog operLog = new SysOperLog();
         Object result = null;
+        Log logAnnotation = null;
 
         try {
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -69,9 +76,15 @@ public class LogAspect {
 
             MethodSignature signature = (MethodSignature) joinPoint.getSignature();
             Method method = signature.getMethod();
-            Log logAnnotation = method.getAnnotation(Log.class);
+            logAnnotation = method.getAnnotation(Log.class);
 
             setBasicInfo(operLog, logAnnotation, method, request, joinPoint);
+
+            // 设置操作和模块信息到结构化日志上下文
+            String operation = signature.getDeclaringTypeName() + "." + signature.getName();
+            String module = signature.getDeclaringTypeName().split("\\.")[signature.getDeclaringTypeName().split("\\.").length - 1];
+            StructuredLogUtils.setOperation(operation, module);
+
             result = joinPoint.proceed();
             setResponseInfo(operLog, result, logAnnotation);
             operLog.setStatus(0);
@@ -80,17 +93,44 @@ public class LogAspect {
             operLog.setStatus(1);
             String errorMsg = e.getMessage();
             if (errorMsg != null) {
-                errorMsg = truncateString(errorMsg, 2000);
+                errorMsg = LogUtils.truncateString(errorMsg, 2000);
             }
             operLog.setErrorMsg(errorMsg);
+
+            // 记录异常到结构化日志
+            StructuredLogUtils.logBusinessEvent("exception_occurred", e.getMessage(),
+                Map.of("exception_type", e.getClass().getSimpleName(), "operation",
+                       joinPoint.getSignature().getName()));
+
             throw e;
         } finally {
             resolveOperatorIfAnonymous(operLog, joinPoint, result);
             long endTime = System.currentTimeMillis();
             operLog.setCostTime(endTime - startTime);
             operLog.setOperTime(LocalDateTime.now());
+
+            // 记录性能指标到结构化日志
+            StructuredLogUtils.logPerformance(joinPoint.getSignature().getName(), endTime - startTime,
+                operLog.getStatus() == 0);
+
+            // 记录操作日志到结构化日志
+            Map<String, Object> params = new HashMap<>();
+            if (logAnnotation.saveRequestData()) {
+                Object[] filteredArgs = filterLoggableArgs(joinPoint.getArgs());
+                if (filteredArgs.length > 0) {
+                    Object toSerialize = filteredArgs.length == 1 ? filteredArgs[0] : filteredArgs;
+                    params.put("request_params", toSerialize);
+                }
+            }
+
+            StructuredLogUtils.logOperation(joinPoint.getSignature().getName(),
+                joinPoint.getTarget().getClass().getSimpleName(), params, result, operLog.getStatus() == 0);
+
             // 异步保存操作日志，不阻塞主线程
             asyncOperLogService.saveOperLogAsync(operLog);
+
+            // 清理MDC上下文
+            StructuredLogUtils.clearContext();
         }
     }
 
@@ -102,17 +142,17 @@ public class LogAspect {
             String methodName = method.getName();
             title = className + "." + methodName;
         }
-        operLog.setTitle(truncateString(title, 50));
+        operLog.setTitle(LogUtils.truncateString(title, 50));
         operLog.setBusinessType(logAnnotation.businessType());
 
         String className = joinPoint.getTarget().getClass().getName();
         String methodName = method.getName();
-        operLog.setMethod(truncateString(className + "." + methodName + "()", 200));
+        operLog.setMethod(LogUtils.truncateString(className + "." + methodName + "()", 200));
 
         if (request != null) {
-            operLog.setRequestMethod(truncateString(request.getMethod(), 10));
-            operLog.setOperUrl(truncateString(request.getRequestURI(), 255));
-            operLog.setOperIp(truncateString(LogUtils.getClientIp(request), 128));
+            operLog.setRequestMethod(LogUtils.truncateString(request.getMethod(), 10));
+            operLog.setOperUrl(LogUtils.truncateString(request.getRequestURI(), 255));
+            operLog.setOperIp(LogUtils.truncateString(LogUtils.getClientIp(request), 128));
         }
 
         setOperatorInfo(operLog);
@@ -153,10 +193,10 @@ public class LogAspect {
                 if (user.getDeptId() != null) {
                     SysDept dept = sysDeptMapper.selectById(user.getDeptId());
                     if (dept != null) {
-                        operLog.setDeptName(truncateString(dept.getDeptName(), 50));
+                        operLog.setDeptName(LogUtils.truncateString(dept.getDeptName(), 50));
                     }
                 }
-                operLog.setOperName(truncateString(user.getUserName(), 50));
+                operLog.setOperName(LogUtils.truncateString(user.getUserName(), 50));
             } else {
                 operLog.setOperName("匿名用户");
                 operLog.setOperatorType(0);
@@ -181,7 +221,7 @@ public class LogAspect {
             username = extractUsernameFromResult(result);
         }
         if (StringUtils.hasText(username)) {
-            operLog.setOperName(truncateString(username, 50));
+            operLog.setOperName(LogUtils.truncateString(username, 50));
             operLog.setOperatorType(0);
         }
     }
@@ -234,7 +274,7 @@ public class LogAspect {
                     Object toSerialize = filteredArgs.length == 1 ? filteredArgs[0] : filteredArgs;
                     String params = objectMapper.writeValueAsString(toSerialize);
                     params = LogUtils.desensitizeParam(params);
-                    params = truncateString(params, 2000);
+                    params = LogUtils.truncateString(params, 2000);
                     operLog.setOperParam(params);
                 }
             }
@@ -257,7 +297,7 @@ public class LogAspect {
         if (logAnnotation.saveResponseData() && result != null) {
             try {
                 String jsonResult = LogUtils.toJsonString(result);
-                operLog.setJsonResult(truncateString(jsonResult, 2000));
+                operLog.setJsonResult(LogUtils.truncateString(jsonResult, 2000));
             } catch (Exception e) {
                 log.warn("记录响应结果失败", e);
                 operLog.setJsonResult("响应解析失败");
@@ -265,24 +305,4 @@ public class LogAspect {
         }
     }
 
-    private String truncateString(String str, int maxLength) {
-        if (str == null || str.isEmpty()) {
-            return str;
-        }
-        if (str.length() <= maxLength) {
-            byte[] bytes = str.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-            if (bytes.length <= maxLength) {
-                return str;
-            }
-        }
-        int targetLength = Math.min(str.length(), maxLength);
-        String truncated = str.substring(0, targetLength);
-        byte[] bytes = truncated.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        while (bytes.length > maxLength - 10 && targetLength > 0) {
-            targetLength--;
-            truncated = str.substring(0, targetLength);
-            bytes = truncated.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        }
-        return truncated + "...";
-    }
 }

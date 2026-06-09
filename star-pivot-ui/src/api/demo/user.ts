@@ -21,7 +21,6 @@ export interface User {
   updateDate?: LocalDateTime
 }
 
-
 /**
  * 系统用户搜索参数
  */
