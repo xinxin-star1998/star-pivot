@@ -2,12 +2,12 @@ package com.star.pivot.system.service.impl;
 
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.system.domain.CaptchaState;
 import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
 import com.star.pivot.system.domain.bo.CaptchaVerifyResponse;
 import com.star.pivot.system.service.interfaces.CaptchaService;
 import com.star.pivot.system.utils.RedisCache;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,8 +17,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.Serial;
-import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -68,37 +66,6 @@ public class CaptchaServiceImpl implements CaptchaService {
 
     private static String buildCaptchaProofKey(String proof) {
         return "captcha:proof:" + proof;
-    }
-
-    @Data
-    private static class CaptchaState implements Serializable {
-        @Serial
-        private static final long serialVersionUID = 1L;
-
-        /**
-         * 验证码 hash（SHA-256）
-         */
-        private String codeHash;
-
-        /**
-         * 随机盐
-         */
-        private String salt;
-
-        /**
-         * 已尝试次数
-         */
-        private int attempts;
-
-        /**
-         * 最大尝试次数
-         */
-        private int maxAttempts;
-
-        /**
-         * 业务场景（login/register/reset 等）
-         */
-        private String scene;
     }
 
     @Override
