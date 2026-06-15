@@ -42,8 +42,8 @@ public class CaptchaServiceImpl implements CaptchaService {
 
     private final RedisCache redisCache;
 
-    // 验证码字符集
-    private static final String CODE_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    // 验证码字符集（只包含大写字母和数字）
+    private static final String CODE_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     // 验证码长度
     private static final int CODE_LENGTH = 4;
     // 验证码图片宽度
