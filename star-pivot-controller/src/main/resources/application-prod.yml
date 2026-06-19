@@ -11,9 +11,6 @@
 # =============================================================================
 
 spring:
-  flyway:
-    connect-retries: 10
-    connect-retries-interval: 5
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver

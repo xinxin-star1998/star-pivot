@@ -10,15 +10,6 @@ spring:
   sql:
     init:
       mode: never
-  flyway:
-    enabled: ${FLYWAY_ENABLED:true}
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    baseline-version: 4
-    validate-on-migrate: true
-    out-of-order: false
-    table: flyway_schema_history
-    encoding: UTF-8
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
