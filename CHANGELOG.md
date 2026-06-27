@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-27
+
 ### Added
 
 - 开源治理文件：`CODE_OF_CONDUCT.md`、`SECURITY.md`、Issue 模板
@@ -45,5 +47,6 @@
 - 多模块 Maven 架构重构（dependencies → framework → module → controller）
 - 生产环境配置校验与安全加固
 
-[Unreleased]: https://github.com/xinxin-star1998/star-pivot/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/xinxin-star1998/star-pivot/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/xinxin-star1998/star-pivot/releases/tag/v1.1.0
 [1.0.0]: https://github.com/xinxin-star1998/star-pivot/releases/tag/v1.0.0
