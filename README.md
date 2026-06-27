@@ -5,6 +5,7 @@
 <p align="center">
   <a href="https://github.com/xinxin-star1998/star-pivot"><img src="https://img.shields.io/badge/GitHub-star--pivot-181717?logo=github" alt="GitHub"></a>
   <a href="https://gitee.com/xin1998/StarPivot"><img src="https://img.shields.io/badge/Gitee-StarPivot-C71D23?logo=gitee" alt="Gitee"></a>
+  <a href="https://compass.gitee.com/analyze/sn4fke5b"><img src="https://compass.gitee.com/badge/sn4fke5b.svg" alt="OSS Compass Analyze"></a>
   <img src="https://img.shields.io/badge/JDK-17+-orange" alt="JDK">
   <img src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot">
   <img src="https://img.shields.io/badge/Vue-3.x-4FC08D?logo=vue.js&logoColor=white" alt="Vue">
@@ -14,6 +15,7 @@
 ## 导航
 
 - [项目简介](#项目简介)
+- [OSS-Compass 开源评估](#oss-compass-开源评估)
 - [功能亮点](#功能亮点)
 - [技术栈](#技术栈)
 - [快速开始](#快速开始)
@@ -21,11 +23,29 @@
 - [文档与接口](#文档与接口)
 - [部署建议](#部署建议)
 - [贡献](#贡献)
+- [开源治理](#开源治理)
 
 ## 项目简介
 
 StarPivot 面向企业后台管理场景，提供一套可快速落地的权限与系统管理基础平台。  
 你可以在此基础上继续扩展业务模块（如审批、报表、运营后台等），减少重复搭建后台框架的成本。
+
+## OSS-Compass 开源评估
+
+StarPivot 已纳入 [OSS Compass（开源指南针）](https://compass.gitee.com/) 生态评估体系，Gitee 平台可直接查看各模型得分。
+
+[![OSS Compass Analyze](https://compass.gitee.com/badge/sn4fke5b.svg)](https://compass.gitee.com/analyze/sn4fke5b)
+
+| 指标 | 得分 | 说明 |
+|------|------|------|
+| Collab. Dev. Index | 68 | 协作开发指数（生产力） |
+| Community Support | 62 | 社区支持（稳健性） |
+| Activity | 60 | 项目活跃度（创新力） |
+
+- 完整分析报告：[compass.gitee.com/analyze/sn4fke5b](https://compass.gitee.com/analyze/sn4fke5b)
+- 差距分析与改进路线：[`doc/OSS-Compass开源健康度差距分析.md`](doc/OSS-Compass开源健康度差距分析.md)
+
+> 指标随社区活动动态更新，以 OSS-Compass 页面为准。欢迎通过 Issue / PR 参与共建，共同提升开源健康度。
 
 ## 在线地址（可选）
 
@@ -191,6 +211,17 @@ pnpm dev
 2. 阅读贡献指南：[`CONTRIBUTING.md`](CONTRIBUTING.md)
 3. 新建分支并按规范提交：`git checkout -b feature/xxx`
 4. 推送分支并发起 PR（Gitee / GitHub）
+
+## 开源治理
+
+| 文档 | 说明 |
+|------|------|
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | 贡献流程、分支与 Commit 规范 |
+| [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | 社区行为准则 |
+| [`SECURITY.md`](SECURITY.md) | 安全漏洞报告方式 |
+| [`CHANGELOG.md`](CHANGELOG.md) | 版本更新记录 |
+| [Issue 模板](.github/ISSUE_TEMPLATE/) | Bug 报告 / 功能建议 |
+| [`doc/OSS-Compass开源健康度差距分析.md`](doc/OSS-Compass开源健康度差距分析.md) | OSS-Compass 差距分析与改进路线 |
 
 ## License
 

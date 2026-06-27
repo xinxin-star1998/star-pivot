@@ -1,0 +1,94 @@
+name: Bug 报告
+description: 报告 StarPivot 的缺陷或异常行为
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢报告问题！请尽量提供完整信息，便于快速定位。
+        安全漏洞请勿在此提交，请参阅 [SECURITY.md](../../SECURITY.md)。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 清晰、简洁地描述遇到的问题
+      placeholder: 例如：登录后刷新页面跳转到 404
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 列出可稳定复现的操作步骤
+      placeholder: |
+        1. 启动后端与前端
+        2. 使用 admin 登录
+        3. 进入 xxx 页面
+        4. 点击 xxx 按钮
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: 影响模块
+      options:
+        - 认证 / 权限
+        - 用户 / 角色 / 菜单
+        - 商城
+        - 代码生成器
+        - 定时任务
+        - 监控
+        - 前端 UI
+        - 部署 / 配置
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 操作系统、JDK、Node、MySQL、Redis 等
+      value: |
+        - OS:
+        - JDK:
+        - Node / pnpm:
+        - MySQL:
+        - Redis:
+        - StarPivot 版本 / commit:
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志 / 截图
+      description: 相关控制台输出、后端日志或截图
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 自检清单
+      options:
+        - label: 我已搜索现有 Issue，确认没有重复
+          required: true
+        - label: 我已阅读 README 与相关 doc 文档
+          required: false

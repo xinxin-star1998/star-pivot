@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 贡献指南
+    url: https://gitee.com/xin1998/StarPivot/blob/master/CONTRIBUTING.md
+    about: 分支命名、Commit 规范、PR 流程
+  - name: 安全漏洞报告
+    url: https://gitee.com/xin1998/StarPivot/blob/master/SECURITY.md
+    about: 请勿在公开 Issue 中披露安全漏洞
+  - name: OSS-Compass 评估报告
+    url: https://compass.gitee.com/analyze/sn4fke5b
+    about: 查看 StarPivot 开源生态健康度分析

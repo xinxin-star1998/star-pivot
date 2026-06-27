@@ -124,6 +124,9 @@ PR 描述至少包含：
 - 相关日志/截图
 - 运行环境（JDK、Node、数据库、操作系统）
 
+GitHub 可使用结构化模板：[Bug 报告](.github/ISSUE_TEMPLATE/bug_report.yml) / [功能建议](.github/ISSUE_TEMPLATE/feature_request.yml)。  
+安全漏洞请勿在公开 Issue 中披露，请参阅 [`SECURITY.md`](SECURITY.md)。
+
 ---
 
 如果你是首次参与贡献，建议先从 `docs`、`fix` 类问题开始，方便熟悉项目结构与提交流程。
