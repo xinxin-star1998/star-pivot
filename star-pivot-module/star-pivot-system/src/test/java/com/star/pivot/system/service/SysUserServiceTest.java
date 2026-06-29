@@ -1,56 +1,83 @@
 package com.star.pivot.system.service;
 
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.star.pivot.framework.domain.DataScope;
 import com.star.pivot.framework.domain.PageResponse;
+import com.star.pivot.framework.exception.BizException;
+import com.star.pivot.security.context.SecurityContextUtils;
+import com.star.pivot.security.context.SecurityUtils;
+import com.star.pivot.system.assembler.UserVOAssembler;
 import com.star.pivot.system.domain.bo.UserReqBo;
 import com.star.pivot.system.domain.bo.UserVO;
 import com.star.pivot.system.domain.dto.UserDTO;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.mapper.SysUserMapper;
-import com.star.pivot.system.service.interfaces.SysUserService;
+import com.star.pivot.system.mapper.UserPostMapper;
+import com.star.pivot.system.mapper.UserRoleMapper;
+import com.star.pivot.system.service.impl.SysUserServiceImpl;
+import com.star.pivot.system.service.interfaces.TokenService;
+import com.star.pivot.system.service.interfaces.UserPermissionCacheService;
+import com.star.pivot.system.utils.DataScopeService;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-/**
- * SysUserService 单元测试
- *
- * @author xinxin
- * @since 2026-06-07
- */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("用户服务测试")
 class SysUserServiceTest {
 
     @Mock
     private SysUserMapper sysUserMapper;
-
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private UserRoleMapper userRoleMapper;
+    @Mock
+    private UserPostMapper userPostMapper;
+    @Mock
+    private UserPermissionCacheService userPermissionCacheService;
+    @Mock
+    private DataScopeService dataScopeService;
+    @Mock
+    private UserVOAssembler userVOAssembler;
+    @Mock
+    private TransactionTemplate transactionTemplate;
+    @Mock
+    private TokenService tokenService;
 
     @InjectMocks
-    private SysUserService sysUserService;
+    private SysUserServiceImpl sysUserService;
 
     private SysUser testUser;
     private UserDTO userDTO;
 
+    @BeforeAll
+    static void initTableInfo() {
+        TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), SysUser.class);
+    }
+
     @BeforeEach
     void setUp() {
-        // 准备测试数据
+        ReflectionTestUtils.setField(sysUserService, "baseMapper", sysUserMapper);
+
         testUser = new SysUser();
         testUser.setUserId(1L);
         testUser.setUserName("testuser");
@@ -71,13 +98,10 @@ class SysUserServiceTest {
     @Test
     @DisplayName("测试根据用户名查询用户 - 成功场景")
     void testGetUserByUsername_Success() {
-        // Given
         when(sysUserMapper.selectOne(any())).thenReturn(testUser);
 
-        // When
         SysUser result = sysUserService.getUserByUsername("testuser");
 
-        // Then
         assertNotNull(result);
         assertEquals("testuser", result.getUserName());
         assertEquals("test@example.com", result.getEmail());
@@ -87,13 +111,10 @@ class SysUserServiceTest {
     @Test
     @DisplayName("测试根据用户名查询用户 - 用户不存在")
     void testGetUserByUsername_NotFound() {
-        // Given
         when(sysUserMapper.selectOne(any())).thenReturn(null);
 
-        // When
         SysUser result = sysUserService.getUserByUsername("nonexistent");
 
-        // Then
         assertNull(result);
         verify(sysUserMapper, times(1)).selectOne(any());
     }
@@ -101,22 +122,25 @@ class SysUserServiceTest {
     @Test
     @DisplayName("测试用户分页查询 - 成功场景")
     void testPageList_Success() {
-        // Given
         UserReqBo reqBo = new UserReqBo();
         reqBo.setPageNum(1);
         reqBo.setPageSize(10);
         reqBo.setUserName("test");
 
+        DataScope dataScope = new DataScope("1=1", Collections.emptyList(), 1L, 100L);
+        when(dataScopeService.getCurrentUserDataScope()).thenReturn(dataScope);
+
         IPage<SysUser> page = new Page<>(1, 10);
         page.setTotal(1);
         page.setRecords(Arrays.asList(testUser));
 
+        UserVO userVO = new UserVO();
+        userVO.setUserName("testuser");
+        when(userVOAssembler.convertToVOList(any())).thenReturn(Arrays.asList(userVO));
         when(sysUserMapper.selectPageList(any(), any())).thenReturn(page);
 
-        // When
         PageResponse<UserVO> result = sysUserService.pageList(reqBo);
 
-        // Then
         assertNotNull(result);
         assertEquals(1, result.getTotal());
         assertFalse(result.getRows().isEmpty());
@@ -126,134 +150,136 @@ class SysUserServiceTest {
     @Test
     @DisplayName("测试添加用户 - 成功场景")
     void testAddUser_Success() {
-        // Given
-        when(sysUserMapper.selectOne(any())).thenReturn(null); // 用户名不存在
-        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encodedPassword");
-        when(sysUserMapper.insert(any(SysUser.class))).thenReturn(1);
+        try (MockedStatic<SecurityUtils> secUtils = mockStatic(SecurityUtils.class);
+             MockedStatic<SecurityContextUtils> secCtx = mockStatic(SecurityContextUtils.class)) {
 
-        // When
-        boolean result = sysUserService.addUser(userDTO);
+            secUtils.when(() -> SecurityUtils.encryptPassword(anyString())).thenReturn("$2a$10$encodedPassword");
+            secCtx.when(SecurityContextUtils::getUsername).thenReturn("admin");
 
-        // Then
-        assertTrue(result);
-        verify(passwordEncoder, times(1)).encode("password123");
-        verify(sysUserMapper, times(1)).insert(any(SysUser.class));
+            when(sysUserMapper.selectOne(any())).thenReturn(null);
+            when(sysUserMapper.insert(any(SysUser.class))).thenReturn(1);
+
+            boolean result = sysUserService.addUser(userDTO);
+
+            assertTrue(result);
+            secUtils.verify(() -> SecurityUtils.encryptPassword("password123"));
+            verify(sysUserMapper, times(1)).insert(any(SysUser.class));
+        }
     }
 
     @Test
     @DisplayName("测试添加用户 - 用户名已存在")
     void testAddUser_UsernameExists() {
-        // Given
-        when(sysUserMapper.selectOne(any())).thenReturn(testUser); // 用户名已存在
+        when(sysUserMapper.selectOne(any())).thenReturn(testUser);
 
-        // When & Then
-        assertThrows(RuntimeException.class, () -> {
-            sysUserService.addUser(userDTO);
-        });
+        assertThrows(BizException.class, () -> sysUserService.addUser(userDTO));
         verify(sysUserMapper, never()).insert(any(SysUser.class));
     }
 
     @Test
     @DisplayName("测试更新用户 - 成功场景")
     void testUpdateUser_Success() {
-        // Given
-        when(sysUserMapper.selectById(1L)).thenReturn(testUser);
-        when(sysUserMapper.updateById(any(SysUser.class))).thenReturn(1);
+        try (MockedStatic<SecurityContextUtils> secCtx = mockStatic(SecurityContextUtils.class)) {
+            secCtx.when(SecurityContextUtils::getUsername).thenReturn("admin");
 
-        // When
-        boolean result = sysUserService.updateUser(userDTO);
+            when(sysUserMapper.selectById(1L)).thenReturn(testUser);
+            when(sysUserMapper.updateById(any(SysUser.class))).thenReturn(1);
 
-        // Then
-        assertTrue(result);
-        verify(sysUserMapper, times(1)).updateById(any(SysUser.class));
+            boolean result = sysUserService.updateUser(userDTO);
+
+            assertTrue(result);
+            verify(sysUserMapper, times(1)).updateById(any(SysUser.class));
+        }
     }
 
     @Test
-    @DisplayName("测试删除用户 - 成功场景")
+    @DisplayName("测试删除用户 - 成功场景（软删除）")
     void testDeleteUserByIds_Success() {
-        // Given
-        List<Long> userIds = Arrays.asList(1L, 2L);
-        when(sysUserMapper.deleteBatchIds(userIds)).thenReturn(2);
+        try (MockedStatic<SecurityContextUtils> secCtx = mockStatic(SecurityContextUtils.class)) {
+            secCtx.when(SecurityContextUtils::getUsername).thenReturn("admin");
 
-        // When
-        boolean result = sysUserService.deleteUserByIds(userIds);
+            List<Long> userIds = Arrays.asList(1L, 2L);
+            when(sysUserMapper.update(any(), any())).thenReturn(2);
 
-        // Then
-        assertTrue(result);
-        verify(sysUserMapper, times(1)).deleteBatchIds(userIds);
+            boolean result = sysUserService.deleteUserByIds(userIds);
+
+            assertTrue(result);
+            verify(sysUserMapper, times(1)).update(any(), any());
+        }
     }
 
     @Test
     @DisplayName("测试重置用户密码 - 成功场景")
     void testResetUserPassword_Success() {
-        // Given
-        when(sysUserMapper.selectById(1L)).thenReturn(testUser);
-        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$newEncodedPassword");
-        when(sysUserMapper.updateById(any(SysUser.class))).thenReturn(1);
+        try (MockedStatic<SecurityUtils> secUtils = mockStatic(SecurityUtils.class);
+             MockedStatic<SecurityContextUtils> secCtx = mockStatic(SecurityContextUtils.class)) {
 
-        // When
-        boolean result = sysUserService.resetUserPassword(1L, "newPassword123");
+            secUtils.when(() -> SecurityUtils.encryptPassword(anyString())).thenReturn("$2a$10$newEncodedPassword");
+            secCtx.when(SecurityContextUtils::getUsername).thenReturn("admin");
 
-        // Then
-        assertTrue(result);
-        verify(passwordEncoder, times(1)).encode("newPassword123");
-        verify(sysUserMapper, times(1)).updateById(any(SysUser.class));
+            when(sysUserMapper.selectById(1L)).thenReturn(testUser);
+            when(sysUserMapper.updateById(any(SysUser.class))).thenReturn(1);
+            doNothing().when(userPermissionCacheService).clearUserPermissionCache(anyString());
+            doNothing().when(tokenService).forceLogout(anyLong(), anyString());
+
+            boolean result = sysUserService.resetUserPassword(1L, "newPassword123");
+
+            assertTrue(result);
+            secUtils.verify(() -> SecurityUtils.encryptPassword("newPassword123"));
+            verify(sysUserMapper, times(1)).updateById(any(SysUser.class));
+        }
     }
 
     @Test
     @DisplayName("测试修改用户状态 - 成功场景")
     void testChangeUserStatus_Success() {
-        // Given
-        when(sysUserMapper.selectById(1L)).thenReturn(testUser);
-        when(sysUserMapper.updateById(any(SysUser.class))).thenReturn(1);
+        try (MockedStatic<SecurityContextUtils> secCtx = mockStatic(SecurityContextUtils.class)) {
+            secCtx.when(SecurityContextUtils::getUsername).thenReturn("admin");
 
-        // When
-        boolean result = sysUserService.changeUserStatus(1L, "1");
+            when(sysUserMapper.selectById(1L)).thenReturn(testUser);
+            when(sysUserMapper.updateById(any(SysUser.class))).thenReturn(1);
 
-        // Then
-        assertTrue(result);
-        verify(sysUserMapper, times(1)).updateById(any(SysUser.class));
+            boolean result = sysUserService.changeUserStatus(1L, "1");
+
+            assertTrue(result);
+            verify(sysUserMapper, times(1)).updateById(any(SysUser.class));
+        }
     }
 
     @Test
     @DisplayName("测试检查是否允许删除用户 - 不能删除自己")
     void testCanDeleteUsers_CannotDeleteSelf() {
-        // Given
-        List<Long> userIds = Arrays.asList(1L);
+        try (MockedStatic<SecurityContextUtils> secCtx = mockStatic(SecurityContextUtils.class)) {
+            secCtx.when(SecurityContextUtils::getUserId).thenReturn(1L);
 
-        // Mock SecurityContext 返回当前用户 ID 为 1L
-        // 这里需要根据实际的 SecurityContextUtils 实现来 mock
+            List<Long> userIds = Arrays.asList(1L);
+            String reason = sysUserService.canDeleteUsers(userIds);
 
-        // When
-        String reason = sysUserService.canDeleteUsers(userIds);
-
-        // Then
-        assertNotNull(reason);
-        assertTrue(reason.contains("不能删除当前登录用户"));
+            assertNotNull(reason);
+            assertTrue(reason.contains("不能删除当前登录用户"));
+        }
     }
 
     @Test
     @DisplayName("测试检查是否允许重置密码 - 不能重置自己密码")
     void testCanResetPassword_CannotResetSelf() {
-        // Given
-        Long targetUserId = 1L;
+        try (MockedStatic<SecurityContextUtils> secCtx = mockStatic(SecurityContextUtils.class)) {
+            secCtx.when(SecurityContextUtils::getUserId).thenReturn(1L);
 
-        // Mock SecurityContext 返回当前用户 ID 为 1L
+            Long targetUserId = 1L;
+            String reason = sysUserService.canResetPassword(targetUserId);
 
-        // When
-        String reason = sysUserService.canResetPassword(targetUserId);
-
-        // Then
-        assertNotNull(reason);
-        assertTrue(reason.contains("不能重置当前登录用户密码"));
+            assertNotNull(reason);
+            assertTrue(reason.contains("不能重置当前登录用户密码"));
+        }
     }
 
     @Test
     @DisplayName("测试判断当前用户是否是超级管理员")
     void testIsCurrentUserSuperAdmin() {
-        // This test depends on SecurityContext implementation
-        // Should be tested with integration test or proper mocking
-        // For now, just ensure the method exists and doesn't throw
-        assertDoesNotThrow(() -> sysUserService.isCurrentUserSuperAdmin());
+        try (MockedStatic<SecurityContextUtils> secCtx = mockStatic(SecurityContextUtils.class)) {
+            secCtx.when(SecurityContextUtils::getUserId).thenReturn(null);
+            assertFalse(sysUserService.isCurrentUserSuperAdmin());
+        }
     }
 }

@@ -82,12 +82,21 @@ export default ({ mode }: { mode: string }) => {
       // 代码分割策略优化
       rollupOptions: {
         output: {
-          // 手动分包，将第三方库单独打包
-          manualChunks: {
-            'vue-vendor': ['vue', 'vue-router', 'pinia'],
-            'element-plus': ['element-plus'],
-            echarts: ['echarts'],
-            utils: ['axios', '@vueuse/core']
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('vue') || id.includes('vue-router') || id.includes('pinia')) {
+                return 'vue-vendor'
+              }
+              if (id.includes('element-plus')) {
+                return 'element-plus'
+              }
+              if (id.includes('echarts')) {
+                return 'echarts'
+              }
+              if (id.includes('axios') || id.includes('@vueuse/core')) {
+                return 'utils'
+              }
+            }
           }
         }
       }

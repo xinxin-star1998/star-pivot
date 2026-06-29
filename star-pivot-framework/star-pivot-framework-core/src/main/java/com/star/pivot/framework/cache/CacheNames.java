@@ -17,7 +17,7 @@ package com.star.pivot.framework.cache;
 public final class CacheNames {
 
     private CacheNames() {
-        // 禁止实例化
+        throw new UnsupportedOperationException("工具类不允许实例化");
     }
 
     /**
