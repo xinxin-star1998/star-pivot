@@ -1,11 +1,11 @@
 package com.star.pivot.architecture;
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
-
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
  * 分层依赖约束：framework 不依赖业务模块；业务模块不依赖 controller 与 controller 模块下的 config。
@@ -21,7 +21,7 @@ class StarPivotArchitectureTest {
         "com.star.pivot.generator..",
         "com.star.pivot.dict..",
         "com.star.pivot.monitor..",
-        "com.star.pivot.mall.."
+        "com.star.pivot.file.."
     };
 
     @ArchTest

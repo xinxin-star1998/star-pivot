@@ -1,0 +1,17 @@
+package com.star.pivot.file.domain.dto;
+
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class SysFileMoveDTO {
+
+    @NotEmpty(message = "文件ID不能为空")
+    private List<Long> ids;
+
+    @NotNull(message = "目标文件夹ID不能为空")
+    private Long targetFolderId;
+}

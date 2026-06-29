@@ -54,9 +54,6 @@ export class DynamicRouteAppender {
     // 追加代码生成编辑页路由
     this.appendGenEditRoute(menuList, routeIndex)
 
-    // 追加商城 SPU 发布/编辑向导页
-    this.appendMallProductSpuRoutes(menuList, routeIndex)
-
     // 追加 Druid 监控 iframe 路由
     this.appendDruidIframeRoute(menuList, routeIndex)
 
@@ -313,68 +310,6 @@ export class DynamicRouteAppender {
     )
     const authList = parent?.meta?.authList
     return authList?.length ? [...authList] : undefined
-  }
-
-  /**
-   * 追加商城 SPU 发布向导（新增 / 编辑，数据库不存菜单）
-   * 必须挂到已有 /mall 目录下，避免与商城根路由重复注册导致 addRoute 被跳过、访问 500。
-   */
-  static appendMallProductSpuRoutes(menuList: AppRouteRecord[], routeIndex: RouteIndex): void {
-    const mallRoot = this.findRouteNode(
-      menuList,
-      (r) => r.path === '/mall' || r.name === 'MallSystem'
-    )
-    if (!mallRoot) {
-      safeWarn('[DynamicRouteAppender] 未找到商城根菜单 /mall，跳过 SPU 向导路由')
-      return
-    }
-
-    if (!mallRoot.children) {
-      mallRoot.children = []
-    }
-
-    const hasAdd =
-      routeIndex.names.has('MallProductAdd') ||
-      Array.from(routeIndex.paths).some((p) => String(p).includes('product/add'))
-    const hasEdit =
-      routeIndex.names.has('MallProductEdit') ||
-      Array.from(routeIndex.paths).some((p) => String(p).includes('product/edit'))
-
-    if (!hasAdd) {
-      mallRoot.children.push({
-        path: 'product/add',
-        name: 'MallProductAdd',
-        component: '/mall/product/modules/addSpu',
-        meta: {
-          title: '发布商品',
-          isHide: true,
-          parentPath: '/mall/product/index',
-          keepAlive: false
-        },
-        menuType: 'C',
-        status: '0',
-        orderNum: 1104
-      })
-      safeLog('[DynamicRouteAppender] 已在 /mall 下追加 SPU 新增向导路由')
-    }
-
-    if (!hasEdit) {
-      mallRoot.children.push({
-        path: 'product/edit/:id',
-        name: 'MallProductEdit',
-        component: '/mall/product/modules/addSpu',
-        meta: {
-          title: '编辑商品',
-          isHide: true,
-          parentPath: '/mall/product/index',
-          keepAlive: false
-        },
-        menuType: 'C',
-        status: '0',
-        orderNum: 1105
-      })
-      safeLog('[DynamicRouteAppender] 已在 /mall 下追加 SPU 编辑向导路由')
-    }
   }
 
   /** 在菜单树中查找节点 */

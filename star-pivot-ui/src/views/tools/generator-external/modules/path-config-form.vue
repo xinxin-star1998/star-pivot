@@ -11,7 +11,7 @@
             @change="applyBuiltinPreset"
           >
             <ElOption label="system 模块" value="system" />
-            <ElOption label="mall 模块" value="mall" />
+            <ElOption label="file 模块" value="file" />
             <ElOption label="monitor 模块" value="monitor" />
           </ElSelect>
           <ElSelect
@@ -46,7 +46,7 @@
         <ElFormItem label="保存为预设">
           <ElInput
             v-model="newPresetName"
-            placeholder="预设名称，如 mall-brand"
+            placeholder="预设名称，如 system-post"
             style="width: 220px"
             maxlength="32"
           />
@@ -77,7 +77,7 @@
         <ElFormItem label="基础包名" required>
           <ElInput
             v-model="model.basePackage"
-            placeholder="com.star.pivot.mall"
+            placeholder="com.star.pivot.system"
             @blur="onBasePackageBlur"
           />
         </ElFormItem>
@@ -91,50 +91,56 @@
       <ElCol :span="24"><div class="section-title">Java 包路径</div></ElCol>
       <ElCol :span="12">
         <ElFormItem label="实体 Entity">
-          <ElInput v-model="model.entityPackage" placeholder="com.star.pivot.mall.domain.entity" />
+          <ElInput
+            v-model="model.entityPackage"
+            placeholder="com.star.pivot.system.domain.entity"
+          />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
         <ElFormItem label="DTO">
-          <ElInput v-model="model.dtoPackage" placeholder="com.star.pivot.mall.domain.dto" />
+          <ElInput v-model="model.dtoPackage" placeholder="com.star.pivot.system.domain.dto" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
         <ElFormItem label="VO (Bo)">
-          <ElInput v-model="model.voPackage" placeholder="com.star.pivot.mall.domain.bo" />
+          <ElInput v-model="model.voPackage" placeholder="com.star.pivot.system.domain.bo" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
         <ElFormItem label="Bo (ReqBo)">
-          <ElInput v-model="model.boPackage" placeholder="com.star.pivot.mall.domain.bo" />
+          <ElInput v-model="model.boPackage" placeholder="com.star.pivot.system.domain.bo" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
         <ElFormItem label="Mapper">
-          <ElInput v-model="model.mapperPackage" placeholder="com.star.pivot.mall.mapper" />
+          <ElInput v-model="model.mapperPackage" placeholder="com.star.pivot.system.mapper" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
         <ElFormItem label="Service">
-          <ElInput v-model="model.servicePackage" placeholder="com.star.pivot.mall.service" />
+          <ElInput v-model="model.servicePackage" placeholder="com.star.pivot.system.service" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
         <ElFormItem label="ServiceImpl">
           <ElInput
             v-model="model.serviceImplPackage"
-            placeholder="com.star.pivot.mall.service.impl"
+            placeholder="com.star.pivot.system.service.impl"
           />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
         <ElFormItem label="Controller">
-          <ElInput v-model="model.controllerPackage" placeholder="com.star.pivot.mall.controller" />
+          <ElInput
+            v-model="model.controllerPackage"
+            placeholder="com.star.pivot.system.controller"
+          />
         </ElFormItem>
       </ElCol>
       <ElCol :span="24">
         <ElFormItem label="Mapper XML 目录">
-          <ElInput v-model="model.mapperXmlPath" placeholder="main/resources/mapper/mall" />
+          <ElInput v-model="model.mapperXmlPath" placeholder="main/resources/mapper/system" />
           <div class="field-hint"
             >写盘/Diff 中显示为 main/resources/mapper/...，对应 star-pivot-module 下资源目录</div
           >
@@ -144,12 +150,12 @@
       <ElCol :span="24"><div class="section-title">写盘相对路径（相对项目根目录）</div></ElCol>
       <ElCol :span="12">
         <ElFormItem label="API 目录">
-          <ElInput v-model="model.apiPath" placeholder="star-pivot-ui/src/api/mall" />
+          <ElInput v-model="model.apiPath" placeholder="star-pivot-ui/src/api/system" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
         <ElFormItem label="页面目录">
-          <ElInput v-model="model.vuePagePath" placeholder="star-pivot-ui/src/views/mall/brand" />
+          <ElInput v-model="model.vuePagePath" placeholder="star-pivot-ui/src/views/system/post" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="24">
@@ -189,11 +195,11 @@
       apiPath: 'star-pivot-ui/src/api/system',
       vuePagePath: 'star-pivot-ui/src/views/system/demo'
     },
-    mall: {
-      basePackage: 'com.star.pivot.mall',
-      mapperXmlPath: 'main/resources/mapper/mall',
-      apiPath: 'star-pivot-ui/src/api/mall',
-      vuePagePath: 'star-pivot-ui/src/views/mall/demo'
+    file: {
+      basePackage: 'com.star.pivot.file',
+      mapperXmlPath: 'main/resources/mapper/file',
+      apiPath: 'star-pivot-ui/src/api/file',
+      vuePagePath: 'star-pivot-ui/src/views/file/demo'
     },
     monitor: {
       basePackage: 'com.star.pivot.monitor',

@@ -59,10 +59,9 @@ StarPivot 已纳入 [OSS Compass（开源指南针）](https://compass.gitee.com
 - 用户 / 角色 / 菜单 / 权限（RBAC）完整链路
 - JWT 无状态认证 + Redis 黑名单机制
 - 动态菜单、动态路由、按钮级权限控制
-- 部门（树）、岗位、字典、文件上传（阿里云 OSS）
+- 部门（树）、岗位、字典、文件中心（阿里云 OSS）
 - EasyExcel 模块化导入导出（各业务独立 `/export`、`/import`、`/importTemplate`）
 - 可配置用户注册（系统参数开关 + 独立限流 + 默认角色）
-- 商城商品图片 OSS 上传（存 `objectName`，展示走预签名 URL）
 - MyBatis-Plus + 代码生成器，提升开发效率
 - Vue 3 + TypeScript + Element Plus，支持主题和国际化
 - 集成 SpringDoc OpenAPI，便于接口联调
@@ -95,7 +94,7 @@ StarPivot 已纳入 [OSS Compass（开源指南针）](https://compass.gitee.com
 
 - `star-pivot-controller`：启动入口 + Controller 层
 - `star-pivot-framework`：基础能力（安全、日志、文件、通用能力）
-- `star-pivot-module`：业务模块（system / dict / generator / quartz / monitor / mall）
+- `star-pivot-module`：业务模块（system / dict / generator / quartz / monitor / file）
 - `star-pivot-dependencies`：BOM 依赖管理
 - `star-pivot-ui`：前端管理系统
 
@@ -119,7 +118,15 @@ CREATE DATABASE `star-pivot` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unico
 ```
 
 ```bash
-mysql -u root -p star-pivot < sql/star-pivot.sql
+# 导入菜单快照（可按需调整）
+mysql -u root -p star-pivot < sql/sys_menu.sql
+mysql -u root -p star-pivot < sql/patch_external_gen_menu.sql
+```
+
+若数据库中仍有历史商城/工作流菜单，可执行：
+
+```bash
+mysql -u root -p star-pivot < sql/patch_remove_mall_workflow_menu.sql
 ```
 
 ### 3) 启动后端
@@ -180,7 +187,6 @@ pnpm dev
 ### 业务与组件
 
 - 用户头像逻辑：[`doc/用户头像功能前后端逻辑文档.md`](doc/用户头像功能前后端逻辑文档.md)
-- 商城商品图片：[`doc/商城商品图片前后端逻辑文档.md`](doc/商城商品图片前后端逻辑文档.md)
 - 导入导出说明：[`doc/通用导入导出使用说明.md`](doc/通用导入导出使用说明.md)（EasyExcel + `ExcelBizHandler`）
 - 字典 Hook：[`doc/useDict.md`](doc/useDict.md)（Pinia 缓存与持久化）
 - 代码生成器迁移：[`doc/生成器模板迁移指南.md`](doc/生成器模板迁移指南.md)（QueryDTO → ReqBo）

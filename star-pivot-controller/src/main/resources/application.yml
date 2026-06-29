@@ -5,8 +5,8 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 210MB
+      max-request-size: 220MB
   sql:
     init:
       mode: never
@@ -59,7 +59,7 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.star.pivot.system.domain,com.star.pivot.generator.domain,com.star.pivot.dict.domain,com.star.pivot.mall.domain
+  type-aliases-package: com.star.pivot.system.domain,com.star.pivot.generator.domain,com.star.pivot.dict.domain,com.star.pivot.file.domain
   global-config:
     db-config:
       id-type: auto
@@ -96,6 +96,18 @@ oss:
   access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
   bucket-name: ${OSS_BUCKET_NAME:star-pivot}
   url-prefix: ${OSS_URL_PREFIX:}
+
+# -----------------------------------------------------------------------------
+# 文件中心上传大小限制（按媒体类型，单位字节）
+# -----------------------------------------------------------------------------
+file-center:
+  upload:
+    max-size-by-media-type:
+      IMAGE: 10485760
+      VIDEO: 209715200
+      DOCUMENT: 52428800
+      AUDIO: 52428800
+      OTHER: 52428800
 
 # -----------------------------------------------------------------------------
 # 代码生成

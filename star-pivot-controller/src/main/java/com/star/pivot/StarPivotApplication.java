@@ -15,9 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author xinxin
  */
 @SpringBootApplication(scanBasePackages = "com.star.pivot")
-@MapperScan(basePackages = {
-        "com.star.pivot.*.mapper"
-})
+@MapperScan(basePackages = "com.star.pivot.*.mapper")
 @EnableCaching
 @EnableAsync
 @EnableScheduling

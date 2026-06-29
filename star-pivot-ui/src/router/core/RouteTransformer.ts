@@ -14,6 +14,7 @@ import { IframeRouteManager } from './IframeRouteManager'
 import { RoutesAlias } from '../routesAlias'
 import { RouteCacheManager } from './RouteCacheManager'
 import { safeLog, safeWarn } from '@/utils'
+import { isLinkOnlyMenu } from '@/utils/navigation/link-only-menu'
 
 interface ConvertedRoute extends Omit<RouteRecordRaw, 'children'> {
   id?: number
@@ -106,9 +107,11 @@ export class RouteTransformer {
         }
       }
 
-      // 递归处理子路由
+      // 递归处理子路由（纯外链菜单不参与动态路由注册）
       if (children?.length) {
-        converted.children = children.map((child) => this.transform(child, depth + 1))
+        converted.children = children
+          .filter((child) => !isLinkOnlyMenu(child))
+          .map((child) => this.transform(child, depth + 1))
       }
 
       // 缓存转换结果

@@ -32,7 +32,6 @@ class CacheNamesTest {
         assertEquals("captcha", CacheNames.CAPTCHA);
         assertEquals("loginFailCount", CacheNames.LOGIN_FAIL_COUNT);
         assertEquals("rateLimit", CacheNames.RATE_LIMIT);
-        assertEquals("workflowDef", CacheNames.WORKFLOW_DEF);
     }
 
     @Test
@@ -52,8 +51,7 @@ class CacheNamesTest {
                 CacheNames.ONLINE_USER,
                 CacheNames.CAPTCHA,
                 CacheNames.LOGIN_FAIL_COUNT,
-                CacheNames.RATE_LIMIT,
-                CacheNames.WORKFLOW_DEF
+                CacheNames.RATE_LIMIT
         };
 
         // 检查是否有重复

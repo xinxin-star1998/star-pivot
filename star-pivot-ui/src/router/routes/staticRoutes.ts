@@ -42,12 +42,6 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     meta: { title: '403', isHideTab: true }
   },
   {
-    path: '/:pathMatch(.*)*',
-    name: 'Exception404',
-    component: () => import('@views/exception/404/index.vue'),
-    meta: { title: '404', isHideTab: true }
-  },
-  {
     path: '/500',
     name: 'Exception500',
     component: () => import('@views/exception/500/index.vue'),
@@ -71,7 +65,6 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     name: 'Outside',
     meta: { title: 'menus.outside.title' },
     children: [
-      // iframe 内嵌页面
       {
         path: '/outside/iframe/:path',
         name: 'Iframe',
@@ -79,5 +72,11 @@ export const staticRoutes: AppRouteRecordRaw[] = [
         meta: { title: 'iframe' }
       }
     ]
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'Exception404',
+    component: () => import('@views/exception/404/index.vue'),
+    meta: { title: '404', isHideTab: true }
   }
 ]

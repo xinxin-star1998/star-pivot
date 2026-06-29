@@ -29,6 +29,19 @@ const MAX_RETRIES = 3 // 最大重试次数，0表示不重试
 const RETRY_DELAY = 1000 // 重试延迟（毫秒）
 const UNAUTHORIZED_DEBOUNCE_TIME = 3000
 
+function isAuthEntryRequest(url?: string): boolean {
+  if (!url) return false
+  const authEntryPaths = [
+    '/auth/login',
+    '/auth/captcha',
+    '/auth/captcha/verify',
+    '/auth/register',
+    '/auth/register/enabled',
+    '/auth/refresh'
+  ]
+  return authEntryPaths.some((path) => url.includes(path))
+}
+
 /** 401防抖状态 */
 let isUnauthorizedErrorShown = false
 let unauthorizedTimer: ReturnType<typeof setTimeout> | null = null
@@ -176,12 +189,15 @@ axiosInstance.interceptors.request.use(
     if (typeof request.url === 'string') {
       request.url = normalizeRequestUrl(request.url)
     }
-    const { accessToken } = useUserStore()
-    if (accessToken)
+    const userStore = useUserStore()
+    const adminToken = userStore.accessToken
+
+    if (adminToken) {
       request.headers.set(
         'Authorization',
-        accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
+        adminToken.startsWith('Bearer ') ? adminToken : `Bearer ${adminToken}`
       )
+    }
 
     // 设置 Content-Type（仅当未设置且数据不是 FormData 时）
     // 注意：axios 会自动将 JavaScript 对象序列化为 JSON，无需手动 stringify
@@ -221,6 +237,10 @@ axiosInstance.interceptors.response.use(
     if (code === ApiStatus.unauthorized) {
       const originalRequest = response.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
+      if (isAuthEntryRequest(originalRequest.url)) {
+        throw createHttpError(messageText, code)
+      }
+
       // 如果未重试过，尝试刷新令牌
       if (!originalRequest._retry) {
         return handleTokenRefresh(originalRequest)
@@ -249,7 +269,8 @@ axiosInstance.interceptors.response.use(
     if (
       error.response?.status === ApiStatus.unauthorized &&
       originalRequest &&
-      !originalRequest._retry
+      !originalRequest._retry &&
+      !isAuthEntryRequest(originalRequest.url)
     ) {
       try {
         await handleTokenRefresh(originalRequest)
@@ -499,3 +520,4 @@ const api = {
 }
 
 export default api
+export { isUserCancelError, handleMutationError } from './mutation'

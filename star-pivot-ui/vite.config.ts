@@ -18,6 +18,14 @@ export default ({ mode }: { mode: string }) => {
   console.log(`🚀 API_URL = ${VITE_API_URL}`)
   console.log(`🚀 VERSION = ${VITE_VERSION}`)
 
+  /** 开发代理：/api/xxx → /api/v1/xxx，与后端 context-path 一致 */
+  const apiVersionRewrite = (path: string) => {
+    if (/^\/api\/v\d+\//.test(path)) {
+      return path
+    }
+    return path.replace(/^\/api\//, '/api/v1/')
+  }
+
   return defineConfig({
     define: {
       __APP_VERSION__: JSON.stringify(VITE_VERSION)
@@ -28,7 +36,8 @@ export default ({ mode }: { mode: string }) => {
       proxy: {
         '/api': {
           target: VITE_API_PROXY_URL,
-          changeOrigin: true
+          changeOrigin: true,
+          rewrite: apiVersionRewrite
         }
       },
       host: true

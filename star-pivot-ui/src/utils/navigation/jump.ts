@@ -17,9 +17,13 @@
 import { AppRouteRecord } from '@/types/router'
 import { router } from '@/router'
 
-// 打开外部链接
+// 打开外部链接（含站内相对路径，在新标签页打开）
 export const openExternalLink = (link: string) => {
-  window.open(link, '_blank')
+  const url =
+    link.startsWith('http://') || link.startsWith('https://')
+      ? link
+      : `${window.location.origin}${link.startsWith('/') ? link : `/${link}`}`
+  window.open(url, '_blank')
 }
 
 /**

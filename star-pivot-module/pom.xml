@@ -21,7 +21,6 @@
         <module>star-pivot-generator</module>
         <module>star-pivot-quartz</module>
         <module>star-pivot-monitor</module>
-        <module>star-pivot-mall</module>
-        <module>star-pivot-workflow</module>
+        <module>star-pivot-file</module>
     </modules>
 </project>
