@@ -1,5 +1,6 @@
 # =============================================================================
-# 开发环境：spring.profiles.active=dev
+# 本地环境：spring.profiles.active=local
+# AI 密钥请通过环境变量注入：AI_API_KEY、AI_EMBEDDING_API_KEY、AI_RERANKER_API_KEY
 # =============================================================================
 # 启动优化：懒加载、减小连接池、缩短超时，加快本地启动
 spring:
@@ -74,3 +75,100 @@ gen:
     allowed-write-paths:
       - ${GEN_EXTERNAL_OUTPUT_ROOT:E:/star-pivot/project0422/StarPivot}
     backup-before-write: true
+---
+# -----------------------------------------------------------------------------
+# AI 智能对话（Spring AI + RAG）
+# 密钥通过环境变量注入：AI_API_KEY、AI_EMBEDDING_API_KEY、AI_RERANKER_API_KEY
+# RAG 双开关：star-pivot.ai.rag.enabled=true + 库表 ai_config.rag_enabled=0
+# -----------------------------------------------------------------------------
+spring:
+  ai:
+    openai:
+      base-url: ${AI_BASE_URL:https://api.deepseek.com}
+      api-key: ${AI_API_KEY:}
+      chat:
+        options:
+          model: ${AI_MODEL:deepseek-chat}
+          temperature: 0.7
+          max-tokens: 4096
+      embedding:
+        base-url: ${AI_EMBEDDING_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode}
+        api-key: ${AI_EMBEDDING_API_KEY:}
+        options:
+          model: ${AI_EMBEDDING_MODEL:text-embedding-v3}
+          dimensions: 1024
+
+star-pivot:
+  ai:
+    bot-name: ${AI_BOT_NAME:AI 助手}
+    bot-avatar: ${AI_BOT_AVATAR:}
+    default-model: ${AI_MODEL:deepseek-chat}
+    default-temperature: 0.7
+    default-prompt-scene: default
+    max-memory-messages: 30
+    welcome-message: ${AI_WELCOME_MESSAGE:你好！我是 **{botName}**，可以帮你写作、翻译、编程、分析等各类问题，有什么我可以帮你的吗？}
+    system-prompt: |
+      你是一个智能 AI 助手，能够进行自然、流畅的多轮对话。
+      你可以帮助用户完成写作、翻译、编程、分析、头脑风暴、学习辅导等广泛任务。
+      请根据用户问题选择合适的方式回答；不确定时请诚实说明，不要编造。
+    prompt-templates:
+      - id: default
+        label: 通用助手
+        description: 日常问答、写作、翻译与通用任务
+        prompt: |
+          你是 {botName}，StarPivot 平台的通用 AI 助手，语气自然、表达清晰。
+      - id: support
+        label: 客服问答
+        description: 产品使用、操作指引与常见问题
+        temperature: 0.3
+        prompt: |
+          你是 {botName}，StarPivot 平台的客服助手，语气礼貌、专业、耐心。
+          优先依据参考资料回答产品问题；不要编造系统中不存在的功能或政策。
+      - id: developer
+        label: 开发辅助
+        description: 编程、调试、架构与代码审查
+        temperature: 0.2
+        model: deepseek-reasoner
+        prompt: |
+          你是 {botName}，StarPivot 平台的开发助手，熟悉 Java 17、Spring Boot 3、Vue 3、MySQL、Redis。
+          涉及安全、性能、并发时主动提醒风险；不要臆造类名、配置项或 API 路径。
+      - id: analyst
+        label: 数据分析
+        description: 报表解读、指标分析与业务洞察
+        temperature: 0.4
+        prompt: |
+          你是 {botName}，StarPivot 平台的数据分析助手，善于解读指标与发现业务洞察。
+          缺少数据时不虚构数字，说明需要哪些字段或口径定义。
+    models:
+      - id: deepseek-chat
+        label: DeepSeek Chat
+      - id: deepseek-reasoner
+        label: DeepSeek Reasoner
+    rag:
+      enabled: true
+      vector-top-k: 20
+      fulltext-top-k: 20
+      retrieve-top-k: 10
+      min-vector-score: 0.3
+      vector-scan-batch-size: 2000
+      vector-scan-max-chunks: 0
+      embedding-cache-ttl: 7d
+      hyde-enabled: true
+      reranker:
+        enabled: true
+        endpoint: ${AI_RERANKER_ENDPOINT:https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank}
+        api-key: ${AI_RERANKER_API_KEY:}
+        model: ${AI_RERANKER_MODEL:gte-rerank}
+        timeout-ms: 1500
+    rate-limit:
+      enabled: true
+      max-requests-per-minute: 30
+    query-router:
+      enabled: true
+      chat-model: deepseek-chat
+      reasoner-model: deepseek-reasoner
+
+logging:
+  level:
+    com.star.pivot.ai: INFO
+
