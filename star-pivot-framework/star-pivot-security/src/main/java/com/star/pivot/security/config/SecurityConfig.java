@@ -4,6 +4,7 @@ import com.star.pivot.security.extension.HttpSecurityCustomizer;
 import com.star.pivot.security.extension.PermitAllPathProvider;
 import com.star.pivot.security.filter.JwtAuthenticationFilter;
 import com.star.pivot.security.filter.JwtSecurityExceptionHandler;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -92,6 +93,9 @@ public class SecurityConfig {
                                         "/swagger-resources/**", "/webjars/**")
                                 .permitAll();
                     }
+
+                    // SSE 流式响应会触发 ASYNC 二次分发，需在 anyRequest 之前放行
+                    auth.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll();
 
                     auth.anyRequest().authenticated();
                 })

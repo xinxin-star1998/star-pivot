@@ -249,4 +249,12 @@ public interface FileStorageService {
      * @throws Exception 上传失败时抛出异常
      */
     void uploadFileInternal(MultipartFile file, String objectName) throws Exception;
+
+    default void deleteObject(String objectName) throws Exception {
+        throw new UnsupportedOperationException("当前存储驱动不支持 deleteObject");
+    }
+
+    default byte[] downloadObject(String objectName) throws Exception {
+        throw new UnsupportedOperationException("当前存储驱动不支持 downloadObject");
+    }
 }

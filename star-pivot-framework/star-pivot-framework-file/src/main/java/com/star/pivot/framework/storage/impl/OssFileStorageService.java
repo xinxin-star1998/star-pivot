@@ -68,4 +68,16 @@ public class OssFileStorageService implements FileStorageService {
         log.debug("使用 OSS 通用文件上传，objectName={}", objectName);
         ossUtil.uploadFile(file, objectName);
     }
+
+    @Override
+    public void deleteObject(String objectName) throws Exception {
+        log.debug("使用 OSS 删除对象，objectName={}", objectName);
+        ossUtil.deleteObject(objectName);
+    }
+
+    @Override
+    public byte[] downloadObject(String objectName) throws Exception {
+        log.debug("使用 OSS 下载对象，objectName={}", objectName);
+        return ossUtil.downloadObject(objectName);
+    }
 }

@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/xinxin-star1998/star-pivot"><img src="https://img.shields.io/badge/GitHub-star--pivot-181717?logo=github" alt="GitHub"></a>
   <a href="https://gitee.com/xin1998/StarPivot"><img src="https://img.shields.io/badge/Gitee-StarPivot-C71D23?logo=gitee" alt="Gitee"></a>
-  <a href="https://compass.gitee.com/analyze/sn4fke5b"><img src="https://compass.gitee.com/badge/sn4fke5b.svg" alt="OSS Compass Analyze"></a>
+  <a href="https://gitee.com/xin1998/starpivot-cloud"><img src="https://img.shields.io/badge/Gitee-starpivot--cloud-C71D23?logo=gitee" alt="StarPivot Cloud"></a>
   <img src="https://img.shields.io/badge/JDK-17+-orange" alt="JDK">
   <img src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot">
   <img src="https://img.shields.io/badge/Vue-3.x-4FC08D?logo=vue.js&logoColor=white" alt="Vue">
@@ -15,7 +15,7 @@
 ## 导航
 
 - [项目简介](#项目简介)
-- [OSS-Compass 开源评估](#oss-compass-开源评估)
+- [相关项目](#相关项目)
 - [功能亮点](#功能亮点)
 - [技术栈](#技术栈)
 - [快速开始](#快速开始)
@@ -30,22 +30,16 @@
 StarPivot 面向企业后台管理场景，提供一套可快速落地的权限与系统管理基础平台。  
 你可以在此基础上继续扩展业务模块（如审批、报表、运营后台等），减少重复搭建后台框架的成本。
 
-## OSS-Compass 开源评估
+## 相关项目
 
-StarPivot 已纳入 [OSS Compass（开源指南针）](https://compass.gitee.com/) 生态评估体系，Gitee 平台可直接查看各模型得分。
+本仓库为 **单体版**（Spring Boot 多模块），侧重 RBAC、系统管理与代码生成等基础能力。
 
-[![OSS Compass Analyze](https://compass.gitee.com/badge/sn4fke5b.svg)](https://compass.gitee.com/analyze/sn4fke5b)
+若需要 **微服务架构**（Spring Cloud Alibaba、Nacos、网关、商城、审批中台、微信小程序等），请使用姊妹项目 **[StarPivot Cloud](https://gitee.com/xin1998/starpivot-cloud)**：
 
-| 指标 | 得分 | 说明 |
-|------|------|------|
-| Collab. Dev. Index | 68 | 协作开发指数（生产力） |
-| Community Support | 62 | 社区支持（稳健性） |
-| Activity | 60 | 项目活跃度（创新力） |
-
-- 完整分析报告：[compass.gitee.com/analyze/sn4fke5b](https://compass.gitee.com/analyze/sn4fke5b)
-- 差距分析与改进路线：[`doc/OSS-Compass开源健康度差距分析.md`](doc/OSS-Compass开源健康度差距分析.md)
-
-> 指标随社区活动动态更新，以 OSS-Compass 页面为准。欢迎通过 Issue / PR 参与共建，共同提升开源健康度。
+| 仓库 | 说明 |
+|------|------|
+| [Gitee · starpivot-cloud](https://gitee.com/xin1998/starpivot-cloud) | 微服务版主仓库 |
+| [GitHub · starpivot-cloud](https://github.com/xinxin-star1998/starpivot-cloud) | GitHub 镜像 |
 
 ## 在线地址（可选）
 
@@ -65,6 +59,7 @@ StarPivot 已纳入 [OSS Compass（开源指南针）](https://compass.gitee.com
 - MyBatis-Plus + 代码生成器，提升开发效率
 - Vue 3 + TypeScript + Element Plus，支持主题和国际化
 - 集成 SpringDoc OpenAPI，便于接口联调
+- **AI 智能对话**（Spring AI + DeepSeek）与 **RAG 知识库**（向量检索 + 全文检索 + 重排序）
 
 ## 技术栈
 
@@ -94,7 +89,7 @@ StarPivot 已纳入 [OSS Compass（开源指南针）](https://compass.gitee.com
 
 - `star-pivot-controller`：启动入口 + Controller 层
 - `star-pivot-framework`：基础能力（安全、日志、文件、通用能力）
-- `star-pivot-module`：业务模块（system / dict / generator / quartz / monitor / file）
+- `star-pivot-module`：业务模块（system / dict / generator / quartz / monitor / file / **ai**）
 - `star-pivot-dependencies`：BOM 依赖管理
 - `star-pivot-ui`：前端管理系统
 
@@ -127,6 +122,8 @@ mysql -u root -p star-pivot < sql/patch_external_gen_menu.sql
 
 ```bash
 mysql -u root -p star-pivot < sql/patch_remove_mall_workflow_menu.sql
+mysql -u root -p star-pivot < sql/patch_ai_tables.sql
+mysql -u root -p star-pivot < sql/patch_ai_menu.sql
 ```
 
 ### 3) 启动后端
@@ -227,7 +224,6 @@ pnpm dev
 | [`SECURITY.md`](SECURITY.md) | 安全漏洞报告方式 |
 | [`CHANGELOG.md`](CHANGELOG.md) | 版本更新记录 |
 | [Issue 模板](.github/ISSUE_TEMPLATE/) | Bug 报告 / 功能建议 |
-| [`doc/OSS-Compass开源健康度差距分析.md`](doc/OSS-Compass开源健康度差距分析.md) | OSS-Compass 差距分析与改进路线 |
 
 ## License
 

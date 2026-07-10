@@ -21,7 +21,8 @@ class StarPivotArchitectureTest {
         "com.star.pivot.generator..",
         "com.star.pivot.dict..",
         "com.star.pivot.monitor..",
-        "com.star.pivot.file.."
+        "com.star.pivot.file..",
+        "com.star.pivot.ai.."
     };
 
     @ArchTest

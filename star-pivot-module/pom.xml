@@ -22,5 +22,6 @@
         <module>star-pivot-quartz</module>
         <module>star-pivot-monitor</module>
         <module>star-pivot-file</module>
+        <module>star-pivot-ai</module>
     </modules>
 </project>

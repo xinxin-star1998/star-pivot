@@ -321,4 +321,21 @@ public class OssUtil {
         putObjectRequest.setMetadata(metadata);
         ossClient.putObject(putObjectRequest);
     }
+
+    public void deleteObject(String objectName) throws Exception {
+        if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
+            throw new IllegalArgumentException("无效的对象路径");
+        }
+        ossClient.deleteObject(bucketName(), objectName);
+    }
+
+    public byte[] downloadObject(String objectName) throws Exception {
+        if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
+            throw new IllegalArgumentException("无效的对象路径");
+        }
+        try (OSSObject ossObject = ossClient.getObject(bucketName(), objectName);
+             java.io.InputStream inputStream = ossObject.getObjectContent()) {
+            return inputStream.readAllBytes();
+        }
+    }
 }

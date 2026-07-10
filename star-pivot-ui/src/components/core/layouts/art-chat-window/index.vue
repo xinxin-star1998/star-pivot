@@ -1,10 +1,15 @@
 <!-- 系统聊天窗口 -->
 <template>
   <div>
-    <ElDrawer v-model="isDrawerVisible" :size="isMobile ? '100%' : '480px'" :with-header="false">
-      <div class="mb-5 flex-cb">
+    <ElDrawer
+      v-model="isDrawerVisible"
+      :size="isMobile ? '100%' : '680px'"
+      :with-header="false"
+      @keydown.esc="handleEscapeKey"
+    >
+      <div class="mb-4 flex-cb">
         <div>
-          <span class="text-base font-medium">Art Bot</span>
+          <span class="text-base font-medium">{{ botDisplayName }}</span>
           <div class="mt-1.5 flex-c gap-1">
             <div
               class="h-2 w-2 rounded-full"
@@ -13,74 +18,223 @@
             <span class="text-xs text-g-600">{{ isOnline ? '在线' : '离线' }}</span>
           </div>
         </div>
-        <div>
+        <div class="flex-c gap-2">
+          <ElButton
+            v-if="isMobile"
+            text
+            size="small"
+            @click="sessionPanelVisible = !sessionPanelVisible"
+          >
+            历史
+          </ElButton>
+          <ElButton
+            text
+            size="small"
+            :disabled="sending || !conversationId"
+            @click="clearCurrentHistory"
+          >
+            清空
+          </ElButton>
+          <ElButton text size="small" :disabled="sending" @click="startNewConversation">
+            新对话
+          </ElButton>
           <ElIcon class="c-p" :size="20" @click="closeChat">
             <Close />
           </ElIcon>
         </div>
       </div>
-      <div class="flex h-[calc(100%-70px)] flex-col">
-        <!-- 聊天消息区域 -->
-        <div
-          class="flex-1 overflow-y-auto border-t-d px-4 py-7.5 [&::-webkit-scrollbar]:!w-1"
-          ref="messageContainer"
-        >
-          <template v-for="(message, index) in messages" :key="index">
-            <div
-              :class="[
-                'mb-7.5 flex w-full items-start gap-2',
-                message.isMe ? 'flex-row-reverse' : 'flex-row'
-              ]"
-            >
-              <ElAvatar :size="32" :src="message.avatar" class="shrink-0" />
-              <div
-                :class="['flex max-w-[70%] flex-col', message.isMe ? 'items-end' : 'items-start']"
-              >
-                <div
-                  :class="[
-                    'mb-1 flex gap-2 text-xs',
-                    message.isMe ? 'flex-row-reverse' : 'flex-row'
-                  ]"
-                >
-                  <span class="font-medium">{{ message.sender }}</span>
-                  <span class="text-g-600">{{ message.time }}</span>
-                </div>
-                <div
-                  :class="[
-                    'rounded-md px-3.5 py-2.5 text-sm leading-[1.4] text-g-900',
-                    message.isMe ? 'message-right bg-theme/15' : 'message-left bg-g-300/50'
-                  ]"
-                  >{{ message.content }}</div
-                >
-              </div>
-            </div>
-          </template>
-        </div>
 
-        <!-- 聊天输入区域 -->
-        <div class="px-4 pt-4">
-          <ElInput
-            v-model="messageText"
-            type="textarea"
-            :rows="3"
-            placeholder="输入消息"
-            resize="none"
-            @keyup.enter.prevent="sendMessage"
+      <div class="relative flex h-[calc(100%-64px)] overflow-hidden rounded-lg border border-g-300/50">
+        <ChatSessionPanel
+          v-if="!isMobile || sessionPanelVisible"
+          :class="{ 'absolute inset-y-0 left-0 z-10 bg-white shadow-lg': isMobile }"
+          :sessions="sessions"
+          :active-id="conversationId"
+          @select="switchSession"
+          @delete="deleteSession"
+          @rename="renameSession"
+        />
+
+        <div class="flex min-w-0 flex-1 flex-col">
+          <div
+            class="flex-1 overflow-y-auto px-4 py-5 [&::-webkit-scrollbar]:!w-1"
+            ref="messageContainer"
           >
-            <template #append>
-              <div class="flex gap-2 py-2">
-                <ElButton :icon="Paperclip" circle plain />
-                <ElButton :icon="Picture" circle plain />
-                <ElButton type="primary" @click="sendMessage" v-ripple>发送</ElButton>
+            <template v-for="message in messages" :key="message.id">
+              <div
+                :class="[
+                  'mb-7.5 flex w-full items-start gap-2',
+                  message.isMe ? 'flex-row-reverse' : 'flex-row'
+                ]"
+              >
+                <ArtAvatarDisplay
+                  v-if="message.isMe"
+                  :key="userAvatarDisplayKey"
+                  :avatar-url="userAvatarUrl"
+                  :size="32"
+                  avatar-class="shrink-0"
+                />
+                <ArtAvatarDisplay
+                  v-else
+                  :avatar-url="botAvatarUrl"
+                  :size="32"
+                  avatar-class="shrink-0"
+                />
+                <div
+                  :class="[
+                    'flex min-w-0 flex-col',
+                    message.isMe ? 'max-w-[70%] items-end' : 'max-w-[92%] items-start'
+                  ]"
+                >
+                  <div
+                    :class="[
+                      'mb-1 flex gap-2 text-xs',
+                      message.isMe ? 'flex-row-reverse' : 'flex-row'
+                    ]"
+                  >
+                    <span class="font-medium">{{ message.sender }}</span>
+                    <span class="text-g-600">{{ message.time }}</span>
+                  </div>
+                  <div
+                    :class="[
+                      'w-full rounded-md px-3.5 py-2.5 text-sm text-g-900',
+                      message.isMe
+                        ? 'message-right bg-theme/15 leading-[1.4]'
+                        : 'message-left bg-g-300/50 leading-normal'
+                    ]"
+                  >
+                    <span
+                      v-if="message.loading && !message.content"
+                      class="inline-flex items-center gap-1 text-g-700"
+                    >
+                      <span class="animate-pulse">{{ message.statusText || '正在思考' }}</span>
+                      <span class="animate-bounce">...</span>
+                    </span>
+                    <ChatMarkdown
+                      v-else-if="!message.isMe && message.content"
+                      :content="message.content"
+                      :streaming="!!message.streaming"
+                    />
+                    <span v-else>{{ message.content }}</span>
+                  </div>
+                  <div
+                    v-if="message.sources?.length"
+                    class="mt-2 w-full rounded-md border border-g-300/60 bg-g-100/40 px-3 py-2 text-xs text-g-700"
+                  >
+                    <div class="mb-1 font-medium text-g-800">参考来源</div>
+                    <div
+                      v-for="(source, index) in message.sources"
+                      :key="`${source.chunkId || index}-${source.docId || ''}`"
+                      class="leading-relaxed"
+                    >
+                      {{ index + 1 }}. {{ source.docTitle || '未知文档'
+                      }}<template v-if="source.pageNum">（第{{ source.pageNum }}页）</template>
+                      <span v-if="source.snippet"> — {{ source.snippet }}</span>
+                    </div>
+                  </div>
+                  <div
+                    v-if="canShowMessageActions(message)"
+                    class="mt-1.5 flex flex-wrap gap-2"
+                    :class="message.isMe ? 'justify-end' : 'justify-start'"
+                  >
+                    <ElButton
+                      link
+                      type="primary"
+                      size="small"
+                      class="!px-0 !text-xs"
+                      @click="copyMessage(message.content)"
+                    >
+                      复制
+                    </ElButton>
+                    <ElButton
+                      v-if="!message.isMe && message.userPrompt"
+                      link
+                      type="primary"
+                      size="small"
+                      class="!px-0 !text-xs"
+                      :disabled="sending"
+                      @click="regenerateMessage(message)"
+                    >
+                      重新生成
+                    </ElButton>
+                  </div>
+                </div>
               </div>
             </template>
-          </ElInput>
-          <div class="mt-3 flex-cb">
-            <div class="flex-c">
-              <ArtSvgIcon icon="ri:image-line" class="mr-5 c-p text-g-600 text-lg" />
-              <ArtSvgIcon icon="ri:emotion-happy-line" class="mr-5 c-p text-g-600 text-lg" />
+          </div>
+
+          <div class="border-t border-g-300/50 px-4 py-3">
+            <div
+              v-if="showModelSelector || showSceneSelector"
+              class="mb-2 flex flex-wrap items-center gap-2"
+            >
+              <template v-if="showSceneSelector">
+                <span class="shrink-0 text-xs text-g-500">场景</span>
+                <ElSelect
+                  v-model="selectedPromptScene"
+                  size="small"
+                  class="!w-36"
+                  :disabled="sending"
+                >
+                  <ElOption
+                    v-for="scene in displaySceneOptions"
+                    :key="scene.id"
+                    :label="scene.label"
+                    :value="scene.id"
+                  >
+                    <div class="flex flex-col leading-tight">
+                      <span>{{ scene.label }}</span>
+                      <span v-if="scene.description" class="text-[11px] text-g-500">{{
+                        scene.description
+                      }}</span>
+                    </div>
+                  </ElOption>
+                </ElSelect>
+              </template>
+              <template v-if="showModelSelector">
+                <span class="shrink-0 text-xs text-g-500">模型</span>
+                <ElSelect
+                  v-model="selectedModel"
+                  size="small"
+                  class="!w-44"
+                  :disabled="sending"
+                >
+                  <ElOption
+                    v-for="model in displayModelOptions"
+                    :key="model.id"
+                    :label="model.label"
+                    :value="model.id"
+                  />
+                </ElSelect>
+              </template>
             </div>
-            <ElButton type="primary" @click="sendMessage" v-ripple class="min-w-20">发送</ElButton>
+            <p v-if="routeHint" class="mb-2 text-[11px] text-g-500">{{ routeHint }}</p>
+            <ElInput
+              v-model="messageText"
+              type="textarea"
+              :rows="3"
+              placeholder="输入消息，Ctrl+Enter 发送"
+              resize="none"
+              :disabled="sending"
+              @keydown="handleInputKeydown"
+            />
+            <div class="mt-2 flex-cb">
+              <span class="text-[11px] text-g-500">Ctrl+Enter 发送 · Shift+Enter 换行 · Esc 停止</span>
+              <div class="flex gap-2">
+                <ElButton v-if="sending" type="danger" plain @click="stopGeneration" v-ripple>
+                  停止生成
+                </ElButton>
+                <ElButton
+                  v-else
+                  type="primary"
+                  :disabled="!messageText.trim()"
+                  @click="sendMessage"
+                  v-ripple
+                >
+                  发送
+                </ElButton>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -89,174 +243,656 @@
 </template>
 
 <script setup lang="ts">
-  import { Picture, Paperclip, Close } from '@element-plus/icons-vue'
-  import { mittBus } from '@/utils/sys'
-  import meAvatar from '@/assets/images/avatar/avatar5.webp'
-  import aiAvatar from '@/assets/images/avatar/avatar10.webp'
+import { Close } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { storeToRefs } from 'pinia'
+import {
+  fetchAiChatClearHistory,
+  fetchAiChatCreateSession,
+  fetchAiChatDeleteSession,
+  fetchAiChatHealth,
+  fetchAiChatMessages,
+  fetchAiChatRenameSession,
+  fetchAiChatSessions,
+  fetchAiChatStream,
+  isStreamAbortError,
+  AI_AUTO_ROUTE,
+  type AiModelOption,
+  type AiPromptSceneOption,
+  type ChatHistoryMessage,
+  type ChatSession
+} from '@/api/ai/chat'
+import { useUserStore } from '@/store/modules/user'
+import { isAbortError, stripChatCopyContent } from '@/utils/ai/render-markdown'
+import { getConversationStorageKey, getModelStorageKey, getSceneStorageKey } from '@/utils/ai/session-storage'
+import { mittBus } from '@/utils/sys'
+import ArtAvatarDisplay from '@/components/core/media/art-avatar-display/index.vue'
+import ChatMarkdown from '@/components/core/layouts/art-chat-window/chat-markdown.vue'
+import ChatSessionPanel from '@/components/core/layouts/art-chat-window/chat-session-panel.vue'
+import defaultUserAvatar from '@imgs/user/avatar.webp'
+import defaultBotAvatar from '@/assets/images/avatar/avatar10.webp'
 
-  defineOptions({ name: 'ArtChatWindow' })
+defineOptions({ name: 'ArtChatWindow' })
 
-  // 类型定义
-  interface ChatMessage {
-    id: number
-    sender: string
-    content: string
-    time: string
-    isMe: boolean
-    avatar: string
+interface ChatMessage {
+  id: number
+  sender: string
+  content: string
+  time: string
+  isMe: boolean
+  loading?: boolean
+  streaming?: boolean
+  statusText?: string
+  stopped?: boolean
+  userPrompt?: string
+  isWelcome?: boolean
+  sources?: import('@/api/ai/chat').RagSourceItem[]
+}
+
+const MOBILE_BREAKPOINT = 640
+const SCROLL_DELAY = 100
+const DEFAULT_BOT_NAME = 'AI 助手'
+const DEFAULT_WELCOME_MESSAGE = '你好！我是 **AI 助手**，有什么我可以帮你的吗？'
+
+const { width } = useWindowSize()
+const isMobile = computed(() => width.value < MOBILE_BREAKPOINT)
+const userStore = useUserStore()
+const { getUserInfo: userInfo } = storeToRefs(userStore)
+
+const isDrawerVisible = ref(false)
+const sessionPanelVisible = ref(false)
+const isOnline = ref(false)
+const sending = ref(false)
+const messageText = ref('')
+const messageId = ref(1)
+const conversationId = ref('')
+const sessions = ref<ChatSession[]>([])
+const messageContainer = ref<HTMLElement | null>(null)
+const streamAbortController = ref<AbortController | null>(null)
+const botDisplayName = ref(DEFAULT_BOT_NAME)
+const botAvatarUrl = ref(defaultBotAvatar)
+const welcomeMessage = ref(DEFAULT_WELCOME_MESSAGE)
+const modelOptions = ref<AiModelOption[]>([])
+const selectedModel = ref('')
+const promptSceneOptions = ref<AiPromptSceneOption[]>([])
+const selectedPromptScene = ref('')
+const queryRouterEnabled = ref(false)
+const routeHint = ref('')
+
+const AUTO_MODEL_OPTION: AiModelOption = { id: AI_AUTO_ROUTE, label: '自动' }
+const AUTO_SCENE_OPTION: AiPromptSceneOption = {
+  id: AI_AUTO_ROUTE,
+  label: '自动',
+  description: '按问题智能选择场景'
+}
+
+const displayModelOptions = computed(() =>
+  queryRouterEnabled.value ? [AUTO_MODEL_OPTION, ...modelOptions.value] : modelOptions.value
+)
+const displaySceneOptions = computed(() =>
+  queryRouterEnabled.value ? [AUTO_SCENE_OPTION, ...promptSceneOptions.value] : promptSceneOptions.value
+)
+const showModelSelector = computed(() => queryRouterEnabled.value || modelOptions.value.length > 1)
+const showSceneSelector = computed(() => queryRouterEnabled.value || promptSceneOptions.value.length > 1)
+
+const userName = computed(() => {
+  const user = userInfo.value?.user
+  return user?.nickName || user?.username || '我'
+})
+
+const userAvatarUrl = computed(() => {
+  const u = userInfo.value as any
+  const topAvatar = u?.avatar
+  const userAvatar = u?.user?.avatar
+  const url = topAvatar && String(topAvatar).trim() ? topAvatar : userAvatar
+  return url && String(url).trim() ? url : defaultUserAvatar
+})
+
+const userAvatarDisplayKey = computed(() => {
+  const u = userInfo.value as any
+  const v = u?.avatarUpdatedAt ?? u?.user?.avatarUpdatedAt ?? ''
+  return `${String(userAvatarUrl.value)}|${v}`
+})
+
+const formatCurrentTime = (): string => {
+  return new Date().toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const formatMessageTime = (timestamp?: number): string => {
+  if (!timestamp) {
+    return formatCurrentTime()
   }
+  return new Date(timestamp).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 
-  // 常量定义
-  const MOBILE_BREAKPOINT = 640
-  const SCROLL_DELAY = 100
-  const BOT_NAME = 'Art Bot'
-  const USER_NAME = 'Ricky'
+const createWelcomeMessage = (): ChatMessage => ({
+  id: messageId.value++,
+  sender: botDisplayName.value,
+  content: welcomeMessage.value,
+  time: formatCurrentTime(),
+  isMe: false,
+  isWelcome: true
+})
 
-  // 响应式布局
-  const { width } = useWindowSize()
-  const isMobile = computed(() => width.value < MOBILE_BREAKPOINT)
+const messages = ref<ChatMessage[]>([createWelcomeMessage()])
 
-  // 组件状态
-  const isDrawerVisible = ref(false)
-  const isOnline = ref(true)
+const scrollToBottom = (): void => {
+  nextTick(() => {
+    setTimeout(() => {
+      if (messageContainer.value) {
+        messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+      }
+    }, SCROLL_DELAY)
+  })
+}
 
-  // 消息相关状态
-  const messageText = ref('')
-  const messageId = ref(10)
-  const messageContainer = ref<HTMLElement | null>(null)
+const loadConversationId = (): void => {
+  const userId = userInfo.value?.user?.userId
+  conversationId.value = sessionStorage.getItem(getConversationStorageKey(userId)) || ''
+}
 
-  // 初始化聊天消息数据
-  const initializeMessages = (): ChatMessage[] => [
-    {
-      id: 1,
-      sender: BOT_NAME,
-      content: '你好！我是你的AI助手，有什么我可以帮你的吗？',
-      time: '10:00',
-      isMe: false,
-      avatar: aiAvatar
-    },
-    {
-      id: 2,
-      sender: USER_NAME,
-      content: '我想了解一下系统的使用方法。',
-      time: '10:01',
-      isMe: true,
-      avatar: meAvatar
-    },
-    {
-      id: 3,
-      sender: BOT_NAME,
-      content: '好的，我来为您介绍系统的主要功能。首先，您可以通过左侧菜单访问不同的功能模块...',
-      time: '10:02',
-      isMe: false,
-      avatar: aiAvatar
-    },
-    {
-      id: 4,
-      sender: USER_NAME,
-      content: '听起来很不错，能具体讲讲数据分析部分吗？',
-      time: '10:05',
-      isMe: true,
-      avatar: meAvatar
-    },
-    {
-      id: 5,
-      sender: BOT_NAME,
-      content: '当然可以。数据分析模块可以帮助您实时监控关键指标，并生成详细的报表...',
-      time: '10:06',
-      isMe: false,
-      avatar: aiAvatar
-    },
-    {
-      id: 6,
-      sender: USER_NAME,
-      content: '太好了，那我如何开始使用呢？',
-      time: '10:08',
-      isMe: true,
-      avatar: meAvatar
-    },
-    {
-      id: 7,
-      sender: BOT_NAME,
-      content: '您可以先创建一个项目，然后在项目中添加相关的数据源，系统会自动进行分析。',
-      time: '10:09',
-      isMe: false,
-      avatar: aiAvatar
-    },
-    {
-      id: 8,
-      sender: USER_NAME,
-      content: '明白了，谢谢你的帮助！',
-      time: '10:10',
-      isMe: true,
-      avatar: meAvatar
-    },
-    {
-      id: 9,
-      sender: BOT_NAME,
-      content: '不客气，有任何问题随时联系我。',
-      time: '10:11',
-      isMe: false,
-      avatar: aiAvatar
+const saveConversationId = (id: string): void => {
+  conversationId.value = id
+  const userId = userInfo.value?.user?.userId
+  sessionStorage.setItem(getConversationStorageKey(userId), id)
+}
+
+const applyBotProfile = (health?: {
+  botAvatar?: string
+  botName?: string
+  welcomeMessage?: string
+  models?: AiModelOption[]
+  defaultModel?: string
+  promptTemplates?: AiPromptSceneOption[]
+  defaultPromptScene?: string
+  queryRouterEnabled?: boolean
+}): void => {
+  queryRouterEnabled.value = health?.queryRouterEnabled ?? false
+  if (health?.botName && String(health.botName).trim()) {
+    botDisplayName.value = health.botName.trim()
+  }
+  if (health?.botAvatar && String(health.botAvatar).trim()) {
+    botAvatarUrl.value = health.botAvatar.trim()
+  } else {
+    botAvatarUrl.value = defaultBotAvatar
+  }
+  if (health?.welcomeMessage && String(health.welcomeMessage).trim()) {
+    welcomeMessage.value = health.welcomeMessage.trim()
+  }
+  if (health?.models?.length) {
+    modelOptions.value = health.models
+    const userId = userInfo.value?.user?.userId
+    const storedModel = sessionStorage.getItem(getModelStorageKey(userId)) || ''
+    const defaultModel = health.defaultModel || health.models[0]?.id || ''
+    const allowedModels = new Set([AI_AUTO_ROUTE, ...health.models.map((item) => item.id)])
+    if (queryRouterEnabled.value) {
+      selectedModel.value =
+        storedModel && allowedModels.has(storedModel) ? storedModel : AI_AUTO_ROUTE
+    } else {
+      selectedModel.value =
+        storedModel && health.models.some((item) => item.id === storedModel)
+          ? storedModel
+          : defaultModel
     }
-  ]
+  } else {
+    modelOptions.value = []
+    selectedModel.value = queryRouterEnabled.value ? AI_AUTO_ROUTE : health?.defaultModel || ''
+  }
+  if (health?.promptTemplates?.length) {
+    promptSceneOptions.value = health.promptTemplates
+    const userId = userInfo.value?.user?.userId
+    const storedScene = sessionStorage.getItem(getSceneStorageKey(userId)) || ''
+    const defaultScene = health.defaultPromptScene || health.promptTemplates[0]?.id || ''
+    const allowedScenes = new Set([AI_AUTO_ROUTE, ...health.promptTemplates.map((item) => item.id)])
+    if (queryRouterEnabled.value) {
+      selectedPromptScene.value =
+        storedScene && allowedScenes.has(storedScene) ? storedScene : AI_AUTO_ROUTE
+    } else {
+      selectedPromptScene.value =
+        storedScene && health.promptTemplates.some((item) => item.id === storedScene)
+          ? storedScene
+          : defaultScene
+    }
+  } else {
+    promptSceneOptions.value = []
+    selectedPromptScene.value = queryRouterEnabled.value
+      ? AI_AUTO_ROUTE
+      : health?.defaultPromptScene || ''
+  }
+}
 
-  const messages = ref<ChatMessage[]>(initializeMessages())
+watch(selectedModel, (model) => {
+  if (model) {
+    const userId = userInfo.value?.user?.userId
+    sessionStorage.setItem(getModelStorageKey(userId), model)
+  }
+})
 
-  // 工具函数
-  const formatCurrentTime = (): string => {
-    return new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+watch(selectedPromptScene, (scene) => {
+  if (scene) {
+    const userId = userInfo.value?.user?.userId
+    sessionStorage.setItem(getSceneStorageKey(userId), scene)
+  }
+})
+
+watch(
+  () => userInfo.value?.user?.userId,
+  () => {
+    loadConversationId()
+  }
+)
+
+const checkHealth = async (): Promise<void> => {
+  try {
+    const health = await fetchAiChatHealth()
+    isOnline.value = !!health?.online
+    applyBotProfile(health)
+  } catch {
+    isOnline.value = false
+    ElMessage.warning('AI 服务连接失败')
+  }
+}
+
+const loadSessions = async (): Promise<void> => {
+  try {
+    sessions.value = (await fetchAiChatSessions()) || []
+  } catch {
+    sessions.value = []
+    ElMessage.warning('加载对话列表失败')
+  }
+}
+
+const mapHistoryToMessages = (history: ChatHistoryMessage[]): ChatMessage[] => {
+  if (!history.length) {
+    return [createWelcomeMessage()]
   }
 
-  const scrollToBottom = (): void => {
-    nextTick(() => {
-      setTimeout(() => {
-        if (messageContainer.value) {
-          messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+  const result: ChatMessage[] = []
+  let lastUser = ''
+
+  for (const item of history) {
+    if (item.role === 'USER') {
+      lastUser = item.content
+      result.push({
+        id: messageId.value++,
+        sender: userName.value,
+        content: item.content,
+        time: formatMessageTime(item.createTime),
+        isMe: true
+      })
+    } else if (item.role === 'ASSISTANT') {
+      result.push({
+        id: messageId.value++,
+        sender: botDisplayName.value,
+        content: item.content,
+        time: formatMessageTime(item.createTime),
+        isMe: false,
+        userPrompt: lastUser
+      })
+    }
+  }
+  return result
+}
+
+const loadConversationMessages = async (targetConversationId: string): Promise<void> => {
+  if (!targetConversationId) {
+    messages.value = [createWelcomeMessage()]
+    return
+  }
+  try {
+    const history = await fetchAiChatMessages(targetConversationId)
+    messages.value = mapHistoryToMessages(history || [])
+  } catch {
+    messages.value = [createWelcomeMessage()]
+    ElMessage.warning('加载对话历史失败')
+  }
+  scrollToBottom()
+}
+
+const canShowMessageActions = (message: ChatMessage): boolean => {
+  return !message.loading && !message.streaming && !!message.content.trim() && !message.isWelcome
+}
+
+const appendStoppedHint = (message: ChatMessage): void => {
+  message.stopped = true
+  if (message.content.trim()) {
+    message.content += '\n\n---\n*已停止生成*'
+  } else {
+    message.content = '*已停止生成*'
+  }
+  message.time = formatCurrentTime()
+}
+
+const appendTimeoutHint = (message: ChatMessage): void => {
+  message.stopped = true
+  if (message.content.trim()) {
+    message.content += '\n\n---\n*生成超时，请重试*'
+  } else {
+    message.content = '*生成超时，请重试*'
+  }
+  message.time = formatCurrentTime()
+}
+
+const stopGeneration = (): void => {
+  streamAbortController.value?.abort()
+}
+
+const handleInputKeydown = (event: KeyboardEvent): void => {
+  if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault()
+    sendMessage()
+  }
+}
+
+const handleEscapeKey = (): void => {
+  if (sending.value) {
+    stopGeneration()
+  }
+}
+
+const copyMessage = async (content: string): Promise<void> => {
+  const text = stripChatCopyContent(content)
+  if (!text) {
+    ElMessage.warning('没有可复制的内容')
+    return
+  }
+  try {
+    await navigator.clipboard.writeText(text)
+    ElMessage.success('已复制到剪贴板')
+  } catch {
+    ElMessage.error('复制失败，请手动选择文本')
+  }
+}
+
+const isLikelyNetworkError = (error: unknown): boolean => {
+  if (!(error instanceof Error)) {
+    return false
+  }
+  const message = error.message.toLowerCase()
+  return (
+    message.includes('failed to fetch') ||
+    message.includes('networkerror') ||
+    message.includes('network error') ||
+    message.includes('无法读取 ai 流式响应')
+  )
+}
+
+const runAssistantStream = async (
+  userText: string,
+  botMessage: ChatMessage,
+  options?: { regenerate?: boolean }
+): Promise<void> => {
+  botMessage.sender = botDisplayName.value
+  botMessage.loading = true
+  botMessage.streaming = false
+  botMessage.statusText = '正在连接…'
+  botMessage.stopped = false
+  botMessage.content = ''
+  botMessage.sources = undefined
+  botMessage.time = formatCurrentTime()
+  botMessage.userPrompt = userText
+
+  sending.value = true
+  streamAbortController.value?.abort()
+  streamAbortController.value = new AbortController()
+  routeHint.value = ''
+  scrollToBottom()
+
+  try {
+    await fetchAiChatStream(
+      {
+        message: userText,
+        conversationId: conversationId.value || undefined,
+        regenerate: options?.regenerate,
+        model: selectedModel.value || undefined,
+        promptScene: selectedPromptScene.value || undefined
+      },
+      {
+        onMeta: (meta) => {
+          if (meta.conversationId) {
+            saveConversationId(meta.conversationId)
+          }
+          if (meta.sources?.length) {
+            botMessage.sources = meta.sources
+          }
+          if (meta.ragDegraded) {
+            routeHint.value = '知识库检索暂不可用，将基于通用能力回答'
+          }
+          if (meta.routed) {
+            const sceneLabel =
+              promptSceneOptions.value.find((item) => item.id === meta.promptScene)?.label ||
+              meta.promptScene ||
+              '自动'
+            const modelLabel =
+              modelOptions.value.find((item) => item.id === meta.model)?.label ||
+              meta.model ||
+              ''
+            routeHint.value = modelLabel
+              ? `智能路由：${sceneLabel} · ${modelLabel}`
+              : `智能路由：${sceneLabel}`
+          }
+        },
+        onStatus: (status) => {
+          botMessage.statusText = status.message
+          scrollToBottom()
+        },
+        onDelta: (chunk) => {
+          botMessage.loading = false
+          botMessage.streaming = true
+          botMessage.statusText = undefined
+          botMessage.content += chunk
+          scrollToBottom()
+        },
+        onError: (message) => {
+          botMessage.loading = false
+          botMessage.streaming = false
+          if (!botMessage.content) {
+            botMessage.content = message || 'AI 服务暂时不可用，请稍后再试。'
+          }
         }
-      }, SCROLL_DELAY)
-    })
-  }
+      },
+      streamAbortController.value.signal
+    )
 
-  // 消息处理方法
-  const sendMessage = (): void => {
-    const text = messageText.value.trim()
-    if (!text) return
+    botMessage.loading = false
+    botMessage.streaming = false
+    if (!botMessage.content) {
+      botMessage.content = '抱歉，我暂时无法回答这个问题。'
+    }
+    botMessage.time = formatCurrentTime()
+    isOnline.value = true
+  } catch (error) {
+    botMessage.loading = false
+    botMessage.streaming = false
 
-    const newMessage: ChatMessage = {
-      id: messageId.value++,
-      sender: USER_NAME,
-      content: text,
-      time: formatCurrentTime(),
-      isMe: true,
-      avatar: meAvatar
+    if (isStreamAbortError(error)) {
+      if (error.reason === 'timeout') {
+        appendTimeoutHint(botMessage)
+      } else {
+        appendStoppedHint(botMessage)
+      }
+      return
     }
 
-    messages.value.push(newMessage)
+    if (isAbortError(error)) {
+      appendStoppedHint(botMessage)
+      return
+    }
+
+    if (!botMessage.content) {
+      botMessage.content = 'AI 服务暂时不可用，请稍后再试。'
+    }
+    botMessage.time = formatCurrentTime()
+    if (isLikelyNetworkError(error)) {
+      isOnline.value = false
+    }
+    ElMessage.error(error instanceof Error ? error.message : '发送失败')
+  } finally {
+    streamAbortController.value = null
+    sending.value = false
+    await loadSessions()
+    scrollToBottom()
+  }
+}
+
+const sendMessage = async (): Promise<void> => {
+  const text = messageText.value.trim()
+  if (!text || sending.value) return
+
+  const failedBot = [...messages.value]
+    .reverse()
+    .find((item) => !item.isMe && item.userPrompt === text && !stripChatCopyContent(item.content))
+  if (failedBot) {
     messageText.value = ''
-    scrollToBottom()
+    await runAssistantStream(text, failedBot, { regenerate: true })
+    return
   }
 
-  // 聊天窗口控制方法
-  const openChat = (): void => {
-    isDrawerVisible.value = true
-    scrollToBottom()
-  }
-
-  const closeChat = (): void => {
-    isDrawerVisible.value = false
-  }
-
-  // 生命周期
-  onMounted(() => {
-    scrollToBottom()
-    mittBus.on('openChat', openChat)
+  messages.value.push({
+    id: messageId.value++,
+    sender: userName.value,
+    content: text,
+    time: formatCurrentTime(),
+    isMe: true
   })
 
-  onUnmounted(() => {
-    mittBus.off('openChat', openChat)
-  })
+  const botMessage: ChatMessage = {
+    id: messageId.value++,
+    sender: botDisplayName.value,
+    content: '',
+    time: formatCurrentTime(),
+    isMe: false,
+    loading: true,
+    streaming: false
+  }
+
+  messages.value.push(botMessage)
+  messageText.value = ''
+  await runAssistantStream(text, botMessage)
+}
+
+const regenerateMessage = async (botMessage: ChatMessage): Promise<void> => {
+  if (!botMessage.userPrompt || sending.value) return
+  await runAssistantStream(botMessage.userPrompt, botMessage, { regenerate: true })
+}
+
+const switchSession = async (targetConversationId: string): Promise<void> => {
+  if (sending.value || targetConversationId === conversationId.value) {
+    sessionPanelVisible.value = false
+    return
+  }
+  saveConversationId(targetConversationId)
+  await loadConversationMessages(targetConversationId)
+  sessionPanelVisible.value = false
+}
+
+const deleteSession = async (targetConversationId: string): Promise<void> => {
+  try {
+    await ElMessageBox.confirm('确定删除这条对话吗？', '提示', {
+      type: 'warning',
+      confirmButtonText: '删除',
+      cancelButtonText: '取消'
+    })
+  } catch {
+    return
+  }
+
+  try {
+    await fetchAiChatDeleteSession(targetConversationId)
+    if (targetConversationId === conversationId.value) {
+      await startNewConversation(false)
+    } else {
+      await loadSessions()
+    }
+    ElMessage.success('对话已删除')
+  } catch {
+    ElMessage.error('删除失败')
+  }
+}
+
+const renameSession = async (payload: { conversationId: string; title: string }): Promise<void> => {
+  try {
+    await fetchAiChatRenameSession(payload)
+    await loadSessions()
+    ElMessage.success('已重命名')
+  } catch {
+    ElMessage.error('重命名失败')
+  }
+}
+
+const clearCurrentHistory = async (): Promise<void> => {
+  if (!conversationId.value || sending.value) return
+
+  try {
+    await ElMessageBox.confirm('确定清空当前对话的消息记录吗？', '提示', {
+      type: 'warning',
+      confirmButtonText: '清空',
+      cancelButtonText: '取消'
+    })
+  } catch {
+    return
+  }
+
+  try {
+    await fetchAiChatClearHistory(conversationId.value)
+    messages.value = [createWelcomeMessage()]
+    scrollToBottom()
+    ElMessage.success('对话已清空')
+  } catch {
+    ElMessage.error('清空失败')
+  }
+}
+
+const startNewConversation = async (showToast = true): Promise<void> => {
+  if (sending.value) {
+    stopGeneration()
+  }
+
+  try {
+    const session = await fetchAiChatCreateSession()
+    saveConversationId(session.conversationId)
+    messages.value = [createWelcomeMessage()]
+    messageText.value = ''
+    await loadSessions()
+    scrollToBottom()
+    if (showToast) {
+      ElMessage.success('已开始新对话')
+    }
+  } catch {
+    ElMessage.error('创建新对话失败')
+  }
+}
+
+const openChat = async (): Promise<void> => {
+  isDrawerVisible.value = true
+  await Promise.all([checkHealth(), loadSessions()])
+  if (conversationId.value) {
+    await loadConversationMessages(conversationId.value)
+  } else {
+    messages.value = [createWelcomeMessage()]
+  }
+  scrollToBottom()
+}
+
+const closeChat = (): void => {
+  isDrawerVisible.value = false
+  sessionPanelVisible.value = false
+}
+
+onMounted(async () => {
+  loadConversationId()
+  await checkHealth()
+  mittBus.on('openChat', openChat)
+})
+
+onUnmounted(() => {
+  streamAbortController.value?.abort()
+  mittBus.off('openChat', openChat)
+})
 </script>

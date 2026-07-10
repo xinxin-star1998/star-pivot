@@ -84,6 +84,10 @@
             <groupId>com.star.pivot</groupId>
             <artifactId>star-pivot-monitor</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.star.pivot</groupId>
+            <artifactId>star-pivot-ai</artifactId>
+        </dependency>
         <!-- Spring Boot Actuator（用于系统指标监控） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
