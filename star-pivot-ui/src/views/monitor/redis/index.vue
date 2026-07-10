@@ -167,6 +167,7 @@
   } from '@/api/monitor/cache'
   import type { CacheContentInfo, CacheKeyInfo, RedisCacheInfo } from '@/types/api/monitor'
   import { ElMessage, ElMessageBox } from 'element-plus'
+  import { handleMutationError } from '@/utils/http/mutation'
   import ArtVirtualList from '@/components/core/lists/art-virtual-list/index.vue'
 
   defineOptions({ name: 'CacheManage' })
@@ -282,7 +283,7 @@
       nextTick(() => keyListRef.value?.scrollToTop())
     } catch (error) {
       console.error('获取键名列表失败:', error)
-      ElMessage.error('获取键名列表失败')
+      handleMutationError(error, '获取键名列表失败')
     } finally {
       loadingKeys.value = false
     }
@@ -325,7 +326,7 @@
       cacheContent.value = data
     } catch (error) {
       console.error('获取缓存内容失败:', error)
-      ElMessage.error('获取缓存内容失败')
+      handleMutationError(error, '获取缓存内容失败')
     } finally {
       loadingContent.value = false
     }
@@ -369,7 +370,7 @@
         }
       } catch (error) {
         console.error('删除缓存失败:', error)
-        ElMessage.error('删除缓存失败')
+        handleMutationError(error, '删除缓存失败')
       } finally {
         deletingCache.value = null
       }
@@ -409,7 +410,7 @@
         }
       } catch (error) {
         console.error('删除键失败:', error)
-        ElMessage.error('删除键失败')
+        handleMutationError(error, '删除键失败')
       } finally {
         deletingKey.value = null
       }
@@ -446,7 +447,7 @@
         }
       } catch (error) {
         console.error('清空缓存失败:', error)
-        ElMessage.error('清空缓存失败')
+        handleMutationError(error, '清空缓存失败')
       } finally {
         clearingAll.value = false
       }

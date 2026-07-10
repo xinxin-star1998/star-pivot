@@ -12,7 +12,8 @@
     "requestCancelled": "请求已取消",
     "networkError": "网络连接异常，请检查网络连接",
     "requestFailed": "请求失败",
-    "requestConfigError": "请求配置错误"
+    "requestConfigError": "请求配置错误",
+    "demoModeDenied": "演示模式，不允许操作"
   },
   "topBar": {
     "search": {

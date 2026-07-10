@@ -36,6 +36,7 @@
   import { ElMessage } from 'element-plus'
   import { useI18n } from 'vue-i18n'
   import { fetchGetConsoleDashboardData } from '@/api/dashboard/console'
+  import { handleMutationError } from '@/utils/http/mutation'
   import type { ConsoleDashboardData } from '@/types/api/dashboard'
   import CardList from './modules/card-list.vue'
   import ActiveUser from './modules/active-user.vue'
@@ -68,7 +69,7 @@
       dashboardData.value = await fetchGetConsoleDashboardData()
     } catch (error) {
       dashboardData.value = createDefaultData()
-      ElMessage.error(t('dashboard.loadFailed'))
+      handleMutationError(error, t('dashboard.loadFailed'))
       console.error('加载首页数据失败', error)
     } finally {
       loading.value = false

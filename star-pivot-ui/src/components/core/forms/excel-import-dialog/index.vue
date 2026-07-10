@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
+  import { handleMutationError } from '@/utils/http/mutation'
   import { UploadFilled } from '@element-plus/icons-vue'
   import type { UploadFile } from 'element-plus'
   import type { ExcelImportResultVo } from '@/api/common/excel'
@@ -107,7 +108,7 @@
     try {
       await props.downloadTemplateFn()
     } catch (err) {
-      ElMessage.error('模板下载失败')
+      handleMutationError(error, '模板下载失败')
       emit('error', err)
     } finally {
       templateLoading.value = false
@@ -139,7 +140,7 @@
       emit('success')
       handleClose()
     } catch (err) {
-      ElMessage.error('导入失败')
+      handleMutationError(error, '导入失败')
       emit('error', err)
     } finally {
       loading.value = false

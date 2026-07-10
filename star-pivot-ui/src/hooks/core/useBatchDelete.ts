@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { isUserCancelError } from '@/utils/http/mutation'
+import { isUserCancelError, handleMutationError } from '@/utils/http/mutation'
 
 type ConfirmType = 'success' | 'warning' | 'info' | 'error'
 
@@ -67,7 +67,7 @@ export function useBatchDelete<T>(options: BatchDeleteOptions<T>) {
         onError(error)
         return
       }
-      ElMessage.error(errorMessage)
+      handleMutationError(error, errorMessage)
     }
   }
 
@@ -112,6 +112,6 @@ export async function runSingleDelete(
       onError(error)
       return
     }
-    ElMessage.error(errorMessage)
+    handleMutationError(error, errorMessage)
   }
 }

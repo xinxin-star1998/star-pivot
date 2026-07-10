@@ -53,6 +53,7 @@
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
   import { fetchGetUserListByRoleId, fetchCancelUser } from '@/api/role/role'
+  import { handleMutationError } from '@/utils/http/mutation'
   import AssignUserSearch from './modules/assign-user-search.vue'
   import { ElTag, ElButton, ElSpace, ElMessage } from 'element-plus'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
@@ -176,7 +177,7 @@
                       refreshData()
                     } catch (error) {
                       console.error('取消授权失败:', error)
-                      ElMessage.error('取消授权失败')
+                      handleMutationError(error, '取消授权失败')
                     }
                   }
                 },

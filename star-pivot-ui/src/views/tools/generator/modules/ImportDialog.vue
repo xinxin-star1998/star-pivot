@@ -56,6 +56,7 @@
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { fetchGetDbList, fetchImportTable } from '@/api/generator/gen-table'
+  import { handleMutationError } from '@/utils/http/mutation'
   import type { ColumnOption } from '@/types'
 
   interface ImportTableItem {
@@ -251,7 +252,7 @@
       if (import.meta.env.DEV) {
         console.error('导入失败：', error)
       }
-      ElMessage.error('导入失败')
+      handleMutationError(error, '导入失败')
     }
   }
 </script>

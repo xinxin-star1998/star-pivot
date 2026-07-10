@@ -2,6 +2,7 @@ package com.star.pivot.security.config;
 
 import com.star.pivot.security.extension.HttpSecurityCustomizer;
 import com.star.pivot.security.extension.PermitAllPathProvider;
+import com.star.pivot.security.filter.DemoModeFilter;
 import com.star.pivot.security.filter.JwtAuthenticationFilter;
 import com.star.pivot.security.filter.JwtSecurityExceptionHandler;
 import jakarta.servlet.DispatcherType;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final DemoModeFilter demoModeFilter;
     private final UserDetailsService userDetailsService;
     private final JwtSecurityExceptionHandler jwtSecurityExceptionHandler;
     private final CorsProperties corsProperties;
@@ -99,7 +101,8 @@ public class SecurityConfig {
 
                     auth.anyRequest().authenticated();
                 })
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(demoModeFilter, JwtAuthenticationFilter.class);
 
         for (HttpSecurityCustomizer customizer : httpSecurityCustomizers) {
             customizer.customize(http);

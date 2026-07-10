@@ -29,12 +29,15 @@
  */
 
 import { useRoute } from 'vue-router'
+import { storeToRefs } from 'pinia'
+import { useUserStore } from '@/store/modules/user'
 import type { AppRouteRecord } from '@/types/router'
 
 type AuthItem = NonNullable<AppRouteRecord['meta']['authList']>[number]
 
 export const useAuth = () => {
   const route = useRoute()
+  const { isDemoMode } = storeToRefs(useUserStore())
 
   /**
    * 每次调用时都从当前路由 meta 中读取最新的权限列表，
@@ -45,9 +48,7 @@ export const useAuth = () => {
   }
 
   /**
-   * 检查是否拥有某权限标识
-   * @param auth 权限标识
-   * @returns 是否有权限
+   * 检查是否拥有某权限标识（演示模式下按钮仍可见，写操作由演示拦截处理）
    */
   const hasAuth = (auth: string): boolean => {
     const backendAuthList = getBackendAuthList()
@@ -55,6 +56,7 @@ export const useAuth = () => {
   }
 
   return {
-    hasAuth
+    hasAuth,
+    isDemoMode
   }
 }

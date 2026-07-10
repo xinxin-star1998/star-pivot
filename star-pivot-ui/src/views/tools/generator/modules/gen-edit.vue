@@ -190,6 +190,7 @@
     ElTabs
   } from 'element-plus'
   import { fetchEditSave, fetchGetGenTableInfo } from '@/api/generator/gen-table'
+  import { handleMutationError } from '@/utils/http/mutation'
   import { fetchGetDictTypeSelectList, type SysDictType } from '@/api/dict/type'
   import { fetchGetParentMenu } from '@/api/menu/menu'
 
@@ -299,7 +300,7 @@
       if (import.meta.env.DEV) {
         console.error('获取代码生成信息失败：', error)
       }
-      ElMessage.error('获取代码生成信息失败')
+      handleMutationError(error, '获取代码生成信息失败')
     } finally {
       loading.value = false
     }

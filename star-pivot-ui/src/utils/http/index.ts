@@ -21,6 +21,7 @@ import { handleError, HttpError, showError, showSuccess } from './error'
 import { $t } from '@/locales'
 import { BaseResponse } from '@/types'
 import { fetchRefreshToken } from '@/api/auth'
+import { isDemoWriteRequest } from '@/utils/demo-mode'
 
 /** 请求配置常量 */
 const REQUEST_TIMEOUT = 15000
@@ -199,6 +200,15 @@ axiosInstance.interceptors.request.use(
       )
     }
 
+    // 演示模式：拦截写操作（弹窗可打开，提交在此被阻止）
+    if (
+      userStore.isDemoMode &&
+      isDemoWriteRequest(request.method, request.url) &&
+      !isAuthEntryRequest(request.url)
+    ) {
+      return Promise.reject(createHttpError($t('httpMsg.demoModeDenied'), ApiStatus.forbidden))
+    }
+
     // 设置 Content-Type（仅当未设置且数据不是 FormData 时）
     // 注意：axios 会自动将 JavaScript 对象序列化为 JSON，无需手动 stringify
     if (request.data && !(request.data instanceof FormData) && !request.headers['Content-Type']) {
@@ -263,6 +273,11 @@ axiosInstance.interceptors.response.use(
     throw createHttpError(messageText, code)
   },
   async (error) => {
+    // 演示模式等场景在请求拦截器里直接 reject HttpError，需原样透传
+    if (error instanceof HttpError) {
+      return Promise.reject(error)
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
     // HTTP 状态码为 401 且未重试过，尝试刷新令牌

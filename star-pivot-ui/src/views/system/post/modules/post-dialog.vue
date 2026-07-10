@@ -50,6 +50,7 @@
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
   import { fetchAddPost, fetchUpdatePost, fetchGetPostById, type SysPost } from '@/api/post/post'
+  import { handleMutationError } from '@/utils/http/mutation'
 
   interface Props {
     visible: boolean
@@ -123,7 +124,7 @@
         }
       } catch (error) {
         console.error('获取岗位详情失败:', error)
-        ElMessage.error('获取岗位详情失败')
+        handleMutationError(error, '获取岗位详情失败')
         // 如果获取详情失败，使用列表数据作为回退
         const row = props.postData
         Object.assign(formData, {
@@ -193,8 +194,7 @@
           dialogVisible.value = false
           emit('submit')
         } catch (error) {
-          console.error('提交失败:', error)
-          ElMessage.error(dialogType.value === 'add' ? '新增失败' : '更新失败')
+          handleMutationError(error, dialogType.value === 'add' ? '新增失败' : '更新失败')
         }
       }
     })

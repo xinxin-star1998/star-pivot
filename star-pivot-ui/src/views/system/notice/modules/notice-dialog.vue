@@ -59,6 +59,7 @@
     fetchGetNoticeById,
     type Notice
   } from '@/api/system/notice/notice'
+  import { handleMutationError } from '@/utils/http/mutation'
   import { DialogType } from '@/types'
   interface Props {
     visible: boolean
@@ -118,7 +119,7 @@
         }
       } catch (error) {
         console.error('获取通知公告详情失败:', error)
-        ElMessage.error('获取通知公告详情失败')
+        handleMutationError(error, '获取通知公告详情失败')
         // 如果获取详情失败，使用列表数据作为回退
         const row = props.noticeData
         Object.assign(formData, {
@@ -184,7 +185,7 @@
           emit('submit')
         } catch (error) {
           console.error('提交失败:', error)
-          ElMessage.error(dialogType.value === 'add' ? '新增失败' : '更新失败')
+          handleMutationError(error, dialogType.value === 'add' ? '新增失败' : '更新失败')
         }
       }
     })

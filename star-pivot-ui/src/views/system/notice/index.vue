@@ -59,6 +59,7 @@
   import { useTable } from '@/hooks/core/useTable'
   import { useDict } from '@/hooks/core/useDict'
   import { fetchDeleteNotice, fetchGetNoticeList, type Notice } from '@/api/system/notice/notice'
+  import { handleMutationError } from '@/utils/http/mutation'
   import NoticeSearch from './modules/notice-search.vue'
   import NoticeDialog from './modules/notice-dialog.vue'
   import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
@@ -255,10 +256,7 @@
       refreshData()
       ElMessage.success('删除成功')
     } catch (error) {
-      if (error !== 'cancel') {
-        console.error('删除通知公告失败:', error)
-        ElMessage.error('删除失败')
-      }
+      handleMutationError(error, '删除失败')
     }
   }
 
@@ -289,10 +287,7 @@
       refreshData()
       ElMessage.success('删除成功')
     } catch (error) {
-      if (error !== 'cancel') {
-        console.error('批量删除通知公告失败:', error)
-        ElMessage.error('删除失败')
-      }
+      handleMutationError(error, '删除失败')
     }
   }
 

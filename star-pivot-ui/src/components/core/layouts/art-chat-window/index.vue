@@ -245,6 +245,7 @@
 <script setup lang="ts">
 import { Close } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { handleMutationError } from '@/utils/http/mutation'
 import { storeToRefs } from 'pinia'
 import {
   fetchAiChatClearHistory,
@@ -732,7 +733,7 @@ const runAssistantStream = async (
     if (isLikelyNetworkError(error)) {
       isOnline.value = false
     }
-    ElMessage.error(error instanceof Error ? error.message : '发送失败')
+    handleMutationError(error, '发送失败')
   } finally {
     streamAbortController.value = null
     sending.value = false
@@ -811,8 +812,8 @@ const deleteSession = async (targetConversationId: string): Promise<void> => {
       await loadSessions()
     }
     ElMessage.success('对话已删除')
-  } catch {
-    ElMessage.error('删除失败')
+  } catch (error) {
+    handleMutationError(error, '删除失败')
   }
 }
 
@@ -821,8 +822,8 @@ const renameSession = async (payload: { conversationId: string; title: string })
     await fetchAiChatRenameSession(payload)
     await loadSessions()
     ElMessage.success('已重命名')
-  } catch {
-    ElMessage.error('重命名失败')
+  } catch (error) {
+    handleMutationError(error, '重命名失败')
   }
 }
 
@@ -844,8 +845,8 @@ const clearCurrentHistory = async (): Promise<void> => {
     messages.value = [createWelcomeMessage()]
     scrollToBottom()
     ElMessage.success('对话已清空')
-  } catch {
-    ElMessage.error('清空失败')
+  } catch (error) {
+    handleMutationError(error, '清空失败')
   }
 }
 
@@ -864,8 +865,8 @@ const startNewConversation = async (showToast = true): Promise<void> => {
     if (showToast) {
       ElMessage.success('已开始新对话')
     }
-  } catch {
-    ElMessage.error('创建新对话失败')
+  } catch (error) {
+    handleMutationError(error, '创建新对话失败')
   }
 }
 

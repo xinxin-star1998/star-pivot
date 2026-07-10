@@ -86,6 +86,7 @@
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { handleMutationError } from '@/utils/http/mutation'
   import { ref, nextTick, h } from 'vue'
 
   defineOptions({ name: 'Config' })
@@ -256,7 +257,7 @@
     } catch (error) {
       if (error !== 'cancel') {
         console.error('删除参数配置失败:', error)
-        ElMessage.error('删除失败')
+        handleMutationError(error, '删除失败')
       }
     }
   }
@@ -303,7 +304,7 @@
       ElMessage.success('导出成功')
     } catch (error) {
       console.error('导出参数配置失败:', error)
-      ElMessage.error('导出失败')
+      handleMutationError(error, '导出失败')
     } finally {
       exporting.value = false
     }

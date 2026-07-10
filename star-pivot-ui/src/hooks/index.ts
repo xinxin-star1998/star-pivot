@@ -5,6 +5,8 @@ export { useCommon } from './core/useCommon'
 
 // 权限控制
 export { useAuth } from './core/useAuth'
+export { useDemoMode } from './core/useDemoMode'
+export { handleMutationError, isUserCancelError } from '@/utils/http/mutation'
 
 // 字典数据管理
 export { useDict } from './core/useDict'

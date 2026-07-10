@@ -96,6 +96,8 @@ declare namespace Api {
         status: string
         createTime: string
       }
+      /** 演示模式：仅可查询，写操作被拦截 */
+      demoMode?: boolean
       roles?: Array<{
         roleId: number
         roleName: string

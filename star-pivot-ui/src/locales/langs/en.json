@@ -12,7 +12,8 @@
     "requestCancelled": "Request cancelled",
     "networkError": "Network connection error, please check your connection",
     "requestFailed": "Request failed",
-    "requestConfigError": "Request configuration error"
+    "requestConfigError": "Request configuration error",
+    "demoModeDenied": "Demo mode: operation not allowed"
   },
   "topBar": {
     "search": {

@@ -53,6 +53,7 @@
   import { useTable } from '@/hooks/core/useTable'
   import { useAuth } from '@/hooks/core/useAuth'
   import { fetchDeletePost, fetchGetPostList, fetchUpdatePost } from '@/api/post/post'
+  import { handleMutationError } from '@/utils/http/mutation'
   import PostSearch from './modules/post-search.vue'
   import PostDialog from './modules/post-dialog.vue'
   import { ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
@@ -227,13 +228,13 @@
       cancelButtonText: '取消',
       type: 'error'
     })
-      .then(() => {
-        fetchDeletePost([row.postId])
-        refreshData()
+      .then(async () => {
+        await fetchDeletePost([row.postId])
         ElMessage.success('删除成功')
+        refreshData()
       })
-      .catch(() => {
-        // 用户取消删除
+      .catch((error) => {
+        handleMutationError(error, '删除失败')
       })
   }
 
@@ -251,15 +252,15 @@
       cancelButtonText: '取消',
       type: 'error'
     })
-      .then(() => {
+      .then(async () => {
         const postIds = selectedRows.value.map((row) => row.postId)
-        fetchDeletePost(postIds)
+        await fetchDeletePost(postIds)
         selectedRows.value = []
-        refreshData()
         ElMessage.success('删除成功')
+        refreshData()
       })
-      .catch(() => {
-        // 用户取消删除
+      .catch((error) => {
+        handleMutationError(error, '删除失败')
       })
   }
 
@@ -305,9 +306,7 @@
       // 刷新列表
       refreshData()
     } catch (error) {
-      console.error('更新状态失败:', error)
-      ElMessage.error('更新状态失败')
-      // 刷新列表以恢复原状态
+      handleMutationError(error, '更新状态失败')
       refreshData()
     }
   }

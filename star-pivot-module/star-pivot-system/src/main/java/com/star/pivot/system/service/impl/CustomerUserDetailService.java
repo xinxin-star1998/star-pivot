@@ -1,6 +1,7 @@
 package com.star.pivot.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.star.pivot.framework.demo.DemoModeUtils;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
@@ -119,9 +120,10 @@ public class CustomerUserDetailService implements UserDetailsService {
 
         log.debug("用户 {} 权限加载完成，权限数量: {}", username, authorities.size());
 
-        // 返回LoginUser对象，而不是Spring Security标准的User对象
-        // 这样SecurityContextUtils才能正确获取到用户信息
-        return new LoginUser(user, authorities);
+        boolean demoMode = roles.stream()
+                .anyMatch(role -> DemoModeUtils.isDemoRoleKey(role.getRoleKey()));
+
+        return new LoginUser(user, authorities, demoMode);
     }
     
     // 注意：缓存清除方法已移至 UserPermissionCacheService，以避免循环依赖

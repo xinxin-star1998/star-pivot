@@ -205,6 +205,7 @@
     fetchUpdateUserStatus
   } from '@/api/user/user'
   import { fetchGetDeptTree, SysDept } from '@/api/dept/dept'
+  import { handleMutationError } from '@/utils/http/mutation'
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
   import {
@@ -629,10 +630,7 @@
       refreshData()
       ElMessage.success('注销成功')
     } catch (error) {
-      if (error !== 'cancel') {
-        console.error('删除用户失败:', error)
-        ElMessage.error('注销失败')
-      }
+      handleMutationError(error, '注销失败')
     }
   }
 
@@ -667,10 +665,7 @@
       refreshData()
       ElMessage.success('注销成功')
     } catch (error) {
-      if (error !== 'cancel') {
-        console.error('批量删除用户失败:', error)
-        ElMessage.error('注销失败')
-      }
+      handleMutationError(error, '注销失败')
     }
   }
 
@@ -708,9 +703,7 @@
       // 刷新列表
       refreshData()
     } catch (error) {
-      console.error('更新状态失败:', error)
-      ElMessage.error('更新状态失败')
-      // 刷新列表以恢复原状态
+      handleMutationError(error, '更新状态失败')
       refreshData()
     }
   }
@@ -728,13 +721,8 @@
       await fetchUnlockUser(row.userId)
       ElMessage.success('账户解锁成功')
       refreshData()
-    } catch (error: any) {
-      if (error !== 'cancel') {
-        console.error('解锁账户失败:', error)
-        // 后端返回的消息会包含在 error 中，直接显示
-        const errorMsg = error?.message || error?.response?.data?.msg || '解锁失败'
-        ElMessage.error(errorMsg)
-      }
+    } catch (error) {
+      handleMutationError(error, '解锁失败')
     }
   }
 
@@ -795,10 +783,8 @@
       } catch {
         /* ignore */
       }
-    } catch (error: any) {
-      if (error === 'cancel' || error === 'close') return
-      console.error('重置密码失败:', error)
-      ElMessage.error(error?.message || '重置密码失败')
+    } catch (error) {
+      handleMutationError(error, '重置密码失败')
     } finally {
       observer.disconnect()
     }

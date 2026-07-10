@@ -77,6 +77,8 @@ public class AppConstants {
     }
 
     public static final String ADMIN_ROLE_KEY = "admin";
+    /** 演示角色权限字符（拥有此角色的账号处于演示模式，禁止写操作） */
+    public static final String DEMO_ROLE_KEY = "demo";
     /** 注册用户默认角色 ID（新用户注册时分配，需与 sys_role 中普通角色一致） */
     public static final Long DEFAULT_REGISTER_ROLE_ID = 5L;
     public static final Long ADMIN_USER_ID = 1L;

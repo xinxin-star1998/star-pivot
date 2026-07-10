@@ -26,6 +26,7 @@
    */
   import { ElButton, ElDialog, ElMessage } from 'element-plus'
   import { fetchPreviewCode } from '@/api/generator/gen-table'
+  import { handleMutationError } from '@/utils/http/mutation'
   import CodePreviewTreePanel from './code-preview-tree-panel.vue'
 
   interface Props {
@@ -68,7 +69,7 @@
       panelRef.value?.selectFirstFile()
     } catch (error) {
       console.error('预览代码失败:', error)
-      ElMessage.error('预览代码失败')
+      handleMutationError(error, '预览代码失败')
       previewCodeMap.value = {}
       panelRef.value?.reset()
     } finally {

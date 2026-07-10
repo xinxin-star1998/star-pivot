@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.star.pivot.framework.security.LoginUserInfo;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.utils.serializer.GrantedAuthorityJsonSupport;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,7 +21,6 @@ import java.util.Collection;
  * @since 2024-01-01
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LoginUser implements UserDetails, LoginUserInfo {
@@ -53,10 +51,20 @@ public class LoginUser implements UserDetails, LoginUserInfo {
     @JsonDeserialize(using = GrantedAuthorityJsonSupport.Deserializer.class)
     private Collection<? extends GrantedAuthority> authorities;
 
+    /**
+     * 演示模式：仅允许查询，写操作会被拦截。
+     */
+    private boolean demoMode;
+
     public LoginUser(SysUser user, Collection<? extends GrantedAuthority> authorities) {
+        this(user, authorities, false);
+    }
+
+    public LoginUser(SysUser user, Collection<? extends GrantedAuthority> authorities, boolean demoMode) {
         this.user = user;
         this.userId = user.getUserId();
         this.authorities = authorities;
+        this.demoMode = demoMode;
     }
 
     @Override
@@ -104,6 +112,11 @@ public class LoginUser implements UserDetails, LoginUserInfo {
     @Override
     public boolean isEnabled() {
         return "0".equals(user.getStatus());
+    }
+
+    @Override
+    public boolean isDemoMode() {
+        return demoMode;
     }
 }
 

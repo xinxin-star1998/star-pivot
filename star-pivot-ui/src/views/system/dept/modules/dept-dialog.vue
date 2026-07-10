@@ -69,6 +69,7 @@
     fetchGetDeptById,
     type SysDept
   } from '@/api/dept/dept'
+  import { handleMutationError } from '@/utils/http/mutation'
   import { DialogType } from '@/types'
 
   interface Props {
@@ -219,7 +220,7 @@
         }
       } catch (error) {
         console.error('获取部门详情失败:', error)
-        ElMessage.error('获取部门详情失败')
+        handleMutationError(error, '获取部门详情失败')
         // 如果获取详情失败，使用列表数据作为回退
         Object.assign(formData, {
           deptId: props.deptData.deptId,
@@ -268,7 +269,7 @@
     } catch (error) {
       console.error('获取部门树失败:', error)
       deptTreeData.value = []
-      ElMessage.error('获取部门树失败')
+      handleMutationError(error, '获取部门树失败')
     }
   }
 
@@ -318,7 +319,7 @@
           emit('submit')
         } catch (error) {
           console.error('提交失败:', error)
-          ElMessage.error(dialogType.value === 'add' ? '添加失败' : '更新失败')
+          handleMutationError(error, dialogType.value === 'add' ? '添加失败' : '更新失败')
         }
       }
     })

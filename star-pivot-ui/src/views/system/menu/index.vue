@@ -56,6 +56,7 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { handleMutationError } from '@/utils/http/mutation'
   import { useMenuStore } from '@/store/modules/menu'
   import type { AppRouteRecord } from '@/types/router'
   import MenuDialog from './modules/menu-dialog.vue'
@@ -213,7 +214,7 @@
       tableData.value = normalizedList
     } catch (error) {
       safeError('获取菜单列表失败:', error)
-      ElMessage.error('获取菜单列表失败')
+      handleMutationError(error, '获取菜单列表失败')
     } finally {
       loading.value = false
     }
@@ -668,7 +669,7 @@
       await reloadDynamicRoutes()
     } catch (error) {
       safeError('保存菜单失败:', error)
-      ElMessage.error(formData.menuId ? '修改菜单失败' : '新增菜单失败')
+      handleMutationError(error, formData.menuId ? '修改菜单失败' : '新增菜单失败')
     }
   }
 
@@ -706,7 +707,7 @@
       // 用户点击取消/关闭时，Element Plus 会抛出 'cancel' 或 'close' 等错误标识，这里统一视为正常中断
       if (error !== 'cancel' && error !== 'close') {
         safeError(`删除${isAuthButton ? '权限' : '菜单'}失败:`, error)
-        ElMessage.error('删除失败')
+        handleMutationError(error, '删除失败')
       }
     }
   }

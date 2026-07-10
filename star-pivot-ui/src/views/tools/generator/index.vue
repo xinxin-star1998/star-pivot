@@ -76,6 +76,7 @@
   import { useRouter } from 'vue-router'
   import { useTable } from '@/hooks/core/useTable'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { handleMutationError } from '@/utils/http/mutation'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
@@ -403,7 +404,7 @@
       // 用户取消删除时不显示错误
       if (error !== 'cancel') {
         console.error('删除表失败:', error)
-        ElMessage.error('删除失败')
+        handleMutationError(error, '删除失败')
       }
     }
   }
@@ -441,7 +442,7 @@
       // 用户取消同步时不显示错误
       if (error !== 'cancel') {
         console.error('同步数据库失败:', error)
-        ElMessage.error('同步失败，请稍后重试')
+        handleMutationError(error, '同步失败，请稍后重试')
       }
     }
   }
@@ -478,7 +479,7 @@
       // 用户取消时不显示错误
       if (error !== 'cancel') {
         console.error('批量生成代码失败:', error)
-        ElMessage.error('批量生成代码失败，请稍后重试')
+        handleMutationError(error, '批量生成代码失败，请稍后重试')
       }
     }
   }
@@ -503,12 +504,8 @@
       const fileName = `${tableName}_${new Date().getTime()}.zip`
       FileSaver.saveAs(blob, fileName)
       ElMessage.success('代码生成成功，文件已下载')
-    } catch (error: any) {
-      if (error !== 'cancel') {
-        console.error('生成代码失败:', error)
-        const errorMessage = error?.message || error?.msg || ''
-        ElMessage.error(errorMessage || '生成代码失败，请稍后重试')
-      }
+    } catch (error) {
+      handleMutationError(error, '生成代码失败，请稍后重试')
     }
   }
 
@@ -542,7 +539,7 @@
       // 用户取消删除时不显示错误
       if (error !== 'cancel') {
         console.error('批量删除表失败:', error)
-        ElMessage.error('删除失败')
+        handleMutationError(error, '删除失败')
       }
     }
   }

@@ -402,6 +402,7 @@
   import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
   import { Refresh, SwitchButton, Location } from '@element-plus/icons-vue'
   import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
+  import { handleMutationError } from '@/utils/http/mutation'
   import defaultAvatarImg from '@imgs/user/avatar.webp'
   import bgImageImg from '@imgs/user/bg.webp'
   import { useSettingStore } from '@/store/modules/setting'
@@ -537,7 +538,7 @@
         logoutLoading: false
       }))
     } catch (error: any) {
-      ElMessage.error(error.message || '获取会话列表失败')
+      handleMutationError(error, '获取会话列表失败')
     } finally {
       sessionLoading.value = false
     }
@@ -596,7 +597,7 @@
       }
     } catch (error: any) {
       if (error !== 'cancel') {
-        ElMessage.error(error.message || '强制下线失败')
+        handleMutationError(error, '强制下线失败')
       }
     } finally {
       const idx = sessionList.value.findIndex((s) => s.deviceSessionId === session.deviceSessionId)
@@ -628,7 +629,7 @@
       userStore.logOut()
     } catch (error: any) {
       if (error !== 'cancel') {
-        ElMessage.error(error.message || '操作失败')
+        handleMutationError(error, '操作失败')
       }
     } finally {
       logoutAllLoading.value = false
@@ -771,7 +772,7 @@
             userStore.logOut()
           })
       } catch (error) {
-        ElMessage.error((error as any)?.message || '密码修改失败，请检查旧密码或稍后重试')
+        handleMutationError(error, '密码修改失败，请检查旧密码或稍后重试')
         if (import.meta.env.DEV) {
           console.error('修改密码失败:', error)
         }
@@ -816,7 +817,7 @@
       } as any)
       ElMessage.success('基本资料保存成功')
     } catch (error) {
-      ElMessage.error((error as any)?.message || '基本资料保存失败')
+      handleMutationError(error, '基本资料保存失败')
       if (import.meta.env.DEV) {
         console.error('保存基本资料失败:', error)
       }
@@ -834,7 +835,7 @@
   }
 
   const handleAvatarUploadError = (error: any) => {
-    ElMessage.error(error?.message || '头像上传失败，请稍后重试')
+    handleMutationError(error, '头像上传失败，请稍后重试')
   }
 </script>
 

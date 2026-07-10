@@ -167,8 +167,13 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
     (statusCode ? getErrorMessage(statusCode) : error.message) ||
     $t('httpMsg.requestFailed')
 
-  // 生产环境统一对外展示通用错误消息，避免泄露内部实现细节
-  const message = isProd ? getPublicMessage(statusCode) : rawMessage
+  // 演示模式等业务文案在任意环境都直接展示
+  const message =
+    rawMessage === $t('httpMsg.demoModeDenied') || rawMessage.includes('演示模式')
+      ? rawMessage
+      : isProd
+        ? getPublicMessage(statusCode)
+        : rawMessage
   throw new HttpError(message, statusCode || ApiStatus.error, {
     data: responseData,
     url: requestConfig?.url,
@@ -182,7 +187,12 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
  * @param showMessage 是否显示错误消息
  */
 export function showError(error: HttpError, showMessage: boolean = true): void {
-  const displayMessage = isProd ? getPublicMessage(error.code) : error.message
+  const displayMessage =
+    error.message === $t('httpMsg.demoModeDenied') || error.message.includes('演示模式')
+      ? error.message
+      : isProd
+        ? getPublicMessage(error.code)
+        : error.message
   if (showMessage) {
     ElMessage.error(displayMessage)
   }

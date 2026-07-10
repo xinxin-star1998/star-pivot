@@ -44,8 +44,8 @@ StarPivot 面向企业后台管理场景，提供一套可快速落地的权限�
 ## 在线地址（可选）
 
 - 在线演示：[https://www.starpivot.org.cn/](https://www.starpivot.org.cn/)
-- 演示账号：`admin`
-- 演示密码：`admin123`
+- 演示账号：`demo`
+- 演示密码：`demo123`
 - 说明：演示环境数据可能被重置，请勿录入真实敏感信息。
 
 ## 功能亮点

@@ -74,6 +74,7 @@
   import { ElMessage } from 'element-plus'
   import { Refresh, Search } from '@element-plus/icons-vue'
   import { fetchAssignUser, fetchGetUserListNotInByRoleId } from '@/api/role/role'
+  import { handleMutationError } from '@/utils/http/mutation'
 
   interface Props {
     modelValue: boolean
@@ -158,7 +159,7 @@
       ElMessage.success('获取用户列表成功')
     } catch (error) {
       console.error('获取用户列表失败:', error)
-      ElMessage.error('获取用户列表失败')
+      handleMutationError(error, '获取用户列表失败')
     } finally {
       loading.value = false
     }

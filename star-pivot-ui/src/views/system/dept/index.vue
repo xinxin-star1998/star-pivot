@@ -47,6 +47,7 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTableColumns } from '@/hooks/core/useTableColumns'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { handleMutationError } from '@/utils/http/mutation'
   import DeptSearch from './modules/dept-search.vue'
   import DeptDialog from './modules/dept-dialog.vue'
   import { ElMessageBox, ElMessage, ElTag } from 'element-plus'
@@ -90,7 +91,7 @@
       tableData.value = res || []
     } catch (error) {
       console.error('获取部门列表失败:', error)
-      ElMessage.error('获取部门列表失败')
+      handleMutationError(error, '获取部门列表失败')
       tableData.value = []
     } finally {
       loading.value = false
@@ -357,7 +358,7 @@
           await getDeptList()
         } catch (error) {
           console.error('删除部门失败:', error)
-          ElMessage.error('删除失败')
+          handleMutationError(error, '删除失败')
         }
       })
       .catch(() => {

@@ -38,6 +38,7 @@
   import { ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage } from 'element-plus'
   import { DialogType } from '@/types'
   import { fetchCreateTable } from '@/api/generator/gen-table'
+  import { handleMutationError } from '@/utils/http/mutation'
 
   interface Props {
     visible: boolean
@@ -122,7 +123,7 @@
       emit('submit', { tableSql: formData.tableSql.trim() })
     } catch (error) {
       console.error('创建表失败:', error)
-      ElMessage.error('创建表失败，请检查SQL语句是否正确')
+      handleMutationError(error, '创建表失败，请检查SQL语句是否正确')
     } finally {
       submitting.value = false
     }

@@ -11,4 +11,11 @@ public interface LoginUserInfo extends Serializable {
     Long getUserId();
 
     String getUsername();
+
+    /**
+     * 是否为演示账号（只读浏览，写操作由演示模式拦截）。
+     */
+    default boolean isDemoMode() {
+        return false;
+    }
 }

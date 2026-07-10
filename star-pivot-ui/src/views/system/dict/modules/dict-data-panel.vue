@@ -61,6 +61,7 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { handleMutationError } from '@/utils/http/mutation'
 
   defineOptions({ name: 'DictDataPanel' })
 
@@ -199,7 +200,7 @@
       pagination.total = result?.total || 0
     } catch (error) {
       safeError('获取字典数据列表失败:', error)
-      ElMessage.error('获取字典数据列表失败')
+      handleMutationError(error, '获取字典数据列表失败')
     } finally {
       loading.value = false
     }
@@ -276,7 +277,7 @@
     } catch (error) {
       if (error !== 'cancel' && error !== 'close') {
         safeError('删除字典数据失败:', error)
-        ElMessage.error('删除失败')
+        handleMutationError(error, '删除失败')
       }
     }
   }
@@ -295,7 +296,7 @@
       await getDictDataList()
     } catch (error) {
       safeError('保存字典数据失败:', error)
-      ElMessage.error(formData.dictCode ? '修改字典数据失败' : '新增字典数据失败')
+      handleMutationError(error, formData.dictCode ? '修改字典数据失败' : '新增字典数据失败')
     }
   }
 

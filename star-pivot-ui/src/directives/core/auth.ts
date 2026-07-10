@@ -45,13 +45,9 @@ interface AuthBinding extends DirectiveBinding {
 const authElements = new Set<{ el: HTMLElement; binding: AuthBinding }>()
 
 function checkAuthPermission(el: HTMLElement, binding: AuthBinding): void {
-  // 获取当前路由的权限列表
   const authList = (router.currentRoute.value.meta.authList as Array<{ authMark: string }>) || []
-
-  // 检查是否有对应的权限标识
   const hasPermission = authList.some((item) => item.authMark === binding.value)
 
-  // 如果没有权限，移除元素
   if (!hasPermission) {
     removeElement(el)
   }
@@ -72,7 +68,6 @@ const authDirective: Directive = {
     checkAuthPermission(el, binding)
   },
   beforeUnmount(el) {
-    // 组件卸载时移除对应元素记录，避免内存泄漏
     for (const item of authElements) {
       if (item.el === el) {
         authElements.delete(item)
@@ -82,7 +77,6 @@ const authDirective: Directive = {
   }
 }
 
-// 监听路由切换，在每次路由变化后重新校验所有已绑定元素的权限
 router.afterEach(() => {
   authElements.forEach(({ el, binding }) => {
     checkAuthPermission(el, binding)

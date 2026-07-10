@@ -88,6 +88,8 @@ export const useUserStore = defineStore(
 
     // 计算属性：获取用户信息
     const getUserInfo = computed(() => info.value)
+    // 演示模式（只读浏览）
+    const isDemoMode = computed(() => info.value.demoMode === true)
     // 计算属性：获取设置状态
     const getSettingState = computed(() => useSettingStore().$state)
     // 计算属性：获取工作台状态
@@ -271,6 +273,7 @@ export const useUserStore = defineStore(
       refreshToken,
       sessionId,
       getUserInfo,
+      isDemoMode,
       getSettingState,
       getWorktabState,
       getSessionId,

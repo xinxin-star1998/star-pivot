@@ -105,6 +105,7 @@
   import DictDataPanel from './modules/dict-data-panel.vue'
   import { useRouter } from 'vue-router'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { handleMutationError } from '@/utils/http/mutation'
   import { useWindowSize } from '@vueuse/core'
   useRouter()
 
@@ -386,7 +387,7 @@
       }
     } catch (error) {
       safeError('获取字典类型列表失败:', error)
-      ElMessage.error('获取字典类型列表失败')
+      handleMutationError(error, '获取字典类型列表失败')
     } finally {
       loading.value = false
     }
@@ -485,7 +486,7 @@
     } catch (error) {
       if (error !== 'cancel' && error !== 'close') {
         safeError('删除字典类型失败:', error)
-        ElMessage.error('删除失败')
+        handleMutationError(error, '删除失败')
       }
     }
   }
@@ -507,7 +508,7 @@
       await getDictTypeList()
     } catch (error) {
       safeError('保存字典类型失败:', error)
-      ElMessage.error(formData.dictId ? '修改字典类型失败' : '新增字典类型失败')
+      handleMutationError(error, formData.dictId ? '修改字典类型失败' : '新增字典类型失败')
     }
   }
 </script>

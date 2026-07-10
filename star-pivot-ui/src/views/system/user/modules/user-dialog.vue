@@ -105,6 +105,7 @@
   import { fetchGetPostSelect } from '@/api/post/post'
   import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
   import { fetchAddUser, fetchUpdateUser, fetchGetUserById } from '@/api/user/user'
+  import { handleMutationError } from '@/utils/http/mutation'
   import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
 
   // 角色列表项类型（扩展 RoleListItem，添加 roleCode 字段）
@@ -231,7 +232,7 @@
         }
       } catch (error) {
         console.error('获取用户详情失败:', error)
-        ElMessage.error('获取用户详情失败')
+        handleMutationError(error, '获取用户详情失败')
         // 如果获取详情失败，使用列表数据作为回退
         Object.assign(formData, {
           userId: row.userId || 0,
@@ -336,7 +337,7 @@
           emit('submit')
         } catch (error) {
           console.error('提交失败:', error)
-          ElMessage.error(dialogType.value === 'add' ? '添加失败' : '更新失败')
+          handleMutationError(error, dialogType.value === 'add' ? '添加失败' : '更新失败')
         }
       }
     })
@@ -359,7 +360,7 @@
     } catch (error) {
       console.error('获取角色列表失败:', error)
       roleList.value = []
-      ElMessage.error('获取角色列表失败')
+      handleMutationError(error, '获取角色列表失败')
     }
   }
   /**
@@ -376,7 +377,7 @@
     } catch (error) {
       console.error('获取岗位列表失败:', error)
       postList.value = []
-      ElMessage.error('获取岗位列表失败')
+      handleMutationError(error, '获取岗位列表失败')
     }
   }
   /**
@@ -393,7 +394,7 @@
     } catch (error) {
       console.error('获取部门树失败:', error)
       deptTreeData.value = []
-      ElMessage.error('获取部门树失败')
+      handleMutationError(error, '获取部门树失败')
     }
   }
 </script>

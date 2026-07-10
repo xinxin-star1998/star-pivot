@@ -1,6 +1,7 @@
 package com.star.pivot.controller.auth;
 
 import com.star.pivot.framework.annotation.Log;
+import com.star.pivot.framework.demo.DemoModeUtils;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.system.domain.bo.*;
@@ -116,6 +117,7 @@ public class AuthAccountController {
         userInfo.put("user", userWithRoles);
         userInfo.put("roles", roles);
         userInfo.put("permissions", permissions);
+        userInfo.put("demoMode", roles.stream().anyMatch(role -> DemoModeUtils.isDemoRoleKey(role.getRoleKey())));
 
         return ResponseEntity.ok(Result.success(userInfo));
     }

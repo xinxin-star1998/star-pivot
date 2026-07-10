@@ -57,6 +57,7 @@
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import type { UploadFile, UploadInstance } from 'element-plus'
   import { ElMessage } from 'element-plus'
+  import { handleMutationError } from '@/utils/http/mutation'
   import { computed, ref, watch } from 'vue'
 
   const visible = defineModel<boolean>('visible', { default: false })
@@ -182,7 +183,7 @@
         ElMessage.warning(`部分上传失败：成功 ${items.length - failed}，失败 ${failed}`)
         emit('success', folderId)
       } else {
-        ElMessage.error('上传失败，请重试')
+        handleMutationError(error, '上传失败，请重试')
       }
     } finally {
       uploading.value = false

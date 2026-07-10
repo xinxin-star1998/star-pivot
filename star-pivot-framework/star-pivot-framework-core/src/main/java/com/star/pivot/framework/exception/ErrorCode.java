@@ -22,6 +22,7 @@ public enum ErrorCode {
 
     FORBIDDEN(403, "无权限访问该资源"),
     ACCESS_DENIED(403, "权限不足"),
+    DEMO_MODE_DENIED(403, "演示模式，不允许操作"),
 
     NOT_FOUND(404, "资源不存在"),
     USER_NOT_FOUND(404, "用户不存在"),
