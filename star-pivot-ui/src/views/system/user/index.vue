@@ -191,19 +191,17 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ExcelImportDialog from '@/components/core/forms/excel-import-dialog/index.vue'
   import {
+    fetchDeleteUser,
     fetchDownloadUserImportTemplate,
     fetchExportUser,
-    fetchImportUserExcel
-  } from '@/api/user/user'
-  import { useTable } from '@/hooks/core/useTable'
-  import { useI18n } from 'vue-i18n'
-  import {
-    fetchDeleteUser,
     fetchGetUserList,
+    fetchImportUserExcel,
     fetchResetUserPassword,
     fetchUnlockUser,
     fetchUpdateUserStatus
   } from '@/api/user/user'
+  import { useTable } from '@/hooks/core/useTable'
+  import { useI18n } from 'vue-i18n'
   import { fetchGetDeptTree, SysDept } from '@/api/dept/dept'
   import { handleMutationError } from '@/utils/http/mutation'
   import UserSearch from './modules/user-search.vue'
@@ -856,8 +854,8 @@
   }
 
   .left-panel.collapsed .department-tree-card {
-    opacity: 0;
     pointer-events: none;
+    opacity: 0;
   }
 
   .dark .left-panel {
@@ -873,15 +871,15 @@
     height: 40px;
     padding: 0;
     color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
     border: var(--panel-border);
     border-left: none;
     border-radius: 0 10px 10px 0;
-    background: var(--el-color-primary-light-9);
-    transform: translateY(-50%);
     transition:
       left 0.22s ease,
       color 0.2s ease,
       background-color 0.2s ease;
+    transform: translateY(-50%);
   }
 
   .panel-toggle-btn:hover {
@@ -935,8 +933,8 @@
     flex-direction: column;
     gap: 6px;
     padding: 10px 10px 8px;
-    border-bottom: var(--panel-border);
     background: linear-gradient(180deg, rgb(64 158 255 / 6%) 0%, transparent 100%);
+    border-bottom: var(--panel-border);
   }
 
   .dept-title-row {
@@ -972,9 +970,9 @@
     height: 20px;
     padding: 0;
     color: var(--art-gray-500);
+    background: transparent;
     border: none;
     border-radius: 4px;
-    background: transparent;
 
     &:hover {
       color: var(--art-gray-700);
@@ -1021,8 +1019,8 @@
   }
 
   .department-tree-wrapper::-webkit-scrollbar-thumb {
-    border-radius: 999px;
     background: rgb(148 163 184 / 45%);
+    border-radius: 999px;
   }
 
   :deep(.el-tree) {
@@ -1033,8 +1031,8 @@
 
   :deep(.el-tree-node__content) {
     height: 32px;
-    line-height: 32px;
     padding-right: 8px;
+    line-height: 32px;
     border-radius: 6px;
     transition: all 0.2s ease;
 
@@ -1067,8 +1065,8 @@
   }
 
   :deep(.el-table) {
-    border-radius: 8px;
     border: 1px solid var(--art-card-border);
+    border-radius: 8px;
 
     .el-table__header-wrapper {
       th {
@@ -1101,9 +1099,9 @@
 
   :deep(.panel-toggle-tooltip) {
     padding: 8px 12px;
-    border-radius: 8px;
     font-size: 13px;
     line-height: 1;
+    border-radius: 8px;
   }
 
   :deep(.el-tag) {

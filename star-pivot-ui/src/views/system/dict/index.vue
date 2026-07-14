@@ -86,17 +86,13 @@
   import { safeError } from '@/utils'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTableColumns } from '@/hooks/core/useTableColumns'
-
-  const DictTypeDialog = defineAsyncComponent(
-    () => import('@views/system/dict/modules/dict-type-dialog.vue')
-  )
   import {
-    fetchGetDictTypeList,
+    type DictTypeFormData,
     fetchAddDictType,
-    fetchUpdateDictType,
     fetchDeleteDictType,
-    type SysDictType,
-    type DictTypeFormData
+    fetchGetDictTypeList,
+    fetchUpdateDictType,
+    type SysDictType
   } from '@/api/dict/type'
   import { ElButton, ElDrawer, ElMessage, ElMessageBox, ElTag } from 'element-plus'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
@@ -107,6 +103,10 @@
   import { useAuth } from '@/hooks/core/useAuth'
   import { handleMutationError } from '@/utils/http/mutation'
   import { useWindowSize } from '@vueuse/core'
+
+  const DictTypeDialog = defineAsyncComponent(
+    () => import('@views/system/dict/modules/dict-type-dialog.vue')
+  )
   useRouter()
 
   defineOptions({ name: 'DictType' })
@@ -532,12 +532,13 @@
 
   .selected-meta {
     display: inline-flex;
-    align-items: center;
     gap: 8px;
+    align-items: center;
 
     .label {
       color: var(--art-gray-600);
     }
+
     .name {
       font-weight: 600;
       color: var(--art-gray-900);
@@ -564,26 +565,26 @@
   }
 
   :deep(.dict-drawer .el-drawer__body) {
-    padding: 0;
     height: 100%;
+    padding: 0;
   }
 
   .drawer-shell {
-    height: 100%;
     display: flex;
     flex-direction: column;
+    height: 100%;
     min-height: 0;
     background: var(--default-bg-color);
   }
 
   .drawer-header {
     display: flex;
+    gap: 12px;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
     padding: 16px 16px 12px;
-    border-bottom: 1px solid var(--art-card-border);
     background: var(--default-box-color);
+    border-bottom: 1px solid var(--art-card-border);
   }
 
   .drawer-title {

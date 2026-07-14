@@ -1,5 +1,6 @@
 package com.star.pivot.system.service.impl;
 
+import com.star.pivot.framework.cache.RedisCache;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.CaptchaState;
@@ -7,7 +8,6 @@ import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
 import com.star.pivot.system.domain.bo.CaptchaVerifyResponse;
 import com.star.pivot.system.service.interfaces.CaptchaService;
-import com.star.pivot.system.utils.RedisCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,9 +1,12 @@
 package com.star.pivot.framework.exception;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.star.pivot.framework.domain.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -12,6 +15,8 @@ import java.util.Map;
  */
 @Slf4j
 public class EnhancedExceptionProcessor {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 处理并记录业务异常
@@ -68,25 +73,21 @@ public class EnhancedExceptionProcessor {
      */
     private static void logBusinessException(ErrorCode errorCode, String message, String operation, String module, Exception exception) {
         try {
-            // 构造结构化日志信息
-            StringBuilder logBuilder = new StringBuilder();
-            logBuilder.append("{");
-            logBuilder.append("\"event\":\"business_exception\",");
-            logBuilder.append("\"error_code\":").append(errorCode.getCode()).append(",");
-            logBuilder.append("\"error_message\":\"").append(escapeJson(message)).append("\",");
-            logBuilder.append("\"operation\":\"").append(escapeJson(operation)).append("\",");
-            logBuilder.append("\"module\":\"").append(escapeJson(module)).append("\",");
-            logBuilder.append("\"timestamp\":").append(System.currentTimeMillis());
+            Map<String, Object> logData = new HashMap<>();
+            logData.put("event", "business_exception");
+            logData.put("error_code", errorCode.getCode());
+            logData.put("error_message", message);
+            logData.put("operation", operation);
+            logData.put("module", module);
+            logData.put("timestamp", System.currentTimeMillis());
 
             String traceId = MDC.get("traceId");
             if (traceId != null) {
-                logBuilder.append(",\"trace_id\":\"").append(traceId).append("\"");
+                logData.put("trace_id", traceId);
             }
 
-            logBuilder.append("}");
-
-            log.warn(logBuilder.toString());
-        } catch (Exception e) {
+            log.warn(objectMapper.writeValueAsString(logData));
+        } catch (JsonProcessingException e) {
             log.warn("记录业务异常日志失败", e);
         }
     }
@@ -96,23 +97,20 @@ public class EnhancedExceptionProcessor {
      */
     private static void logSystemException(Exception exception, String operation, String module, String traceId) {
         try {
-            StringBuilder logBuilder = new StringBuilder();
-            logBuilder.append("{");
-            logBuilder.append("\"event\":\"system_exception\",");
-            logBuilder.append("\"exception_type\":\"").append(exception.getClass().getSimpleName()).append("\",");
-            logBuilder.append("\"message\":\"").append(escapeJson(exception.getMessage())).append("\",");
-            logBuilder.append("\"operation\":\"").append(escapeJson(operation)).append("\",");
-            logBuilder.append("\"module\":\"").append(escapeJson(module)).append("\",");
-            logBuilder.append("\"timestamp\":").append(System.currentTimeMillis());
+            Map<String, Object> logData = new HashMap<>();
+            logData.put("event", "system_exception");
+            logData.put("exception_type", exception.getClass().getSimpleName());
+            logData.put("message", exception.getMessage());
+            logData.put("operation", operation);
+            logData.put("module", module);
+            logData.put("timestamp", System.currentTimeMillis());
 
             if (traceId != null) {
-                logBuilder.append(",\"trace_id\":\"").append(traceId).append("\"");
+                logData.put("trace_id", traceId);
             }
 
-            logBuilder.append("}");
-
-            log.error(logBuilder.toString(), exception);
-        } catch (Exception e) {
+            log.error(objectMapper.writeValueAsString(logData), exception);
+        } catch (JsonProcessingException e) {
             log.error("记录系统异常日志失败", e);
         }
     }
@@ -122,35 +120,24 @@ public class EnhancedExceptionProcessor {
      */
     private static void logValidationError(String message, String operation, String module, Map<String, String> fieldErrors) {
         try {
-            StringBuilder logBuilder = new StringBuilder();
-            logBuilder.append("{");
-            logBuilder.append("\"event\":\"validation_error\",");
-            logBuilder.append("\"message\":\"").append(escapeJson(message)).append("\",");
-            logBuilder.append("\"operation\":\"").append(escapeJson(operation)).append("\",");
-            logBuilder.append("\"module\":\"").append(escapeJson(module)).append("\",");
-            logBuilder.append("\"timestamp\":").append(System.currentTimeMillis());
+            Map<String, Object> logData = new HashMap<>();
+            logData.put("event", "validation_error");
+            logData.put("message", message);
+            logData.put("operation", operation);
+            logData.put("module", module);
+            logData.put("timestamp", System.currentTimeMillis());
 
             if (fieldErrors != null && !fieldErrors.isEmpty()) {
-                logBuilder.append(",\"field_errors\":{");
-                boolean first = true;
-                for (Map.Entry<String, String> entry : fieldErrors.entrySet()) {
-                    if (!first) logBuilder.append(",");
-                    logBuilder.append("\"").append(escapeJson(entry.getKey())).append("\":\"")
-                             .append(escapeJson(entry.getValue())).append("\"");
-                    first = false;
-                }
-                logBuilder.append("}");
+                logData.put("field_errors", fieldErrors);
             }
 
             String traceId = MDC.get("traceId");
             if (traceId != null) {
-                logBuilder.append(",\"trace_id\":\"").append(traceId).append("\"");
+                logData.put("trace_id", traceId);
             }
 
-            logBuilder.append("}");
-
-            log.warn(logBuilder.toString());
-        } catch (Exception e) {
+            log.warn(objectMapper.writeValueAsString(logData));
+        } catch (JsonProcessingException e) {
             log.warn("记录验证错误日志失败", e);
         }
     }
@@ -232,19 +219,5 @@ public class EnhancedExceptionProcessor {
             clazz = clazz.getSuperclass();
         }
         return false;
-    }
-
-    /**
-     * 转义JSON字符串
-     */
-    private static String escapeJson(String str) {
-        if (str == null) {
-            return null;
-        }
-        return str.replace("\\", "\\\\")
-                 .replace("\"", "\\\"")
-                 .replace("\n", "\\n")
-                 .replace("\r", "\\r")
-                 .replace("\t", "\\t");
     }
 }

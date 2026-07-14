@@ -17,7 +17,7 @@
         <!-- Spring Boot 版本 -->
         <spring-boot.version>3.5.9</spring-boot.version>
         <!-- MyBatis -->
-        <mybatis-plus.version>3.5.12</mybatis-plus.version>
+        <mybatis-plus.version>3.5.15</mybatis-plus.version>
         <mybatis-spring.version>3.0.4</mybatis-spring.version>
         <!-- 数据库与连接池 -->
         <mysql.version>9.1.0</mysql.version>
@@ -25,15 +25,15 @@
         <!-- JWT -->
         <jjwt.version>0.12.3</jjwt.version>
         <!-- 工具与通用 -->
-        <lombok.version>1.18.36</lombok.version>
-        <hutool.version>5.8.32</hutool.version>
+        <lombok.version>1.18.38</lombok.version>
+        <hutool.version>5.8.35</hutool.version>
         <kaptcha.version>2.3.3</kaptcha.version>
         <velocity.version>2.3</velocity.version>
         <commons-lang3.version>3.17.0</commons-lang3.version>
         <poi.version>5.2.5</poi.version>
         <yauaa.version>7.1.0</yauaa.version>
         <oshi.version>6.9.1</oshi.version>
-        <fastjson.version>2.0.34</fastjson.version>
+        <fastjson.version>2.0.56</fastjson.version>
         <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
         <aliyun-oss.version>3.18.5</aliyun-oss.version>
         <commons-io.version>2.16.1</commons-io.version>

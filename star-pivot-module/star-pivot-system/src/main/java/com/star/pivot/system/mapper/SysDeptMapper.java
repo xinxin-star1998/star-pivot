@@ -14,5 +14,7 @@ import java.util.List;
 @Mapper
 public interface SysDeptMapper extends BaseMapper<SysDept> {
     List<Long> selectAllDeptIds();
+
+    List<Long> selectDeptIdsByParentId(Long parentId);
 }
 

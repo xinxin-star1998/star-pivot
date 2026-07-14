@@ -7,5 +7,16 @@
         where  d.del_flag = '0' and d.status = '0'
         order by d.order_num
     </select>
+
+    <select id="selectDeptIdsByParentId" resultType="java.lang.Long">
+        WITH RECURSIVE dept_tree AS (
+            SELECT dept_id FROM sys_dept WHERE dept_id = #{parentId} AND del_flag = '0' AND status = '0'
+            UNION ALL
+            SELECT d.dept_id FROM sys_dept d
+            INNER JOIN dept_tree dt ON d.parent_id = dt.dept_id
+            WHERE d.del_flag = '0' AND d.status = '0'
+        )
+        SELECT dept_id FROM dept_tree
+    </select>
 </mapper>
 

@@ -105,7 +105,7 @@
   .move-tip {
     margin: 0 0 16px;
     font-size: 13px;
-    color: var(--el-text-color-secondary);
     line-height: 1.6;
+    color: var(--el-text-color-secondary);
   }
 </style>

@@ -57,10 +57,10 @@
 
   .policy-card {
     max-width: 760px;
-    margin: 0 auto;
     padding: 28px;
-    border-radius: 12px;
+    margin: 0 auto;
     background: var(--el-bg-color);
+    border-radius: 12px;
     box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
   }
 
@@ -73,15 +73,15 @@
 
   .policy-update {
     margin: 10px 0 0;
-    color: var(--art-gray-600);
     font-size: 13px;
+    color: var(--art-gray-600);
   }
 
   .policy-content {
     margin-top: 24px;
-    color: var(--el-text-color-primary);
-    line-height: 1.9;
     font-size: 14px;
+    line-height: 1.9;
+    color: var(--el-text-color-primary);
   }
 
   .policy-content h3 {
@@ -95,8 +95,8 @@
   }
 
   .policy-footer {
-    margin-top: 28px;
     display: flex;
     justify-content: flex-end;
+    margin-top: 28px;
   }
 </style>

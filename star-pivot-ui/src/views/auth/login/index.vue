@@ -223,7 +223,13 @@
         rememberPassword: formData.rememberPassword
       })
 
-      const { token, refreshToken, username: returnedUsername, nickname, deviceSessionId } = response
+      const {
+        token,
+        refreshToken,
+        username: returnedUsername,
+        nickname,
+        deviceSessionId
+      } = response
 
       // 验证token
       if (!token) {

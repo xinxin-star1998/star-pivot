@@ -1,8 +1,8 @@
 package com.star.pivot.system.service.interfaces;
 
+import com.star.pivot.framework.cache.RedisCache;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
-import com.star.pivot.system.utils.RedisCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

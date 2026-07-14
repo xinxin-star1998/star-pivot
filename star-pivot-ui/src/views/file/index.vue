@@ -668,8 +668,8 @@
   }
 
   .file-sidebar {
-    width: 272px;
     flex-shrink: 0;
+    width: 272px;
 
     :deep(.el-card__body) {
       height: calc(100vh - 148px);
@@ -679,11 +679,11 @@
   }
 
   .file-main {
-    flex: 1;
-    min-width: 0;
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 12px;
+    min-width: 0;
     min-height: 0;
   }
 
@@ -703,18 +703,18 @@
   }
 
   .file-table-card__body {
-    flex: 1;
-    min-height: 0;
     display: flex;
+    flex: 1;
     flex-direction: column;
+    min-height: 0;
   }
 
   .panel-toolbar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px 16px;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 4px;
   }
 
@@ -730,18 +730,18 @@
 
   .location-bar {
     display: inline-flex;
-    align-items: center;
     gap: 6px;
+    align-items: center;
     padding: 4px 12px;
-    border-radius: 6px;
-    background: var(--el-fill-color-light);
     font-size: 13px;
     color: var(--el-text-color-regular);
+    background: var(--el-fill-color-light);
+    border-radius: 6px;
   }
 
   .location-icon {
-    color: var(--el-color-primary);
     font-size: 16px;
+    color: var(--el-color-primary);
   }
 
   .location-text {
@@ -752,32 +752,32 @@
   }
 
   .media-filter {
-    margin-bottom: 12px;
     padding-bottom: 12px;
+    margin-bottom: 12px;
     border-bottom: 1px solid var(--el-border-color-lighter);
   }
 
   .filter-icon {
     margin-right: 2px;
-    vertical-align: -2px;
     font-size: 13px;
+    vertical-align: -2px;
   }
 
   :deep(.file-name-cell) {
     display: inline-flex;
-    align-items: center;
     gap: 10px;
+    align-items: center;
     max-width: 100%;
     cursor: default;
   }
 
   :deep(.file-thumb) {
+    flex-shrink: 0;
     width: 44px;
     height: 44px;
-    flex-shrink: 0;
-    border-radius: 4px;
-    border: 1px solid var(--el-border-color-lighter);
     cursor: zoom-in;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 4px;
   }
 
   :deep(.file-thumb .el-image__inner) {
@@ -796,8 +796,8 @@
     white-space: nowrap;
 
     &.is-link {
-      cursor: pointer;
       color: var(--el-color-primary);
+      cursor: pointer;
 
       &:hover {
         text-decoration: underline;
@@ -807,7 +807,7 @@
 
   :deep(.file-op-cell) {
     display: flex;
-    align-items: center;
     flex-wrap: nowrap;
+    align-items: center;
   }
 </style>

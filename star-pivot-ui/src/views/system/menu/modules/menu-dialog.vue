@@ -61,7 +61,7 @@
 
 <script setup lang="ts">
   import type { FormRules } from 'element-plus'
-  import { ElIcon, ElTooltip, ElMessage, ElInput } from 'element-plus'
+  import { ElIcon, ElInput, ElMessage, ElTooltip } from 'element-plus'
   import { QuestionFilled } from '@element-plus/icons-vue'
   import { Icon } from '@iconify/vue'
   import { formatMenuTitle } from '@/utils/router'
@@ -833,17 +833,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 32px;
     min-width: 112px;
+    height: 32px;
     padding: 0 14px;
     font-size: 13px;
     line-height: 32px;
-    white-space: nowrap;
     color: var(--el-color-primary);
+    white-space: nowrap;
+    background: var(--default-box-color);
     border: 0;
     border-left: 1px solid var(--el-border-color);
     border-radius: 0 4px 4px 0;
-    background: var(--default-box-color);
 
     &:hover {
       background: var(--el-fill-color-light);

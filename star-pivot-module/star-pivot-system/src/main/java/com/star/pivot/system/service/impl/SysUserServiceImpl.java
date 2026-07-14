@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DataScope;
 import com.star.pivot.framework.domain.PageResponse;
+import com.star.pivot.framework.event.UserPasswordChangedEvent;
 import com.star.pivot.framework.excel.ExcelImportResult;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
@@ -25,7 +26,6 @@ import com.star.pivot.system.mapper.SysUserMapper;
 import com.star.pivot.system.mapper.UserPostMapper;
 import com.star.pivot.system.mapper.UserRoleMapper;
 import com.star.pivot.system.service.interfaces.SysUserService;
-import com.star.pivot.system.service.interfaces.TokenService;
 import com.star.pivot.system.service.interfaces.UserPermissionCacheService;
 import com.star.pivot.system.utils.DataScopeService;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -65,9 +65,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private UserVOAssembler userVOAssembler;
     @Autowired
     private TransactionTemplate transactionTemplate;
-    @Lazy
     @Autowired
-    private TokenService tokenService;
+    private ApplicationEventPublisher eventPublisher;
 
     /**
      * 用户分页查询
@@ -256,17 +255,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
         boolean success = this.updateById(user);
         if (success) {
-            // 清除权限缓存
             userPermissionCacheService.clearUserPermissionCache(user.getUserName());
-            
-            // 强制该用户的所有会话下线（使旧的 JWT Token 和 RefreshToken 失效）
-            // logoutType: 0-正常登出, 1-强制下线, 2-过期下线
-            try {
-                tokenService.forceLogout(userId, "1");
-                log.info("重置密码成功，已强制用户 {} 下线: userId={}", user.getUserName(), userId);
-            } catch (Exception e) {
-                log.warn("重置密码后强制下线失败: userId={}", userId, e);
-            }
+            eventPublisher.publishEvent(UserPasswordChangedEvent.create(this, userId));
+            log.info("重置密码成功，已发布强制下线事件: userId={}", userId);
         }
         return success;
     }
@@ -294,13 +285,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         boolean success = this.updateById(user);
         if (success) {
             userPermissionCacheService.clearUserPermissionCache(user.getUserName());
-            // 强制该用户的所有会话下线（使旧的 JWT Token 和 RefreshToken 失效）
-            try {
-                tokenService.forceLogout(userId, "1");
-                log.info("修改密码成功，已强制用户 {} 下线: userId={}", user.getUserName(), userId);
-            } catch (Exception e) {
-                log.warn("修改密码后强制下线失败: userId={}", userId, e);
-            }
+            eventPublisher.publishEvent(UserPasswordChangedEvent.create(this, userId));
+            log.info("修改密码成功，已发布强制下线事件: userId={}", userId);
         }
         return success;
     }

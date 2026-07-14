@@ -150,27 +150,27 @@
 <style scoped lang="scss">
   :deep(.oper-log-detail-drawer) {
     .el-drawer {
-      border-radius: 12px 0 0 12px;
-      box-shadow: -20px 0 60px rgba(0, 0, 0, 0.15);
       max-width: 900px;
+      border-radius: 12px 0 0 12px;
+      box-shadow: -20px 0 60px rgb(0 0 0 / 15%);
     }
 
     .el-drawer__header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 16px 24px;
       position: sticky;
       top: 0;
       z-index: 10;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 
       .el-drawer__title {
-        color: #fff;
         font-size: 18px;
         font-weight: 600;
+        color: #fff;
       }
 
       .el-drawer__close {
-        color: rgba(255, 255, 255, 0.8);
         font-size: 20px;
+        color: rgb(255 255 255 / 80%);
 
         &:hover {
           color: #fff;
@@ -179,21 +179,21 @@
     }
 
     .el-drawer__body {
-      padding: 24px;
-      background-color: #fafbfc;
-      overflow-y: auto;
       max-height: calc(100vh - 80px);
+      padding: 24px;
+      overflow-y: auto;
+      background-color: #fafbfc;
     }
   }
 
   .loading-container {
     display: flex;
     flex-direction: column;
+    gap: 16px;
     align-items: center;
     justify-content: center;
-    padding: 60px 20px;
-    gap: 16px;
     min-height: 300px;
+    padding: 60px 20px;
   }
 
   .loading-spinner {
@@ -209,24 +209,26 @@
     0% {
       transform: rotate(0deg);
     }
+
     100% {
       transform: rotate(360deg);
     }
   }
 
   .loading-text {
-    color: #999;
     font-size: 14px;
+    color: #999;
   }
 
   .error-container {
     padding: 40px 20px;
   }
+
   .empty-container {
     padding: 60px 20px;
   }
 
-  @media (max-width: 768px) {
+  @media (width <= 768px) {
     :deep(.oper-log-detail-drawer) .el-drawer {
       max-width: 100%;
     }
@@ -236,10 +238,12 @@
     width: 8px;
     height: 8px;
   }
+
   ::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
   }
+
   ::-webkit-scrollbar-thumb {
     background: #c1c1c1;
     border-radius: 4px;

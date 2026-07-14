@@ -188,7 +188,6 @@ public class LogAspect {
             }
             if (loginUser.getUser() != null) {
                 SysUser user = loginUser.getUser();
-                operLog.setOperName(user.getUserName());
                 operLog.setOperatorType(1);
                 if (user.getDeptId() != null) {
                     SysDept dept = sysDeptMapper.selectById(user.getDeptId());

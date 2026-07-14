@@ -316,8 +316,8 @@
   .preview-header {
     &__main {
       display: flex;
-      align-items: center;
       gap: 8px;
+      align-items: center;
       min-width: 0;
     }
 
@@ -328,20 +328,20 @@
     }
 
     &__title {
+      overflow: hidden;
       font-size: 16px;
       font-weight: 600;
       color: var(--el-text-color-primary);
-      overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     &__sub {
-      margin-top: 6px;
       padding-left: 28px;
+      margin-top: 6px;
+      overflow: hidden;
       font-size: 12px;
       color: var(--el-text-color-secondary);
-      overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -356,14 +356,14 @@
   }
 
   .preview-body {
-    border-radius: 10px;
-    background: var(--el-fill-color-lighter);
-    overflow: hidden;
-    min-height: 180px;
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
+    min-height: 180px;
+    overflow: hidden;
+    background: var(--el-fill-color-lighter);
+    border-radius: 10px;
   }
 
   .preview-image {
@@ -387,18 +387,18 @@
   .preview-pdf {
     width: 100%;
     height: min(50vh, 420px);
-    border: none;
     background: #fff;
+    border: none;
   }
 
   .preview-fallback {
-    text-align: center;
     padding: 40px 16px;
     color: var(--el-text-color-secondary);
+    text-align: center;
 
     &__icon {
-      font-size: 48px;
       margin-bottom: 8px;
+      font-size: 48px;
       opacity: 0.5;
     }
 
@@ -416,25 +416,25 @@
 
   .info-card {
     padding: 12px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--el-border-color-lighter);
     background: var(--el-fill-color-blank);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 8px;
 
     &__label {
       display: block;
+      margin-bottom: 6px;
       font-size: 11px;
       font-weight: 600;
-      letter-spacing: 0.04em;
       color: var(--el-text-color-placeholder);
-      margin-bottom: 6px;
+      letter-spacing: 0.04em;
     }
 
     &__value {
       display: block;
+      overflow: hidden;
       font-size: 13px;
       font-weight: 500;
       color: var(--el-text-color-primary);
-      overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -442,18 +442,18 @@
 
   .meta-section {
     &__title {
+      margin-bottom: 10px;
       font-size: 13px;
       font-weight: 600;
       color: var(--el-text-color-primary);
-      margin-bottom: 10px;
     }
   }
 
   .meta-list {
     margin: 0;
+    overflow: hidden;
     border: 1px solid var(--el-border-color-lighter);
     border-radius: 8px;
-    overflow: hidden;
   }
 
   .meta-row {
@@ -481,8 +481,8 @@
 
     &__mono {
       display: flex;
-      align-items: flex-start;
       gap: 8px;
+      align-items: flex-start;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 12px;
       line-height: 1.5;
@@ -495,9 +495,9 @@
 
   .preview-footer {
     display: flex;
-    justify-content: flex-end;
     flex-wrap: wrap;
     gap: 10px;
+    justify-content: flex-end;
     width: 100%;
   }
 </style>
@@ -505,8 +505,8 @@
 <style lang="scss">
   .file-preview-drawer {
     .el-drawer__header {
-      margin-bottom: 0;
       padding-bottom: 16px;
+      margin-bottom: 0;
       border-bottom: 1px solid var(--el-border-color-lighter);
     }
 
@@ -516,8 +516,8 @@
     }
 
     .el-drawer__footer {
-      border-top: 1px solid var(--el-border-color-lighter);
       padding-top: 12px;
+      border-top: 1px solid var(--el-border-color-lighter);
     }
   }
 </style>

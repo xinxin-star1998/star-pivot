@@ -396,11 +396,11 @@
     fetchGetUserInfo,
     fetchLogout,
     fetchUserSessions,
-    forceLogoutSession,
-    forceLogoutAllSessions
+    forceLogoutAllSessions,
+    forceLogoutSession
   } from '@/api/auth'
   import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-  import { Refresh, SwitchButton, Location } from '@element-plus/icons-vue'
+  import { Location, Refresh, SwitchButton } from '@element-plus/icons-vue'
   import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
   import { handleMutationError } from '@/utils/http/mutation'
   import defaultAvatarImg from '@imgs/user/avatar.webp'
@@ -921,8 +921,8 @@
     }
 
     :deep(.el-table) {
-      border-radius: 8px;
       overflow: hidden;
+      border-radius: 8px;
     }
 
     :deep(.current-session-row) {

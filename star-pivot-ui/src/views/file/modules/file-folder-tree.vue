@@ -216,9 +216,9 @@
 
   .tree-node {
     display: flex;
-    align-items: center;
-    gap: 6px;
     flex: 1;
+    gap: 6px;
+    align-items: center;
     min-width: 0;
     padding-right: 4px;
 
@@ -236,9 +236,9 @@
   .node-label {
     flex: 1;
     overflow: hidden;
+    font-size: 13px;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 13px;
   }
 
   .node-count {
@@ -246,18 +246,18 @@
     min-width: 18px;
     height: 18px;
     padding: 0 5px;
-    border-radius: 9px;
-    background: var(--el-fill-color);
-    color: var(--el-text-color-secondary);
     font-size: 11px;
     line-height: 18px;
+    color: var(--el-text-color-secondary);
     text-align: center;
+    background: var(--el-fill-color);
+    border-radius: 9px;
   }
 
   .node-more {
-    opacity: 0;
     flex-shrink: 0;
     padding: 0 2px;
+    opacity: 0;
     transition: opacity 0.15s;
   }
 

@@ -480,24 +480,26 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px;
-    border: 1px solid var(--art-card-border);
-    border-radius: 12px;
     background: linear-gradient(
       135deg,
       var(--el-color-primary-light-9) 0%,
       var(--el-color-primary-light-8) 100%
     );
+    border: 1px solid var(--art-card-border);
+    border-radius: 12px;
   }
 
   .mode-toggle :deep(.el-radio-button__inner) {
-    border-radius: 10px;
     padding: 8px 14px;
     font-weight: 600;
+    border-radius: 10px;
   }
+
   .mode-toggle :deep(.el-radio-button:first-child .el-radio-button__inner) {
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
   }
+
   .mode-toggle :deep(.el-radio-button:last-child .el-radio-button__inner) {
     border-top-right-radius: 10px;
     border-bottom-right-radius: 10px;
@@ -505,9 +507,10 @@
 
   .cron-title__name {
     font-weight: 600;
-    color: var(--art-gray-900);
     line-height: 1.2;
+    color: var(--art-gray-900);
   }
+
   .cron-title__desc {
     margin-top: 4px;
     font-size: 12px;
@@ -517,6 +520,7 @@
   .cron-section {
     margin-top: 14px;
   }
+
   .cron-section__title {
     margin-bottom: 10px;
     font-weight: 600;
@@ -525,22 +529,26 @@
 
   .preset-card {
     cursor: pointer;
+    border: 1px solid var(--art-card-border);
     border-radius: 12px;
     transition: all 0.2s ease;
-    border: 1px solid var(--art-card-border);
   }
+
   .preset-card:hover {
-    transform: translateY(-1px);
     box-shadow: 0 6px 18px rgb(0 0 0 / 8%);
+    transform: translateY(-1px);
   }
+
   .preset-card--active {
-    border-color: var(--el-color-primary);
     background: var(--el-color-primary-light-9);
+    border-color: var(--el-color-primary);
   }
+
   .preset-card__name {
     font-weight: 600;
     color: var(--art-gray-900);
   }
+
   .preset-card__desc {
     margin-top: 6px;
     font-size: 12px;
@@ -559,41 +567,48 @@
     flex-direction: column;
     gap: 10px;
   }
+
   .form-row {
     display: flex;
-    align-items: center;
-    gap: 10px;
     flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
   }
+
   .form-row__label {
     color: var(--art-gray-700);
   }
 
   .advanced-section {
-    margin-top: 14px;
     padding-top: 10px;
+    margin-top: 14px;
     border-top: 1px solid var(--art-card-border);
   }
+
   .advanced-header {
     display: flex;
+    gap: 10px;
     align-items: baseline;
     justify-content: space-between;
-    gap: 10px;
     margin-bottom: 10px;
   }
+
   .advanced-title {
     font-weight: 600;
     color: var(--art-gray-800);
   }
+
   .advanced-tip {
     font-size: 12px;
     color: var(--el-text-color-secondary);
   }
+
   .advanced-hint {
     margin-top: 10px;
     font-size: 12px;
     color: var(--el-text-color-secondary);
   }
+
   .mono {
     font-family:
       ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
@@ -605,10 +620,12 @@
     flex-direction: column;
     gap: 12px;
   }
+
   .side-card {
-    border-radius: 12px;
     border: 1px solid var(--art-card-border);
+    border-radius: 12px;
   }
+
   .side-card--summary {
     color: #fff;
     background: linear-gradient(135deg, #2d3a57 0%, #1f2b44 100%);
@@ -618,66 +635,77 @@
   .side-title {
     font-weight: 600;
   }
+
   .side-row {
     display: flex;
+    gap: 10px;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
   }
+
   .side-cron {
     margin-top: 10px;
     font-weight: 700;
     letter-spacing: 1px;
   }
+
   .side-tz {
     margin-top: 8px;
     font-size: 12px;
     opacity: 0.8;
   }
+
   .side-desc {
     margin-top: 10px;
     font-size: 13px;
     color: var(--el-text-color-regular);
   }
+
   .side-desc--ok {
     color: var(--el-color-success);
   }
 
   .chips {
-    margin-top: 12px;
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 8px;
+    margin-top: 12px;
   }
+
   .chip {
     padding: 8px 10px;
+    text-align: center;
     background: rgb(255 255 255 / 10%);
     border-radius: 12px;
-    text-align: center;
   }
+
   .chip__k {
     font-size: 12px;
     opacity: 0.9;
   }
+
   .chip__v {
     margin-top: 6px;
     font-weight: 700;
   }
 
   .next-list {
-    margin-top: 10px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin-top: 10px;
   }
+
   .next-item {
     padding: 10px 12px;
     border: 1px solid var(--art-card-border);
     border-radius: 12px;
   }
+
   .next-item__main {
     font-weight: 600;
   }
+
   .next-empty {
     color: var(--el-text-color-secondary);
   }

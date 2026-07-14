@@ -650,8 +650,8 @@
 <style lang="scss">
   .icon-picker-dialog {
     .el-dialog__header {
-      margin-right: 0;
       padding: 4px 16px 0;
+      margin-right: 0;
     }
 
     .el-dialog__body {

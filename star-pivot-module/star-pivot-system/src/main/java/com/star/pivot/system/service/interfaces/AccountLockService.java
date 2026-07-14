@@ -1,9 +1,9 @@
 package com.star.pivot.system.service.interfaces;
 
+import com.star.pivot.framework.cache.RedisCache;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.entity.SysUser;
-import com.star.pivot.system.utils.RedisCache;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

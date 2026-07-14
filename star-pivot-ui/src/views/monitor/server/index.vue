@@ -547,9 +547,9 @@
   }
 
   :deep(.server-monitor-card) {
+    background: var(--monitor-card-bg);
     border: 1px solid var(--monitor-card-border);
     border-radius: 14px;
-    background: var(--monitor-card-bg);
     box-shadow:
       0 10px 28px rgb(15 23 42 / 8%),
       0 2px 8px rgb(15 23 42 / 5%);
@@ -568,18 +568,18 @@
 
   .card-header {
     display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
     align-items: center;
     justify-content: space-between;
     min-height: 40px;
-    gap: 12px;
-    flex-wrap: wrap;
   }
 
   .header-meta {
-    margin-top: 8px;
     display: flex;
-    align-items: center;
     gap: 14px;
+    align-items: center;
+    margin-top: 8px;
     font-size: 12px;
     color: var(--monitor-muted-text);
   }
@@ -593,8 +593,8 @@
   .title-main {
     font-size: 17px;
     font-weight: 600;
-    color: var(--monitor-title-text);
     line-height: 1.1;
+    color: var(--monitor-title-text);
     letter-spacing: 0.2px;
   }
 
@@ -605,31 +605,31 @@
 
   .header-actions {
     display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
-    flex-wrap: wrap;
   }
 
   .health-indicator {
     display: inline-flex;
-    align-items: center;
     gap: 6px;
+    align-items: center;
     padding: 5px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--monitor-card-border);
-    background: var(--monitor-block-bg);
-    color: var(--monitor-muted-text);
     font-size: 12px;
     line-height: 1;
+    color: var(--monitor-muted-text);
+    background: var(--monitor-block-bg);
+    border: 1px solid var(--monitor-card-border);
+    border-radius: 999px;
     transition: all 0.22s ease;
   }
 
   .health-dot {
     width: 8px;
     height: 8px;
-    border-radius: 50%;
     background: #22c55e;
+    border-radius: 50%;
     box-shadow: 0 0 8px rgb(34 197 94 / 55%);
   }
 
@@ -639,8 +639,8 @@
   }
 
   .health-indicator.is-warning {
-    border-color: rgb(245 158 11 / 50%);
     background: rgb(245 158 11 / 12%);
+    border-color: rgb(245 158 11 / 50%);
   }
 
   .health-indicator.is-warning .health-dot {
@@ -649,8 +649,8 @@
   }
 
   .health-indicator.is-danger {
-    border-color: rgb(239 68 68 / 54%);
     background: rgb(239 68 68 / 12%);
+    border-color: rgb(239 68 68 / 54%);
   }
 
   .health-indicator.is-danger .health-dot {
@@ -660,21 +660,21 @@
 
   .status-pills {
     display: flex;
-    align-items: center;
-    gap: 8px;
     flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
   }
 
   .status-pill {
     display: inline-flex;
-    align-items: center;
     gap: 6px;
+    align-items: center;
     padding: 5px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--monitor-card-border);
-    background: var(--monitor-block-bg);
     font-size: 12px;
     line-height: 1;
+    background: var(--monitor-block-bg);
+    border: 1px solid var(--monitor-card-border);
+    border-radius: 999px;
     transition: all 0.22s ease;
   }
 
@@ -683,27 +683,27 @@
   }
 
   .pill-value {
-    color: var(--monitor-title-text);
     font-weight: 600;
+    color: var(--monitor-title-text);
   }
 
   .status-pill.is-warning {
-    border-color: rgb(245 158 11 / 48%);
     background: rgb(245 158 11 / 12%);
+    border-color: rgb(245 158 11 / 48%);
   }
 
   .status-pill.is-danger {
-    border-color: rgb(239 68 68 / 52%);
     background: rgb(239 68 68 / 12%);
+    border-color: rgb(239 68 68 / 52%);
   }
 
   .density-switch {
     :deep(.el-radio-button__inner) {
       padding: 7px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--monitor-card-border);
-      background: var(--monitor-block-bg);
       color: var(--monitor-muted-text);
+      background: var(--monitor-block-bg);
+      border: 1px solid var(--monitor-card-border);
+      border-radius: 8px;
       box-shadow: none;
     }
   }
@@ -714,26 +714,26 @@
 
   .overview-card {
     position: relative;
-    margin-bottom: 10px;
     min-height: 102px;
     padding: 14px 16px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgb(255 255 255 / 95%) 0%, rgb(247 250 255 / 90%) 100%);
     border: 1px solid var(--monitor-card-border);
     border-radius: 12px;
-    background: linear-gradient(135deg, rgb(255 255 255 / 95%) 0%, rgb(247 250 255 / 90%) 100%);
     box-shadow: 0 8px 18px rgb(15 23 42 / 6%);
-    overflow: hidden;
     transition: all 0.24s ease;
   }
 
   .overview-card::after {
-    content: '';
     position: absolute;
     top: -24px;
     right: -28px;
     width: 90px;
     height: 90px;
-    border-radius: 50%;
+    content: '';
     background: radial-gradient(circle, rgb(59 130 246 / 14%) 0%, rgb(59 130 246 / 0%) 70%);
+    border-radius: 50%;
   }
 
   .overview-alert {
@@ -744,10 +744,10 @@
     align-items: center;
     justify-content: center;
     padding: 3px 8px;
-    border-radius: 999px;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.2px;
+    border-radius: 999px;
   }
 
   .overview-card.is-warning {
@@ -805,9 +805,9 @@
 
   .meter-item {
     padding: 10px 12px;
-    border-radius: 10px;
     background: var(--monitor-block-bg);
     border: 1px solid var(--monitor-block-border);
+    border-radius: 10px;
     transition: all 0.2s ease;
   }
 
@@ -828,16 +828,16 @@
 
   .meter-value {
     margin-top: 6px;
-    text-align: right;
     font-size: 12px;
     font-weight: 500;
     color: var(--monitor-muted-text);
+    text-align: right;
   }
 
   :deep(.el-card) {
-    border-radius: 12px;
-    border: 1px solid var(--monitor-card-border);
     background: var(--monitor-card-bg);
+    border: 1px solid var(--monitor-card-border);
+    border-radius: 12px;
     transition: all 0.3s ease;
 
     &:hover {
@@ -853,19 +853,19 @@
   }
 
   .section-card {
-    margin-bottom: 12px;
     position: relative;
+    margin-bottom: 12px;
     overflow: hidden;
     transition: transform 0.22s ease;
   }
 
   .section-card::before {
-    content: '';
     position: absolute;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 2px;
+    content: '';
     background: var(--section-accent, rgb(59 130 246 / 72%));
   }
 
@@ -918,9 +918,9 @@
     }
 
     :deep(.el-table .cell) {
-      font-size: 12px;
       padding-top: 4px;
       padding-bottom: 4px;
+      font-size: 12px;
     }
   }
 
@@ -931,8 +931,9 @@
     --el-table-border-color: var(--monitor-card-border);
     --el-table-header-text-color: var(--monitor-muted-text);
     --el-table-text-color: var(--monitor-title-text);
-    border-radius: 10px;
+
     overflow: hidden;
+    border-radius: 10px;
 
     .cell {
       font-size: 13px;
@@ -941,8 +942,8 @@
 
   :deep(.el-descriptions__label) {
     width: 130px;
-    color: var(--monitor-muted-text);
     font-weight: 500;
+    color: var(--monitor-muted-text);
   }
 
   :deep(.el-button) {
@@ -968,14 +969,14 @@
   }
 
   .server-monitor-page.is-dark .status-pill:hover {
-    transform: translateY(-1px);
-    border-color: rgb(148 163 184 / 56%);
     background: rgb(30 41 59 / 84%);
+    border-color: rgb(148 163 184 / 56%);
+    transform: translateY(-1px);
   }
 
   .server-monitor-page.is-dark .health-indicator:hover {
-    transform: translateY(-1px);
     border-color: rgb(148 163 184 / 56%);
+    transform: translateY(-1px);
   }
 
   .server-monitor-page.is-dark .overview-card {
@@ -986,10 +987,10 @@
   }
 
   .server-monitor-page.is-dark .overview-card:hover {
-    transform: translateY(-2px);
     box-shadow:
       inset 0 0 0 1px rgb(148 163 184 / 20%),
       0 16px 28px rgb(2 6 23 / 46%);
+    transform: translateY(-2px);
   }
 
   .server-monitor-page.is-dark .overview-card::after {
@@ -1009,8 +1010,8 @@
   }
 
   .server-monitor-page.is-dark .meter-item:hover {
-    border-color: rgb(100 116 139 / 56%);
     background: rgb(15 23 42 / 88%);
+    border-color: rgb(100 116 139 / 56%);
   }
 
   .server-monitor-page.is-dark .meter-item.is-warning:hover {
@@ -1027,15 +1028,15 @@
   }
 
   .server-monitor-page.is-dark :deep(.density-switch .el-radio-button__inner:hover) {
-    border-color: rgb(59 130 246 / 52%);
     color: rgb(191 219 254);
+    border-color: rgb(59 130 246 / 52%);
   }
 
   .server-monitor-page.is-dark
     :deep(.density-switch .el-radio-button__original-radio:checked + .el-radio-button__inner) {
-    border-color: rgb(59 130 246 / 72%);
-    background: rgb(30 58 138 / 34%);
     color: rgb(219 234 254);
+    background: rgb(30 58 138 / 34%);
+    border-color: rgb(59 130 246 / 72%);
   }
 
   .server-monitor-page.is-dark :deep(.el-table__row:hover > td.el-table__cell) {
@@ -1043,8 +1044,8 @@
   }
 
   .server-monitor-page.is-dark :deep(.el-button.el-button--primary) {
-    border-color: rgb(59 130 246 / 72%);
     background: linear-gradient(135deg, rgb(37 99 235 / 86%) 0%, rgb(29 78 216 / 92%) 100%);
+    border-color: rgb(59 130 246 / 72%);
   }
 
   .server-monitor-page.is-dark :deep(.el-button.el-button--primary:hover) {
@@ -1055,11 +1056,11 @@
   .server-monitor-page.is-dark :deep(.el-tag.el-tag--info),
   .server-monitor-page.is-dark :deep(.el-tag.el-tag--success) {
     color: rgb(191 219 254);
-    border-color: rgb(59 130 246 / 45%);
     background: rgb(30 58 138 / 24%);
+    border-color: rgb(59 130 246 / 45%);
   }
 
-  @media (max-width: 768px) {
+  @media (width <= 768px) {
     .server-monitor-page {
       padding: 10px;
     }
@@ -1077,15 +1078,15 @@
     }
 
     .header-actions {
-      width: 100%;
       justify-content: flex-start;
+      width: 100%;
     }
 
     .header-meta {
-      margin-top: 6px;
-      width: 100%;
-      justify-content: space-between;
       gap: 8px;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 6px;
     }
   }
 </style>

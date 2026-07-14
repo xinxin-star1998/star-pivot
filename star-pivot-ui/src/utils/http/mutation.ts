@@ -43,7 +43,6 @@ export function handleMutationError(
     if (!options?.showHttpError) return
   }
 
-  const message =
-    error instanceof Error && !isHttpError(error) ? error.message : fallbackMessage
+  const message = error instanceof Error && !isHttpError(error) ? error.message : fallbackMessage
   ElMessage.error(message)
 }

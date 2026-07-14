@@ -43,12 +43,28 @@ public class ResponseAdvice implements ResponseBodyAdvice<Object> {
         if (resultBody instanceof Result<?> result) {
             Integer code = result.getCode();
             if (code != null) {
-                HttpStatus status = HttpStatus.resolve(code);
-                if (status != null) {
-                    response.setStatusCode(status);
-                }
+                response.setStatusCode(resolveHttpStatus(code));
             }
         }
         return resultBody;
+    }
+
+    private HttpStatus resolveHttpStatus(Integer code) {
+        if (code >= 200 && code < 300) {
+            return HttpStatus.valueOf(code);
+        }
+        if (code == 401) {
+            return HttpStatus.UNAUTHORIZED;
+        }
+        if (code == 403) {
+            return HttpStatus.FORBIDDEN;
+        }
+        if (code == 404) {
+            return HttpStatus.NOT_FOUND;
+        }
+        if (code >= 500 && code < 600) {
+            return HttpStatus.valueOf(code);
+        }
+        return HttpStatus.OK;
     }
 }

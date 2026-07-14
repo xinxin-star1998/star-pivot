@@ -1,30 +1,20 @@
 package com.star.pivot.system.utils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.star.pivot.framework.domain.AppConstants;
 import com.star.pivot.framework.domain.DataScope;
-import com.star.pivot.system.domain.entity.SysDept;
+import com.star.pivot.security.context.SecurityContextUtils;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.mapper.RoleDeptMapper;
 import com.star.pivot.system.mapper.SysDeptMapper;
 import com.star.pivot.system.mapper.SysRoleMapper;
 import com.star.pivot.system.mapper.SysUserMapper;
-import com.star.pivot.security.context.SecurityContextUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 数据权限服务。
@@ -201,8 +191,7 @@ public class DataScopeService {
     /**
      * 构建数据权限 SQL 过滤条件。
      * <p>
-     * 注意：对于部门ID列表，直接拼接实际值（部门ID为Long类型，来自数据库，无SQL注入风险）。
-     * 对于用户ID和部门ID，使用占位符以支持参数化查询。
+     * 使用 MyBatis 占位符支持参数化查询，避免 SQL 拼接。
      * </p>
      */
     private String buildSqlFilter(String dataScopeType, Long userId, Set<Long> deptIdSet, Long userDeptId) {
@@ -214,8 +203,7 @@ public class DataScopeService {
                 if (CollectionUtils.isEmpty(deptIdSet)) {
                     return SQL_NONE;
                 }
-                // 直接拼接部门ID列表（Long类型，无SQL注入风险）
-                return "u.dept_id IN (" + String.join(",", deptIdSet.stream().map(String::valueOf).toList()) + ")";
+                return "u.dept_id IN (<foreach collection='param.deptIds' item='deptId' separator=','>#{deptId}</foreach>)";
             case AppConstants.DataScope.DEPT:
                 if (userDeptId == null) {
                     return SQL_NONE;
@@ -236,33 +224,16 @@ public class DataScopeService {
     }
 
     /**
-     * 递归查询指定部门及其所有子部门的 ID（含当前部门）。
+     * 查询指定部门及其所有子部门的 ID（含当前部门）。
+     * 使用 SQL WITH RECURSIVE 实现递归查询，避免 N+1 查询问题。
      * 仅包含未删除、状态正常的部门。
      */
     private Set<Long> selectDeptIdsByParentId(Long parentId) {
         if (parentId == null) {
             return new HashSet<>();
         }
-        Set<Long> deptIdSet = new HashSet<>();
-        deptIdSet.add(parentId);
-        selectChildrenDeptIds(parentId, deptIdSet);
-        return deptIdSet;
-    }
-
-    /**
-     * 递归收集子部门 ID 到给定集合。
-     */
-    private void selectChildrenDeptIds(Long parentId, Set<Long> deptIdSet) {
-        LambdaQueryWrapper<SysDept> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysDept::getParentId, parentId)
-                .eq(SysDept::getDelFlag, AppConstants.DelFlag.NORMAL)
-                .eq(SysDept::getStatus, AppConstants.Status.NORMAL);
-        
-        List<SysDept> children = deptMapper.selectList(wrapper);
-        for (SysDept child : children) {
-            deptIdSet.add(child.getDeptId());
-            selectChildrenDeptIds(child.getDeptId(), deptIdSet);
-        }
+        List<Long> deptIds = deptMapper.selectDeptIdsByParentId(parentId);
+        return deptIds != null ? new HashSet<>(deptIds) : new HashSet<>();
     }
 
     /**

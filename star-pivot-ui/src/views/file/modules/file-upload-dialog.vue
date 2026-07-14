@@ -59,6 +59,7 @@
   import { ElMessage } from 'element-plus'
   import { handleMutationError } from '@/utils/http/mutation'
   import { computed, ref, watch } from 'vue'
+  import { error } from 'echarts/types/src/util/log'
 
   const visible = defineModel<boolean>('visible', { default: false })
 
@@ -197,15 +198,15 @@
   }
 
   .upload-icon {
+    margin-bottom: 8px;
     font-size: 48px;
     color: var(--el-color-primary);
-    margin-bottom: 8px;
   }
 
   .upload-tip {
-    color: var(--el-text-color-secondary);
     font-size: 12px;
     line-height: 1.5;
+    color: var(--el-text-color-secondary);
   }
 
   .upload-progress {

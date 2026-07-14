@@ -154,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-  import { Refresh, Link } from '@element-plus/icons-vue'
+  import { Link, Refresh } from '@element-plus/icons-vue'
   import { fetchGetDruidMonitorInfo } from '@/api/monitor/druid'
   import { usePageVisibility } from '@/hooks/core/usePageVisibility'
   import type { DruidMonitorInfo } from '@/types/api/monitor'
@@ -276,10 +276,10 @@
 
 <style scoped lang="scss">
   .druid-monitor-page {
+    box-sizing: border-box;
     height: 100%;
     padding: 20px;
     overflow-y: auto;
-    box-sizing: border-box;
     background-color: var(--default-bg-color);
   }
 

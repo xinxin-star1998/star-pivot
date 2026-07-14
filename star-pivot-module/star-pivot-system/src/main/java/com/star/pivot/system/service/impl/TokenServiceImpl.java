@@ -1,7 +1,8 @@
 package com.star.pivot.system.service.impl;
 
-import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.event.UserPasswordChangedEvent;
 import com.star.pivot.framework.exception.BizException;
+import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.LogUtils;
 import com.star.pivot.security.token.JwtBlackListManager;
 import com.star.pivot.security.token.JwtUtil;
@@ -18,6 +19,7 @@ import com.star.pivot.system.service.interfaces.TokenService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -253,6 +255,16 @@ public class TokenServiceImpl implements TokenService {
             onlineUserService.saveOnlineUserHistory(onlineUser, logoutType);
         } catch (Exception e) {
             log.warn("保存在线用户历史记录失败，userId: {}", userId, e);
+        }
+    }
+
+    @EventListener
+    public void onUserPasswordChanged(UserPasswordChangedEvent event) {
+        try {
+            forceLogout(event.getUserId(), event.getLogoutType());
+            log.info("监听用户密码变更事件，已强制用户下线: userId={}", event.getUserId());
+        } catch (Exception e) {
+            log.warn("处理用户密码变更事件失败: userId={}", event.getUserId(), e);
         }
     }
 }

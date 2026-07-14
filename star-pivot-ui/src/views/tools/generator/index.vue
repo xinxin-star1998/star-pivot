@@ -73,27 +73,27 @@
 </template>
 
 <script setup lang="ts">
-  import { useRouter } from 'vue-router'
-  import { useTable } from '@/hooks/core/useTable'
-  import { useAuth } from '@/hooks/core/useAuth'
-  import { handleMutationError } from '@/utils/http/mutation'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import { ElButton, ElMessage, ElMessageBox, ElSpace, ElTag } from 'element-plus'
-  import {
-    fetchBatchGenerateCode,
-    fetchDeleteTable,
-    fetchGenerateCode,
-    fetchGetGenTableList,
-    fetchSyncDatabase
-  } from '@/api/generator/gen-table'
-  import FileSaver from 'file-saver'
-  import { DialogType } from '@/types'
+import { useRouter } from 'vue-router'
+import { useTable } from '@/hooks/core/useTable'
+import { useAuth } from '@/hooks/core/useAuth'
+import { handleMutationError } from '@/utils/http/mutation'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+import { ElButton, ElMessage, ElMessageBox, ElSpace, ElTag } from 'element-plus'
+import {
+  fetchBatchGenerateCode,
+  fetchDeleteTable,
+  fetchGenerateCode,
+  fetchGetGenTableList,
+  fetchSyncDatabase
+} from '@/api/generator/gen-table'
+import FileSaver from 'file-saver'
+import { DialogType } from '@/types'
 
-  const genAddDialog = defineAsyncComponent(
+const genAddDialog = defineAsyncComponent(
     () => import('@views/tools/generator/modules/gen-add-dialog.vue')
   )
   const ImportDialog = defineAsyncComponent(
@@ -605,8 +605,8 @@
   }
 
   :deep(.art-search-bar .action-column .action-buttons-wrapper) {
+    align-items: center;
     min-height: 32px;
     margin-bottom: 0;
-    align-items: center;
   }
 </style>
