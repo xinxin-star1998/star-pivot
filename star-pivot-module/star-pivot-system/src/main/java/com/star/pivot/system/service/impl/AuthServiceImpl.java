@@ -6,15 +6,13 @@ import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.utils.LogUtils;
 import com.star.pivot.framework.utils.validation.AssertUtils;
 import com.star.pivot.security.context.SecurityUtils;
-import com.star.pivot.system.domain.bo.LoginRequest;
-import com.star.pivot.system.domain.bo.LoginResponse;
-import com.star.pivot.system.domain.bo.RegisterRequest;
-import com.star.pivot.system.domain.bo.RegisterResponse;
+import com.star.pivot.system.domain.bo.*;
 import com.star.pivot.system.domain.entity.SysLogininfor;
 import com.star.pivot.system.domain.entity.SysUser;
 import com.star.pivot.system.domain.entity.UserRole;
 import com.star.pivot.system.mapper.UserRoleMapper;
 import com.star.pivot.system.service.interfaces.*;
+import com.star.pivot.system.utils.LoginIpBlacklistMatcher;
 import com.star.pivot.system.utils.LoginUser;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     private final AccountLockService accountLockService;
     private final UserRoleMapper userRoleMapper;
     private final ISysConfigService sysConfigService;
+    private final PasswordPolicyService passwordPolicyService;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -75,6 +74,7 @@ public class AuthServiceImpl implements AuthService {
         SysLogininfor logininfor = buildLoginInfo(request.getUsername(), ipaddr, browser, os, loginLocation);
         
         try {
+            checkLoginIpBlacklisted(ipaddr, logininfor);
             preCheckBeforeAuthentication(request, ipaddr, logininfor);
             
             UsernamePasswordAuthenticationToken authenticationToken = 
@@ -91,6 +91,12 @@ public class AuthServiceImpl implements AuthService {
             response.setRefreshToken(tokenPair.getRefreshToken());
             response.setUsername(request.getUsername());
             response.setNickname(user.getNickName());
+
+            PasswordModifyHint passwordModifyHint = passwordPolicyService.evaluate(user);
+            if (passwordModifyHint.isRequired()) {
+                response.setNeedChangePassword(true);
+                response.setPasswordModifyReason(passwordModifyHint.getReason());
+            }
 
             accountLockService.clearLoginFailures(request.getUsername());
             rateLimitService.clearIpRateLimit(ipaddr);
@@ -117,7 +123,9 @@ public class AuthServiceImpl implements AuthService {
         AssertUtils.notNull(request, ErrorCode.PARAM_NOT_NULL, "登录请求不能为空");
         AssertUtils.notEmpty(request.getUsername(), ErrorCode.PARAM_NOT_NULL, "用户名不能为空");
         AssertUtils.notEmpty(request.getPassword(), ErrorCode.PARAM_NOT_NULL, "密码不能为空");
-        AssertUtils.notEmpty(request.getCaptchaProof(), ErrorCode.PARAM_NOT_NULL, "验证码凭证不能为空");
+        if (sysConfigService.isCaptchaEnabled()) {
+            AssertUtils.notEmpty(request.getCaptchaProof(), ErrorCode.PARAM_NOT_NULL, "验证码凭证不能为空");
+        }
         
         String username = request.getUsername().trim();
         if (username.length() > 100) {
@@ -253,11 +261,23 @@ public class AuthServiceImpl implements AuthService {
         // 3. 检查IP+用户名维度限流
         rateLimitService.checkIpUsernameRateLimit(ipaddr, request.getUsername());
 
-        // 4. 验证验证码 proof（一次性）
-        if (!captchaService.validateAndConsumeCaptchaProof(request.getCaptchaProof(), "login")) {
-            recordLoginFailure(logininfor, "验证码错误或已失效");
-            accountLockService.recordLoginFailure(request.getUsername());
-            throw new BizException(ErrorCode.CAPTCHA_ERROR, "验证码错误或已失效");
+        // 4. 验证验证码 proof（一次性，可通过 sys.account.captchaEnabled 关闭）
+        if (sysConfigService.isCaptchaEnabled()) {
+            if (!captchaService.validateAndConsumeCaptchaProof(request.getCaptchaProof(), "login")) {
+                recordLoginFailure(logininfor, "验证码错误或已失效");
+                accountLockService.recordLoginFailure(request.getUsername());
+                throw new BizException(ErrorCode.CAPTCHA_ERROR, "验证码错误或已失效");
+            }
+        }
+    }
+
+    /**
+     * 检查登录 IP 是否命中黑名单（sys.login.blackIPList）
+     */
+    private void checkLoginIpBlacklisted(String ipaddr, SysLogininfor logininfor) {
+        if (LoginIpBlacklistMatcher.isBlocked(ipaddr, sysConfigService.getLoginBlackIpList())) {
+            recordLoginFailure(logininfor, "登录IP已被禁止访问");
+            throw new BizException(ErrorCode.FORBIDDEN, "当前IP禁止登录");
         }
     }
 

@@ -161,7 +161,53 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
 
     @Override
     public boolean isRegisterUserEnabled() {
-        return parseBooleanConfig(selectConfigValueByKey(SysConfigKeys.REGISTER_USER));
+        return parseBooleanConfig(selectConfigValueByKey(SysConfigKeys.REGISTER_USER), false);
+    }
+
+    @Override
+    public boolean isCaptchaEnabled() {
+        return parseBooleanConfig(selectConfigValueByKey(SysConfigKeys.ACCOUNT_CAPTCHA_ENABLED),
+                SysConfigKeys.DEFAULT_CAPTCHA_ENABLED);
+    }
+
+    @Override
+    public String getInitPassword() {
+        String value = selectConfigValueByKey(SysConfigKeys.USER_INIT_PASSWORD);
+        return StringUtils.hasText(value) ? value.trim() : SysConfigKeys.DEFAULT_INIT_PASSWORD;
+    }
+
+    @Override
+    public String getLoginBlackIpList() {
+        String value = selectConfigValueByKey(SysConfigKeys.LOGIN_BLACK_IP_LIST);
+        return value != null ? value.trim() : "";
+    }
+
+    @Override
+    public int getInitPasswordModifyPolicy() {
+        return parseIntConfig(selectConfigValueByKey(SysConfigKeys.ACCOUNT_INIT_PASSWORD_MODIFY),
+                SysConfigKeys.DEFAULT_INIT_PASSWORD_MODIFY);
+    }
+
+    @Override
+    public int getPasswordValidateDays() {
+        return parseIntConfig(selectConfigValueByKey(SysConfigKeys.ACCOUNT_PASSWORD_VALIDATE_DAYS),
+                SysConfigKeys.DEFAULT_PASSWORD_VALIDATE_DAYS);
+    }
+
+    @Override
+    public int getCaptchaLength() {
+        return clampIntConfig(selectConfigValueByKey(SysConfigKeys.ACCOUNT_CAPTCHA_LENGTH),
+                SysConfigKeys.DEFAULT_CAPTCHA_LENGTH,
+                SysConfigKeys.MIN_CAPTCHA_LENGTH,
+                SysConfigKeys.MAX_CAPTCHA_LENGTH);
+    }
+
+    @Override
+    public int getCaptchaExpireSeconds() {
+        return clampIntConfig(selectConfigValueByKey(SysConfigKeys.ACCOUNT_CAPTCHA_EXPIRE_SECONDS),
+                SysConfigKeys.DEFAULT_CAPTCHA_EXPIRE_SECONDS,
+                SysConfigKeys.MIN_CAPTCHA_EXPIRE_SECONDS,
+                SysConfigKeys.MAX_CAPTCHA_EXPIRE_SECONDS);
     }
 
     /**
@@ -187,6 +233,38 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
     }
 
     private boolean parseBooleanConfig(String value) {
+        return parseBooleanConfig(value, false);
+    }
+
+    private boolean parseBooleanConfig(String value, boolean defaultValue) {
+        if (!StringUtils.hasText(value)) {
+            return defaultValue;
+        }
         return "true".equalsIgnoreCase(StringUtils.trimWhitespace(value));
+    }
+
+    private int parseIntConfig(String value, int defaultValue) {
+        if (!StringUtils.hasText(value)) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(StringUtils.trimWhitespace(value));
+        } catch (NumberFormatException ex) {
+            log.warn("参数配置值无法解析为整数，使用默认值: value={}, default={}", value, defaultValue);
+            return defaultValue;
+        }
+    }
+
+    private int clampIntConfig(String value, int defaultValue, int min, int max) {
+        int parsed = parseIntConfig(value, defaultValue);
+        if (parsed < min) {
+            log.warn("参数配置值低于下限，使用下限: value={}, min={}", parsed, min);
+            return min;
+        }
+        if (parsed > max) {
+            log.warn("参数配置值超过上限，使用上限: value={}, max={}", parsed, max);
+            return max;
+        }
+        return parsed;
     }
 }

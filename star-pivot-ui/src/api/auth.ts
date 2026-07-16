@@ -14,7 +14,7 @@ export function fetchLogin(data: Api.Auth.LoginParams) {
     data: {
       username,
       password,
-      captchaProof
+      ...(captchaProof ? { captchaProof } : {})
     }
     // showSuccessMessage: true // 显示成功消息
     // showErrorMessage: false // 不显示错误消息
@@ -94,6 +94,16 @@ export function fetchRefreshToken(data: { username: string; refreshToken: string
     url: '/api/auth/refresh',
     data,
     showErrorMessage: false // 刷新失败时不显示错误消息，由拦截器统一处理
+  })
+}
+
+/**
+ * 查询登录页公开配置（验证码开关、注册开关）
+ */
+export async function fetchLoginConfig(): Promise<Api.Auth.LoginConfigResponse> {
+  return request.get<Api.Auth.LoginConfigResponse>({
+    url: '/api/auth/login/config',
+    showErrorMessage: false
   })
 }
 

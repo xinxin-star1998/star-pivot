@@ -6,11 +6,14 @@ import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.system.domain.CaptchaState;
 import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
+import com.star.pivot.system.service.interfaces.ISysConfigService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.concurrent.TimeUnit;
 
@@ -20,16 +23,22 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.startsWith;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class CaptchaServiceImplTest {
 
     @Mock
     private RedisCache redisCache;
 
+    @Mock
+    private ISysConfigService sysConfigService;
+
     private CaptchaServiceImpl captchaService;
 
     @BeforeEach
     void setUp() {
-        captchaService = new CaptchaServiceImpl(redisCache);
+        when(sysConfigService.getCaptchaLength()).thenReturn(4);
+        when(sysConfigService.getCaptchaExpireSeconds()).thenReturn(180);
+        captchaService = new CaptchaServiceImpl(redisCache, sysConfigService);
     }
 
     @Test

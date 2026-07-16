@@ -77,6 +77,14 @@ public class AuthAccountController {
         return Result.success(new RegisterConfigResponse(sysConfigService.isRegisterUserEnabled()));
     }
 
+    @Operation(summary = "查询登录页配置", description = "读取验证码开关与注册开关，供登录页初始化")
+    @GetMapping("/login/config")
+    public Result<LoginConfigResponse> getLoginConfig() {
+        return Result.success(new LoginConfigResponse(
+                sysConfigService.isCaptchaEnabled(),
+                sysConfigService.isRegisterUserEnabled()));
+    }
+
     @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息，包括用户基本信息、角色列表和权限菜单树")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "获取成功"),

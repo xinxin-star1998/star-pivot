@@ -56,7 +56,12 @@
               </ElInput>
             </ElFormItem>
 
-            <ElFormItem prop="captcha" :error="captchaError" class="captcha-item">
+            <ElFormItem
+              v-if="captchaEnabled"
+              prop="captcha"
+              :error="captchaError"
+              class="captcha-item"
+            >
               <div class="captcha-container">
                 <ElInput
                   v-model="formData.captcha"
@@ -132,8 +137,8 @@
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
   import { fetchCaptcha, fetchLogin, fetchVerifyCaptcha } from '@/api/auth'
-  import { isRegisterEnabled } from '@/utils/auth/register-config'
-  import { ElNotification, type FormInstance, type FormRules } from 'element-plus'
+  import { getLoginConfig } from '@/utils/auth/login-config'
+  import { ElMessageBox, ElNotification, type FormInstance, type FormRules } from 'element-plus'
   import { useCommon } from '@/hooks'
   import { useRoute, useRouter } from 'vue-router'
 
@@ -144,7 +149,6 @@
   const settingStore = useSettingStore()
   const { isDark } = storeToRefs(settingStore)
 
-  // 监听语言切换，重置表单
   watch(locale, () => {
     formKey.value++
   })
@@ -174,11 +178,16 @@
   const rules = computed<FormRules>(() => ({
     username: [{ required: true, message: t('login.placeholder.username'), trigger: 'blur' }],
     password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }],
-    captcha: [{ required: true, message: t('login.placeholder.captcha'), trigger: 'blur' }]
+    ...(captchaEnabled.value
+      ? {
+          captcha: [{ required: true, message: t('login.placeholder.captcha'), trigger: 'blur' }]
+        }
+      : {})
   }))
 
   const loading = ref(false)
   const registerEnabled = ref(false)
+  const captchaEnabled = ref(true)
 
   // 登录
   const handleSubmit = async () => {
@@ -196,24 +205,27 @@
 
       captchaError.value = ''
 
-      // 先校验验证码，获取一次性 proof
-      if (!formData.captchaToken) {
-        captchaError.value = '请先获取验证码'
-        return
+      let captchaProof: string | undefined
+
+      if (captchaEnabled.value) {
+        if (!formData.captchaToken) {
+          captchaError.value = '请先获取验证码'
+          return
+        }
+
+        loading.value = true
+
+        const verifyRes = await fetchVerifyCaptcha({
+          captchaToken: formData.captchaToken,
+          code: formData.captcha,
+          scene: 'login'
+        })
+
+        captchaProof = verifyRes.captchaProof
+      } else {
+        loading.value = true
       }
 
-      // 立即设置 loading 状态，防止重复点击
-      loading.value = true
-
-      const verifyRes = await fetchVerifyCaptcha({
-        captchaToken: formData.captchaToken,
-        code: formData.captcha,
-        scene: 'login'
-      })
-
-      const captchaProof = verifyRes.captchaProof
-
-      // 登录请求
       const { username, password } = formData
 
       const response = await fetchLogin({
@@ -228,7 +240,9 @@
         refreshToken,
         username: returnedUsername,
         nickname,
-        deviceSessionId
+        deviceSessionId,
+        needChangePassword,
+        passwordModifyReason
       } = response
 
       // 验证token
@@ -269,6 +283,10 @@
       // 保存登录信息到本地存储
       saveLoginInfo()
 
+      if (needChangePassword) {
+        await promptChangePassword(passwordModifyReason)
+      }
+
       // 获取 redirect 参数，如果存在且不是登录页或根路径则跳转到指定页面，否则跳转到首页
       const redirect = route.query.redirect as string
       if (redirect && redirect !== '/' && !redirect.includes('login')) {
@@ -288,9 +306,9 @@
         }
         // 处理账户锁定错误（423）
         else if (error.code === 423) {
-          // 账户锁定错误，HTTP拦截器已经显示了错误消息，这里不需要额外处理
-          // 但可以刷新验证码，让用户重新尝试
-          refreshCaptcha()
+          if (captchaEnabled.value) {
+            refreshCaptcha()
+          }
         }
       } else {
         // 处理非 HttpError
@@ -359,11 +377,33 @@
     }
   }
 
-  // 组件挂载时获取验证码并加载保存的登录信息
+  const promptChangePassword = async (reason?: string) => {
+    const message =
+      reason === 'PASSWORD_EXPIRED'
+        ? '您的密码已过期，请尽快修改密码。'
+        : '您正在使用初始密码登录，请尽快修改密码。'
+
+    try {
+      await ElMessageBox.confirm(message, '安全提示', {
+        confirmButtonText: '去修改',
+        cancelButtonText: '稍后',
+        type: 'warning'
+      })
+      await router.push({ path: '/system/user-center', query: { tab: 'password' } })
+    } catch {
+      // 用户选择稍后
+    }
+  }
+
+  // 组件挂载时加载登录配置并获取验证码
   onMounted(async () => {
     loadSavedLoginInfo()
-    registerEnabled.value = await isRegisterEnabled()
-    refreshCaptcha()
+    const loginConfig = await getLoginConfig()
+    captchaEnabled.value = loginConfig.captchaEnabled
+    registerEnabled.value = loginConfig.registerEnabled
+    if (captchaEnabled.value) {
+      refreshCaptcha()
+    }
   })
 
   // 登录成功提示

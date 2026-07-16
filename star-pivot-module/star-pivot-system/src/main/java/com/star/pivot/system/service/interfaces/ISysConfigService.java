@@ -74,4 +74,39 @@ public interface ISysConfigService extends IService<SysConfig> {
      * 是否开启用户自助注册
      */
     boolean isRegisterUserEnabled();
+
+    /**
+     * 是否开启登录验证码
+     */
+    boolean isCaptchaEnabled();
+
+    /**
+     * 账号初始密码
+     */
+    String getInitPassword();
+
+    /**
+     * 登录 IP 黑名单配置（; 分隔）
+     */
+    String getLoginBlackIpList();
+
+    /**
+     * 初始密码修改策略（0 关闭，1 登录提醒）
+     */
+    int getInitPasswordModifyPolicy();
+
+    /**
+     * 密码更新周期（天，0 表示不限制）
+     */
+    int getPasswordValidateDays();
+
+    /**
+     * 验证码位数（4-6）
+     */
+    int getCaptchaLength();
+
+    /**
+     * 验证码过期时间（秒，60-600）
+     */
+    int getCaptchaExpireSeconds();
 }

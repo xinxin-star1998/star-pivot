@@ -38,6 +38,7 @@ function isAuthEntryRequest(url?: string): boolean {
     '/auth/captcha/verify',
     '/auth/register',
     '/auth/register/enabled',
+    '/auth/login/config',
     '/auth/refresh'
   ]
   return authEntryPaths.some((path) => url.includes(path))

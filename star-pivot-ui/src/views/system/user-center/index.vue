@@ -408,8 +408,11 @@
   import { useSettingStore } from '@/store/modules/setting'
   import { extractOssObjectPath, needsOssPresignedDisplay } from '@/utils/storage/oss-object-path'
   import dayjs from 'dayjs'
+  import { useRoute } from 'vue-router'
 
   defineOptions({ name: 'UserCenter' })
+
+  const route = useRoute()
 
   // 主题状态
   const settingStore = useSettingStore()
@@ -745,6 +748,10 @@
   }
 
   onMounted(() => {
+    const tab = route.query.tab
+    if (tab === 'password' || tab === 'session' || tab === 'basic') {
+      activeTab.value = tab
+    }
     getUserDetail()
   })
 

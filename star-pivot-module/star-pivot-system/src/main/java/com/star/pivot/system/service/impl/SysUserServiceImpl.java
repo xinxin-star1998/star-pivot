@@ -25,6 +25,7 @@ import com.star.pivot.system.domain.excel.SysUserExcel;
 import com.star.pivot.system.mapper.SysUserMapper;
 import com.star.pivot.system.mapper.UserPostMapper;
 import com.star.pivot.system.mapper.UserRoleMapper;
+import com.star.pivot.system.service.interfaces.ISysConfigService;
 import com.star.pivot.system.service.interfaces.SysUserService;
 import com.star.pivot.system.service.interfaces.UserPermissionCacheService;
 import com.star.pivot.system.utils.DataScopeService;
@@ -67,6 +68,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private TransactionTemplate transactionTemplate;
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+    @Autowired
+    private ISysConfigService sysConfigService;
 
     /**
      * 用户分页查询
@@ -130,8 +133,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
             if (StringUtils.hasText(userDTO.getPassword())) {
                 sysUser.setPassword(SecurityUtils.encryptPassword(userDTO.getPassword()));
+                sysUser.setPwdUpdateDate(LocalDateTime.now());
             } else {
-                sysUser.setPassword(SecurityUtils.encryptPassword("Star123456"));
+                sysUser.setPassword(SecurityUtils.encryptPassword(sysConfigService.getInitPassword()));
             }
             
             String currentUser = SecurityContextUtils.getUsername();

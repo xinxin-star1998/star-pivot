@@ -69,8 +69,8 @@ declare namespace Api {
       username: string
       password: string
       rememberPassword: boolean
-      /** 验证码通过凭证（一次性 proof） */
-      captchaProof: string
+      /** 验证码通过凭证（一次性 proof）；验证码关闭时可不传 */
+      captchaProof?: string
     }
     /** 登录响应 */
     interface LoginResponse {
@@ -81,6 +81,16 @@ declare namespace Api {
       refreshToken?: string
       /** 当前设备会话ID，用于会话管理 */
       deviceSessionId?: string
+      /** 登录后是否需修改密码 */
+      needChangePassword?: boolean
+      /** 需修改密码原因：INIT_PASSWORD / PASSWORD_EXPIRED */
+      passwordModifyReason?: string
+    }
+
+    /** 登录页公开配置 */
+    interface LoginConfigResponse {
+      captchaEnabled: boolean
+      registerEnabled: boolean
     }
 
     /** 用户信息 */

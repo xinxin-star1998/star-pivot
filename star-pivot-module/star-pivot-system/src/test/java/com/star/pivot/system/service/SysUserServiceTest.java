@@ -18,7 +18,7 @@ import com.star.pivot.system.mapper.SysUserMapper;
 import com.star.pivot.system.mapper.UserPostMapper;
 import com.star.pivot.system.mapper.UserRoleMapper;
 import com.star.pivot.system.service.impl.SysUserServiceImpl;
-import com.star.pivot.system.service.interfaces.TokenService;
+import com.star.pivot.system.service.interfaces.ISysConfigService;
 import com.star.pivot.system.service.interfaces.UserPermissionCacheService;
 import com.star.pivot.system.utils.DataScopeService;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
@@ -31,6 +31,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -39,7 +40,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,7 +63,9 @@ class SysUserServiceTest {
     @Mock
     private TransactionTemplate transactionTemplate;
     @Mock
-    private TokenService tokenService;
+    private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private ISysConfigService sysConfigService;
 
     @InjectMocks
     private SysUserServiceImpl sysUserService;
@@ -148,6 +152,30 @@ class SysUserServiceTest {
     }
 
     @Test
+    @DisplayName("测试添加用户 - 未指定密码时使用 sys_config 初始密码")
+    void testAddUser_UseConfigInitPassword() {
+        UserDTO dtoWithoutPassword = new UserDTO();
+        dtoWithoutPassword.setUserName("newuser");
+        dtoWithoutPassword.setNickName("新用户");
+
+        try (MockedStatic<SecurityUtils> secUtils = mockStatic(SecurityUtils.class);
+             MockedStatic<SecurityContextUtils> secCtx = mockStatic(SecurityContextUtils.class)) {
+
+            when(sysConfigService.getInitPassword()).thenReturn("123456");
+            secUtils.when(() -> SecurityUtils.encryptPassword("123456")).thenReturn("$2a$10$encodedPassword");
+            secCtx.when(SecurityContextUtils::getUsername).thenReturn("admin");
+
+            when(sysUserMapper.selectOne(any())).thenReturn(null);
+            when(sysUserMapper.insert(any(SysUser.class))).thenReturn(1);
+
+            boolean result = sysUserService.addUser(dtoWithoutPassword);
+
+            assertTrue(result);
+            secUtils.verify(() -> SecurityUtils.encryptPassword("123456"));
+        }
+    }
+
+    @Test
     @DisplayName("测试添加用户 - 成功场景")
     void testAddUser_Success() {
         try (MockedStatic<SecurityUtils> secUtils = mockStatic(SecurityUtils.class);
@@ -220,13 +248,13 @@ class SysUserServiceTest {
             when(sysUserMapper.selectById(1L)).thenReturn(testUser);
             when(sysUserMapper.updateById(any(SysUser.class))).thenReturn(1);
             doNothing().when(userPermissionCacheService).clearUserPermissionCache(anyString());
-            doNothing().when(tokenService).forceLogout(anyLong(), anyString());
 
             boolean result = sysUserService.resetUserPassword(1L, "newPassword123");
 
             assertTrue(result);
             secUtils.verify(() -> SecurityUtils.encryptPassword("newPassword123"));
             verify(sysUserMapper, times(1)).updateById(any(SysUser.class));
+            verify(eventPublisher, times(1)).publishEvent(any());
         }
     }
 

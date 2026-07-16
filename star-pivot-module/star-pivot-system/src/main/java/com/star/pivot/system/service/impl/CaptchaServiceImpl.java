@@ -8,6 +8,7 @@ import com.star.pivot.system.domain.bo.CaptchaIssueResponse;
 import com.star.pivot.system.domain.bo.CaptchaVerifyRequest;
 import com.star.pivot.system.domain.bo.CaptchaVerifyResponse;
 import com.star.pivot.system.service.interfaces.CaptchaService;
+import com.star.pivot.system.service.interfaces.ISysConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,17 +40,18 @@ import java.util.concurrent.TimeUnit;
 public class CaptchaServiceImpl implements CaptchaService {
 
     private final RedisCache redisCache;
+    private final ISysConfigService sysConfigService;
 
     // 验证码字符集（只包含大写字母和数字）
     private static final String CODE_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    // 验证码长度
-    private static final int CODE_LENGTH = 4;
-    // 验证码图片宽度
+    // 验证码图片宽度（最小值，随位数自动扩展）
     private static final int IMAGE_WIDTH = 120;
     // 验证码图片高度
     private static final int IMAGE_HEIGHT = 40;
-    // 验证码过期时间（秒）
-    private static final int CAPTCHA_EXPIRE_SECONDS = 180;
+    /** 单个字符占位宽度 */
+    private static final int CHAR_SLOT_WIDTH = 22;
+    /** 图片左右留白 */
+    private static final int IMAGE_PADDING = 10;
     // 验证码最大尝试次数
     private static final int MAX_ATTEMPTS = 5;
     // proof 过期时间（秒）
@@ -88,8 +90,9 @@ public class CaptchaServiceImpl implements CaptchaService {
         state.setScene(scene);
 
         String key = buildCaptchaTokenKey(captchaToken);
+        int expireSeconds = sysConfigService.getCaptchaExpireSeconds();
         try {
-            redisCache.setCacheObject(key, state, CAPTCHA_EXPIRE_SECONDS, TimeUnit.SECONDS);
+            redisCache.setCacheObject(key, state, expireSeconds, TimeUnit.SECONDS);
             log.debug("验证码已存储到Redis，key: {}, scene: {}", key, scene);
         } catch (Exception e) {
             log.error("存储验证码到Redis失败，key: {}, error: {}", key, e.getMessage(), e);
@@ -143,7 +146,7 @@ public class CaptchaServiceImpl implements CaptchaService {
             if (newAttempts >= state.getMaxAttempts()) {
                 redisCache.deleteObject(key);
             } else {
-                redisCache.setCacheObject(key, state, CAPTCHA_EXPIRE_SECONDS, TimeUnit.SECONDS);
+                redisCache.setCacheObject(key, state, sysConfigService.getCaptchaExpireSeconds(), TimeUnit.SECONDS);
             }
             throw new BizException(ErrorCode.CAPTCHA_ERROR);
         }
@@ -200,9 +203,10 @@ public class CaptchaServiceImpl implements CaptchaService {
      * 生成随机验证码
      */
     private String generateRandomCode() {
+        int codeLength = sysConfigService.getCaptchaLength();
         Random random = new Random();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < CODE_LENGTH; i++) {
+        StringBuilder sb = new StringBuilder(codeLength);
+        for (int i = 0; i < codeLength; i++) {
             sb.append(CODE_CHARSET.charAt(random.nextInt(CODE_CHARSET.length())));
         }
         return sb.toString();
@@ -213,28 +217,29 @@ public class CaptchaServiceImpl implements CaptchaService {
      * Linux 无头环境（如 ECS）需安装 fontconfig 与字体包，否则会抛出 ServiceException。
      */
     private BufferedImage createImage(String code) {
-        // 创建图片
-        BufferedImage image = new BufferedImage(IMAGE_WIDTH, IMAGE_HEIGHT, BufferedImage.TYPE_INT_RGB);
+        int imageWidth = Math.max(IMAGE_WIDTH, IMAGE_PADDING * 2 + code.length() * CHAR_SLOT_WIDTH);
+        BufferedImage image = new BufferedImage(imageWidth, IMAGE_HEIGHT, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = image.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         // 设置背景色
         g.setColor(new Color(240, 240, 240));
-        g.fillRect(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
+        g.fillRect(0, 0, imageWidth, IMAGE_HEIGHT);
 
         // 绘制干扰线
         Random random = new Random();
         for (int i = 0; i < 10; i++) {
             g.setColor(new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)));
-            g.drawLine(random.nextInt(IMAGE_WIDTH), random.nextInt(IMAGE_HEIGHT),
-                    random.nextInt(IMAGE_WIDTH), random.nextInt(IMAGE_HEIGHT));
+            g.drawLine(random.nextInt(imageWidth), random.nextInt(IMAGE_HEIGHT),
+                    random.nextInt(imageWidth), random.nextInt(IMAGE_HEIGHT));
         }
 
         try {
-            // 使用缓存字体，减少重复字体解析
             g.setFont(CAPTCHA_FONT);
             for (int i = 0; i < code.length(); i++) {
                 g.setColor(new Color(random.nextInt(80), random.nextInt(80), random.nextInt(80)));
-                g.drawString(String.valueOf(code.charAt(i)), 25 * i + 10, 25);
+                int x = IMAGE_PADDING + i * CHAR_SLOT_WIDTH;
+                g.drawString(String.valueOf(code.charAt(i)), x, 28);
             }
         } catch (Throwable t) {
             g.dispose();
@@ -248,7 +253,7 @@ public class CaptchaServiceImpl implements CaptchaService {
         // 绘制干扰点
         for (int i = 0; i < 50; i++) {
             g.setColor(new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)));
-            g.fillRect(random.nextInt(IMAGE_WIDTH), random.nextInt(IMAGE_HEIGHT), 1, 1);
+            g.fillRect(random.nextInt(imageWidth), random.nextInt(IMAGE_HEIGHT), 1, 1);
         }
 
         g.dispose();

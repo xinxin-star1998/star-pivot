@@ -70,15 +70,15 @@
   }
 
   .captcha-container {
-    @apply flex items-center gap-3 w-full;
+    @apply flex items-center gap-3 w-full min-w-0;
   }
 
   .captcha-input {
-    @apply flex-1;
+    @apply flex-1 min-w-0;
   }
 
   .captcha-image-wrapper {
-    @apply relative w-[140px] h-[52px] rounded-xl overflow-hidden
+    @apply relative flex-shrink-0 w-[156px] h-[52px] rounded-xl overflow-hidden
       border-2 border-g-200/80 dark:border-g-600/50
       bg-gradient-to-br from-g-50 to-g-100
       dark:from-g-800 dark:to-g-700
@@ -88,7 +88,7 @@
   }
 
   .captcha-image {
-    @apply w-full h-full object-cover cursor-pointer
+    @apply block w-full h-full object-contain cursor-pointer
       transition-all duration-300;
   }
 

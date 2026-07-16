@@ -20,4 +20,14 @@ public class LoginResponse {
      * </ul>
      */
     private String refreshToken;
+
+    /**
+     * 登录成功后是否需修改密码（由 sys.account.initPasswordModify / sys.account.passwordValidateDays 决定）
+     */
+    private Boolean needChangePassword;
+
+    /**
+     * 需修改密码的原因：INIT_PASSWORD（初始密码）、PASSWORD_EXPIRED（密码过期）
+     */
+    private String passwordModifyReason;
 }
