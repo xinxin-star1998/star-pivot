@@ -16,6 +16,34 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+function Ensure-GitInPath {
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        return
+    }
+
+    $candidates = @(
+        'E:\Program Files\Git\cmd',
+        'C:\Program Files\Git\cmd',
+        'C:\Program Files (x86)\Git\cmd'
+    )
+
+    foreach ($dir in $candidates) {
+        if (Test-Path (Join-Path $dir 'git.exe')) {
+            $env:PATH = "$dir;$env:PATH"
+            return
+        }
+    }
+
+    throw @'
+git not found in PATH.
+
+Install Git for Windows, or add its cmd directory to PATH, e.g.:
+  E:\Program Files\Git\cmd
+'@
+}
+
+Ensure-GitInPath
+
 $GiteeUrl = 'https://gitee.com/xin1998/StarPivot.git'
 $GithubUrl = 'https://github.com/xinxin-star1998/star-pivot.git'
 
