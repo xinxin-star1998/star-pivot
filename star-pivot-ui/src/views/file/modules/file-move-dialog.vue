@@ -28,6 +28,10 @@
 <script lang="ts" setup>
   import { moveFiles } from '@/api/file/file'
   import type { FileCategoryNode } from '@/api/file/types'
+  import {
+    mapCategoryCascaderOptions,
+    resolveFolderIdFromPath
+  } from '@/utils/file/folder-tree'
   import { ElMessage } from 'element-plus'
   import { computed, ref, watch } from 'vue'
 
@@ -44,27 +48,19 @@
   }>()
 
   const submitting = ref(false)
-  const selectedPath = ref<[string, number] | undefined>()
+  const selectedPath = ref<Array<string | number> | undefined>()
 
   const cascaderProps = {
     expandTrigger: 'hover' as const,
-    emitPath: true
+    emitPath: true,
+    checkStrictly: true
   }
 
   const cascaderOptions = computed(() =>
-    props.categories.map((cat) => ({
-      value: cat.category,
-      label: cat.categoryLabel,
-      children: (cat.children || [])
-        .filter((folder) => folder.folderId !== props.excludeFolderId)
-        .map((folder) => ({
-          value: folder.folderId!,
-          label: folder.folderName
-        }))
-    }))
+    mapCategoryCascaderOptions(props.categories, props.excludeFolderId)
   )
 
-  const targetFolderId = computed(() => selectedPath.value?.[1])
+  const targetFolderId = computed(() => resolveFolderIdFromPath(selectedPath.value))
 
   watch(
     () => visible.value,

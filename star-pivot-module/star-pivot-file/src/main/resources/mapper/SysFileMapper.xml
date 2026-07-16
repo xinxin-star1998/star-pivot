@@ -6,35 +6,129 @@
     <sql id="fileColumns">
         file_id, folder_id, category, media_type, file_name, file_ext, content_type,
         file_size, object_name, file_hash, storage_provider, biz_type, biz_id,
-        del_flag, delete_by, delete_time, create_by, create_time, update_by, update_time, remark
+        del_flag, delete_by, delete_time, create_by, create_by_user_id, create_dept_id,
+        create_time, update_by, update_time, remark
+    </sql>
+
+    <sql id="fileColumnsAliased">
+        f.file_id, f.folder_id, f.category, f.media_type, f.file_name, f.file_ext, f.content_type,
+        f.file_size, f.object_name, f.file_hash, f.storage_provider, f.biz_type, f.biz_id,
+        f.del_flag, f.delete_by, f.delete_time, f.create_by, f.create_by_user_id, f.create_dept_id,
+        f.create_time, f.update_by, f.update_time, f.remark
+    </sql>
+
+    <sql id="dataScopeFilter">
+        <choose>
+            <when test="query.dataScope != null and query.dataScope.sqlFilter == '1=1'">
+            </when>
+            <when test="query.dataScope != null and query.dataScope.sqlFilter == 'EMPTY_IN'">
+                AND create_by_user_id = -1
+            </when>
+            <when test="query.deptIds != null and query.deptIds.size() > 0">
+                AND create_dept_id IN
+                <foreach collection="query.deptIds" item="deptId" open="(" separator="," close=")">
+                    #{deptId}
+                </foreach>
+            </when>
+            <when test="query.userDeptId != null">
+                AND create_dept_id = #{query.userDeptId}
+            </when>
+            <when test="query.userId != null">
+                AND create_by_user_id = #{query.userId}
+            </when>
+        </choose>
+    </sql>
+
+    <sql id="dataScopeFilterAliased">
+        <choose>
+            <when test="query.dataScope != null and query.dataScope.sqlFilter == '1=1'">
+            </when>
+            <when test="query.dataScope != null and query.dataScope.sqlFilter == 'EMPTY_IN'">
+                AND f.create_by_user_id = -1
+            </when>
+            <when test="query.deptIds != null and query.deptIds.size() > 0">
+                AND f.create_dept_id IN
+                <foreach collection="query.deptIds" item="deptId" open="(" separator="," close=")">
+                    #{deptId}
+                </foreach>
+            </when>
+            <when test="query.userDeptId != null">
+                AND f.create_dept_id = #{query.userDeptId}
+            </when>
+            <when test="query.userId != null">
+                AND f.create_by_user_id = #{query.userId}
+            </when>
+        </choose>
     </sql>
 
     <select id="selectPageList" resultType="com.star.pivot.file.domain.entity.SysFile">
-        SELECT <include refid="fileColumns"/>
-        FROM sys_file
-        WHERE del_flag = '0'
+        SELECT <include refid="fileColumnsAliased"/>
+        FROM sys_file f
+        <if test="query.listScope == 'favorite' and query.currentUserId != null">
+            INNER JOIN sys_file_favorite fav ON fav.file_id = f.file_id AND fav.user_id = #{query.currentUserId}
+        </if>
+        <if test="query.listScope == 'recent' and query.currentUserId != null">
+            INNER JOIN sys_file_recent r ON r.file_id = f.file_id AND r.user_id = #{query.currentUserId}
+        </if>
+        WHERE f.del_flag = '0'
         <if test="query.folderId != null">
-            AND folder_id = #{query.folderId}
+            AND f.folder_id = #{query.folderId}
         </if>
         <if test="query.category != null and query.category != ''">
-            AND category = #{query.category}
+            AND f.category = #{query.category}
         </if>
         <if test="query.mediaType != null and query.mediaType != ''">
-            AND media_type = #{query.mediaType}
+            AND f.media_type = #{query.mediaType}
         </if>
-        <if test="query.fileName != null and query.fileName != ''">
-            AND file_name LIKE CONCAT('%', #{query.fileName}, '%')
-        </if>
+        <choose>
+            <when test="query.keyword != null and query.keyword != ''">
+                AND (
+                    f.file_name LIKE CONCAT('%', #{query.keyword}, '%')
+                    OR IFNULL(f.remark, '') LIKE CONCAT('%', #{query.keyword}, '%')
+                    OR EXISTS (
+                        SELECT 1 FROM sys_file_tag_rel tr
+                        INNER JOIN sys_file_tag t ON t.tag_id = tr.tag_id
+                        WHERE tr.file_id = f.file_id
+                          AND t.tag_name LIKE CONCAT('%', #{query.keyword}, '%')
+                          <if test="query.currentUserId != null">
+                            AND tr.create_by_user_id = #{query.currentUserId}
+                          </if>
+                    )
+                )
+            </when>
+            <when test="query.fileName != null and query.fileName != ''">
+                AND f.file_name LIKE CONCAT('%', #{query.fileName}, '%')
+            </when>
+        </choose>
         <if test="query.createBy != null and query.createBy != ''">
-            AND create_by LIKE CONCAT('%', #{query.createBy}, '%')
+            AND f.create_by LIKE CONCAT('%', #{query.createBy}, '%')
         </if>
         <if test="query.beginTime != null">
-            AND create_time &gt;= #{query.beginTime}
+            AND f.create_time &gt;= #{query.beginTime}
         </if>
         <if test="query.endTime != null">
-            AND create_time &lt;= #{query.endTime}
+            AND f.create_time &lt;= #{query.endTime}
         </if>
-        ORDER BY create_time DESC
+        <if test="query.tagId != null and query.currentUserId != null">
+            AND EXISTS (
+                SELECT 1 FROM sys_file_tag_rel tr
+                WHERE tr.file_id = f.file_id
+                  AND tr.tag_id = #{query.tagId}
+                  AND tr.create_by_user_id = #{query.currentUserId}
+            )
+        </if>
+        <include refid="dataScopeFilterAliased"/>
+        <choose>
+            <when test="query.listScope == 'recent' and query.currentUserId != null">
+                ORDER BY r.access_time DESC
+            </when>
+            <when test="query.listScope == 'favorite' and query.currentUserId != null">
+                ORDER BY fav.create_time DESC
+            </when>
+            <otherwise>
+                ORDER BY f.create_time DESC
+            </otherwise>
+        </choose>
     </select>
 
     <select id="selectRecyclePageList" resultType="com.star.pivot.file.domain.entity.SysFile">
@@ -56,6 +150,7 @@
         <if test="query.endTime != null">
             AND delete_time &lt;= #{query.endTime}
         </if>
+        <include refid="dataScopeFilter"/>
         ORDER BY delete_time DESC
     </select>
 
@@ -64,6 +159,44 @@
         FROM sys_file
         WHERE folder_id = #{folderId}
           AND del_flag = '0'
+    </select>
+
+    <select id="countByObjectName" resultType="long">
+        SELECT COUNT(1)
+        FROM sys_file
+        WHERE object_name = #{objectName}
+        <if test="excludeFileId != null">
+            AND file_id &lt;&gt; #{excludeFileId}
+        </if>
+    </select>
+
+    <select id="selectByHashAndSize" resultType="com.star.pivot.file.domain.entity.SysFile">
+        SELECT <include refid="fileColumns"/>
+        FROM sys_file
+        WHERE del_flag = '0'
+          AND file_hash = #{fileHash}
+          AND file_size = #{fileSize}
+        ORDER BY create_time ASC
+        LIMIT 1
+    </select>
+
+    <select id="selectRecycleByIds" resultType="com.star.pivot.file.domain.entity.SysFile">
+        SELECT <include refid="fileColumns"/>
+        FROM sys_file
+        WHERE del_flag = '2'
+          AND file_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectAllRecycleIds" resultType="long">
+        SELECT file_id
+        FROM sys_file
+        WHERE del_flag = '2'
+        <include refid="dataScopeFilter"/>
+        ORDER BY delete_time ASC
+        LIMIT #{limit}
     </select>
 
     <update id="restoreByIds">
@@ -79,4 +212,50 @@
             #{id}
         </foreach>
     </update>
+
+    <delete id="physicalDeleteByIds">
+        DELETE FROM sys_file
+        WHERE file_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectUsageSummary" resultType="com.star.pivot.file.domain.vo.SysFileUsageStatVo">
+        SELECT
+            COUNT(1) AS fileCount,
+            COALESCE(SUM(file_size), 0) AS totalBytes,
+            COUNT(DISTINCT object_name) AS uniqueObjects
+        FROM sys_file
+        WHERE del_flag = '0'
+        <include refid="dataScopeFilter"/>
+    </select>
+
+    <select id="selectUsageGroupByUser" resultType="com.star.pivot.file.domain.vo.SysFileUsageStatVo">
+        SELECT
+            create_by_user_id AS groupId,
+            MAX(create_by) AS groupName,
+            COUNT(1) AS fileCount,
+            COALESCE(SUM(file_size), 0) AS totalBytes,
+            COUNT(DISTINCT object_name) AS uniqueObjects
+        FROM sys_file
+        WHERE del_flag = '0'
+        <include refid="dataScopeFilter"/>
+        GROUP BY create_by_user_id
+        ORDER BY totalBytes DESC
+    </select>
+
+    <select id="selectUsageGroupByDept" resultType="com.star.pivot.file.domain.vo.SysFileUsageStatVo">
+        SELECT
+            create_dept_id AS groupId,
+            CONCAT('部门#', IFNULL(create_dept_id, 0)) AS groupName,
+            COUNT(1) AS fileCount,
+            COALESCE(SUM(file_size), 0) AS totalBytes,
+            COUNT(DISTINCT object_name) AS uniqueObjects
+        FROM sys_file
+        WHERE del_flag = '0'
+        <include refid="dataScopeFilter"/>
+        GROUP BY create_dept_id
+        ORDER BY totalBytes DESC
+    </select>
 </mapper>

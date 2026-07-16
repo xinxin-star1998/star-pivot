@@ -34,6 +34,11 @@ public class DataScopeService {
     private static final String SQL_NONE = "EMPTY_IN";
     /** SQL 全部数据：恒真条件，用于超级管理员或全部数据权限 */
     private static final String SQL_ALL = "1=1";
+    /**
+     * 部门 IN 过滤标记：实际条件由 Mapper 用 {@code param.deptIds} + foreach 生成，
+     * 切勿把 MyBatis 标签原文写入此字段。
+     */
+    private static final String SQL_DEPT_IN = "DEPT_IN";
     /** MyBatis 用户部门 ID 占位符，表别名使用 u */
     private static final String PLACEHOLDER_USER_DEPT_ID = "u.dept_id = #{param.userDeptId}";
     /** MyBatis 用户ID占位符（仅本人权限），表别名使用 u */
@@ -203,7 +208,7 @@ public class DataScopeService {
                 if (CollectionUtils.isEmpty(deptIdSet)) {
                     return SQL_NONE;
                 }
-                return "u.dept_id IN (<foreach collection='param.deptIds' item='deptId' separator=','>#{deptId}</foreach>)";
+                return SQL_DEPT_IN;
             case AppConstants.DataScope.DEPT:
                 if (userDeptId == null) {
                     return SQL_NONE;

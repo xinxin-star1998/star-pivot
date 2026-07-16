@@ -44,17 +44,9 @@
                 {{ col.label }}
               </slot>
             </template>
-            <!-- 如果有formatter，使用formatter渲染 -->
+            <!-- 如果有formatter，使用formatter渲染（只调用一次，避免 ElImage 等组件被重复创建） -->
             <template v-if="col.formatter && !col.useSlot" #default="slotScope">
-              <template
-                v-if="
-                  typeof col.formatter(slotScope.row) === 'string' ||
-                  typeof col.formatter(slotScope.row) === 'number'
-                "
-              >
-                {{ col.formatter(slotScope.row) }}
-              </template>
-              <component v-else :is="col.formatter(slotScope.row)" />
+              <component :is="resolveFormatterVNode(col.formatter(slotScope.row))" />
             </template>
             <!-- 如果使用插槽 -->
             <template v-else-if="col.useSlot && col.prop" #default="slotScope">
@@ -107,6 +99,14 @@
   import { useResizeObserver, useWindowSize } from '@vueuse/core'
 
   defineOptions({ name: 'ArtTable' })
+
+  /** 将 formatter 返回值规范为可被 <component :is> 渲染的节点（仅调用一次 formatter） */
+  function resolveFormatterVNode(result: unknown) {
+    if (typeof result === 'string' || typeof result === 'number') {
+      return () => result
+    }
+    return result as object
+  }
 
   const { width } = useWindowSize()
   const elTableRef = ref<InstanceType<typeof ElTable> | null>(null)

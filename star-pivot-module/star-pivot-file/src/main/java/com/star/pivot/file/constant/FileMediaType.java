@@ -9,7 +9,7 @@ import lombok.Getter;
 public enum FileMediaType {
 
     IMAGE("IMAGE", "图片", 10L * 1024 * 1024),
-    VIDEO("VIDEO", "视频", 200L * 1024 * 1024),
+    VIDEO("VIDEO", "视频", 2L * 1024 * 1024 * 1024),
     DOCUMENT("DOCUMENT", "文档", 50L * 1024 * 1024),
     AUDIO("AUDIO", "音频", 50L * 1024 * 1024),
     OTHER("OTHER", "其他", 50L * 1024 * 1024);

@@ -284,17 +284,17 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
     params?: Partial<TParams>,
     useCache = enableCache
   ): Promise<ApiResponse<TRecord>> => {
-    // 如果正在请求中，取消上一个请求
-    if (isFetching && abortController) {
+    // 取消进行中的请求，避免 Tab 切换等场景复用旧结果
+    if (abortController) {
       abortController.abort()
     }
 
-    // 如果已有待处理的请求，等待它完成（避免重复调用）
+    // 等待旧请求收尾（不复用其返回值；取消时可能“成功”返回空数据）
     if (pendingRequest) {
       try {
-        return await pendingRequest
+        await pendingRequest
       } catch {
-        // 如果上一个请求失败，继续执行新的请求
+        // 忽略取消/失败，继续发起新请求
       }
     }
 
@@ -425,9 +425,9 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
       return standardResponse
     } catch (err) {
       if (err instanceof Error && err.message === '请求已取消') {
-        // 请求被取消，回到 idle 状态
+        // 请求被取消：抛出以便上层 await pendingRequest 时走 catch，继续发起新请求
         loadingState.value = 'idle'
-        return { records: [], total: 0, current: 1, size: 10 }
+        throw err
       }
 
       // 状态机：请求失败，进入 error 状态

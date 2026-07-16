@@ -55,4 +55,10 @@ public class SysFile extends BaseEntity {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime deleteTime;
+
+    /** 上传人用户 ID（数据权限） */
+    private Long createByUserId;
+
+    /** 上传人部门 ID（数据权限） */
+    private Long createDeptId;
 }

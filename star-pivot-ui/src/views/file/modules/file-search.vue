@@ -34,10 +34,10 @@
   const formItems = computed(() => {
     const items = [
       {
-        label: '文件名',
+        label: props.recycle ? '文件名' : '关键词',
         key: 'fileName',
         type: 'input',
-        placeholder: '请输入文件名',
+        placeholder: props.recycle ? '请输入文件名' : '文件名 / 备注 / 标签',
         clearable: true
       },
       {

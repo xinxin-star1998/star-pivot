@@ -7,6 +7,7 @@ spring:
     multipart:
       max-file-size: 210MB
       max-request-size: 220MB
+      # 分片上传单片约 5MB；整文件上传仍受此限制，大文件走 /file/multipart/*
   sql:
     init:
       mode: never
@@ -104,10 +105,30 @@ file-center:
   upload:
     max-size-by-media-type:
       IMAGE: 10485760
-      VIDEO: 209715200
+      VIDEO: 2147483648
       DOCUMENT: 52428800
       AUDIO: 52428800
       OTHER: 52428800
+  preview:
+    # microsoft | kkfileview
+    office-viewer: microsoft
+    kkfileview-base-url: ''
+  share:
+    # 前端公开页 Origin，如 http://localhost:3000；空则由请求 Host 推断
+    public-base-url: 'http://localhost:3000'
+  watermark:
+    # 预览水印开关
+    enabled: true
+    # 占位符：{username} {nickname} {datetime} {date} {time}
+    content-template: '{username} {datetime}'
+    guest-name: '分享访客'
+    font-size: 14
+    font-color: 'rgba(0, 0, 0, 0.12)'
+    rotate: -22
+    gap-x: 120
+    gap-y: 120
+    # 图片下载是否服务端叠加水印（jpg/png/gif/bmp）
+    download-enabled: true
 
 # -----------------------------------------------------------------------------
 # 代码生成

@@ -526,12 +526,17 @@ CREATE TABLE `sys_file`  (
   `delete_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '删除者',
   `delete_time` datetime(0) NULL DEFAULT NULL COMMENT '删除时间',
   `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '创建者',
+  `create_by_user_id` bigint(0) NULL DEFAULT NULL COMMENT '上传人用户ID',
+  `create_dept_id` bigint(0) NULL DEFAULT NULL COMMENT '上传人部门ID',
   `create_time` datetime(0) NULL DEFAULT NULL COMMENT '创建时间',
   `update_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '更新者',
   `update_time` datetime(0) NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`file_id`) USING BTREE,
-  UNIQUE INDEX `uk_object_name`(`object_name`) USING BTREE,
+  INDEX `idx_object_name`(`object_name`) USING BTREE,
+  INDEX `idx_file_hash`(`file_hash`, `file_size`, `del_flag`) USING BTREE,
+  INDEX `idx_create_user`(`create_by_user_id`, `del_flag`) USING BTREE,
+  INDEX `idx_create_dept`(`create_dept_id`, `del_flag`) USING BTREE,
   INDEX `idx_folder_del`(`folder_id`, `del_flag`) USING BTREE,
   INDEX `idx_media_type`(`media_type`, `del_flag`) USING BTREE,
   INDEX `idx_category_time`(`category`, `create_time`) USING BTREE,
@@ -542,7 +547,7 @@ CREATE TABLE `sys_file`  (
 -- ----------------------------
 -- Records of sys_file
 -- ----------------------------
-INSERT INTO `sys_file` VALUES (1, 1, 'SYSTEM', 'IMAGE', 'wgS1Q5B8i97zWP7.thumb.1000_0.jpeg', 'jpeg', 'image/jpeg', 116206, 'file/system/1/2026/06/27/a9b4d733-0025-4dd3-a871-eaf58d819890.jpeg', NULL, 'OSS', NULL, NULL, '0', NULL, NULL, 'admin', '2026-06-27 16:24:06', '', NULL, NULL);
+INSERT INTO `sys_file` VALUES (1, 1, 'SYSTEM', 'IMAGE', 'wgS1Q5B8i97zWP7.thumb.1000_0.jpeg', 'jpeg', 'image/jpeg', 116206, 'file/system/1/2026/06/27/a9b4d733-0025-4dd3-a871-eaf58d819890.jpeg', NULL, 'OSS', NULL, NULL, '0', NULL, NULL, 'admin', 1, 100, '2026-06-27 16:24:06', '', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for sys_file_folder
@@ -833,6 +838,8 @@ INSERT INTO `sys_menu` VALUES (103, '文件夹编辑', 25, 7, '', '', NULL, '', 
 INSERT INTO `sys_menu` VALUES (104, '文件夹删除', 25, 8, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:folder:delete', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '删除文件夹');
 INSERT INTO `sys_menu` VALUES (105, '文件迁移', 25, 9, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:resource:move', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '迁移到其他文件夹');
 INSERT INTO `sys_menu` VALUES (106, '文件重命名', 25, 10, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:resource:edit', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '修改文件展示名称');
+INSERT INTO `sys_menu` VALUES (107, '彻底删除', 25, 11, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:resource:purge', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '回收站彻底删除并清理OSS');
+INSERT INTO `sys_menu` VALUES (108, '清空回收站', 25, 12, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:resource:purge', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '清空回收站');
 
 -- ----------------------------
 -- Table structure for sys_notice

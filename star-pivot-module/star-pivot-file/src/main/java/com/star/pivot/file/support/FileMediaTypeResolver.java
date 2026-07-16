@@ -35,6 +35,10 @@ public class FileMediaTypeResolver {
         return resolve(file.getContentType(), file.getOriginalFilename());
     }
 
+    public FileMediaType resolveByFilename(String filename, String contentType) {
+        return resolve(contentType, filename);
+    }
+
     private FileMediaType resolveByMime(String contentType) {
         if (!StringUtils.hasText(contentType)) {
             return null;

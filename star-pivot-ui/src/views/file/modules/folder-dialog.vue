@@ -17,6 +17,9 @@
           />
         </ElSelect>
       </ElFormItem>
+      <ElFormItem v-if="!isEdit && parentLabel" label="上级目录">
+        <ElInput :model-value="parentLabel" disabled />
+      </ElFormItem>
       <ElFormItem label="文件夹名" prop="folderName">
         <ElInput v-model="form.folderName" placeholder="请输入文件夹名称" />
       </ElFormItem>
@@ -48,6 +51,8 @@
     type: 'add' | 'edit'
     data?: SysFileFolderForm
     defaultCategory?: string
+    parentId?: number
+    parentLabel?: string
   }>()
 
   const emit = defineEmits<{
@@ -60,6 +65,7 @@
   const form = reactive<SysFileFolderForm>({
     category: '',
     folderName: '',
+    parentId: 0,
     orderNum: 0,
     remark: ''
   })
@@ -80,6 +86,7 @@
       } else {
         reset()
         form.category = props.defaultCategory || ''
+        form.parentId = props.parentId || 0
       }
     }
   )
@@ -88,6 +95,7 @@
     form.folderId = undefined
     form.category = props.defaultCategory || ''
     form.folderName = ''
+    form.parentId = props.parentId || 0
     form.orderNum = 0
     form.remark = ''
   }
@@ -100,7 +108,7 @@
         await updateFolder({ ...form })
         ElMessage.success('更新成功')
       } else {
-        await createFolder({ ...form })
+        await createFolder({ ...form, parentId: form.parentId || 0 })
         ElMessage.success('创建成功')
       }
       visible.value = false

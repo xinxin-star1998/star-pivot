@@ -81,6 +81,15 @@ public class MysqlChatSessionRepository {
             return;
         }
         AiChatSession session = requireActiveSession(conversationId, userId);
+        // 软删前改写 conversation_id，释放唯一索引，避免重建同 ID 会话撞键
+        String freedConversationId = conversationId + ":deleted:" + session.getSessionId();
+        if (freedConversationId.length() > 64) {
+            freedConversationId = ("d:" + session.getSessionId() + ":" + conversationId)
+                    .substring(0, 64);
+        }
+        session.setConversationId(freedConversationId);
+        session.setUpdateTime(LocalDateTime.now());
+        aiChatSessionMapper.updateById(session);
         aiChatSessionMapper.deleteById(session.getSessionId());
     }
 

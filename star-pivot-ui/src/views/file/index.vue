@@ -5,14 +5,30 @@
         <FileFolderTree
           :active-folder-id="selectedFolderId"
           :categories="categoryTree"
+          :list-scope="fileListScope"
+          @select-all="handleSelectAll"
+          @select-favorite="handleSelectFavorite"
+          @select-recent="handleSelectRecent"
           @select-folder="handleSelectFolder"
-          @add-folder="openFolderDialog('add', undefined, $event)"
+          @add-folder="handleAddFolder"
           @edit-folder="handleEditFolder"
           @delete-folder="handleDeleteFolder"
+          @drop-files="onDropFilesToFolder"
+          @drop-move="onDropMoveToFolder"
         />
       </ElCard>
 
-      <div class="file-main">
+      <div
+        class="file-main"
+        :class="{ 'is-dragover': dragOverMain }"
+        @dragenter.prevent="onMainDragEnter"
+        @dragover.prevent="onMainDragOver"
+        @dragleave.prevent="onMainDragLeave"
+        @drop.prevent="onMainDrop"
+      >
+        <div v-if="dragOverMain && activeTab === 'all'" class="drop-mask">
+          松开以上传到{{ selectedFolderId ? '当前文件夹' : '所选目标（将打开上传框）' }}
+        </div>
         <FileSearch
           v-model="searchForm"
           :recycle="activeTab === 'recycle'"
@@ -45,6 +61,23 @@
                   {{ item.label }}
                 </ElRadioButton>
               </ElRadioGroup>
+              <ElSelect
+                v-if="hasAuth('file:resource:tag')"
+                v-model="tagFilterId"
+                clearable
+                placeholder="标签筛选"
+                style="width: 140px"
+                size="small"
+                @change="handleSearch"
+              >
+                <ElOption
+                  v-for="tag in tagOptions"
+                  :key="tag.tagId"
+                  :label="tag.tagName"
+                  :value="tag.tagId!"
+                />
+              </ElSelect>
+              <ElSegmented v-model="viewMode" :options="viewModeOptions" size="small" />
             </div>
 
             <ArtTableHeader
@@ -76,6 +109,35 @@
                   </ElButton>
                   <ElButton
                     v-if="activeTab === 'all'"
+                    v-auth="'file:resource:download'"
+                    v-ripple
+                    :disabled="selectedRows.length === 0"
+                    :loading="zipDownloading"
+                    @click="handleBatchZipDownload"
+                  >
+                    <ArtSvgIcon class="mr-1" icon="ri:download-cloud-2-line" />
+                    打包下载
+                  </ElButton>
+                  <ElButton
+                    v-if="activeTab === 'all'"
+                    v-auth="'file:resource:tag'"
+                    v-ripple
+                    :disabled="selectedRows.length === 0"
+                    @click="openTagBind(selectedRows.map((r) => r.fileId!))"
+                  >
+                    <ArtSvgIcon class="mr-1" icon="ri:price-tag-3-line" />
+                    打标签
+                  </ElButton>
+                  <ElButton
+                    v-if="activeTab === 'all'"
+                    v-auth="'file:resource:tag'"
+                    v-ripple
+                    @click="tagDialogMode = 'manage'; tagDialogVisible = true"
+                  >
+                    标签管理
+                  </ElButton>
+                  <ElButton
+                    v-if="activeTab === 'all'"
                     v-auth="'file:resource:delete'"
                     v-ripple
                     :disabled="selectedRows.length === 0"
@@ -94,20 +156,35 @@
                   >
                     批量恢复
                   </ElButton>
+                  <ElButton
+                    v-if="activeTab === 'recycle'"
+                    v-auth="'file:resource:purge'"
+                    v-ripple
+                    :disabled="selectedRows.length === 0"
+                    type="danger"
+                    @click="handleBatchPurge"
+                  >
+                    彻底删除
+                  </ElButton>
+                  <ElButton
+                    v-if="activeTab === 'recycle'"
+                    v-auth="'file:resource:purge'"
+                    v-ripple
+                    type="danger"
+                    plain
+                    @click="handleClearRecycle"
+                  >
+                    清空回收站
+                  </ElButton>
                 </ElSpace>
               </template>
             </ArtTableHeader>
           </div>
 
           <div class="file-table-card__body">
-            <ElEmpty
-              v-if="activeTab === 'all' && !selectedFolderId && !loading"
-              :image-size="100"
-              description="请在左侧选择文件夹"
-            />
-
             <ArtTable
-              v-else
+              v-if="viewMode === 'table' || activeTab === 'recycle'"
+              :key="`file-table-${activeTab}-${listMode}`"
               :columns="columns"
               :data="data"
               :loading="loading"
@@ -118,6 +195,34 @@
               @pagination:size-change="handleSizeChange"
               @pagination:current-change="handleCurrentChange"
             />
+            <template v-else>
+              <FileGridView
+                v-if="viewMode === 'grid'"
+                v-model:selected-rows="selectedRows"
+                :data="data"
+                :loading="loading"
+                @preview="openPreview"
+              />
+              <FileTimelineView
+                v-else
+                v-model:selected-rows="selectedRows"
+                :data="data"
+                :loading="loading"
+                @preview="openPreview"
+              />
+              <div class="view-pagination">
+                <ElPagination
+                  v-model:current-page="pagination.current"
+                  v-model:page-size="pagination.size"
+                  :page-sizes="[10, 20, 50, 100]"
+                  :total="pagination.total"
+                  background
+                  layout="total, sizes, prev, pager, next"
+                  @size-change="handleSizeChange"
+                  @current-change="handleCurrentChange"
+                />
+              </div>
+            </template>
           </div>
         </ElCard>
       </div>
@@ -126,8 +231,10 @@
     <FileUploadDialog
       v-model:visible="uploadVisible"
       :categories="categoryTree"
-      :default-folder-id="selectedFolderId"
+      :default-folder-id="uploadTargetFolderId ?? selectedFolderId"
+      :seed-files="uploadSeedFiles"
       @success="onUploadSuccess"
+      @closed="uploadSeedFiles = []; uploadTargetFolderId = undefined"
     />
 
     <FilePreviewDialog
@@ -150,8 +257,24 @@
       v-model:visible="folderDialogVisible"
       :data="folderDialogData"
       :default-category="folderDialogCategory"
+      :parent-id="folderDialogParentId"
+      :parent-label="folderDialogParentLabel"
       :type="folderDialogType"
       @success="loadFolderTree"
+    />
+
+    <FileTagDialog
+      v-model="tagDialogVisible"
+      :mode="tagDialogMode"
+      :file-ids="tagBindFileIds"
+      :initial-tag-ids="tagBindInitialIds"
+      @success="onTagSuccess"
+    />
+
+    <FileVersionDialog
+      v-model="versionDialogVisible"
+      :file="versionFile"
+      @success="refreshData"
     />
   </div>
 </template>
@@ -159,14 +282,20 @@
 <script lang="ts" setup>
   import {
     deleteFiles,
+    downloadFilesZip,
     fetchFileList,
     fetchFilePreviewUrl,
+    fetchFileTagList,
     fetchRecycleList,
+    moveFiles,
+    purgeFiles,
+    clearRecycleBin,
     renameFile,
-    restoreFiles
+    restoreFiles,
+    toggleFileFavorite
   } from '@/api/file/file'
   import { deleteFolder, fetchFolderTree } from '@/api/file/folder'
-  import type { FileCategoryNode, SysFile, SysFileFolderForm } from '@/api/file/types'
+  import type { FileCategoryNode, SysFile, SysFileFolderForm, SysFileTag } from '@/api/file/types'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
@@ -174,14 +303,19 @@
   import { useTable } from '@/hooks/core/useTable'
   import { useAuth } from '@/hooks/core/useAuth'
   import { formatFileSize, openFileUrl, resolveFileDisplayUrl } from '@/utils/file/file-center'
+  import { findFolderInTree } from '@/utils/file/folder-tree'
   import { handleMutationError } from '@/utils/http/mutation'
   import { ElImage, ElMessage, ElMessageBox, ElTag } from 'element-plus'
   import { computed, h, onActivated, onMounted, ref } from 'vue'
   import { getCategoryLabel, getMediaTypeIcon, MEDIA_TYPE_TAG, MEDIA_TYPES } from './constants'
   import FileFolderTree from './modules/file-folder-tree.vue'
+  import FileGridView from './modules/file-grid-view.vue'
   import FileMoveDialog from './modules/file-move-dialog.vue'
   import FilePreviewDialog from './modules/file-preview-dialog.vue'
   import FileSearch from './modules/file-search.vue'
+  import FileTagDialog from './modules/file-tag-dialog.vue'
+  import FileVersionDialog from './modules/file-version-dialog.vue'
+  import FileTimelineView from './modules/file-timeline-view.vue'
   import FileUploadDialog from './modules/file-upload-dialog.vue'
   import FolderDialog from './modules/folder-dialog.vue'
 
@@ -196,20 +330,43 @@
   const selectedFolderId = ref<number>()
   const selectedCategory = ref('')
   const selectedFolderName = ref('')
+  /** all | favorite | recent */
+  const fileListScope = ref('all')
   const mediaTypeFilter = ref('')
+  const tagFilterId = ref<number>()
+  const tagOptions = ref<SysFileTag[]>([])
   const selectedRows = ref<SysFile[]>([])
+  const viewMode = ref<'table' | 'grid' | 'timeline'>('table')
+  const viewModeOptions = [
+    { label: '列表', value: 'table' },
+    { label: '网格', value: 'grid' },
+    { label: '时间', value: 'timeline' }
+  ]
 
   const uploadVisible = ref(false)
+  const uploadSeedFiles = ref<File[]>([])
+  const uploadTargetFolderId = ref<number>()
+  const dragOverMain = ref(false)
+  let dragEnterCount = 0
   const moveVisible = ref(false)
   const moveFileIds = ref<number[]>([])
   const pageInitialized = ref(false)
   const previewVisible = ref(false)
   const previewFile = ref<SysFile | null>(null)
+  const zipDownloading = ref(false)
+  const tagDialogVisible = ref(false)
+  const tagDialogMode = ref<'manage' | 'bind'>('manage')
+  const tagBindFileIds = ref<number[]>([])
+  const tagBindInitialIds = ref<number[]>([])
+  const versionDialogVisible = ref(false)
+  const versionFile = ref<SysFile | null>(null)
 
   const folderDialogVisible = ref(false)
   const folderDialogType = ref<'add' | 'edit'>('add')
   const folderDialogData = ref<SysFileFolderForm>()
   const folderDialogCategory = ref('')
+  const folderDialogParentId = ref(0)
+  const folderDialogParentLabel = ref('')
 
   const searchForm = ref<Record<string, unknown>>({
     fileName: undefined,
@@ -222,7 +379,13 @@
   const isRecycle = computed(() => activeTab.value === 'recycle')
 
   const locationText = computed(() => {
-    if (!selectedFolderId.value) return ''
+    if (fileListScope.value === 'favorite') return '我的收藏'
+    if (fileListScope.value === 'recent') return '最近访问'
+    if (!selectedFolderId.value) return '全部文件'
+    const found = findFolderInTree(categoryTree.value, selectedFolderId.value)
+    if (found?.pathNames?.length) {
+      return found.pathNames.join(' / ')
+    }
     const catLabel = getCategoryLabel(selectedCategory.value)
     return `${catLabel} / ${selectedFolderName.value || '默认'}`
   })
@@ -244,7 +407,6 @@
     searchParams,
     clearData,
     cancelRequest,
-    resetPagination,
     handleSizeChange,
     handleCurrentChange,
     refreshData,
@@ -265,11 +427,11 @@
     const url = resolveFileDisplayUrl(row)
     if (row.mediaType === 'IMAGE' && url) {
       return h(ElImage, {
+        key: `thumb-${row.fileId}-${url}`,
         src: url,
         fit: 'cover',
         previewSrcList: [url],
         previewTeleported: true,
-        lazy: true,
         class: 'file-thumb',
         onClick: (event: Event) => event.stopPropagation()
       })
@@ -293,26 +455,47 @@
             'div',
             {
               class: 'file-name-cell',
+              draggable: !recycle,
+              onDragstart: (e: DragEvent) => onFileRowDragStart(row, e),
               onClick: () => !recycle && hasAuth('file:resource:query') && openPreview(row)
             },
             [
               renderFileThumb(row),
-              h(
-                'span',
-                {
-                  class: [
-                    'file-name-text',
-                    !recycle && hasAuth('file:resource:query') ? 'is-link' : ''
-                  ]
-                },
-                row.fileName
-              )
+              h('div', { class: 'file-name-main' }, [
+                h(
+                  'span',
+                  {
+                    class: [
+                      'file-name-text',
+                      !recycle && hasAuth('file:resource:query') ? 'is-link' : ''
+                    ]
+                  },
+                  row.fileName
+                ),
+                !recycle &&
+                  row.tags?.length &&
+                  h(
+                    'div',
+                    { class: 'file-tag-row', onClick: (e: Event) => e.stopPropagation() },
+                    row.tags.slice(0, 3).map((tag) =>
+                      h(
+                        ElTag,
+                        {
+                          size: 'small',
+                          effect: 'plain',
+                          style: { borderColor: tag.tagColor, color: tag.tagColor }
+                        },
+                        () => tag.tagName
+                      )
+                    )
+                  )
+              ])
             ]
           )
       }
     ]
 
-    if (recycle) {
+    if (recycle || !selectedFolderId.value) {
       cols.push({
         prop: 'categoryLabel',
         label: '业务分类',
@@ -352,7 +535,7 @@
       {
         prop: 'operation',
         label: '操作',
-        width: recycle ? 120 : 240,
+        width: recycle ? 160 : 240,
         fixed: 'right' as const,
         formatter: (row: SysFile) =>
           h('div', { class: 'file-op-cell' }, [
@@ -367,6 +550,34 @@
                 onClick: () => handleDownload(row)
               }),
             !recycle &&
+              hasAuth('file:resource:query') &&
+              h(ArtButtonTable, {
+                icon: row.favorited ? 'ri:star-fill' : 'ri:star-line',
+                iconClass: row.favorited
+                  ? 'bg-warning/12 text-warning'
+                  : 'bg-g-300/40 text-g-600',
+                tooltip: row.favorited ? '取消收藏' : '收藏',
+                onClick: () => handleToggleFavorite(row)
+              }),
+            !recycle &&
+              hasAuth('file:resource:tag') &&
+              h(ArtButtonTable, {
+                icon: 'ri:price-tag-3-line',
+                tooltip: '打标签',
+                onClick: () =>
+                  openTagBind(
+                    [row.fileId!],
+                    (row.tags || []).map((t) => t.tagId!).filter(Boolean)
+                  )
+              }),
+            !recycle &&
+              hasAuth('file:resource:version') &&
+              h(ArtButtonTable, {
+                icon: 'ri:history-line',
+                tooltip: '版本',
+                onClick: () => openVersionDialog(row)
+              }),
+            !recycle &&
               hasAuth('file:resource:move') &&
               h(ArtButtonTable, {
                 type: 'edit',
@@ -376,7 +587,8 @@
             !recycle &&
               hasAuth('file:resource:edit') &&
               h(ArtButtonTable, {
-                icon: 'ri:input-method-line',
+                icon: 'ri:text',
+                iconClass: 'bg-warning/12 text-warning',
                 tooltip: '重命名',
                 onClick: () => handleRename(row)
               }),
@@ -385,10 +597,22 @@
               h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete([row.fileId!]) }),
             recycle &&
               hasAuth('file:resource:restore') &&
-              h(ArtButtonTable, { type: 'resume', onClick: () => handleRestore([row.fileId!]) })
+              h(ArtButtonTable, { type: 'resume', onClick: () => handleRestore([row.fileId!]) }),
+            recycle &&
+              hasAuth('file:resource:purge') &&
+              h(ArtButtonTable, {
+                type: 'delete',
+                tooltip: '彻底删除',
+                onClick: () => handlePurge([row.fileId!])
+              })
           ])
       } as never
     )
+
+    if (!recycle) {
+      const op = cols[cols.length - 1] as { width?: number }
+      op.width = 340
+    }
 
     return cols
   }
@@ -398,28 +622,56 @@
     categoryTree.value = tree || []
   }
 
-  function applyDefaultFolderIfNeeded() {
-    if (selectedFolderId.value || categoryTree.value.length === 0) return
-    const first = categoryTree.value[0]
-    const defaultFolder = first.children?.[0]
-    if (!defaultFolder?.folderId) return
-    selectedFolderId.value = defaultFolder.folderId
-    selectedCategory.value = first.category
-    selectedFolderName.value = defaultFolder.folderName || '默认'
-  }
-
-  async function initPage() {
-    await loadFolderTree()
-    applyDefaultFolderIfNeeded()
-    if (selectedFolderId.value || isRecycle.value) {
-      await handleSearch()
+  async function loadTagOptions() {
+    if (!hasAuth('file:resource:tag')) {
+      tagOptions.value = []
+      return
+    }
+    try {
+      tagOptions.value = (await fetchFileTagList()) || []
+    } catch {
+      tagOptions.value = []
     }
   }
 
+  async function initPage() {
+    await Promise.all([loadFolderTree(), loadTagOptions()])
+    await handleSearch()
+  }
+
+  function handleSelectAll() {
+    fileListScope.value = 'all'
+    selectedFolderId.value = undefined
+    selectedCategory.value = ''
+    selectedFolderName.value = ''
+    resetColumns?.()
+    handleSearch()
+  }
+
+  function handleSelectFavorite() {
+    fileListScope.value = 'favorite'
+    selectedFolderId.value = undefined
+    selectedCategory.value = ''
+    selectedFolderName.value = ''
+    resetColumns?.()
+    handleSearch()
+  }
+
+  function handleSelectRecent() {
+    fileListScope.value = 'recent'
+    selectedFolderId.value = undefined
+    selectedCategory.value = ''
+    selectedFolderName.value = ''
+    resetColumns?.()
+    handleSearch()
+  }
+
   function handleSelectFolder(payload: { folderId: number; category: string; folderName: string }) {
+    fileListScope.value = 'all'
     selectedFolderId.value = payload.folderId
     selectedCategory.value = payload.category
     selectedFolderName.value = payload.folderName
+    resetColumns?.()
     handleSearch()
   }
 
@@ -436,25 +688,37 @@
       delete paramsRecord[key]
     })
     Object.assign(searchParams, { pageNum: 1, pageSize: 20 })
-    resetPagination()
   }
 
   async function handleSearch(tab: 'all' | 'recycle' = listMode.value) {
     const { beginTime, endTime } = parseTimeRange(searchForm.value.timeRange)
+    const keyword = (searchForm.value.fileName as string | undefined)?.trim()
     const params: Record<string, unknown> = {
       pageNum: 1,
-      fileName: searchForm.value.fileName,
       beginTime,
       endTime
     }
     if (tab === 'recycle') {
+      params.fileName = keyword || undefined
+      params.keyword = undefined
       params.category = searchForm.value.category
       params.deleteBy = searchForm.value.deleteBy
+      params.folderId = undefined
+      params.mediaType = undefined
+      params.createBy = undefined
+      params.listScope = undefined
+      params.tagId = undefined
     } else {
-      params.folderId = selectedFolderId.value
-      params.category = selectedCategory.value
+      const scoped = fileListScope.value === 'favorite' || fileListScope.value === 'recent'
+      params.keyword = keyword || undefined
+      params.fileName = undefined
+      params.folderId = scoped ? undefined : selectedFolderId.value
+      params.category = !scoped && selectedFolderId.value ? selectedCategory.value : undefined
       params.mediaType = mediaTypeFilter.value || undefined
       params.createBy = searchForm.value.createBy
+      params.deleteBy = undefined
+      params.listScope = scoped ? fileListScope.value : undefined
+      params.tagId = tagFilterId.value || undefined
     }
     Object.assign(searchParams, params)
     await getData()
@@ -469,17 +733,19 @@
       timeRange: undefined
     }
     mediaTypeFilter.value = ''
+    tagFilterId.value = undefined
     clearTableSearchParams()
     await handleSearch(tab)
   }
 
   async function handleTabChange(tab: 'all' | 'recycle') {
+    // 先切 listMode，避免 clearData/请求期间仍打到上一 Tab 的接口
     listMode.value = tab
     selectedRows.value = []
-    resetColumns?.()
     cancelRequest()
     clearData()
-    resetPagination()
+    resetColumns?.()
+    // resetSearch -> getData 会回到第一页，无需单独 resetPagination
     await resetSearch(tab)
   }
 
@@ -499,16 +765,13 @@
     if (targetFolderId === selectedFolderId.value) {
       refreshData()
     } else {
-      for (const cat of categoryTree.value) {
-        const folder = cat.children?.find((f) => f.folderId === targetFolderId)
-        if (folder) {
-          handleSelectFolder({
-            folderId: targetFolderId,
-            category: cat.category,
-            folderName: folder.folderName || ''
-          })
-          break
-        }
+      const found = findFolderInTree(categoryTree.value, targetFolderId)
+      if (found) {
+        handleSelectFolder({
+          folderId: targetFolderId,
+          category: found.category,
+          folderName: found.folder.folderName || ''
+        })
       }
     }
     loadFolderTree()
@@ -531,6 +794,53 @@
       if (file.displayUrl) {
         openFileUrl(file.displayUrl, file.fileName)
       }
+    }
+  }
+
+  async function handleToggleFavorite(file: SysFile) {
+    if (!file.fileId) return
+    try {
+      const res = await toggleFileFavorite(file.fileId)
+      file.favorited = res.favorited
+      ElMessage.success(res.favorited ? '已收藏' : '已取消收藏')
+      if (fileListScope.value === 'favorite' && !res.favorited) {
+        refreshData()
+      }
+    } catch (error) {
+      handleMutationError(error, '收藏操作失败')
+    }
+  }
+
+  function openTagBind(fileIds: number[], initialTagIds: number[] = []) {
+    tagDialogMode.value = 'bind'
+    tagBindFileIds.value = fileIds
+    tagBindInitialIds.value = initialTagIds
+    tagDialogVisible.value = true
+  }
+
+  function openVersionDialog(file: SysFile) {
+    versionFile.value = file
+    versionDialogVisible.value = true
+  }
+
+  async function onTagSuccess() {
+    await loadTagOptions()
+    if (tagDialogMode.value === 'bind') {
+      refreshData()
+    }
+  }
+
+  async function handleBatchZipDownload() {
+    const ids = selectedRows.value.map((r) => r.fileId!).filter(Boolean)
+    if (!ids.length) return
+    zipDownloading.value = true
+    try {
+      await downloadFilesZip(ids)
+      ElMessage.success('打包下载已开始')
+    } catch (error) {
+      handleMutationError(error, '打包下载失败')
+    } finally {
+      zipDownloading.value = false
     }
   }
 
@@ -558,19 +868,42 @@
     }
   }
 
-  function openFolderDialog(type: 'add' | 'edit', data?: SysFileFolderForm, category?: string) {
+  function openFolderDialog(
+    type: 'add' | 'edit',
+    data?: SysFileFolderForm,
+    options?: { category?: string; parentId?: number; parentLabel?: string }
+  ) {
     folderDialogType.value = type
     folderDialogData.value = data
-    folderDialogCategory.value = category || selectedCategory.value
+    folderDialogCategory.value = options?.category || selectedCategory.value
+    folderDialogParentId.value = options?.parentId || 0
+    folderDialogParentLabel.value = options?.parentLabel || ''
     folderDialogVisible.value = true
   }
 
-  function handleEditFolder(payload: { folderId: number; category: string; folderName: string }) {
-    openFolderDialog('edit', {
-      folderId: payload.folderId,
+  function handleAddFolder(payload: { category?: string; parentId?: number }) {
+    let parentLabel = ''
+    if (payload.parentId) {
+      const found = findFolderInTree(categoryTree.value, payload.parentId)
+      parentLabel = found?.pathNames?.join(' / ') || ''
+    }
+    openFolderDialog('add', undefined, {
       category: payload.category,
-      folderName: payload.folderName
+      parentId: payload.parentId || 0,
+      parentLabel
     })
+  }
+
+  function handleEditFolder(payload: { folderId: number; category: string; folderName: string }) {
+    openFolderDialog(
+      'edit',
+      {
+        folderId: payload.folderId,
+        category: payload.category,
+        folderName: payload.folderName
+      },
+      { category: payload.category }
+    )
   }
 
   async function handleDeleteFolder(folderId: number) {
@@ -582,9 +915,14 @@
       ElMessage.success('文件夹已删除')
       if (selectedFolderId.value === folderId) {
         selectedFolderId.value = undefined
+        selectedCategory.value = ''
         selectedFolderName.value = ''
+        resetColumns?.()
       }
       await loadFolderTree()
+      if (!selectedFolderId.value && activeTab.value === 'all') {
+        await handleSearch()
+      }
     } catch (error) {
       handleMutationError(error, '删除文件夹失败')
     }
@@ -623,23 +961,133 @@
     await handleRestore(selectedRows.value.map((r) => r.fileId!))
   }
 
+  async function handlePurge(ids: number[]) {
+    try {
+      await ElMessageBox.confirm(
+        '彻底删除后不可恢复，并将清理无引用的 OSS 对象。确认继续？',
+        '彻底删除',
+        { type: 'warning' }
+      )
+      await purgeFiles(ids)
+      ElMessage.success('已彻底删除')
+      selectedRows.value = []
+      refreshData()
+      loadFolderTree()
+    } catch (error) {
+      handleMutationError(error, '彻底删除失败')
+    }
+  }
+
+  async function handleBatchPurge() {
+    await handlePurge(selectedRows.value.map((r) => r.fileId!))
+  }
+
+  async function handleClearRecycle() {
+    try {
+      await ElMessageBox.confirm(
+        '将清空当前权限范围内回收站全部文件，且不可恢复。确认继续？',
+        '清空回收站',
+        { type: 'warning' }
+      )
+      const count = await clearRecycleBin()
+      ElMessage.success(count ? `已清空 ${count} 个文件` : '回收站已为空')
+      selectedRows.value = []
+      refreshData()
+      loadFolderTree()
+    } catch (error) {
+      handleMutationError(error, '清空回收站失败')
+    }
+  }
+
   function onUploadSuccess(folderId: number) {
     if (folderId && folderId !== selectedFolderId.value) {
-      for (const cat of categoryTree.value) {
-        const folder = cat.children?.find((f) => f.folderId === folderId)
-        if (folder) {
-          handleSelectFolder({
-            folderId,
-            category: cat.category,
-            folderName: folder.folderName || ''
-          })
-          break
-        }
+      const found = findFolderInTree(categoryTree.value, folderId)
+      if (found) {
+        handleSelectFolder({
+          folderId,
+          category: found.category,
+          folderName: found.folder.folderName || ''
+        })
+      } else {
+        refreshData()
       }
     } else {
       refreshData()
     }
     loadFolderTree()
+  }
+
+  function openUploadWithFiles(files: File[], folderId?: number) {
+    if (!files.length) return
+    if (!hasAuth('file:resource:add')) {
+      ElMessage.warning('无上传权限')
+      return
+    }
+    uploadSeedFiles.value = files
+    uploadTargetFolderId.value = folderId ?? selectedFolderId.value
+    uploadVisible.value = true
+  }
+
+  function collectDroppedFiles(event: DragEvent): File[] {
+    const list = event.dataTransfer?.files
+    if (!list?.length) return []
+    return Array.from(list).filter((f) => f && f.size >= 0)
+  }
+
+  function onMainDragEnter(e: DragEvent) {
+    if (activeTab.value !== 'all') return
+    if (!e.dataTransfer?.types?.includes('Files')) return
+    dragEnterCount++
+    dragOverMain.value = true
+  }
+
+  function onMainDragOver(e: DragEvent) {
+    if (activeTab.value !== 'all') return
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+  }
+
+  function onMainDragLeave() {
+    dragEnterCount = Math.max(0, dragEnterCount - 1)
+    if (dragEnterCount === 0) dragOverMain.value = false
+  }
+
+  function onMainDrop(e: DragEvent) {
+    dragEnterCount = 0
+    dragOverMain.value = false
+    if (activeTab.value !== 'all') return
+    const files = collectDroppedFiles(e)
+    if (!files.length) return
+    openUploadWithFiles(files, selectedFolderId.value)
+  }
+
+  function onDropFilesToFolder(payload: { folderId: number; files: File[] }) {
+    openUploadWithFiles(payload.files, payload.folderId)
+  }
+
+  function onFileRowDragStart(row: SysFile, e: DragEvent) {
+    if (!row.fileId || !e.dataTransfer) return
+    const ids = selectedRows.value.some((r) => r.fileId === row.fileId)
+      ? selectedRows.value.map((r) => r.fileId!).filter(Boolean)
+      : [row.fileId]
+    e.dataTransfer.setData('application/x-star-file-ids', JSON.stringify(ids))
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  async function onDropMoveToFolder(payload: { folderId: number; fileIds: number[] }) {
+    if (!hasAuth('file:resource:move')) {
+      ElMessage.warning('无迁移权限')
+      return
+    }
+    if (!payload.fileIds.length) return
+    try {
+      await moveFiles(payload.fileIds, payload.folderId)
+      ElMessage.success('已迁移到目标文件夹')
+      selectedRows.value = []
+      refreshData()
+      loadFolderTree()
+    } catch (error) {
+      handleMutationError(error, '迁移失败')
+    }
   }
 
   onMounted(async () => {
@@ -649,7 +1097,7 @@
 
   onActivated(() => {
     if (!pageInitialized.value) return
-    if (selectedFolderId.value && activeTab.value === 'all') {
+    if (activeTab.value === 'all') {
       handleSearch()
     }
   })
@@ -679,12 +1127,36 @@
   }
 
   .file-main {
+    position: relative;
     display: flex;
     flex: 1;
     flex-direction: column;
     gap: 12px;
     min-width: 0;
     min-height: 0;
+
+    &.is-dragover .drop-mask {
+      opacity: 1;
+      pointer-events: none;
+    }
+  }
+
+  .drop-mask {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--el-color-primary);
+    pointer-events: none;
+    background: color-mix(in srgb, var(--el-color-primary) 12%, transparent);
+    border: 2px dashed var(--el-color-primary);
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
   }
 
   .file-table-card {
@@ -752,9 +1224,20 @@
   }
 
   .media-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
     padding-bottom: 12px;
     margin-bottom: 12px;
     border-bottom: 1px solid var(--el-border-color-lighter);
+  }
+
+  .view-pagination {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 0 4px;
   }
 
   .filter-icon {
@@ -788,6 +1271,20 @@
     flex-shrink: 0;
     font-size: 18px;
     color: var(--el-color-primary);
+  }
+
+  :deep(.file-name-main) {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  :deep(.file-tag-row) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
   }
 
   :deep(.file-name-text) {

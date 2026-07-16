@@ -210,5 +210,8 @@ INSERT INTO `sys_menu` VALUES (103, '文件夹编辑', 25, 7, '', '', NULL, '', 
 INSERT INTO `sys_menu` VALUES (104, '文件夹删除', 25, 8, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:folder:delete', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '删除文件夹');
 INSERT INTO `sys_menu` VALUES (105, '文件迁移', 25, 9, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:resource:move', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '迁移到其他文件夹');
 INSERT INTO `sys_menu` VALUES (106, '文件重命名', 25, 10, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:resource:edit', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '修改文件展示名称');
+INSERT INTO `sys_menu` VALUES (107, '彻底删除', 25, 11, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:resource:purge', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '回收站彻底删除并清理OSS');
+INSERT INTO `sys_menu` VALUES (108, '清空回收站', 25, 12, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:resource:purge', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '清空回收站');
+INSERT INTO `sys_menu` VALUES (109, '文件分享', 25, 13, '', '', NULL, '', 1, 1, 'F', '0', '0', 'file:resource:share', '#', 'admin', '2026-06-27 15:56:30', '', NULL, '创建/管理分享外链');
 
 SET FOREIGN_KEY_CHECKS = 1;

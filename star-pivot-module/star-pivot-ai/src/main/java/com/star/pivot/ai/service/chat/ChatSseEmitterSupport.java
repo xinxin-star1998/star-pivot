@@ -1,12 +1,14 @@
 package com.star.pivot.ai.service.chat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.star.pivot.ai.domain.vo.RagRetrievalResult;
 import com.star.pivot.ai.domain.vo.RagSourceVo;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.star.pivot.framework.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -85,13 +87,24 @@ public class ChatSseEmitterSupport {
         log.warn("AI chat stream failed", error);
         synchronized (emitter) {
             try {
-                String message = error.getMessage() != null ? error.getMessage() : "AI 生成失败";
-                emitter.send(SseEmitter.event().name("error").data(message));
+                emitter.send(SseEmitter.event().name("error").data(safeClientMessage(error)));
                 emitter.complete();
             } catch (IOException ignored) {
                 emitter.completeWithError(error);
             }
         }
+    }
+
+    /** 仅回传业务异常文案，避免泄露上游 SDK/HTTP 细节 */
+    private static String safeClientMessage(Throwable error) {
+        Throwable current = error;
+        while (current != null) {
+            if (current instanceof BizException && StringUtils.hasText(current.getMessage())) {
+                return current.getMessage();
+            }
+            current = current.getCause();
+        }
+        return "AI 生成失败，请稍后重试";
     }
 
     public void completeStream(SseEmitter emitter) {

@@ -6,7 +6,7 @@
         v-if="hasAuth('file:folder:add')"
         link
         type="primary"
-        @click="emit('add-folder', activeCategory || categories[0]?.category)"
+        @click="emit('add-folder', { category: activeCategory || categories[0]?.category })"
       >
         <ArtSvgIcon class="mr-0.5" icon="ri:add-line" />
         新建
@@ -34,25 +34,43 @@
         @node-click="handleNodeClick"
       >
         <template #default="{ data }">
-          <div :class="{ 'is-folder': !!data.folderId }" class="tree-node">
-            <ArtSvgIcon
-              :icon="data.folderId ? 'ri:folder-3-line' : getCategoryIcon(data.category)"
-              class="node-icon"
-            />
+          <div
+            :class="{
+              'is-folder': !!data.folderId,
+              'is-all': !!data.isAll,
+              'is-drop-target': dropTargetKey === data.nodeKey
+            }"
+            class="tree-node"
+            @dragenter.prevent="onNodeDragEnter(data, $event)"
+            @dragover.prevent="onNodeDragOver(data, $event)"
+            @dragleave.prevent="onNodeDragLeave(data)"
+            @drop.prevent="onNodeDrop(data, $event)"
+          >
+            <ArtSvgIcon :icon="resolveNodeIcon(data)" class="node-icon" />
             <span :title="data.label" class="node-label">{{ data.label }}</span>
             <span v-if="data.fileCount != null" class="node-count">{{ data.fileCount }}</span>
             <ElDropdown
-              v-if="data.folderId && data.folderName !== '默认' && hasFolderManage"
+              v-if="data.folderId && hasFolderManage"
               trigger="click"
               @command="(cmd: string) => handleFolderCommand(cmd, data)"
             >
               <ElButton :icon="MoreFilled" class="node-more" link @click.stop />
               <template #dropdown>
                 <ElDropdownMenu>
-                  <ElDropdownItem v-if="hasAuth('file:folder:edit')" command="edit">
+                  <ElDropdownItem v-if="hasAuth('file:folder:add')" command="add-child">
+                    新建子文件夹
+                  </ElDropdownItem>
+                  <ElDropdownItem
+                    v-if="hasAuth('file:folder:edit') && data.folderName !== '默认'"
+                    command="edit"
+                  >
                     重命名
                   </ElDropdownItem>
-                  <ElDropdownItem v-if="hasAuth('file:folder:delete')" command="delete" divided>
+                  <ElDropdownItem
+                    v-if="hasAuth('file:folder:delete') && data.folderName !== '默认'"
+                    command="delete"
+                    divided
+                  >
                     删除
                   </ElDropdownItem>
                 </ElDropdownMenu>
@@ -70,76 +88,127 @@
   import type { FileCategoryNode } from '@/api/file/types'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { findFolderInTree, mapFoldersToTreeNodes, sumFolderFileCount } from '@/utils/file/folder-tree'
   import { getCategoryIcon } from '../constants'
   import { MoreFilled, Search } from '@element-plus/icons-vue'
   import type { ElTree } from 'element-plus'
   import { computed, nextTick, ref, watch } from 'vue'
 
+  const ALL_FILES_KEY = 'all-files'
+
+  interface TreeNode {
+    nodeKey: string
+    label: string
+    isAll?: boolean
+    isFavorite?: boolean
+    isRecent?: boolean
+    category?: string
+    folderId?: number
+    folderName?: string
+    fileCount?: number
+    children?: TreeNode[]
+  }
+
   const props = defineProps<{
     categories: FileCategoryNode[]
     activeFolderId?: number
+    /** all | favorite | recent */
+    listScope?: string
   }>()
 
   const emit = defineEmits<{
+    'select-all': []
+    'select-favorite': []
+    'select-recent': []
     'select-folder': [payload: { folderId: number; category: string; folderName: string }]
-    'add-folder': [category?: string]
-    'edit-folder': [payload: { folderId: number; category: string; folderName: string }]
+    'add-folder': [payload: { category?: string; parentId?: number }]
+    'edit-folder': [payload: { folderId: number; category: string; folderName: string; parentId?: number }]
     'delete-folder': [folderId: number]
+    'drop-files': [payload: { folderId: number; files: File[] }]
+    'drop-move': [payload: { folderId: number; fileIds: number[] }]
   }>()
 
   const { hasAuth } = useAuth()
   const treeRef = ref<InstanceType<typeof ElTree>>()
   const filterText = ref('')
+  const dropTargetKey = ref('')
 
   const hasFolderManage = computed(
-    () => hasAuth('file:folder:edit') || hasAuth('file:folder:delete')
+    () =>
+      hasAuth('file:folder:add') || hasAuth('file:folder:edit') || hasAuth('file:folder:delete')
   )
 
   const activeCategory = computed(() => {
     if (!props.activeFolderId) return ''
-    for (const cat of props.categories) {
-      if (cat.children?.some((f) => f.folderId === props.activeFolderId)) {
-        return cat.category
-      }
-    }
-    return ''
+    return findFolderInTree(props.categories, props.activeFolderId)?.category || ''
   })
 
-  const currentNodeKey = computed(() =>
-    props.activeFolderId ? `folder-${props.activeFolderId}` : undefined
-  )
+  const currentNodeKey = computed(() => {
+    if (props.listScope === 'favorite') return 'scope-favorite'
+    if (props.listScope === 'recent') return 'scope-recent'
+    if (props.activeFolderId) return `folder-${props.activeFolderId}`
+    return ALL_FILES_KEY
+  })
 
-  const treeData = computed(() =>
+  const categoryNodes = computed<TreeNode[]>(() =>
     props.categories.map((cat) => ({
       nodeKey: `cat-${cat.category}`,
       label: cat.categoryLabel,
       category: cat.category,
-      children: (cat.children || []).map((folder) => ({
-        nodeKey: `folder-${folder.folderId}`,
-        label: folder.folderName,
-        folderName: folder.folderName,
-        folderId: folder.folderId,
-        category: cat.category,
-        fileCount: folder.fileCount
-      }))
+      children: mapFoldersToTreeNodes(cat.children || [], cat.category)
     }))
   )
+
+  const totalFileCount = computed(() =>
+    props.categories.reduce((sum, cat) => sum + sumFolderFileCount(cat.children || []), 0)
+  )
+
+  const treeData = computed<TreeNode[]>(() => [
+    {
+      nodeKey: ALL_FILES_KEY,
+      label: '全部文件',
+      isAll: true,
+      fileCount: totalFileCount.value,
+      children: categoryNodes.value
+    },
+    {
+      nodeKey: 'scope-favorite',
+      label: '我的收藏',
+      isFavorite: true
+    },
+    {
+      nodeKey: 'scope-recent',
+      label: '最近访问',
+      isRecent: true
+    }
+  ])
+
+  function filterNodes(nodes: TreeNode[], kw: string): TreeNode[] {
+    return nodes
+      .map((node) => {
+        const selfMatch = node.label.toLowerCase().includes(kw)
+        const children = filterNodes(node.children || [], kw)
+        if (selfMatch || children.length) {
+          return { ...node, children: selfMatch ? node.children || [] : children }
+        }
+        return null
+      })
+      .filter(Boolean) as TreeNode[]
+  }
 
   const filteredTreeData = computed(() => {
     const kw = filterText.value.trim().toLowerCase()
     if (!kw) return treeData.value
-    return treeData.value
-      .map((cat) => {
-        const catMatch = cat.label.toLowerCase().includes(kw)
-        const children = (cat.children || []).filter(
-          (f) => catMatch || f.label.toLowerCase().includes(kw)
-        )
-        if (catMatch || children.length) {
-          return { ...cat, children: catMatch ? cat.children : children }
-        }
-        return null
-      })
-      .filter(Boolean) as typeof treeData.value
+
+    const filteredCategories = filterNodes(categoryNodes.value, kw)
+    const extras = treeData.value.slice(1).filter((n) => n.label.toLowerCase().includes(kw))
+    const showAll = '全部文件'.includes(kw) || filteredCategories.length > 0
+    const result: TreeNode[] = []
+    if (showAll) {
+      result.push({ ...treeData.value[0], children: filteredCategories })
+    }
+    result.push(...extras)
+    return result
   })
 
   const treeProps = {
@@ -148,21 +217,34 @@
   }
 
   watch(
-    () => props.activeFolderId,
-    (id) => {
-      if (id) {
-        nextTick(() => treeRef.value?.setCurrentKey(`folder-${id}`))
-      }
+    currentNodeKey,
+    (key) => {
+      nextTick(() => treeRef.value?.setCurrentKey(key))
     },
     { immediate: true }
   )
 
-  function handleNodeClick(data: {
-    folderId?: number
-    category?: string
-    folderName?: string
-    label?: string
-  }) {
+  function resolveNodeIcon(data: TreeNode) {
+    if (data.isAll) return 'ri:file-list-3-line'
+    if (data.isFavorite) return 'ri:star-fill'
+    if (data.isRecent) return 'ri:history-line'
+    if (data.folderId) return 'ri:folder-3-line'
+    return getCategoryIcon(data.category)
+  }
+
+  function handleNodeClick(data: TreeNode) {
+    if (data.isAll) {
+      emit('select-all')
+      return
+    }
+    if (data.isFavorite) {
+      emit('select-favorite')
+      return
+    }
+    if (data.isRecent) {
+      emit('select-recent')
+      return
+    }
     if (data.folderId && data.category) {
       emit('select-folder', {
         folderId: data.folderId,
@@ -172,14 +254,61 @@
     }
   }
 
-  function handleFolderCommand(
-    command: string,
-    data: { folderId: number; category: string; folderName: string }
-  ) {
-    if (command === 'edit') {
-      emit('edit-folder', data)
-    } else if (command === 'delete') {
+  function handleFolderCommand(command: string, data: TreeNode) {
+    if (command === 'add-child' && data.folderId && data.category) {
+      emit('add-folder', { category: data.category, parentId: data.folderId })
+    } else if (command === 'edit' && data.folderId && data.category) {
+      emit('edit-folder', {
+        folderId: data.folderId,
+        category: data.category,
+        folderName: data.folderName || data.label || ''
+      })
+    } else if (command === 'delete' && data.folderId) {
       emit('delete-folder', data.folderId)
+    }
+  }
+
+  function onNodeDragEnter(data: TreeNode, event: DragEvent) {
+    if (!data.folderId) return
+    dropTargetKey.value = data.nodeKey
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = event.dataTransfer.types.includes('Files') ? 'copy' : 'move'
+    }
+  }
+
+  function onNodeDragOver(data: TreeNode, event: DragEvent) {
+    if (!data.folderId) return
+    dropTargetKey.value = data.nodeKey
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = event.dataTransfer.types.includes('Files') ? 'copy' : 'move'
+    }
+  }
+
+  function onNodeDragLeave(data: TreeNode) {
+    if (dropTargetKey.value === data.nodeKey) {
+      dropTargetKey.value = ''
+    }
+  }
+
+  function onNodeDrop(data: TreeNode, event: DragEvent) {
+    dropTargetKey.value = ''
+    if (!data.folderId) return
+
+    const fileList = event.dataTransfer?.files
+    if (fileList?.length) {
+      emit('drop-files', { folderId: data.folderId, files: Array.from(fileList) })
+      return
+    }
+
+    const raw = event.dataTransfer?.getData('application/x-star-file-ids')
+    if (!raw) return
+    try {
+      const fileIds = JSON.parse(raw) as number[]
+      if (Array.isArray(fileIds) && fileIds.length) {
+        emit('drop-move', { folderId: data.folderId, fileIds })
+      }
+    } catch {
+      // ignore
     }
   }
 </script>
@@ -221,9 +350,15 @@
     align-items: center;
     min-width: 0;
     padding-right: 4px;
+    border-radius: 4px;
 
     &.is-folder:hover .node-more {
       opacity: 1;
+    }
+
+    &.is-drop-target {
+      background: color-mix(in srgb, var(--el-color-primary) 14%, transparent);
+      outline: 1px dashed var(--el-color-primary);
     }
   }
 

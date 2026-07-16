@@ -134,9 +134,7 @@ class DataScopeServiceIntegrationTest {
 
         DataScope scope = dataScopeService.getCurrentUserDataScope();
 
-        assertTrue(scope.getSqlFilter().contains("u.dept_id IN ("));
-        assertTrue(scope.getSqlFilter().contains("10"));
-        assertTrue(scope.getSqlFilter().contains("20"));
+        assertEquals("DEPT_IN", scope.getSqlFilter());
         assertEquals(2, scope.getDeptIds().size());
         assertTrue(scope.getDeptIds().containsAll(List.of(10L, 20L)));
     }

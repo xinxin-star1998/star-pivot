@@ -23,10 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,11 +52,7 @@ public class SysFileFolderServiceImpl extends ServiceImpl<SysFileFolderMapper, S
                     .orderByAsc(SysFileFolder::getOrderNum)
                     .orderByAsc(SysFileFolder::getFolderId));
 
-            List<SysFileFolderVo> children = folders.stream()
-                    .map(this::toFolderVo)
-                    .sorted(Comparator.comparing(SysFileFolderVo::getOrderNum, Comparator.nullsLast(Integer::compareTo)))
-                    .collect(Collectors.toList());
-            node.setChildren(children);
+            node.setChildren(buildFolderTree(folders));
             nodes.add(node);
         }
         return nodes;
@@ -73,18 +66,21 @@ public class SysFileFolderServiceImpl extends ServiceImpl<SysFileFolderMapper, S
             throw new BizException(ErrorCode.PARAM_INVALID, "文件夹名称不能为空");
         }
 
-        long exists = count(new LambdaQueryWrapper<SysFileFolder>()
-                .eq(SysFileFolder::getCategory, dto.getCategory())
-                .eq(SysFileFolder::getFolderName, dto.getFolderName())
-                .eq(SysFileFolder::getDelFlag, FileBizConstants.DEL_FLAG_NORMAL));
-        if (exists > 0) {
-            throw new BizException(ErrorCode.PARAM_INVALID, "同分类下文件夹名称已存在");
+        Long parentId = normalizeParentId(dto.getParentId());
+        if (parentId > 0) {
+            SysFileFolder parent = getActiveFolder(parentId);
+            AssertUtils.notNull(parent, ErrorCode.NOT_FOUND, "父文件夹不存在");
+            if (!dto.getCategory().equals(parent.getCategory())) {
+                throw new BizException(ErrorCode.PARAM_INVALID, "父文件夹与业务分类不一致");
+            }
         }
+
+        assertUniqueName(dto.getCategory(), parentId, dto.getFolderName(), null);
 
         SysFileFolder folder = new SysFileFolder();
         folder.setCategory(dto.getCategory());
-        folder.setFolderName(dto.getFolderName());
-        folder.setParentId(0L);
+        folder.setFolderName(dto.getFolderName().trim());
+        folder.setParentId(parentId);
         folder.setOrderNum(dto.getOrderNum() != null ? dto.getOrderNum() : 0);
         folder.setStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "0");
         folder.setDelFlag(FileBizConstants.DEL_FLAG_NORMAL);
@@ -102,16 +98,28 @@ public class SysFileFolderServiceImpl extends ServiceImpl<SysFileFolderMapper, S
         SysFileFolder folder = getActiveFolder(dto.getFolderId());
         AssertUtils.notNull(folder, ErrorCode.NOT_FOUND, "文件夹不存在");
 
-        if (StringUtils.hasText(dto.getFolderName()) && !dto.getFolderName().equals(folder.getFolderName())) {
-            long exists = count(new LambdaQueryWrapper<SysFileFolder>()
-                    .eq(SysFileFolder::getCategory, folder.getCategory())
-                    .eq(SysFileFolder::getFolderName, dto.getFolderName())
-                    .eq(SysFileFolder::getDelFlag, FileBizConstants.DEL_FLAG_NORMAL)
-                    .ne(SysFileFolder::getFolderId, dto.getFolderId()));
-            if (exists > 0) {
-                throw new BizException(ErrorCode.PARAM_INVALID, "同分类下文件夹名称已存在");
+        Long parentId = folder.getParentId() == null ? 0L : folder.getParentId();
+        if (dto.getParentId() != null) {
+            parentId = normalizeParentId(dto.getParentId());
+            if (parentId.equals(dto.getFolderId())) {
+                throw new BizException(ErrorCode.PARAM_INVALID, "不能将文件夹设为自己的子级");
             }
-            folder.setFolderName(dto.getFolderName());
+            if (parentId > 0) {
+                SysFileFolder parent = getActiveFolder(parentId);
+                AssertUtils.notNull(parent, ErrorCode.NOT_FOUND, "父文件夹不存在");
+                if (!folder.getCategory().equals(parent.getCategory())) {
+                    throw new BizException(ErrorCode.PARAM_INVALID, "父文件夹与业务分类不一致");
+                }
+                if (isDescendant(dto.getFolderId(), parentId)) {
+                    throw new BizException(ErrorCode.PARAM_INVALID, "不能移动到自己的子文件夹下");
+                }
+            }
+            folder.setParentId(parentId);
+        }
+
+        if (StringUtils.hasText(dto.getFolderName()) && !dto.getFolderName().equals(folder.getFolderName())) {
+            assertUniqueName(folder.getCategory(), parentId, dto.getFolderName(), dto.getFolderId());
+            folder.setFolderName(dto.getFolderName().trim());
         }
         if (dto.getOrderNum() != null) {
             folder.setOrderNum(dto.getOrderNum());
@@ -132,8 +140,15 @@ public class SysFileFolderServiceImpl extends ServiceImpl<SysFileFolderMapper, S
     public void delete(Long folderId) {
         SysFileFolder folder = getActiveFolder(folderId);
         AssertUtils.notNull(folder, ErrorCode.NOT_FOUND, "文件夹不存在");
-        if (FileBizConstants.DEFAULT_FOLDER_NAME.equals(folder.getFolderName())) {
+        if (FileBizConstants.DEFAULT_FOLDER_NAME.equals(folder.getFolderName())
+                && (folder.getParentId() == null || folder.getParentId() == 0L)) {
             throw new BizException(ErrorCode.PARAM_INVALID, "默认文件夹不可删除");
+        }
+        long childCount = count(new LambdaQueryWrapper<SysFileFolder>()
+                .eq(SysFileFolder::getParentId, folderId)
+                .eq(SysFileFolder::getDelFlag, FileBizConstants.DEL_FLAG_NORMAL));
+        if (childCount > 0) {
+            throw new BizException(ErrorCode.PARAM_INVALID, "请先删除子文件夹");
         }
         long fileCount = sysFileMapper.countActiveByFolderId(folderId);
         if (fileCount > 0) {
@@ -144,6 +159,70 @@ public class SysFileFolderServiceImpl extends ServiceImpl<SysFileFolderMapper, S
                 .set(SysFileFolder::getDelFlag, FileBizConstants.DEL_FLAG_RECYCLE)
                 .set(SysFileFolder::getUpdateBy, SecurityContextUtils.getUsername())
                 .set(SysFileFolder::getUpdateTime, LocalDateTime.now()));
+    }
+
+    private List<SysFileFolderVo> buildFolderTree(List<SysFileFolder> folders) {
+        Map<Long, SysFileFolderVo> map = new LinkedHashMap<>();
+        for (SysFileFolder folder : folders) {
+            map.put(folder.getFolderId(), toFolderVo(folder));
+        }
+        List<SysFileFolderVo> roots = new ArrayList<>();
+        for (SysFileFolderVo vo : map.values()) {
+            Long parentId = vo.getParentId() == null ? 0L : vo.getParentId();
+            if (parentId == 0L || !map.containsKey(parentId)) {
+                roots.add(vo);
+            } else {
+                map.get(parentId).getChildren().add(vo);
+            }
+        }
+        sortTree(roots);
+        return roots;
+    }
+
+    private void sortTree(List<SysFileFolderVo> nodes) {
+        if (nodes == null || nodes.isEmpty()) {
+            return;
+        }
+        nodes.sort(Comparator.comparing(SysFileFolderVo::getOrderNum, Comparator.nullsLast(Integer::compareTo))
+                .thenComparing(SysFileFolderVo::getFolderId, Comparator.nullsLast(Long::compareTo)));
+        for (SysFileFolderVo node : nodes) {
+            sortTree(node.getChildren());
+        }
+    }
+
+    private void assertUniqueName(String category, Long parentId, String folderName, Long excludeId) {
+        LambdaQueryWrapper<SysFileFolder> wrapper = new LambdaQueryWrapper<SysFileFolder>()
+                .eq(SysFileFolder::getCategory, category)
+                .eq(SysFileFolder::getParentId, parentId)
+                .eq(SysFileFolder::getFolderName, folderName.trim())
+                .eq(SysFileFolder::getDelFlag, FileBizConstants.DEL_FLAG_NORMAL);
+        if (excludeId != null) {
+            wrapper.ne(SysFileFolder::getFolderId, excludeId);
+        }
+        if (count(wrapper) > 0) {
+            throw new BizException(ErrorCode.PARAM_INVALID, "同级目录下文件夹名称已存在");
+        }
+    }
+
+    /** 判断 candidateId 是否是 ancestorId 的子孙 */
+    private boolean isDescendant(Long ancestorId, Long candidateId) {
+        Long current = candidateId;
+        Set<Long> visited = new HashSet<>();
+        while (current != null && current > 0 && visited.add(current)) {
+            if (current.equals(ancestorId)) {
+                return true;
+            }
+            SysFileFolder folder = getActiveFolder(current);
+            if (folder == null) {
+                return false;
+            }
+            current = folder.getParentId();
+        }
+        return false;
+    }
+
+    private Long normalizeParentId(Long parentId) {
+        return parentId == null || parentId < 0 ? 0L : parentId;
     }
 
     private SysFileFolder getActiveFolder(Long folderId) {
@@ -158,6 +237,7 @@ public class SysFileFolderServiceImpl extends ServiceImpl<SysFileFolderMapper, S
     private SysFileFolderVo toFolderVo(SysFileFolder folder) {
         SysFileFolderVo vo = new SysFileFolderVo();
         BeanUtils.copyProperties(folder, vo);
+        vo.setChildren(new ArrayList<>());
         vo.setFileCount(sysFileMapper.countActiveByFolderId(folder.getFolderId()));
         return vo;
     }

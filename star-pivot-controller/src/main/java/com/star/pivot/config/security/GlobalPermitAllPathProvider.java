@@ -12,7 +12,9 @@ public class GlobalPermitAllPathProvider implements PermitAllPathProvider {
     public List<String> permitAllPaths() {
         return List.of(
                 "/auth/register",
-                "/api/auth/register"
+                "/api/auth/register",
+                "/file/share/public/**",
+                "/api/file/share/public/**"
         );
     }
 }

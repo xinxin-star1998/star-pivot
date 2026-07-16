@@ -6,6 +6,7 @@ import com.star.pivot.ai.domain.dto.ChatSendDto;
 import com.star.pivot.ai.domain.vo.RagRetrievalResult;
 import com.star.pivot.ai.service.AiKnowledgeRetrievalService;
 import com.star.pivot.framework.exception.BizException;
+import com.star.pivot.security.context.SecurityContextUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -59,6 +60,11 @@ public class ChatPromptAssembler {
 
     public RagRetrievalResult retrieve(AiRuntimeSnapshot runtime, String userMessage, boolean useRag) {
         if (!useRag || !runtime.isRagEnabled() || !StringUtils.hasText(userMessage)) {
+            return RagRetrievalResult.builder().context("").sources(java.util.List.of()).build();
+        }
+        // 仅具备知识库查询权限的用户可检索全局知识库，避免任意对话用户读出知识内容
+        if (!SecurityContextUtils.hasAuthority("ai:knowledge:query")) {
+            log.debug("Skip RAG: current user lacks ai:knowledge:query");
             return RagRetrievalResult.builder().context("").sources(java.util.List.of()).build();
         }
         try {

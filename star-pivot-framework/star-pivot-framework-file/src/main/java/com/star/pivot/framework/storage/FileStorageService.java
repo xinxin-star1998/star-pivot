@@ -257,4 +257,42 @@ public interface FileStorageService {
     default byte[] downloadObject(String objectName) throws Exception {
         throw new UnsupportedOperationException("当前存储驱动不支持 downloadObject");
     }
+
+    /** 初始化分片上传，返回 uploadId */
+    default String initiateMultipartUpload(String objectName, String contentType) throws Exception {
+        throw new UnsupportedOperationException("当前存储驱动不支持分片上传");
+    }
+
+    /**
+     * 上传分片。
+     *
+     * @return 分片 ETag
+     */
+    default String uploadPart(String objectName, String uploadId, int partNumber,
+                              java.io.InputStream inputStream, long partSize) throws Exception {
+        throw new UnsupportedOperationException("当前存储驱动不支持分片上传");
+    }
+
+    /** 完成分片上传 */
+    default void completeMultipartUpload(String objectName, String uploadId,
+                                         java.util.List<java.util.Map.Entry<Integer, String>> partETags)
+            throws Exception {
+        throw new UnsupportedOperationException("当前存储驱动不支持分片上传");
+    }
+
+    /** 取消分片上传 */
+    default void abortMultipartUpload(String objectName, String uploadId) throws Exception {
+        throw new UnsupportedOperationException("当前存储驱动不支持分片上传");
+    }
+
+    /** 列出已上传分片号（断点续传） */
+    default java.util.List<Integer> listUploadedPartNumbers(String objectName, String uploadId) throws Exception {
+        throw new UnsupportedOperationException("当前存储驱动不支持分片上传");
+    }
+
+    /** 列出已上传分片（含 ETag，用于断点续传完成） */
+    default java.util.List<java.util.Map.Entry<Integer, String>> listUploadedParts(String objectName, String uploadId)
+            throws Exception {
+        throw new UnsupportedOperationException("当前存储驱动不支持分片上传");
+    }
 }

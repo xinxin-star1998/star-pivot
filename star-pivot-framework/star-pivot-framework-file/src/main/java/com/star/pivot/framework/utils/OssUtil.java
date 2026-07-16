@@ -338,4 +338,61 @@ public class OssUtil {
             return inputStream.readAllBytes();
         }
     }
+
+    public String initiateMultipartUpload(String objectName, String contentType) {
+        if (!StringUtils.hasText(objectName) || objectName.contains("..") || objectName.startsWith("/")) {
+            throw new IllegalArgumentException("无效的对象路径");
+        }
+        InitiateMultipartUploadRequest request = new InitiateMultipartUploadRequest(bucketName(), objectName);
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType(StringUtils.hasText(contentType) ? contentType : "application/octet-stream");
+        request.setObjectMetadata(metadata);
+        InitiateMultipartUploadResult result = ossClient.initiateMultipartUpload(request);
+        return result.getUploadId();
+    }
+
+    public String uploadPart(String objectName, String uploadId, int partNumber,
+                             java.io.InputStream inputStream, long partSize) {
+        UploadPartRequest request = new UploadPartRequest();
+        request.setBucketName(bucketName());
+        request.setKey(objectName);
+        request.setUploadId(uploadId);
+        request.setPartNumber(partNumber);
+        request.setInputStream(inputStream);
+        request.setPartSize(partSize);
+        UploadPartResult result = ossClient.uploadPart(request);
+        return result.getETag();
+    }
+
+    public void completeMultipartUpload(String objectName, String uploadId, java.util.List<PartETag> partETags) {
+        CompleteMultipartUploadRequest request =
+                new CompleteMultipartUploadRequest(bucketName(), objectName, uploadId, partETags);
+        ossClient.completeMultipartUpload(request);
+    }
+
+    public void abortMultipartUpload(String objectName, String uploadId) {
+        AbortMultipartUploadRequest request =
+                new AbortMultipartUploadRequest(bucketName(), objectName, uploadId);
+        ossClient.abortMultipartUpload(request);
+    }
+
+    public java.util.List<Integer> listUploadedPartNumbers(String objectName, String uploadId) {
+        return listUploadedParts(objectName, uploadId).stream()
+                .map(java.util.Map.Entry::getKey)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public java.util.List<java.util.Map.Entry<Integer, String>> listUploadedParts(String objectName, String uploadId) {
+        java.util.List<java.util.Map.Entry<Integer, String>> parts = new java.util.ArrayList<>();
+        PartListing listing;
+        ListPartsRequest request = new ListPartsRequest(bucketName(), objectName, uploadId);
+        do {
+            listing = ossClient.listParts(request);
+            for (PartSummary part : listing.getParts()) {
+                parts.add(java.util.Map.entry(part.getPartNumber(), part.getETag()));
+            }
+            request.setPartNumberMarker(listing.getNextPartNumberMarker());
+        } while (listing.isTruncated());
+        return parts;
+    }
 }

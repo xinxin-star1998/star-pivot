@@ -44,6 +44,10 @@ public final class DemoModeUtils {
             return true;
         }
 
+        if (isAiChatDemoAllowed(normalizedMethod, path)) {
+            return true;
+        }
+
         if ("POST".equals(normalizedMethod)) {
             if (READ_ONLY_POST_PATH.matcher(path).matches()) {
                 return true;
@@ -54,6 +58,24 @@ public final class DemoModeUtils {
         }
 
         return false;
+    }
+
+    /**
+     * 演示账号允许使用 AI 对话（发消息、会话 CRUD），便于展示核心能力。
+     */
+    private static boolean isAiChatDemoAllowed(String method, String path) {
+        if (!path.startsWith("/ai/chat/")) {
+            return false;
+        }
+        return switch (method) {
+            case "POST" -> path.equals("/ai/chat/send")
+                    || path.equals("/ai/chat/stream")
+                    || path.equals("/ai/chat/sessions");
+            case "PUT" -> path.equals("/ai/chat/sessions/rename");
+            case "DELETE" -> path.equals("/ai/chat/sessions")
+                    || path.equals("/ai/chat/history");
+            default -> false;
+        };
     }
 
     private static String stripContextPath(String requestUri, String contextPath) {

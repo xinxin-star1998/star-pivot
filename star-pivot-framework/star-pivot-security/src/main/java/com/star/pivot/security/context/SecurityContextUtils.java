@@ -41,4 +41,17 @@ public class SecurityContextUtils {
         }
         return null;
     }
+
+    /** 当前认证是否拥有指定权限标识 */
+    public static boolean hasAuthority(String authority) {
+        if (authority == null || authority.isEmpty()) {
+            return false;
+        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(granted -> authority.equals(granted.getAuthority()));
+    }
 }

@@ -13,6 +13,25 @@ function normalizePath(url?: string): string {
   return withoutQuery.replace(/^\/api(\/v1)?/, '') || withoutQuery
 }
 
+/** 演示账号允许的 AI 对话写接口（与后端 DemoModeUtils 保持一致） */
+function isAiChatDemoAllowed(method: string, path: string): boolean {
+  if (!path.startsWith('/ai/chat/')) {
+    return false
+  }
+  if (method === 'POST') {
+    return (
+      path === '/ai/chat/send' || path === '/ai/chat/stream' || path === '/ai/chat/sessions'
+    )
+  }
+  if (method === 'PUT') {
+    return path === '/ai/chat/sessions/rename'
+  }
+  if (method === 'DELETE') {
+    return path === '/ai/chat/sessions' || path === '/ai/chat/history'
+  }
+  return false
+}
+
 /** 演示账号下是否允许发出的 HTTP 请求 */
 export function isDemoReadOnlyRequest(method?: string, url?: string): boolean {
   const normalizedMethod = (method || 'GET').toUpperCase()
@@ -22,6 +41,10 @@ export function isDemoReadOnlyRequest(method?: string, url?: string): boolean {
 
   const path = normalizePath(url)
   if (AUTH_ALLOW_POST.some((item) => path.includes(item))) {
+    return true
+  }
+
+  if (isAiChatDemoAllowed(normalizedMethod, path)) {
     return true
   }
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.star.pivot.file.mapper.SysFileRecentMapper">
+
+    <insert id="upsert">
+        INSERT INTO sys_file_recent (user_id, file_id, access_time)
+        VALUES (#{userId}, #{fileId}, NOW())
+        ON DUPLICATE KEY UPDATE access_time = NOW()
+    </insert>
+
+    <select id="selectOverflowRecentIds" resultType="long">
+        SELECT recent_id
+        FROM sys_file_recent
+        WHERE user_id = #{userId}
+        ORDER BY access_time DESC
+        LIMIT 10000 OFFSET #{keep}
+    </select>
+</mapper>

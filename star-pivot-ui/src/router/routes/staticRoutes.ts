@@ -74,6 +74,12 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     ]
   },
   {
+    path: '/s/:code',
+    name: 'FileSharePublic',
+    component: () => import('@/views/file/share/index.vue'),
+    meta: { title: '文件分享', isHideTab: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'Exception404',
     component: () => import('@views/exception/404/index.vue'),

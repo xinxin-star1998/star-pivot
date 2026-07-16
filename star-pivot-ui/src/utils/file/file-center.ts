@@ -1,6 +1,8 @@
 import type { SysFile } from '@/api/file/types'
 
-export type PreviewMode = 'image' | 'video' | 'audio' | 'pdf' | 'download'
+export type PreviewMode = 'image' | 'video' | 'audio' | 'pdf' | 'office' | 'download'
+
+const OFFICE_EXTS = new Set(['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv', 'rtf'])
 
 export function formatFileSize(bytes?: number): string {
   if (bytes == null || bytes <= 0) return '0 B'
@@ -22,11 +24,19 @@ export function getPreviewMode(mediaType?: string, fileExt?: string): PreviewMod
       return 'video'
     case 'AUDIO':
       return 'audio'
-    case 'DOCUMENT':
-      return fileExt?.toLowerCase() === 'pdf' ? 'pdf' : 'download'
+    case 'DOCUMENT': {
+      const ext = fileExt?.toLowerCase()
+      if (ext === 'pdf') return 'pdf'
+      if (ext && OFFICE_EXTS.has(ext)) return 'office'
+      return 'download'
+    }
     default:
       return 'download'
   }
+}
+
+export function buildOfficeViewerUrl(fileUrl: string): string {
+  return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`
 }
 
 export function resolveFileDisplayUrl(file: SysFile): string {

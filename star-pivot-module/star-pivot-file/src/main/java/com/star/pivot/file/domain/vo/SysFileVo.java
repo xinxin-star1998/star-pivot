@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class SysFileVo {
@@ -58,4 +59,10 @@ public class SysFileVo {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime deleteTime;
+
+    /** 当前用户是否已收藏 */
+    private Boolean favorited;
+
+    /** 当前用户打在该文件上的标签 */
+    private List<SysFileTagVo> tags;
 }

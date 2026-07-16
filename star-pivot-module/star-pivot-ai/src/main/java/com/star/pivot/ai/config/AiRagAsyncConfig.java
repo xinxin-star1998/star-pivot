@@ -61,11 +61,15 @@ public class AiRagAsyncConfig {
     }
 
     private Runnable wrapWithSecurityContext(Runnable task) {
-        SecurityContext context = SecurityContextHolder.getContext();
+        SecurityContext parent = SecurityContextHolder.getContext();
+        SecurityContext child = SecurityContextHolder.createEmptyContext();
+        if (parent != null) {
+            child.setAuthentication(parent.getAuthentication());
+        }
         return () -> {
             SecurityContext previous = SecurityContextHolder.getContext();
             try {
-                SecurityContextHolder.setContext(context);
+                SecurityContextHolder.setContext(child);
                 task.run();
             } finally {
                 SecurityContextHolder.setContext(previous);

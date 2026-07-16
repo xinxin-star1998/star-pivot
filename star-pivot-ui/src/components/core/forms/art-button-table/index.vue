@@ -25,6 +25,7 @@
       | 'delete'
       | 'more'
       | 'view'
+      | 'download'
       | 'sync'
       | 'generate'
       | 'execute'
@@ -56,6 +57,7 @@
     edit: { icon: 'ri:pencil-line', class: 'bg-secondary/12 text-secondary' },
     delete: { icon: 'ri:delete-bin-5-line', class: 'bg-error/12 text-error' },
     view: { icon: 'ri:eye-line', class: 'bg-info/12 text-info' },
+    download: { icon: 'ri:download-2-line', class: 'bg-primary/12 text-primary' },
     sync: { icon: 'ri:refresh-line', class: 'bg-info/12 text-info' },
     generate: { icon: 'ri:code-s-slash-line', class: 'bg-success/12 text-success' },
     execute: { icon: 'ri:play-circle-line', class: 'bg-success/12 text-success' },

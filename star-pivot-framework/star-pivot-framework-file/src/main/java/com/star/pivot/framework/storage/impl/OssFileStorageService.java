@@ -80,4 +80,42 @@ public class OssFileStorageService implements FileStorageService {
         log.debug("使用 OSS 下载对象，objectName={}", objectName);
         return ossUtil.downloadObject(objectName);
     }
+
+    @Override
+    public String initiateMultipartUpload(String objectName, String contentType) throws Exception {
+        return ossUtil.initiateMultipartUpload(objectName, contentType);
+    }
+
+    @Override
+    public String uploadPart(String objectName, String uploadId, int partNumber,
+                             java.io.InputStream inputStream, long partSize) throws Exception {
+        return ossUtil.uploadPart(objectName, uploadId, partNumber, inputStream, partSize);
+    }
+
+    @Override
+    public void completeMultipartUpload(String objectName, String uploadId,
+                                        java.util.List<java.util.Map.Entry<Integer, String>> partETags)
+            throws Exception {
+        java.util.List<com.aliyun.oss.model.PartETag> tags = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<Integer, String> entry : partETags) {
+            tags.add(new com.aliyun.oss.model.PartETag(entry.getKey(), entry.getValue()));
+        }
+        ossUtil.completeMultipartUpload(objectName, uploadId, tags);
+    }
+
+    @Override
+    public void abortMultipartUpload(String objectName, String uploadId) throws Exception {
+        ossUtil.abortMultipartUpload(objectName, uploadId);
+    }
+
+    @Override
+    public java.util.List<Integer> listUploadedPartNumbers(String objectName, String uploadId) throws Exception {
+        return ossUtil.listUploadedPartNumbers(objectName, uploadId);
+    }
+
+    @Override
+    public java.util.List<java.util.Map.Entry<Integer, String>> listUploadedParts(String objectName, String uploadId)
+            throws Exception {
+        return ossUtil.listUploadedParts(objectName, uploadId);
+    }
 }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.star.pivot.file.mapper.SysFileAuditMapper">
+
+    <select id="selectAuditPage" resultType="com.star.pivot.file.domain.entity.SysFileAudit">
+        SELECT audit_id, file_id, file_name, action, detail, oper_by, oper_by_user_id, oper_ip, oper_time
+        FROM sys_file_audit
+        <where>
+            <if test="query.action != null and query.action != ''">
+                AND action = #{query.action}
+            </if>
+            <if test="query.fileName != null and query.fileName != ''">
+                AND file_name LIKE CONCAT('%', #{query.fileName}, '%')
+            </if>
+            <if test="query.operBy != null and query.operBy != ''">
+                AND oper_by LIKE CONCAT('%', #{query.operBy}, '%')
+            </if>
+            <if test="query.fileId != null">
+                AND file_id = #{query.fileId}
+            </if>
+            <if test="query.beginTime != null">
+                AND oper_time &gt;= #{query.beginTime}
+            </if>
+            <if test="query.endTime != null">
+                AND oper_time &lt;= #{query.endTime}
+            </if>
+        </where>
+        ORDER BY oper_time DESC
+    </select>
+</mapper>

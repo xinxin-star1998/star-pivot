@@ -5,7 +5,7 @@
     class="file-preview-drawer"
     destroy-on-close
     direction="rtl"
-    size="480px"
+    size="560px"
     @closed="reset"
   >
     <template #header>
@@ -25,22 +25,29 @@
 
     <div v-loading="loading" class="drawer-body">
       <div class="preview-body">
-        <template v-if="previewUrl">
-          <img
-            v-if="mode === 'image'"
-            :src="previewUrl"
-            alt="preview"
-            class="preview-image"
-            @load="onImageLoad"
-          />
-          <video v-else-if="mode === 'video'" :src="previewUrl" class="preview-media" controls />
-          <audio v-else-if="mode === 'audio'" :src="previewUrl" class="preview-audio" controls />
-          <iframe v-else-if="mode === 'pdf'" :src="previewUrl" class="preview-pdf" title="pdf" />
-          <div v-else class="preview-fallback">
-            <ArtSvgIcon :icon="fileIcon" class="preview-fallback__icon" />
-            <p>该文件类型不支持在线预览</p>
-          </div>
-        </template>
+        <FileWatermarkOverlay :config="watermark">
+          <template v-if="previewUrl">
+            <img
+              v-if="mode === 'image'"
+              :src="previewUrl"
+              alt="preview"
+              class="preview-image"
+              @load="onImageLoad"
+            />
+            <video v-else-if="mode === 'video'" :src="previewUrl" class="preview-media" controls />
+            <audio v-else-if="mode === 'audio'" :src="previewUrl" class="preview-audio" controls />
+            <iframe
+              v-else-if="mode === 'pdf' || mode === 'office'"
+              :src="officeSrc"
+              class="preview-pdf"
+              title="preview"
+            />
+            <div v-else class="preview-fallback">
+              <ArtSvgIcon :icon="fileIcon" class="preview-fallback__icon" />
+              <p>该文件类型不支持在线预览</p>
+            </div>
+          </template>
+        </FileWatermarkOverlay>
       </div>
 
       <div v-if="detail" class="info-grid">
@@ -120,6 +127,8 @@
 
     <template #footer>
       <div class="preview-footer">
+        <ElButton v-if="showShare" @click="shareVisible = true">分享</ElButton>
+        <ElButton v-if="showVersion" @click="versionVisible = true">版本</ElButton>
         <ElButton v-if="showRename" @click="handleRename">重命名</ElButton>
         <ElButton v-if="showMove" @click="handleMove">迁移</ElButton>
         <ElButton :disabled="!previewUrl" type="primary" @click="download">下载</ElButton>
@@ -128,20 +137,37 @@
       </div>
     </template>
   </ElDrawer>
+
+  <FileShareDialog v-model:visible="shareVisible" :file="detail" />
+  <FileVersionDialog
+    v-model="versionVisible"
+    :file="detail"
+    @success="emit('renamed')"
+  />
 </template>
 
 <script lang="ts" setup>
-  import { fetchFileDetail, fetchFilePreviewUrl, renameFile } from '@/api/file/file'
-  import type { SysFile } from '@/api/file/types'
+  import {
+    downloadFileWatermarked,
+    fetchFileDetail,
+    fetchFilePreviewUrl,
+    fetchFileWatermarkConfig,
+    renameFile
+  } from '@/api/file/file'
+  import type { SysFile, SysFileWatermark } from '@/api/file/types'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
   import {
     formatFileSize,
+    buildOfficeViewerUrl,
     getPreviewMode,
     openFileUrl,
     type PreviewMode
   } from '@/utils/file/file-center'
   import { getMediaTypeIcon, MEDIA_TYPE_TAG } from '../constants'
+  import FileShareDialog from './file-share-dialog.vue'
+  import FileVersionDialog from './file-version-dialog.vue'
+  import FileWatermarkOverlay from './file-watermark-overlay.vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { computed, ref, watch } from 'vue'
 
@@ -161,12 +187,24 @@
 
   const loading = ref(false)
   const previewUrl = ref('')
+  const viewerUrl = ref('')
   const detail = ref<SysFile | null>(null)
   const imageSize = ref('')
+  const shareVisible = ref(false)
+  const versionVisible = ref(false)
+  const watermark = ref<SysFileWatermark | null>(null)
 
   const mode = computed<PreviewMode>(() =>
     getPreviewMode(detail.value?.mediaType, detail.value?.fileExt)
   )
+
+  const officeSrc = computed(() => {
+    if (mode.value === 'pdf') return previewUrl.value
+    if (mode.value === 'office') {
+      return viewerUrl.value || (previewUrl.value ? buildOfficeViewerUrl(previewUrl.value) : '')
+    }
+    return ''
+  })
 
   const fileIcon = computed(() => getMediaTypeIcon(detail.value?.mediaType))
 
@@ -213,21 +251,29 @@
 
   const showRename = computed(() => hasAuth('file:resource:edit') && !!detail.value?.fileId)
 
+  const showShare = computed(() => hasAuth('file:resource:share') && !!detail.value?.fileId)
+
+  const showVersion = computed(() => hasAuth('file:resource:version') && !!detail.value?.fileId)
+
   watch(
     () => [visible.value, props.file?.fileId] as const,
     async ([open, fileId]) => {
       if (!open || !fileId) return
       loading.value = true
       previewUrl.value = ''
+      viewerUrl.value = ''
       detail.value = props.file ? { ...props.file } : null
       imageSize.value = ''
       try {
-        const [fileDetail, urlRes] = await Promise.all([
+        const [fileDetail, urlRes, wm] = await Promise.all([
           fetchFileDetail(fileId),
-          fetchFilePreviewUrl(fileId)
+          fetchFilePreviewUrl(fileId),
+          fetchFileWatermarkConfig().catch(() => null)
         ])
         detail.value = fileDetail
         previewUrl.value = urlRes.url
+        viewerUrl.value = (urlRes as { viewerUrl?: string }).viewerUrl || ''
+        watermark.value = wm
       } catch {
         previewUrl.value = props.file?.displayUrl || ''
       } finally {
@@ -265,6 +311,17 @@
   }
 
   function download() {
+    const fileId = detail.value?.fileId
+    if (
+      watermark.value?.downloadEnabled &&
+      mode.value === 'image' &&
+      fileId
+    ) {
+      downloadFileWatermarked(fileId, detail.value?.fileName).catch(() => {
+        ElMessage.error('下载失败')
+      })
+      return
+    }
     if (previewUrl.value) {
       openFileUrl(previewUrl.value, detail.value?.fileName)
     }
@@ -309,6 +366,7 @@
     previewUrl.value = ''
     detail.value = null
     imageSize.value = ''
+    watermark.value = null
   }
 </script>
 
