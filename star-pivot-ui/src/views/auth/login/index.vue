@@ -57,7 +57,7 @@
             </ElFormItem>
 
             <ElFormItem
-              v-if="captchaEnabled"
+              v-if="captchaEnabled && captchaType === 'image'"
               prop="captcha"
               :error="captchaError"
               class="captcha-item"
@@ -96,6 +96,45 @@
                   </div>
                 </div>
               </div>
+            </ElFormItem>
+
+            <ElFormItem
+              v-if="captchaEnabled && captchaType === 'slider'"
+              :error="captchaError"
+              class="captcha-item"
+            >
+              <LoginCaptchaSlider
+                ref="behaviorCaptchaRef"
+                @verified="onBehaviorVerified"
+                @failed="onBehaviorFailed"
+                @refreshed="onBehaviorRefreshed"
+              />
+            </ElFormItem>
+
+            <ElFormItem
+              v-if="captchaEnabled && captchaType === 'drag'"
+              :error="captchaError"
+              class="captcha-item"
+            >
+              <LoginCaptchaDrag
+                ref="behaviorCaptchaRef"
+                @verified="onBehaviorVerified"
+                @failed="onBehaviorFailed"
+                @refreshed="onBehaviorRefreshed"
+              />
+            </ElFormItem>
+
+            <ElFormItem
+              v-if="captchaEnabled && captchaType === 'click'"
+              :error="captchaError"
+              class="captcha-item"
+            >
+              <LoginCaptchaClick
+                ref="behaviorCaptchaRef"
+                @verified="onBehaviorVerified"
+                @failed="onBehaviorFailed"
+                @refreshed="onBehaviorRefreshed"
+              />
             </ElFormItem>
 
             <div class="form-options">
@@ -138,6 +177,9 @@
   import { HttpError } from '@/utils/http/error'
   import { fetchCaptcha, fetchLogin, fetchVerifyCaptcha } from '@/api/auth'
   import { getLoginConfig } from '@/utils/auth/login-config'
+  import LoginCaptchaSlider from './modules/login-captcha-slider.vue'
+  import LoginCaptchaDrag from './modules/login-captcha-drag.vue'
+  import LoginCaptchaClick from './modules/login-captcha-click.vue'
   import { ElMessageBox, ElNotification, type FormInstance, type FormRules } from 'element-plus'
   import { useCommon } from '@/hooks'
   import { useRoute, useRouter } from 'vue-router'
@@ -178,7 +220,7 @@
   const rules = computed<FormRules>(() => ({
     username: [{ required: true, message: t('login.placeholder.username'), trigger: 'blur' }],
     password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }],
-    ...(captchaEnabled.value
+    ...(captchaEnabled.value && captchaType.value === 'image'
       ? {
           captcha: [{ required: true, message: t('login.placeholder.captcha'), trigger: 'blur' }]
         }
@@ -188,6 +230,27 @@
   const loading = ref(false)
   const registerEnabled = ref(false)
   const captchaEnabled = ref(true)
+  const captchaType = ref('image')
+  const behaviorCaptchaRef = ref<{ refresh: () => void }>()
+  /** 行为验证码（滑块/拖动条/点选）通过后缓存的一次性 proof */
+  const behaviorCaptchaProof = ref('')
+
+  const isBehaviorCaptcha = computed(() => ['slider', 'drag', 'click'].includes(captchaType.value))
+
+  const onBehaviorVerified = (proof: string) => {
+    behaviorCaptchaProof.value = proof
+    captchaError.value = ''
+  }
+
+  const onBehaviorFailed = () => {
+    behaviorCaptchaProof.value = ''
+    captchaError.value = '验证失败，请重试'
+  }
+
+  const onBehaviorRefreshed = () => {
+    behaviorCaptchaProof.value = ''
+    captchaError.value = ''
+  }
 
   // 登录
   const handleSubmit = async () => {
@@ -208,20 +271,29 @@
       let captchaProof: string | undefined
 
       if (captchaEnabled.value) {
-        if (!formData.captchaToken) {
-          captchaError.value = '请先获取验证码'
-          return
+        if (isBehaviorCaptcha.value) {
+          if (!behaviorCaptchaProof.value) {
+            captchaError.value = '请先完成安全验证'
+            return
+          }
+          loading.value = true
+          captchaProof = behaviorCaptchaProof.value
+        } else {
+          if (!formData.captchaToken) {
+            captchaError.value = '请先获取验证码'
+            return
+          }
+
+          loading.value = true
+
+          const verifyRes = await fetchVerifyCaptcha({
+            captchaToken: formData.captchaToken,
+            code: formData.captcha,
+            scene: 'login'
+          })
+
+          captchaProof = verifyRes.captchaProof
         }
-
-        loading.value = true
-
-        const verifyRes = await fetchVerifyCaptcha({
-          captchaToken: formData.captchaToken,
-          code: formData.captcha,
-          scene: 'login'
-        })
-
-        captchaProof = verifyRes.captchaProof
       } else {
         loading.value = true
       }
@@ -302,17 +374,12 @@
         // 处理验证码错误
         if (error.code === 401 && error.message.includes('验证码')) {
           captchaError.value = error.message
-          refreshCaptcha()
-        }
-        // 处理账户锁定错误（423）
-        else if (error.code === 423) {
-          if (captchaEnabled.value) {
-            refreshCaptcha()
-          }
         }
       } else {
-        // 处理非 HttpError
         console.error('[Login] Unexpected error:', error)
+      }
+      if (captchaEnabled.value) {
+        refreshCaptcha()
       }
     } finally {
       loading.value = false
@@ -321,13 +388,19 @@
 
   // 获取验证码
   const refreshCaptcha = async () => {
-    loadingCaptcha.value = true
     captchaError.value = ''
+    behaviorCaptchaProof.value = ''
 
+    if (isBehaviorCaptcha.value) {
+      behaviorCaptchaRef.value?.refresh()
+      return
+    }
+
+    loadingCaptcha.value = true
     try {
       const response = await fetchCaptcha()
       formData.captchaToken = response.captchaToken
-      captchaImage.value = response.captchaImage
+      captchaImage.value = response.captchaImage || ''
     } catch (error) {
       console.error('获取验证码失败:', error)
     } finally {
@@ -401,7 +474,10 @@
     const loginConfig = await getLoginConfig()
     captchaEnabled.value = loginConfig.captchaEnabled
     registerEnabled.value = loginConfig.registerEnabled
-    if (captchaEnabled.value) {
+    captchaType.value = ['slider', 'drag', 'click'].includes(loginConfig.captchaType || '')
+      ? (loginConfig.captchaType as string)
+      : 'image'
+    if (captchaEnabled.value && captchaType.value === 'image') {
       refreshCaptcha()
     }
   })

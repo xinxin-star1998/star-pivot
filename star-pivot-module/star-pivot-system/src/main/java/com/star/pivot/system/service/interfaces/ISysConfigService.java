@@ -109,4 +109,9 @@ public interface ISysConfigService extends IService<SysConfig> {
      * 验证码过期时间（秒，60-600）
      */
     int getCaptchaExpireSeconds();
+
+    /**
+     * 验证码类型：image / slider
+     */
+    String getCaptchaType();
 }

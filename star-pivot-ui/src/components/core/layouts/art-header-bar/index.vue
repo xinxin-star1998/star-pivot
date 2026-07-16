@@ -38,7 +38,7 @@
         <ArtIconButton
           v-if="shouldShowRefreshButton"
           icon="ri:refresh-line"
-          class="!ml-3 refresh-btn max-sm:!hidden"
+          class="!ml-3 header-refresh-btn max-sm:!hidden"
           :style="{ marginLeft: !isLeftMenu ? '10px' : '0' }"
           @click="reload"
         />
@@ -446,7 +446,7 @@
   }
 
   /* Hover animation classes */
-  .refresh-btn:hover :deep(.art-svg-icon) {
+  .header-refresh-btn:hover :deep(.art-svg-icon) {
     animation: rotate180 0.5s;
   }
 

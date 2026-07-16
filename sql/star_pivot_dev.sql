@@ -681,6 +681,7 @@ INSERT INTO `sys_config` VALUES (7, '用户管理-初始密码修改策略', 'sy
 INSERT INTO `sys_config` VALUES (8, '用户管理-账号密码更新周期', 'sys.account.passwordValidateDays', '0', 'Y', 'admin', '2026-01-25 17:41:36', '', NULL, '密码更新周期（填写数字，数据初始化值为0不限制，若修改必须为大于0小于365的正整数），如果超过这个周期登录系统时，则在登录时就会提醒修改密码对话框');
 INSERT INTO `sys_config` VALUES (11, '账号自助-验证码位数', 'sys.account.captchaLength', '4', 'Y', 'admin', '2026-07-16 15:22:13', '', NULL, '验证码字符位数，允许范围 4-6');
 INSERT INTO `sys_config` VALUES (12, '账号自助-验证码过期时间', 'sys.account.captchaExpireSeconds', '180', 'Y', 'admin', '2026-07-16 15:22:13', '', NULL, '验证码有效时间（秒），允许范围 60-600');
+INSERT INTO `sys_config` VALUES (13, '账号自助-验证码类型', 'sys.account.captchaType', 'image', 'Y', 'admin', '2026-07-16 15:22:13', '', NULL, '验证码类型：image=图形字符，slider=滑块拼图，drag=拖动条，click=文字点选');
 
 -- ----------------------------
 -- Table structure for sys_dept

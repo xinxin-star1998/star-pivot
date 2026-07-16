@@ -32,11 +32,17 @@ public final class SysConfigKeys {
     /** 账号自助 - 验证码过期时间（秒） */
     public static final String ACCOUNT_CAPTCHA_EXPIRE_SECONDS = "sys.account.captchaExpireSeconds";
 
+    /** 账号自助 - 验证码类型（image / slider / click） */
+    public static final String ACCOUNT_CAPTCHA_TYPE = "sys.account.captchaType";
+
     /** 默认值：初始密码 */
     public static final String DEFAULT_INIT_PASSWORD = "123456";
 
     /** 默认值：验证码开启 */
     public static final boolean DEFAULT_CAPTCHA_ENABLED = true;
+
+    /** 默认值：验证码类型 */
+    public static final String DEFAULT_CAPTCHA_TYPE = "image";
 
     /** 默认值：初始密码修改策略关闭 */
     public static final int DEFAULT_INIT_PASSWORD_MODIFY = 0;

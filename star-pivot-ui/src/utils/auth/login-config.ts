@@ -5,7 +5,8 @@ let pendingRequest: Promise<Api.Auth.LoginConfigResponse> | null = null
 
 const defaultLoginConfig: Api.Auth.LoginConfigResponse = {
   captchaEnabled: true,
-  registerEnabled: false
+  registerEnabled: false,
+  captchaType: 'image'
 }
 
 /**

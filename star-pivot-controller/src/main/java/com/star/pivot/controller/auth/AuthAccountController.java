@@ -82,7 +82,8 @@ public class AuthAccountController {
     public Result<LoginConfigResponse> getLoginConfig() {
         return Result.success(new LoginConfigResponse(
                 sysConfigService.isCaptchaEnabled(),
-                sysConfigService.isRegisterUserEnabled()));
+                sysConfigService.isRegisterUserEnabled(),
+                sysConfigService.getCaptchaType()));
     }
 
     @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息，包括用户基本信息、角色列表和权限菜单树")

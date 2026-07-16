@@ -210,6 +210,15 @@ public class SysConfigServiceImpl extends ServiceImpl<SysConfigMapper, SysConfig
                 SysConfigKeys.MAX_CAPTCHA_EXPIRE_SECONDS);
     }
 
+    @Override
+    public String getCaptchaType() {
+        String value = selectConfigValueByKey(SysConfigKeys.ACCOUNT_CAPTCHA_TYPE);
+        if (!StringUtils.hasText(value)) {
+            return SysConfigKeys.DEFAULT_CAPTCHA_TYPE;
+        }
+        return com.star.pivot.system.constants.CaptchaTypes.normalize(value);
+    }
+
     /**
      * 转换为VO
      *

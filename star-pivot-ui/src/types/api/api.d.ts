@@ -91,6 +91,8 @@ declare namespace Api {
     interface LoginConfigResponse {
       captchaEnabled: boolean
       registerEnabled: boolean
+      /** 验证码类型：image / slider / drag / click */
+      captchaType?: string
     }
 
     /** 用户信息 */
@@ -141,14 +143,36 @@ declare namespace Api {
     }
     /** 验证码响应 */
     interface CaptchaResponse {
+      /** 验证码类型：image / slider / drag / click */
+      captchaType?: string
       /** 服务端生成的验证码 token */
       captchaToken: string
-      captchaImage: string
+      /** 图形验证码图片 */
+      captchaImage?: string
+      /** 滑块/点选背景图 */
+      backgroundImage?: string
+      /** 滑块拼图块 */
+      sliderImage?: string
+      /** 拼图块纵向位置 */
+      sliderY?: number
+      /** 点选提示 */
+      clickTip?: string
+      /** 点选文字顺序 */
+      clickWords?: string[]
     }
 
     /** 验证码校验响应 */
     interface CaptchaVerifyResponse {
       captchaProof: string
+    }
+
+    /** 验证码校验请求 */
+    interface CaptchaVerifyParams {
+      captchaToken: string
+      code?: string
+      sliderX?: number
+      clickPoints?: Array<{ x: number; y: number }>
+      scene?: string
     }
 
     /** 注册请求参数 */

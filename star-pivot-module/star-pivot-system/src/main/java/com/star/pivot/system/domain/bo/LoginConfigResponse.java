@@ -17,4 +17,7 @@ public class LoginConfigResponse {
 
     /** 是否开放用户自助注册 */
     private boolean registerEnabled;
+
+    /** 验证码类型：image / slider */
+    private String captchaType;
 }

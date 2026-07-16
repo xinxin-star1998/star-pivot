@@ -77,7 +77,7 @@ export function fetchCaptcha(scene = 'login') {
  * 校验验证码，获取一次性 proof
  * @param data 校验请求参数
  */
-export function fetchVerifyCaptcha(data: { captchaToken: string; code: string; scene?: string }) {
+export function fetchVerifyCaptcha(data: Api.Auth.CaptchaVerifyParams) {
   return request.post<Api.Auth.CaptchaVerifyResponse>({
     url: '/api/auth/captcha/verify',
     data
