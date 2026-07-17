@@ -132,10 +132,7 @@
                     v-if="activeTab === 'all'"
                     v-auth="'file:resource:tag'"
                     v-ripple
-                    @click="
-                      tagDialogMode = 'manage'
-                      tagDialogVisible = true
-                    "
+                    @click="tagDialogMode = 'manage'; tagDialogVisible = true"
                   >
                     {{ t('file.tagManage') }}
                   </ElButton>
@@ -237,10 +234,7 @@
       :default-folder-id="uploadTargetFolderId ?? selectedFolderId"
       :seed-files="uploadSeedFiles"
       @success="onUploadSuccess"
-      @closed="
-        uploadSeedFiles = []
-        uploadTargetFolderId = undefined
-      "
+      @closed="uploadSeedFiles = []; uploadTargetFolderId = undefined"
     />
 
     <FilePreviewDialog
@@ -282,47 +276,47 @@
 </template>
 
 <script lang="ts" setup>
-  import {
-    clearRecycleBin,
-    deleteFiles,
-    downloadFilesZip,
-    fetchFileList,
-    fetchFilePreviewUrl,
-    fetchFileTagList,
-    fetchRecycleList,
-    moveFiles,
-    purgeFiles,
-    renameFile,
-    restoreFiles,
-    toggleFileFavorite
-  } from '@/api/file/file'
-  import { deleteFolder, fetchFolderTree } from '@/api/file/folder'
-  import type { FileCategoryNode, SysFile, SysFileFolderForm, SysFileTag } from '@/api/file/types'
-  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-  import { useTable } from '@/hooks/core/useTable'
-  import { useAuth } from '@/hooks/core/useAuth'
-  import { formatFileSize, openFileUrl, resolveFileDisplayUrl } from '@/utils/file/file-center'
-  import { findFolderInTree } from '@/utils/file/folder-tree'
-  import { handleMutationError } from '@/utils/http/mutation'
-  import { ElImage, ElMessage, ElMessageBox, ElTag } from 'element-plus'
-  import { computed, h, onActivated, onMounted, ref } from 'vue'
-  import { useI18n } from 'vue-i18n'
-  import { getCategoryLabel, getMediaTypeIcon, MEDIA_TYPE_TAG, MEDIA_TYPES } from './constants'
-  import FileFolderTree from './modules/file-folder-tree.vue'
-  import FileGridView from './modules/file-grid-view.vue'
-  import FileMoveDialog from './modules/file-move-dialog.vue'
-  import FilePreviewDialog from './modules/file-preview-dialog.vue'
-  import FileSearch from './modules/file-search.vue'
-  import FileTagDialog from './modules/file-tag-dialog.vue'
-  import FileVersionDialog from './modules/file-version-dialog.vue'
-  import FileTimelineView from './modules/file-timeline-view.vue'
-  import FileUploadDialog from './modules/file-upload-dialog.vue'
-  import FolderDialog from './modules/folder-dialog.vue'
+import {
+  clearRecycleBin,
+  deleteFiles,
+  downloadFilesZip,
+  fetchFileList,
+  fetchFilePreviewUrl,
+  fetchFileTagList,
+  fetchRecycleList,
+  moveFiles,
+  purgeFiles,
+  renameFile,
+  restoreFiles,
+  toggleFileFavorite
+} from '@/api/file/file'
+import { deleteFolder, fetchFolderTree } from '@/api/file/folder'
+import type { FileCategoryNode, SysFile, SysFileFolderForm, SysFileTag } from '@/api/file/types'
+import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+import ArtTable from '@/components/core/tables/art-table/index.vue'
+import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+import { useTable } from '@/hooks/core/useTable'
+import { useAuth } from '@/hooks/core/useAuth'
+import { formatFileSize, openFileUrl, resolveFileDisplayUrl } from '@/utils/file/file-center'
+import { findFolderInTree } from '@/utils/file/folder-tree'
+import { handleMutationError } from '@/utils/http/mutation'
+import { ElImage, ElMessage, ElMessageBox, ElTag } from 'element-plus'
+import { computed, h, onActivated, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { getCategoryLabel, getMediaTypeIcon, MEDIA_TYPE_TAG, MEDIA_TYPES } from './constants'
+import FileFolderTree from './modules/file-folder-tree.vue'
+import FileGridView from './modules/file-grid-view.vue'
+import FileMoveDialog from './modules/file-move-dialog.vue'
+import FilePreviewDialog from './modules/file-preview-dialog.vue'
+import FileSearch from './modules/file-search.vue'
+import FileTagDialog from './modules/file-tag-dialog.vue'
+import FileVersionDialog from './modules/file-version-dialog.vue'
+import FileTimelineView from './modules/file-timeline-view.vue'
+import FileUploadDialog from './modules/file-upload-dialog.vue'
+import FolderDialog from './modules/folder-dialog.vue'
 
-  defineOptions({ name: 'FileManage' })
+defineOptions({ name: 'FileManage' })
 
   const { hasAuth } = useAuth()
   const { t } = useI18n()
