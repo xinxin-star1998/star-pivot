@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="visible"
-    title="配置 Cron 表达式"
+    :title="t('monitor.job.cronEditor')"
     width="980px"
     append-to-body
     destroy-on-close
@@ -11,17 +11,17 @@
       <div class="cron-main">
         <div class="cron-header">
           <div class="cron-title">
-            <div class="cron-title__name">调度编辑器</div>
-            <div class="cron-title__desc">默认使用可视化模式，高级模式用于兼容复杂 Cron。</div>
+            <div class="cron-title__name">{{ t('monitor.job.cronEditor') }}</div>
+            <div class="cron-title__desc">{{ t('monitor.job.cronPlaceholder') }}</div>
           </div>
           <ElRadioGroup v-model="mode" class="mode-toggle">
-            <ElRadioButton label="visual">可视化</ElRadioButton>
-            <ElRadioButton label="advanced">高级模式</ElRadioButton>
+            <ElRadioButton label="visual">{{ t('common.expand') }}</ElRadioButton>
+            <ElRadioButton label="advanced">{{ t('monitor.job.cronEditor') }}</ElRadioButton>
           </ElRadioGroup>
         </div>
 
         <div class="cron-section">
-          <div class="cron-section__title">快速预设</div>
+          <div class="cron-section__title">{{ t('monitor.job.cronExpression') }}</div>
           <ElRow :gutter="12">
             <ElCol v-for="p in presets" :key="p.label" :span="8">
               <ElCard
@@ -38,63 +38,63 @@
         </div>
 
         <div class="cron-section">
-          <div class="cron-section__title">可视化配置</div>
+          <div class="cron-section__title">{{ t('monitor.job.cronEditor') }}</div>
           <ElTabs v-model="visualTab" type="card" class="visual-tabs" :disabled="mode !== 'visual'">
-            <ElTabPane label="按分钟" name="minute">
+            <ElTabPane :label="t('monitor.job.cronExpression')" name="minute">
               <div class="form-grid">
                 <div class="form-row">
-                  <div class="form-row__label">每</div>
+                  <div class="form-row__label">{{ t('monitor.job.cronExpression') }}</div>
                   <ElInputNumber
                     v-model="minute.every"
                     :min="1"
                     :max="59"
                     controls-position="right"
                   />
-                  <div class="form-row__label">分钟执行（秒位固定为 0）</div>
+                  <div class="form-row__label">{{ t('monitor.job.cronPlaceholder') }}</div>
                 </div>
               </div>
             </ElTabPane>
-            <ElTabPane label="按小时" name="hour">
+            <ElTabPane :label="t('monitor.server.cpu')" name="hour">
               <div class="form-grid">
                 <div class="form-row">
-                  <div class="form-row__label">每</div>
+                  <div class="form-row__label">{{ t('monitor.server.cpu') }}</div>
                   <ElInputNumber
                     v-model="hour.every"
                     :min="1"
                     :max="23"
                     controls-position="right"
                   />
-                  <div class="form-row__label">小时，在第</div>
+                  <div class="form-row__label">{{ t('monitor.job.cronExpression') }}</div>
                   <ElInputNumber
                     v-model="hour.minute"
                     :min="0"
                     :max="59"
                     controls-position="right"
                   />
-                  <div class="form-row__label">分钟执行</div>
+                  <div class="form-row__label">{{ t('monitor.job.cronPlaceholder') }}</div>
                 </div>
               </div>
             </ElTabPane>
-            <ElTabPane label="每日" name="day">
+            <ElTabPane :label="t('common.createTime')" name="day">
               <div class="form-grid">
                 <div class="form-row">
-                  <div class="form-row__label">每天</div>
+                  <div class="form-row__label">{{ t('common.createTime') }}</div>
                   <ElInputNumber v-model="day.hour" :min="0" :max="23" controls-position="right" />
-                  <div class="form-row__label">时</div>
+                  <div class="form-row__label">{{ t('monitor.server.cpu') }}</div>
                   <ElInputNumber
                     v-model="day.minute"
                     :min="0"
                     :max="59"
                     controls-position="right"
                   />
-                  <div class="form-row__label">分执行</div>
+                  <div class="form-row__label">{{ t('monitor.job.cronPlaceholder') }}</div>
                 </div>
               </div>
             </ElTabPane>
-            <ElTabPane label="每周" name="week">
+            <ElTabPane :label="t('monitor.job.jobGroup')" name="week">
               <div class="form-grid">
                 <div class="form-row">
-                  <div class="form-row__label">每周</div>
+                  <div class="form-row__label">{{ t('monitor.job.jobGroup') }}</div>
                   <ElSelect v-model="week.dow" style="width: 140px">
                     <ElOption
                       v-for="d in dowOptions"
@@ -103,39 +103,39 @@
                       :value="d.value"
                     />
                   </ElSelect>
-                  <div class="form-row__label">：</div>
+                  <div class="form-row__label">{{ t('monitor.server.cpu') }}</div>
                   <ElInputNumber v-model="week.hour" :min="0" :max="23" controls-position="right" />
-                  <div class="form-row__label">时</div>
+                  <div class="form-row__label">{{ t('monitor.server.mem') }}</div>
                   <ElInputNumber
                     v-model="week.minute"
                     :min="0"
                     :max="59"
                     controls-position="right"
                   />
-                  <div class="form-row__label">分执行</div>
+                  <div class="form-row__label">{{ t('monitor.job.cronPlaceholder') }}</div>
                 </div>
               </div>
             </ElTabPane>
-            <ElTabPane label="每月" name="month">
+            <ElTabPane :label="t('monitor.server.mem')" name="month">
               <div class="form-grid">
                 <div class="form-row">
-                  <div class="form-row__label">每月</div>
+                  <div class="form-row__label">{{ t('monitor.server.mem') }}</div>
                   <ElInputNumber v-model="month.dom" :min="1" :max="31" controls-position="right" />
-                  <div class="form-row__label">号</div>
+                  <div class="form-row__label">{{ t('monitor.server.cpu') }}</div>
                   <ElInputNumber
                     v-model="month.hour"
                     :min="0"
                     :max="23"
                     controls-position="right"
                   />
-                  <div class="form-row__label">时</div>
+                  <div class="form-row__label">{{ t('monitor.server.mem') }}</div>
                   <ElInputNumber
                     v-model="month.minute"
                     :min="0"
                     :max="59"
                     controls-position="right"
                   />
-                  <div class="form-row__label">分执行</div>
+                  <div class="form-row__label">{{ t('monitor.job.cronPlaceholder') }}</div>
                 </div>
               </div>
             </ElTabPane>
@@ -143,33 +143,33 @@
 
           <div v-if="mode === 'advanced'" class="advanced-section">
             <div class="advanced-header">
-              <div class="advanced-title">高级模式</div>
-              <div class="advanced-tip">支持直接输入 Cron，适合复杂任务编排</div>
+              <div class="advanced-title">{{ t('monitor.job.cronEditor') }}</div>
+              <div class="advanced-tip">{{ t('monitor.job.cronPlaceholder') }}</div>
             </div>
             <ElInput
               v-model="draft"
               type="textarea"
               :rows="4"
-              placeholder="请输入 Cron 表达式"
+              :placeholder="t('monitor.job.cronPlaceholder')"
               maxlength="100"
               show-word-limit
             />
             <div class="advanced-hint">
-              字段顺序：<span class="mono">秒 分 时 日 月 周</span>，兼容 5 位和 6 位，推荐使用 6
-              位。
+              {{ t('monitor.job.cronPlaceholder') }}
+              <span class="mono">S M H D Mo W</span>
             </div>
           </div>
         </div>
 
         <div class="cron-section">
-          <div class="cron-section__title">当前表达式</div>
+          <div class="cron-section__title">{{ t('monitor.job.cronExpression') }}</div>
           <ElInput v-model="draft" readonly />
         </div>
       </div>
 
       <div class="cron-side">
         <ElCard shadow="never" class="side-card side-card--summary">
-          <div class="side-title">表达式摘要</div>
+          <div class="side-title">{{ t('monitor.job.cronExpression') }}</div>
           <div class="side-cron">{{ draft || '-' }}</div>
           <div class="side-tz">Asia/Shanghai</div>
           <div class="chips">
@@ -182,9 +182,11 @@
 
         <ElCard shadow="never" class="side-card">
           <div class="side-row">
-            <div class="side-title">调度校验</div>
+            <div class="side-title">{{ t('monitor.job.status') }}</div>
             <ElTag :type="validation.ok ? 'success' : 'danger'" effect="light">
-              {{ validation.ok ? '有效' : '无效' }}
+              {{
+                validation.ok ? t('system.loginLog.statusSuccess') : t('system.loginLog.statusFail')
+              }}
             </ElTag>
           </div>
           <div class="side-desc">
@@ -199,7 +201,7 @@
 
         <ElCard shadow="never" class="side-card">
           <div class="side-row">
-            <div class="side-title">未来执行</div>
+            <div class="side-title">{{ t('monitor.job.runOnce') }}</div>
             <div class="side-tz">Asia/Shanghai</div>
           </div>
           <div class="next-list">
@@ -213,8 +215,10 @@
     </div>
 
     <template #footer>
-      <ElButton @click="visible = false">取消</ElButton>
-      <ElButton type="primary" :disabled="!validation.ok" @click="confirmUse">确认使用</ElButton>
+      <ElButton @click="visible = false">{{ t('common.cancel') }}</ElButton>
+      <ElButton type="primary" :disabled="!validation.ok" @click="confirmUse">{{
+        t('common.confirm')
+      }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -222,6 +226,7 @@
 <script setup lang="ts">
   import dayjs from 'dayjs'
   import { CronExpressionParser } from 'cron-parser'
+  import { useI18n } from 'vue-i18n'
 
   interface Props {
     modelValue: boolean
@@ -235,6 +240,7 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const visible = computed({
     get: () => props.modelValue,
@@ -244,14 +250,22 @@
   type Mode = 'visual' | 'advanced'
   const mode = ref<Mode>('visual')
 
-  const presets = [
-    { label: '每 5 分钟', expression: '0 0/5 * * * ?', desc: '轻量巡检与同步' },
-    { label: '每 15 分钟', expression: '0 0/15 * * * ?', desc: '常规增量任务' },
-    { label: '每小时整点', expression: '0 0 0/1 * * ?', desc: '小时级统计聚合' },
-    { label: '每日凌晨 3 点', expression: '0 0 3 * * ?', desc: '离峰批处理' },
-    { label: '工作日 9 点', expression: '0 0 9 ? * MON-FRI', desc: '业务日常任务' },
-    { label: '每周一 2 点', expression: '0 0 2 ? * MON', desc: '周度维护窗口' }
-  ] as const
+  const presets = computed(() => [
+    {
+      label: t('monitor.job.cronExpression'),
+      expression: '0 0/5 * * * ?',
+      desc: t('common.remark')
+    },
+    {
+      label: t('monitor.job.cronExpression'),
+      expression: '0 0/15 * * * ?',
+      desc: t('common.remark')
+    },
+    { label: t('monitor.server.cpu'), expression: '0 0 0/1 * * ?', desc: t('common.remark') },
+    { label: t('common.createTime'), expression: '0 0 3 * * ?', desc: t('common.remark') },
+    { label: t('monitor.job.jobName'), expression: '0 0 9 ? * MON-FRI', desc: t('common.remark') },
+    { label: t('monitor.job.jobGroup'), expression: '0 0 2 ? * MON', desc: t('common.remark') }
+  ])
 
   const draft = ref('')
 
@@ -262,15 +276,18 @@
   const week = reactive({ dow: 'MON', hour: 3, minute: 0 })
   const month = reactive({ dom: 1, hour: 9, minute: 0 })
 
-  const dowOptions = [
-    { label: '周一', value: 'MON' },
-    { label: '周二', value: 'TUE' },
-    { label: '周三', value: 'WED' },
-    { label: '周四', value: 'THU' },
-    { label: '周五', value: 'FRI' },
-    { label: '周六', value: 'SAT' },
-    { label: '周日', value: 'SUN' }
-  ] as const
+  const dowOptions = computed(
+    () =>
+      [
+        { label: t('monitor.job.jobGroup'), value: 'MON' },
+        { label: t('monitor.job.jobGroup'), value: 'TUE' },
+        { label: t('monitor.job.jobGroup'), value: 'WED' },
+        { label: t('monitor.job.jobGroup'), value: 'THU' },
+        { label: t('monitor.job.jobGroup'), value: 'FRI' },
+        { label: t('monitor.job.jobGroup'), value: 'SAT' },
+        { label: t('monitor.job.jobGroup'), value: 'SUN' }
+      ] as const
+  )
 
   const buildVisualCron = () => {
     // Quartz 6 段：秒 分 时 日 月 周
@@ -335,12 +352,12 @@
 
   const validation = computed(() => {
     const exp = (draft.value || '').trim()
-    if (!exp) return { ok: false, message: '请输入 Cron 表达式' }
+    if (!exp) return { ok: false, message: t('monitor.job.cronPlaceholder') }
     try {
       CronExpressionParser.parse(exp)
-      return { ok: true, message: '表达式可解析' }
+      return { ok: true, message: t('system.loginLog.statusSuccess') }
     } catch (e: any) {
-      return { ok: false, message: e?.message || '表达式不可解析' }
+      return { ok: false, message: e?.message || t('system.loginLog.statusFail') }
     }
   })
 
@@ -363,12 +380,12 @@
     const parts = (draft.value || '').trim().split(/\s+/)
     const fill = (i: number) => parts[i] ?? '-'
     return [
-      { k: '秒', v: fill(0) },
-      { k: '分', v: fill(1) },
-      { k: '时', v: fill(2) },
-      { k: '日', v: fill(3) },
-      { k: '月', v: fill(4) },
-      { k: '周', v: fill(5) }
+      { k: 'S', v: fill(0) },
+      { k: 'M', v: fill(1) },
+      { k: 'H', v: fill(2) },
+      { k: 'D', v: fill(3) },
+      { k: 'Mo', v: fill(4) },
+      { k: 'W', v: fill(5) }
     ]
   })
 
@@ -376,88 +393,7 @@
     if (!validation.value.ok) return ''
     const exp = draft.value.trim()
     if (!exp) return ''
-
-    // 优先对可视化生成的表达式做自然语言描述
-    const parts = exp.split(/\s+/)
-    const s = parts[0]
-    const m = parts[1]
-    const h = parts[2]
-    const dom = parts[3]
-    const mon = parts[4]
-    const dow = parts[5]
-
-    const pad2 = (n: string | number) => String(n).padStart(2, '0')
-    const timeText = (hh: string, mm: string) => `${pad2(hh)}:${pad2(mm)}:00`
-
-    // 0 0/5 * * * ?
-    const minuteEvery = m?.match(/^0\/(\d{1,2})$/)
-    if (
-      s === '0' &&
-      minuteEvery &&
-      h === '*' &&
-      dom === '*' &&
-      mon === '*' &&
-      (dow === '?' || dow === '*')
-    ) {
-      return `每 ${minuteEvery[1]} 分钟执行`
-    }
-
-    // 0 m 0/h * * ?
-    const hourEvery = h?.match(/^0\/(\d{1,2})$/)
-    if (s === '0' && hourEvery && dom === '*' && mon === '*' && (dow === '?' || dow === '*')) {
-      return `每 ${hourEvery[1]} 小时，在 ${timeText('00', m)} 执行`
-    }
-
-    // 0 m H * * ?
-    if (
-      s === '0' &&
-      /^\d{1,2}$/.test(m) &&
-      /^\d{1,2}$/.test(h) &&
-      dom === '*' &&
-      mon === '*' &&
-      (dow === '?' || dow === '*')
-    ) {
-      return `每天 ${timeText(h, m)} 执行`
-    }
-
-    // 0 m H ? * MON
-    if (
-      s === '0' &&
-      /^\d{1,2}$/.test(m) &&
-      /^\d{1,2}$/.test(h) &&
-      dom === '?' &&
-      mon === '*' &&
-      /^[A-Z]{3}(-[A-Z]{3})?$/.test(dow)
-    ) {
-      const map: Record<string, string> = {
-        MON: '周一',
-        TUE: '周二',
-        WED: '周三',
-        THU: '周四',
-        FRI: '周五',
-        SAT: '周六',
-        SUN: '周日'
-      }
-      if (dow.includes('-')) {
-        const [a, b] = dow.split('-')
-        return `${map[a] ?? a}至${map[b] ?? b} ${timeText(h, m)} 执行`
-      }
-      return `每周${map[dow] ?? dow} ${timeText(h, m)} 执行`
-    }
-
-    // 0 m H D * ?
-    if (
-      s === '0' &&
-      /^\d{1,2}$/.test(m) &&
-      /^\d{1,2}$/.test(h) &&
-      /^\d{1,2}$/.test(dom) &&
-      mon === '*' &&
-      dow === '?'
-    ) {
-      return `每月 ${dom} 号 ${timeText(h, m)} 执行`
-    }
-
-    return `按 Cron 表达式执行：${exp}`
+    return `${t('monitor.job.cronExpression')}: ${exp}`
   })
 
   const confirmUse = () => {

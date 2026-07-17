@@ -229,8 +229,9 @@
 
   const loading = ref(false)
   const registerEnabled = ref(false)
-  const captchaEnabled = ref(true)
-  const captchaType = ref('image')
+  /** 等登录配置拉取完成后再展示，避免默认 image 闪一下「获取验证码」 */
+  const captchaEnabled = ref(false)
+  const captchaType = ref('')
   const behaviorCaptchaRef = ref<{ refresh: () => void }>()
   /** 行为验证码（滑块/拖动条/点选）通过后缓存的一次性 proof */
   const behaviorCaptchaProof = ref('')

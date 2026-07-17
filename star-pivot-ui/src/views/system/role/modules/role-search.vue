@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+  import { useI18n } from 'vue-i18n'
 
   interface Props {
     modelValue: Record<string, any>
@@ -25,97 +26,82 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const searchBarRef = ref()
 
-  /**
-   * 表单数据双向绑定
-   */
   const formData = computed({
     get: () => props.modelValue,
     set: (val) => emit('update:modelValue', val)
   })
 
-  /**
-   * 表单校验规则
-   */
   const rules = {}
 
-  /**
-   * 角色状态选项
-   */
-  const statusOptions = ref([
-    { label: '启用', value: 0 },
-    { label: '禁用', value: 1 }
+  const statusOptions = computed(() => [
+    { label: t('system.role.statusEnabled'), value: 0 },
+    { label: t('system.role.statusDisabled'), value: 1 }
   ])
 
-  /**
-   * 搜索表单配置项
-   */
   const formItems = computed(() => [
     {
-      label: '角色名称',
+      label: t('system.role.roleName'),
       key: 'roleName',
       type: 'input',
-      placeholder: '请输入角色名称',
+      placeholder: t('system.role.roleNamePlaceholder'),
       clearable: true
     },
     {
-      label: '角色编码',
+      label: t('system.role.roleKey'),
       key: 'roleKey',
       type: 'input',
-      placeholder: '请输入角色编码',
+      placeholder: t('system.role.roleKeyPlaceholder'),
       clearable: true
     },
     {
-      label: '角色描述',
+      label: t('system.role.roleDesc'),
       key: 'remark',
       type: 'input',
-      placeholder: '请输入角色描述',
+      placeholder: t('system.role.roleDescPlaceholder'),
       clearable: true
     },
     {
-      label: '角色状态',
+      label: t('system.role.roleStatus'),
       key: 'status',
       type: 'select',
       props: {
-        placeholder: '请选择状态',
+        placeholder: t('common.pleaseSelect'),
         options: statusOptions.value,
         clearable: true
       }
     },
     {
-      label: '创建日期',
+      label: t('system.role.createDate'),
       key: 'daterange',
       type: 'datetime',
       props: {
         style: { width: '100%' },
-        placeholder: '请选择日期范围',
+        placeholder: t('system.role.dateRangePlaceholder'),
         type: 'daterange',
-        rangeSeparator: '至',
-        startPlaceholder: '开始日期',
-        endPlaceholder: '结束日期',
+        rangeSeparator: t('system.role.rangeSeparator'),
+        startPlaceholder: t('system.role.startDate'),
+        endPlaceholder: t('system.role.endDate'),
         valueFormat: 'YYYY-MM-DD',
         shortcuts: [
-          { text: '今日', value: [new Date(), new Date()] },
-          { text: '最近一周', value: [new Date(Date.now() - 604800000), new Date()] },
-          { text: '最近一个月', value: [new Date(Date.now() - 2592000000), new Date()] }
+          { text: t('system.role.today'), value: [new Date(), new Date()] },
+          { text: t('system.role.lastWeek'), value: [new Date(Date.now() - 604800000), new Date()] },
+          {
+            text: t('system.role.lastMonth'),
+            value: [new Date(Date.now() - 2592000000), new Date()]
+          }
         ]
       }
     }
   ])
 
-  /**
-   * 处理重置事件
-   */
   const handleReset = () => {
     emit('reset')
   }
 
-  /**
-   * 处理搜索事件
-   * 验证表单后触发搜索
-   */
   const handleSearch = async () => {
     await searchBarRef.value.validate()
     emit('search', formData.value)

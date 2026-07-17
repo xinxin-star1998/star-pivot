@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="visible"
-    title="选择写盘根目录（服务端）"
+    :title="t('tools.genExt.selectRoot')"
     width="640px"
     append-to-body
     @open="onOpen"
@@ -11,22 +11,22 @@
       :closable="false"
       show-icon
       class="mb-3"
-      title="写盘在服务端执行，此处浏览的是服务器磁盘目录（非浏览器本机）。若前后端同机开发，选中的即为项目路径。"
+      :title="t('tools.genExt.selectRootHint')"
     />
     <div class="dir-toolbar">
       <ElBreadcrumb separator="/">
         <ElBreadcrumbItem v-if="!dirData?.current">
-          <a href="#" @click.prevent="loadDirs('')">根目录</a>
+          <a href="#" @click.prevent="loadDirs('')">{{ t('tools.genExt.rootDir') }}</a>
         </ElBreadcrumbItem>
         <ElBreadcrumbItem v-else>
-          <a href="#" @click.prevent="loadDirs('')">根目录</a>
+          <a href="#" @click.prevent="loadDirs('')">{{ t('tools.genExt.rootDir') }}</a>
         </ElBreadcrumbItem>
         <ElBreadcrumbItem v-if="dirData?.current">
           <span>{{ dirData.current }}</span>
         </ElBreadcrumbItem>
       </ElBreadcrumb>
       <ElButton v-if="dirData?.parent" link type="primary" @click="loadDirs(dirData.parent!)">
-        上级目录
+        {{ t('file.parentFolder') }}
       </ElButton>
     </div>
     <div v-loading="loading" class="dir-list">
@@ -38,22 +38,27 @@
       >
         <ArtSvgIcon icon="ri:folder-3-line" class="dir-item__icon" />
         <span class="dir-item__name" :title="item.path">{{ item.name }}</span>
-        <ElButton link type="primary" size="small" @click.stop="loadDirs(item.path)">进入</ElButton>
-        <ElButton link type="success" size="small" @click.stop="selectDir(item.path)"
-          >选择</ElButton
-        >
+        <ElButton link type="primary" size="small" @click.stop="loadDirs(item.path)">
+          {{ t('tools.genExt.enterDir') }}
+        </ElButton>
+        <ElButton link type="success" size="small" @click.stop="selectDir(item.path)">
+          {{ t('tools.genExt.selectDir') }}
+        </ElButton>
       </div>
-      <ElEmpty v-if="!loading && !dirData?.directories?.length" description="暂无子目录" />
+      <ElEmpty
+        v-if="!loading && !dirData?.directories?.length"
+        :description="t('tools.genExt.noSubDir')"
+      />
     </div>
     <div v-if="dirData?.current" class="current-select">
-      <span>当前目录：</span>
+      <span>{{ t('tools.genExt.currentDir') }}</span>
       <code>{{ dirData.current }}</code>
       <ElButton type="primary" size="small" class="ml-2" @click="selectDir(dirData.current!)">
-        选择当前目录
+        {{ t('tools.genExt.selectCurrentDir') }}
       </ElButton>
     </div>
     <template #footer>
-      <ElButton @click="visible = false">取消</ElButton>
+      <ElButton @click="visible = false">{{ t('common.cancel') }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -68,11 +73,13 @@
     ElEmpty,
     ElMessage
   } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { type ExternalWriteDirList, fetchExternalWriteDirs } from '@/api/generator/gen-external'
 
   const visible = defineModel<boolean>('visible', { default: false })
   const emit = defineEmits<{ select: [string] }>()
+  const { t } = useI18n()
 
   const loading = ref(false)
   const dirData = ref<ExternalWriteDirList | null>(null)
@@ -91,7 +98,7 @@
   function selectDir(path: string) {
     emit('select', path)
     visible.value = false
-    ElMessage.success('已选择写盘根目录')
+    ElMessage.success(t('tools.genExt.selectRootSuccess'))
   }
 
   function onOpen() {

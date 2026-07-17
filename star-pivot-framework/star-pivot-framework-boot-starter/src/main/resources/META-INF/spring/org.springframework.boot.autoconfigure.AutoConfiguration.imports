@@ -2,4 +2,5 @@ com.star.pivot.framework.boot.autoconfigure.StarPivotWebMvcAutoConfiguration
 com.star.pivot.framework.boot.autoconfigure.StarPivotMybatisPlusAutoConfiguration
 com.star.pivot.framework.boot.autoconfigure.StarPivotOpenApiAutoConfiguration
 com.star.pivot.framework.boot.autoconfigure.StarPivotRedisCacheAutoConfiguration
+com.star.pivot.framework.boot.autoconfigure.StarPivotI18nAutoConfiguration
 

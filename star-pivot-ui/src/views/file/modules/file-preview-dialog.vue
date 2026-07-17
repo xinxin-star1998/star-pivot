@@ -44,7 +44,7 @@
             />
             <div v-else class="preview-fallback">
               <ArtSvgIcon :icon="fileIcon" class="preview-fallback__icon" />
-              <p>该文件类型不支持在线预览</p>
+              <p>{{ t('file.previewUnsupported') }}</p>
             </div>
           </template>
         </FileWatermarkOverlay>
@@ -70,10 +70,10 @@
       </div>
 
       <div v-if="detail" class="meta-section">
-        <div class="meta-section__title">元数据</div>
+        <div class="meta-section__title">{{ t('file.metaTitle') }}</div>
         <dl class="meta-list">
           <div v-if="detail.fileId" class="meta-row">
-            <dt>文件 ID</dt>
+            <dt>{{ t('file.metaFileId') }}</dt>
             <dd>{{ detail.fileId }}</dd>
           </div>
           <div v-if="detail.contentType" class="meta-row">
@@ -81,44 +81,48 @@
             <dd>{{ detail.contentType }}</dd>
           </div>
           <div v-if="detail.fileExt" class="meta-row">
-            <dt>扩展名</dt>
+            <dt>{{ t('file.metaExt') }}</dt>
             <dd>.{{ detail.fileExt }}</dd>
           </div>
           <div v-if="imageSize" class="meta-row">
-            <dt>尺寸</dt>
+            <dt>{{ t('file.metaDimension') }}</dt>
             <dd>{{ imageSize }}</dd>
           </div>
           <div v-if="detail.categoryLabel" class="meta-row">
-            <dt>业务分类</dt>
+            <dt>{{ t('file.category') }}</dt>
             <dd>{{ detail.categoryLabel }}</dd>
           </div>
           <div v-if="detail.objectName" class="meta-row">
-            <dt>对象 Key</dt>
+            <dt>{{ t('file.metaObjectKey') }}</dt>
             <dd class="meta-row__mono">
               <span :title="detail.objectName">{{ detail.objectName }}</span>
-              <ElButton link type="primary" @click="copyText(detail.objectName, '对象 Key')">
-                复制
+              <ElButton
+                link
+                type="primary"
+                @click="copyText(detail.objectName, t('file.metaObjectKey'))"
+              >
+                {{ t('file.copy') }}
               </ElButton>
             </dd>
           </div>
           <div v-if="detail.bizType || detail.bizId" class="meta-row">
-            <dt>业务关联</dt>
+            <dt>{{ t('file.metaBizRef') }}</dt>
             <dd>{{ bizRef }}</dd>
           </div>
           <div v-if="detail.createBy" class="meta-row">
-            <dt>上传人</dt>
+            <dt>{{ t('file.uploader') }}</dt>
             <dd>{{ detail.createBy }}</dd>
           </div>
           <div v-if="detail.createTime" class="meta-row">
-            <dt>上传时间</dt>
+            <dt>{{ t('file.uploadTime') }}</dt>
             <dd>{{ formatDateTime(detail.createTime) }}</dd>
           </div>
           <div v-if="detail.updateTime" class="meta-row">
-            <dt>更新时间</dt>
+            <dt>{{ t('file.updateTime') }}</dt>
             <dd>{{ formatDateTime(detail.updateTime) }}</dd>
           </div>
           <div v-if="detail.remark" class="meta-row">
-            <dt>备注</dt>
+            <dt>{{ t('common.remark') }}</dt>
             <dd>{{ detail.remark }}</dd>
           </div>
         </dl>
@@ -127,23 +131,27 @@
 
     <template #footer>
       <div class="preview-footer">
-        <ElButton v-if="showShare" @click="shareVisible = true">分享</ElButton>
-        <ElButton v-if="showVersion" @click="versionVisible = true">版本</ElButton>
-        <ElButton v-if="showRename" @click="handleRename">重命名</ElButton>
-        <ElButton v-if="showMove" @click="handleMove">迁移</ElButton>
-        <ElButton :disabled="!previewUrl" type="primary" @click="download">下载</ElButton>
-        <ElButton :disabled="!previewUrl" @click="copyPreviewLink">复制链接</ElButton>
-        <ElButton v-if="showDelete" plain type="danger" @click="handleDelete">删除</ElButton>
+        <ElButton v-if="showShare" @click="shareVisible = true">{{ t('file.share') }}</ElButton>
+        <ElButton v-if="showVersion" @click="versionVisible = true">{{
+          t('file.version')
+        }}</ElButton>
+        <ElButton v-if="showRename" @click="handleRename">{{ t('file.rename') }}</ElButton>
+        <ElButton v-if="showMove" @click="handleMove">{{ t('file.move') }}</ElButton>
+        <ElButton :disabled="!previewUrl" type="primary" @click="download">{{
+          t('file.download')
+        }}</ElButton>
+        <ElButton :disabled="!previewUrl" @click="copyPreviewLink">{{
+          t('file.copyLink')
+        }}</ElButton>
+        <ElButton v-if="showDelete" plain type="danger" @click="handleDelete">{{
+          t('common.delete')
+        }}</ElButton>
       </div>
     </template>
   </ElDrawer>
 
   <FileShareDialog v-model:visible="shareVisible" :file="detail" />
-  <FileVersionDialog
-    v-model="versionVisible"
-    :file="detail"
-    @success="emit('renamed')"
-  />
+  <FileVersionDialog v-model="versionVisible" :file="detail" @success="emit('renamed')" />
 </template>
 
 <script lang="ts" setup>
@@ -158,8 +166,8 @@
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
   import {
-    formatFileSize,
     buildOfficeViewerUrl,
+    formatFileSize,
     getPreviewMode,
     openFileUrl,
     type PreviewMode
@@ -170,6 +178,7 @@
   import FileWatermarkOverlay from './file-watermark-overlay.vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { computed, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   const visible = defineModel<boolean>('visible', { default: false })
 
@@ -184,6 +193,7 @@
   }>()
 
   const { hasAuth } = useAuth()
+  const { t } = useI18n()
 
   const loading = ref(false)
   const previewUrl = ref('')
@@ -220,14 +230,14 @@
   )
 
   const shortFileName = computed(() => {
-    const name = detail.value?.fileName || '文件预览'
+    const name = detail.value?.fileName || t('file.previewTitle')
     return name.length > 22 ? `${name.slice(0, 20)}...` : name
   })
 
   const storageLabel = computed(() => {
     const p = detail.value?.storageProvider?.toUpperCase()
-    if (p === 'OSS') return '阿里云 OSS'
-    if (p === 'LOCAL') return '本地存储'
+    if (p === 'OSS') return t('file.storageOss')
+    if (p === 'LOCAL') return t('file.storageLocal')
     return detail.value?.storageProvider || '-'
   })
 
@@ -298,27 +308,23 @@
   async function copyText(text: string, label: string) {
     try {
       await navigator.clipboard.writeText(text)
-      ElMessage.success(`${label}已复制`)
+      ElMessage.success(t('file.copySuccess'))
     } catch {
-      ElMessage.error('复制失败')
+      ElMessage.error(t('file.copyFail'))
     }
   }
 
   function copyPreviewLink() {
     if (previewUrl.value) {
-      copyText(previewUrl.value, '访问链接')
+      copyText(previewUrl.value, t('file.accessLink'))
     }
   }
 
   function download() {
     const fileId = detail.value?.fileId
-    if (
-      watermark.value?.downloadEnabled &&
-      mode.value === 'image' &&
-      fileId
-    ) {
+    if (watermark.value?.downloadEnabled && mode.value === 'image' && fileId) {
       downloadFileWatermarked(fileId, detail.value?.fileName).catch(() => {
-        ElMessage.error('下载失败')
+        ElMessage.error(t('file.loadFail'))
       })
       return
     }
@@ -330,7 +336,7 @@
   async function handleDelete() {
     const fileId = detail.value?.fileId
     if (!fileId) return
-    await ElMessageBox.confirm('确认将文件移入回收站？', '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('file.deleteFileConfirm'), t('common.tips'), { type: 'warning' })
     emit('delete', fileId)
     visible.value = false
   }
@@ -345,19 +351,19 @@
   async function handleRename() {
     const fileId = detail.value?.fileId
     if (!fileId) return
-    const { value } = await ElMessageBox.prompt('请输入新的文件名', '重命名', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    const { value } = await ElMessageBox.prompt(t('file.renamePrompt'), t('file.rename'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       inputValue: detail.value?.fileName || '',
       inputValidator: (val) => {
         const name = val?.trim()
-        if (!name) return '文件名不能为空'
-        if (name.includes('/') || name.includes('\\')) return '文件名不能包含路径分隔符'
+        if (!name) return t('file.nameEmpty')
+        if (name.includes('/') || name.includes('\\')) return t('file.nameInvalid')
         return true
       }
     })
     await renameFile({ fileId, fileName: value.trim() })
-    ElMessage.success('重命名成功')
+    ElMessage.success(t('file.renameSuccess'))
     detail.value = await fetchFileDetail(fileId)
     emit('renamed')
   }

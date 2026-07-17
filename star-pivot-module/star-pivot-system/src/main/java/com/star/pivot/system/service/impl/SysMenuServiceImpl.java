@@ -12,6 +12,7 @@ import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysRole;
 import com.star.pivot.system.mapper.RoleMenuMapper;
 import com.star.pivot.system.mapper.SysMenuMapper;
+import com.star.pivot.system.service.interfaces.SysI18nService;
 import com.star.pivot.system.service.interfaces.SysMenuService;
 import com.star.pivot.system.service.interfaces.SysUserService;
 import com.star.pivot.system.service.interfaces.UserPermissionCacheService;
@@ -47,6 +48,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 //    private final SysMenuMapper sysMenuMapper;
 //    private final SysRoleMapper sysRoleMapper;
     private final UserPermissionCacheService userPermissionCacheService;
+    private final SysI18nService sysI18nService;
 
     @Override
     @Transactional(readOnly = true)
@@ -113,7 +115,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
         // 创建菜单
         SysMenu menu = new SysMenu();
-        BeanUtils.copyProperties(menuDTO, menu);
+        BeanUtils.copyProperties(menuDTO, menu, "translations");
         menu.setParentId(menuDTO.getParentId() != null ? menuDTO.getParentId() : ROOT_PARENT_ID);
         menu.setOrderNum(menuDTO.getOrderNum() != null ? menuDTO.getOrderNum() : 0);
         menu.setIsFrame(menuDTO.getIsFrame() != null ? menuDTO.getIsFrame() : 1);
@@ -128,6 +130,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         boolean result = this.save(menu);
         if (result) {
             log.info("新增菜单成功: menuId={}, menuName={}", menu.getMenuId(), menu.getMenuName());
+            sysI18nService.saveMenuTranslations(menu.getMenuId(), menu.getMenuName(), menuDTO.getTranslations());
             // 清除所有用户权限缓存（菜单变更可能影响所有用户权限）
             userPermissionCacheService.clearAllUserPermissionCache();
         } else {
@@ -159,7 +162,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         }
 
         // 更新菜单信息
-        BeanUtils.copyProperties(menuDTO, menu, "menuId");
+        BeanUtils.copyProperties(menuDTO, menu, "menuId", "translations");
         String currentUser = SecurityContextUtils.getUsername();
         menu.setUpdateBy(currentUser);
         menu.setUpdateTime(LocalDateTime.now());
@@ -167,6 +170,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         boolean result = this.updateById(menu);
         if (result) {
             log.info("修改菜单成功: menuId={}, menuName={}", menu.getMenuId(), menu.getMenuName());
+            sysI18nService.saveMenuTranslations(menu.getMenuId(), menu.getMenuName(), menuDTO.getTranslations());
             // 清除所有用户权限缓存（菜单变更可能影响所有用户权限）
             userPermissionCacheService.clearAllUserPermissionCache();
         } else {
@@ -207,6 +211,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         boolean result = this.removeByIds(menuIds);
         if (result) {
             log.info("删除菜单成功: menuIds={}", menuIds);
+            sysI18nService.deleteMenuTranslations(menuIds);
             // 清除所有用户权限缓存（菜单变更可能影响所有用户权限）
             userPermissionCacheService.clearAllUserPermissionCache();
         } else {
@@ -302,7 +307,12 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             menu.setValue(menu.getMenuId());
             
             List<SysMenu> childTree = buildMenuTree(allMenu, menu.getMenuId());
-            menu.setChildren(childTree);
+            // 叶子节点（含按钮）不挂空 children，避免前端树表误显示展开箭头
+            if (childTree != null && !childTree.isEmpty()) {
+                menu.setChildren(childTree);
+            } else {
+                menu.setChildren(null);
+            }
             tree.add(menu);
         }
 

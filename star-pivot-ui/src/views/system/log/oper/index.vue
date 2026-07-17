@@ -25,10 +25,10 @@
               v-ripple
               v-auth="'system:operlog:delete'"
             >
-              批量删除
+              {{ t('common.batchDelete') }}
             </ElButton>
             <ElButton type="danger" @click="handleClean" v-ripple v-auth="'system:operlog:delete'">
-              清空日志
+              {{ t('system.operLog.clear') }}
             </ElButton>
           </ElSpace>
         </template>
@@ -62,11 +62,13 @@
   import type { OperLogListItem, OperLogSearchParams } from '@/types/api/operlog'
   import OperLogDetail from './modules/oper-log-detail.vue'
   import OperLogSearch from './modules/oper-log-search.vue'
+  import { useI18n } from 'vue-i18n'
   import { getOperBusinessTypeLabel } from './constants'
 
   defineOptions({ name: 'OperLog' })
 
   const { hasAuth } = useAuth()
+  const { t } = useI18n()
 
   // 搜索栏显示状态
   const showSearchBar = ref(true)
@@ -114,21 +116,21 @@
       immediate: true, // 确保页面加载时自动获取数据
       columnsFactory: () => [
         { type: 'selection' }, // 勾选列
-        { type: 'index', width: 60, label: '序号' }, // 序号
+        { type: 'index', width: 60, label: t('table.column.index') },
         {
           prop: 'operTime',
-          label: '操作时间',
+          label: t('system.operLog.operTime'),
           width: 180,
           sortable: true
         },
         {
           prop: 'title',
-          label: '模块标题',
+          label: t('system.operLog.title'),
           width: 150
         },
         {
           prop: 'businessType',
-          label: '业务类型',
+          label: t('system.operLog.businessType'),
           width: 100,
           formatter: (row: OperLogListItem) => {
             return getOperBusinessTypeLabel(row.businessType)
@@ -136,23 +138,23 @@
         },
         {
           prop: 'operName',
-          label: '操作人员',
+          label: t('system.operLog.operName'),
           width: 120
         },
         {
           prop: 'deptName',
-          label: '部门',
+          label: t('system.dept.deptName'),
           width: 120
         },
         {
           prop: 'operUrl',
-          label: '请求URL',
+          label: t('system.operLog.operUrl'),
           minWidth: 200,
           showOverflowTooltip: true
         },
         {
           prop: 'requestMethod',
-          label: '请求方式',
+          label: t('system.operLog.requestMethod'),
           width: 100,
           formatter: (row: OperLogListItem) => {
             const method = row.requestMethod || ''
@@ -180,12 +182,12 @@
         },
         {
           prop: 'operIp',
-          label: '操作IP',
+          label: t('system.operLog.operIp'),
           width: 140
         },
         {
           prop: 'status',
-          label: '状态',
+          label: t('system.operLog.status'),
           width: 100,
           formatter: (row: OperLogListItem) => {
             return h(
@@ -194,19 +196,22 @@
                 type: row.status === 0 ? 'success' : 'danger',
                 size: 'small'
               },
-              () => (row.status === 0 ? '正常' : '异常')
+              () =>
+                row.status === 0
+                  ? t('system.operLog.statusSuccess')
+                  : t('system.operLog.statusFail')
             )
           }
         },
         {
           prop: 'costTime',
-          label: '耗时(ms)',
+          label: t('system.operLog.costTime'),
           width: 100,
           sortable: true
         },
         {
           prop: 'operation',
-          label: '操作',
+          label: t('common.operation'),
           width: 120,
           fixed: 'right',
           formatter: (row: OperLogListItem) => {
@@ -219,7 +224,7 @@
                   size: 'small',
                   onClick: () => showDetail(row)
                 },
-                () => '详情'
+                () => t('system.operLog.detail')
               ),
               hasAuth('system:operlog:delete') &&
                 h(
@@ -230,7 +235,7 @@
                     size: 'small',
                     onClick: () => handleDelete(row)
                   },
-                  () => '删除'
+                  () => t('common.delete')
                 )
             ])
           }
@@ -283,15 +288,17 @@
    */
   const handleDelete = async (row: OperLogListItem) => {
     try {
-      await ElMessageBox.confirm('确定要删除这条操作日志吗？', '提示', {
-        type: 'warning'
+      await ElMessageBox.confirm(t('system.operLog.deleteConfirm'), t('common.tips'), {
+        type: 'warning',
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel')
       })
       await fetchDeleteOperLog([row.operId!])
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
       refreshData()
     } catch (error: any) {
       if (error !== 'cancel') {
-        ElMessage.error(error?.message || '删除失败')
+        ElMessage.error(error?.message || t('common.deleteFail'))
       }
     }
   }
@@ -301,24 +308,22 @@
    */
   const handleBatchDelete = async () => {
     if (selectedRows.value.length === 0) {
-      ElMessage.warning('请选择要删除的日志')
+      ElMessage.warning(t('common.pleaseSelect'))
       return
     }
     try {
-      await ElMessageBox.confirm(
-        `确定要删除选中的 ${selectedRows.value.length} 条操作日志吗？`,
-        '提示',
-        {
-          type: 'warning'
-        }
-      )
+      await ElMessageBox.confirm(t('system.operLog.deleteConfirm'), t('common.tips'), {
+        type: 'warning',
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel')
+      })
       const operIds = selectedRows.value.map((row: OperLogListItem) => row.operId!).filter(Boolean)
       await fetchDeleteOperLog(operIds)
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
       refreshData()
     } catch (error: any) {
       if (error !== 'cancel') {
-        ElMessage.error(error?.message || '删除失败')
+        ElMessage.error(error?.message || t('common.deleteFail'))
       }
     }
   }
@@ -328,17 +333,17 @@
    */
   const handleClean = async () => {
     try {
-      await ElMessageBox.confirm('确定要清空所有操作日志吗？此操作不可恢复！', '警告', {
+      await ElMessageBox.confirm(t('system.operLog.clearConfirm'), t('common.tips'), {
         type: 'warning',
-        confirmButtonText: '确定清空',
-        cancelButtonText: '取消'
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel')
       })
       await fetchCleanOperLog()
-      ElMessage.success('清空成功')
+      ElMessage.success(t('common.deleteSuccess'))
       refreshData()
     } catch (error: any) {
       if (error !== 'cancel') {
-        ElMessage.error(error?.message || '清空失败')
+        ElMessage.error(error?.message || t('common.deleteFail'))
       }
     }
   }

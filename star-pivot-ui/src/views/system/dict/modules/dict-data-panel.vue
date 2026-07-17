@@ -16,7 +16,7 @@
     >
       <template #left>
         <ElButton @click="handleAdd" v-ripple v-auth="'system:data:add'" :disabled="!dictType">
-          新增字典数据
+          {{ t('system.dict.addData') }}
         </ElButton>
       </template>
     </ArtTableHeader>
@@ -62,6 +62,8 @@
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
   import { handleMutationError } from '@/utils/http/mutation'
+  import { useDictStore } from '@/store/modules/dict'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'DictDataPanel' })
 
@@ -74,6 +76,7 @@
   })
 
   const { hasAuth } = useAuth()
+  const { t } = useI18n()
 
   const loading = ref(false)
   const tableRef = ref()
@@ -94,70 +97,62 @@
 
   const formItems = computed(() => [
     {
-      label: '字典标签',
+      label: t('system.dict.dictLabel'),
       key: 'dictLabel',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入字典标签' }
+      props: { clearable: true, placeholder: t('system.dict.labelPlaceholder') }
     },
     {
-      label: '状态',
+      label: t('common.status'),
       key: 'status',
       type: 'select',
       props: {
         clearable: true,
-        placeholder: '请选择状态',
+        placeholder: t('common.pleaseSelect'),
         options: [
-          { label: '正常', value: '0' },
-          { label: '停用', value: '1' }
+          { label: t('common.normal'), value: '0' },
+          { label: t('common.disabled'), value: '1' }
         ]
       }
     }
   ])
 
-  const STATUS_CONFIG = {
-    '0': { text: '正常', type: 'success' as const },
-    '1': { text: '停用', type: 'danger' as const }
-  }
+  const STATUS_CONFIG = computed(() => ({
+    '0': { text: t('common.normal'), type: 'success' as const },
+    '1': { text: t('common.disabled'), type: 'danger' as const }
+  }))
 
   const { columnChecks, columns } = useTableColumns(() => [
-    { type: 'index', width: 60, label: '序号' },
-    // { prop: 'dictCode', label: '字典编码', width: 80 },
-    { prop: 'dictLabel', label: '字典标签', minWidth: 120 },
-    { prop: 'dictValue', label: '字典键值', minWidth: 120 },
-    // { prop: 'dictType', label: '字典类型', minWidth: 150 },
-    // {
-    //   prop: 'dictSort',
-    //   label: '字典排序',
-    //   width: 100,
-    //   formatter: (row: SysDictData) => row.dictSort || 0
-    // },
+    { type: 'index', width: 60, label: t('common.orderNum') },
+    { prop: 'dictLabel', label: t('system.dict.dictLabel'), minWidth: 120 },
+    { prop: 'dictValue', label: t('system.dict.dictValue'), minWidth: 120 },
     {
       prop: 'status',
-      label: '状态',
+      label: t('common.status'),
       width: 100,
       formatter: (row: SysDictData) => {
-        const status = (row.status || '0') as keyof typeof STATUS_CONFIG
-        const statusInfo = STATUS_CONFIG[status] || STATUS_CONFIG['0']
+        const status = (row.status || '0') as '0' | '1'
+        const statusInfo = STATUS_CONFIG.value[status] || STATUS_CONFIG.value['0']
         return h(ElTag, { type: statusInfo.type }, () => statusInfo.text)
       }
     },
     {
       prop: 'remark',
-      label: '备注',
+      label: t('common.remark'),
       minWidth: 150,
       formatter: (row: SysDictData) =>
-        row.remark || h('span', { style: 'color: var(--art-gray-500)' }, '无')
+        row.remark || h('span', { style: 'color: var(--art-gray-500)' }, t('common.empty'))
     },
     {
       prop: 'createTime',
-      label: '创建时间',
+      label: t('common.createTime'),
       width: 180,
       formatter: (row: SysDictData) =>
-        row.createTime || h('span', { style: 'color: var(--art-gray-500)' }, '暂无')
+        row.createTime || h('span', { style: 'color: var(--art-gray-500)' }, t('common.empty'))
     },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('common.operation'),
       width: 180,
       align: 'right',
       formatter: (row: SysDictData) => {
@@ -200,7 +195,7 @@
       pagination.total = result?.total || 0
     } catch (error) {
       safeError('获取字典数据列表失败:', error)
-      handleMutationError(error, '获取字典数据列表失败')
+      handleMutationError(error, t('system.dict.loadFail'))
     } finally {
       loading.value = false
     }
@@ -234,7 +229,7 @@
 
   const handleAdd = (): void => {
     if (!props.dictType) {
-      ElMessage.warning('请先选择字典类型')
+      ElMessage.warning(t('common.pleaseSelect'))
       return
     }
     editData.value = null
@@ -259,25 +254,25 @@
 
   const handleDelete = async (row: SysDictData): Promise<void> => {
     if (!row.dictCode) {
-      ElMessage.warning('字典数据ID不存在，无法删除')
+      ElMessage.warning(t('common.deleteFail'))
       return
     }
 
     try {
-      await ElMessageBox.confirm(`确定要删除字典数据"${row.dictLabel}"吗？删除后无法恢复`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      await ElMessageBox.confirm(t('system.dict.deleteConfirm'), t('common.tips'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning'
       })
 
       await fetchDeleteDictData([row.dictCode])
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
       if (tableData.value.length === 1 && pagination.current > 1) pagination.current--
       await getDictDataList()
     } catch (error) {
       if (error !== 'cancel' && error !== 'close') {
         safeError('删除字典数据失败:', error)
-        handleMutationError(error, '删除失败')
+        handleMutationError(error, t('common.deleteFail'))
       }
     }
   }
@@ -287,16 +282,17 @@
       const isEdit = !!formData.dictCode
       if (isEdit) {
         await fetchUpdateDictData(formData)
-        ElMessage.success('修改字典数据成功')
+        ElMessage.success(t('common.updateSuccess'))
       } else {
         await fetchAddDictData(formData)
-        ElMessage.success('新增字典数据成功')
+        ElMessage.success(t('common.addSuccess'))
       }
       dialogVisible.value = false
+      useDictStore().clearDictCache(formData.dictType)
       await getDictDataList()
     } catch (error) {
       safeError('保存字典数据失败:', error)
-      handleMutationError(error, formData.dictCode ? '修改字典数据失败' : '新增字典数据失败')
+      handleMutationError(error, formData.dictCode ? t('common.updateFail') : t('common.addFail'))
     }
   }
 

@@ -22,4 +22,6 @@ export interface MenuFormData {
   perms?: string
   icon?: string
   remark?: string
+  /** @deprecated 多语言已统一到「国际化管理 → UI 文案（菜单）」维护 */
+  translations?: Record<string, string>
 }

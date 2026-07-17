@@ -26,12 +26,26 @@ public interface DictDataService extends IService<DictData> {
     PageResponse<DictDataVO> selectDictDataPage(DictDataQueryDTO queryDTO);
 
     /**
-     * 根据字典类型查询字典数据
+     * 根据字典类型查询字典数据（按当前请求语言解析 dictLabel）
      *
      * @param dictType 字典类型
-    字典数据列表
- * @return      */
+     * @return 字典数据列表
+     */
     List<DictDataVO> selectDictDataByType(String dictType);
+
+    /**
+     * 根据字典类型与语言查询字典数据
+     *
+     * @param dictType 字典类型
+     * @param lang     语言编码
+     * @return 字典数据列表
+     */
+    List<DictDataVO> selectDictDataByType(String dictType, String lang);
+
+    /**
+     * 加载字典原文（默认语言，带本地缓存）
+     */
+    List<DictDataVO> loadRawDictDataByType(String dictType);
 
     /**
      * 根据字典编码查询字典数据详情

@@ -1,20 +1,19 @@
 import App from './App.vue'
-import {initStore} from './store' // Store
-import {initRouter} from './router' // Router
-import language from './locales' // 国际化
+import { initStore } from './store' // Store
+import { initRouter } from './router' // Router
+import language, { loadLanguageOptions, switchAppLanguage } from './locales' // 国际化
 import '@styles/core/tailwind.css' // tailwind
 import '@styles/index.scss' // 样式
 import '@utils/sys/console.ts' // 控制台输出内容
-import {setupGlobDirectives} from './directives'
-import {setupErrorHandle} from './utils/sys/error-handle'
-import {setupOfflineIconify} from './utils/ui/iconify-offline'
-import {setupPerformanceMonitor} from './utils/performance'
-// 添加缺失的导入
+import { setupGlobDirectives } from './directives'
+import { setupErrorHandle } from './utils/sys/error-handle'
+import { setupOfflineIconify } from './utils/ui/iconify-offline'
+import { setupPerformanceMonitor } from './utils/performance'
 import { createApp } from 'vue'
+import { useUserStore } from './store/modules/user'
 
 void setupOfflineIconify()
 
-// 初始化前端性能监控（采集 Core Web Vitals：LCP/CLS/INP/FCP/TTFB）
 setupPerformanceMonitor({
   enableConsoleLog: import.meta.env.DEV,
   enableReport: import.meta.env.VITE_PERF_REPORT === 'true',
@@ -36,3 +35,9 @@ setupErrorHandle(app)
 
 app.use(language)
 app.mount('#app')
+
+// Pinia 持久化恢复后，强制对齐 vue-i18n locale 与远程 UI 包
+const userStore = useUserStore()
+userStore.setLanguage(userStore.language)
+void loadLanguageOptions()
+void switchAppLanguage(userStore.language)

@@ -201,6 +201,12 @@ axiosInstance.interceptors.request.use(
       )
     }
 
+    // 传递当前界面语言，供后端解析菜单等多语言资源
+    const language = userStore.language
+    if (language) {
+      request.headers.set('X-Lang', language)
+    }
+
     // 演示模式：拦截写操作（弹窗可打开，提交在此被阻止）
     if (
       userStore.isDemoMode &&

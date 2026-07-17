@@ -1,7 +1,7 @@
 <template>
   <div class="file-folder-tree">
     <div class="tree-header">
-      <span class="tree-title">文件夹</span>
+      <span class="tree-title">{{ t('file.rootFolder') }}</span>
       <ElButton
         v-if="hasAuth('file:folder:add')"
         link
@@ -9,7 +9,7 @@
         @click="emit('add-folder', { category: activeCategory || categories[0]?.category })"
       >
         <ArtSvgIcon class="mr-0.5" icon="ri:add-line" />
-        新建
+        {{ t('file.new') }}
       </ElButton>
     </div>
 
@@ -18,7 +18,7 @@
       :prefix-icon="Search"
       class="tree-filter"
       clearable
-      placeholder="搜索分类或文件夹"
+      :placeholder="t('file.searchFolder')"
     />
 
     <ElScrollbar class="tree-scroll">
@@ -58,20 +58,20 @@
               <template #dropdown>
                 <ElDropdownMenu>
                   <ElDropdownItem v-if="hasAuth('file:folder:add')" command="add-child">
-                    新建子文件夹
+                    {{ t('file.newChildFolder') }}
                   </ElDropdownItem>
                   <ElDropdownItem
                     v-if="hasAuth('file:folder:edit') && data.folderName !== '默认'"
                     command="edit"
                   >
-                    重命名
+                    {{ t('file.rename') }}
                   </ElDropdownItem>
                   <ElDropdownItem
                     v-if="hasAuth('file:folder:delete') && data.folderName !== '默认'"
                     command="delete"
                     divided
                   >
-                    删除
+                    {{ t('common.delete') }}
                   </ElDropdownItem>
                 </ElDropdownMenu>
               </template>
@@ -79,7 +79,11 @@
           </div>
         </template>
       </ElTree>
-      <ElEmpty v-if="filteredTreeData.length === 0" :image-size="64" description="无匹配文件夹" />
+      <ElEmpty
+        v-if="filteredTreeData.length === 0"
+        :image-size="64"
+        :description="t('file.emptyFolder')"
+      />
     </ElScrollbar>
   </div>
 </template>
@@ -88,11 +92,16 @@
   import type { FileCategoryNode } from '@/api/file/types'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
-  import { findFolderInTree, mapFoldersToTreeNodes, sumFolderFileCount } from '@/utils/file/folder-tree'
+  import {
+    findFolderInTree,
+    mapFoldersToTreeNodes,
+    sumFolderFileCount
+  } from '@/utils/file/folder-tree'
   import { getCategoryIcon } from '../constants'
   import { MoreFilled, Search } from '@element-plus/icons-vue'
   import type { ElTree } from 'element-plus'
   import { computed, nextTick, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   const ALL_FILES_KEY = 'all-files'
 
@@ -122,20 +131,22 @@
     'select-recent': []
     'select-folder': [payload: { folderId: number; category: string; folderName: string }]
     'add-folder': [payload: { category?: string; parentId?: number }]
-    'edit-folder': [payload: { folderId: number; category: string; folderName: string; parentId?: number }]
+    'edit-folder': [
+      payload: { folderId: number; category: string; folderName: string; parentId?: number }
+    ]
     'delete-folder': [folderId: number]
     'drop-files': [payload: { folderId: number; files: File[] }]
     'drop-move': [payload: { folderId: number; fileIds: number[] }]
   }>()
 
   const { hasAuth } = useAuth()
+  const { t } = useI18n()
   const treeRef = ref<InstanceType<typeof ElTree>>()
   const filterText = ref('')
   const dropTargetKey = ref('')
 
   const hasFolderManage = computed(
-    () =>
-      hasAuth('file:folder:add') || hasAuth('file:folder:edit') || hasAuth('file:folder:delete')
+    () => hasAuth('file:folder:add') || hasAuth('file:folder:edit') || hasAuth('file:folder:delete')
   )
 
   const activeCategory = computed(() => {
@@ -166,19 +177,19 @@
   const treeData = computed<TreeNode[]>(() => [
     {
       nodeKey: ALL_FILES_KEY,
-      label: '全部文件',
+      label: t('file.allFiles'),
       isAll: true,
       fileCount: totalFileCount.value,
       children: categoryNodes.value
     },
     {
       nodeKey: 'scope-favorite',
-      label: '我的收藏',
+      label: t('file.myFavorite'),
       isFavorite: true
     },
     {
       nodeKey: 'scope-recent',
-      label: '最近访问',
+      label: t('file.recentAccess'),
       isRecent: true
     }
   ])
@@ -202,7 +213,8 @@
 
     const filteredCategories = filterNodes(categoryNodes.value, kw)
     const extras = treeData.value.slice(1).filter((n) => n.label.toLowerCase().includes(kw))
-    const showAll = '全部文件'.includes(kw) || filteredCategories.length > 0
+    const allFilesLabel = t('file.allFiles')
+    const showAll = allFilesLabel.includes(kw) || filteredCategories.length > 0
     const result: TreeNode[] = []
     if (showAll) {
       result.push({ ...treeData.value[0], children: filteredCategories })

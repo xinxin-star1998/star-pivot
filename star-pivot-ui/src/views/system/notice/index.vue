@@ -14,8 +14,7 @@
         <template #left>
           <ElSpace wrap>
             <ElButton @click="showDialog('add')" v-ripple v-auth="'system:notice:add'">
-              <!-- <ArtSvgIcon icon="ri:add-line" class="mr-1" /> -->
-              新增通知公告
+              {{ t('system.notice.addNotice') }}
             </ElButton>
             <ElButton
               type="danger"
@@ -24,7 +23,7 @@
               v-ripple
               v-auth="'system:notice:delete'"
             >
-              批量删除
+              {{ t('common.batchDelete') }}
             </ElButton>
           </ElSpace>
         </template>
@@ -58,11 +57,13 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { useDict } from '@/hooks/core/useDict'
+  import { useI18n } from 'vue-i18n'
   import { fetchDeleteNotice, fetchGetNoticeList, type Notice } from '@/api/system/notice/notice'
   import { handleMutationError } from '@/utils/http/mutation'
   import NoticeSearch from './modules/notice-search.vue'
   import NoticeDialog from './modules/notice-dialog.vue'
   import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
+  import type { ColumnOption } from '@/types'
   import { DialogType } from '@/types'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
@@ -71,17 +72,15 @@
   defineOptions({ name: 'Notice' })
 
   const { hasAuth } = useAuth()
+  const { t } = useI18n()
   const { getDictItem, getTagType, loadDicts } = useDict()
 
-  // 弹窗相关
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const currentNoticeData = ref<Partial<Notice>>({})
 
-  // 选中行
   const selectedRows = ref<Notice[]>([])
 
-  // 搜索表单
   const searchForm = ref({
     noticeTitle: undefined,
     noticeType: undefined,
@@ -102,7 +101,6 @@
     handleCurrentChange,
     refreshData
   } = useTable({
-    // 核心配置
     core: {
       apiFn: fetchGetNoticeList,
       apiParams: {
@@ -110,18 +108,18 @@
         pageSize: 20,
         ...searchForm.value
       },
-      columnsFactory: () => [
-        { type: 'selection' }, // 勾选列
-        { type: 'index', width: 60, label: '序号' }, // 序号
+      columnsFactory: (): ColumnOption<Notice>[] => [
+        { type: 'selection' },
+        { type: 'index', width: 60, label: t('table.column.index') },
         {
           prop: 'noticeTitle',
-          label: '公告标题',
+          label: t('system.notice.noticeTitle'),
           minWidth: 150,
           showOverflowTooltip: true
         },
         {
           prop: 'noticeType',
-          label: '公告类型',
+          label: t('system.notice.noticeType'),
           formatter: (row: Notice) => {
             const dictItem = getDictItem('sys_notice_type', row.noticeType)
             if (dictItem) {
@@ -136,13 +134,13 @@
         },
         {
           prop: 'noticeContent',
-          label: '公告内容',
+          label: t('system.notice.noticeContent'),
           minWidth: 150,
           showOverflowTooltip: true
         },
         {
           prop: 'status',
-          label: '公告状态',
+          label: t('system.notice.noticeStatus'),
           formatter: (row: Notice) => {
             const dictItem = getDictItem('sys_notice_status', row.status)
             if (dictItem) {
@@ -157,25 +155,24 @@
         },
         {
           prop: 'createBy',
-          label: '创建人',
+          label: t('common.operation'),
           width: 100,
           showOverflowTooltip: true
         },
         {
           prop: 'createTime',
-          label: '创建时间',
+          label: t('common.createTime'),
           width: 150,
           showOverflowTooltip: true
         },
         {
           prop: 'operation',
-          label: '操作',
+          label: t('common.operation'),
           width: 120,
-          fixed: 'right', // 固定列
+          fixed: 'right',
           formatter: (row) => {
             const actions: any[] = []
 
-            // 编辑通知公告按钮权限：system:notice:edit
             if (hasAuth('system:notice:edit')) {
               actions.push(
                 h(ArtButtonTable, {
@@ -185,7 +182,6 @@
               )
             }
 
-            // 删除通知公告按钮权限：system:notice:remove
             if (hasAuth('system:notice:delete')) {
               actions.push(
                 h(ArtButtonTable, {
@@ -196,7 +192,6 @@
             }
 
             if (actions.length === 0) {
-              // 无任何操作权限时返回空占位
               return h('span', { style: 'color: var(--art-gray-500)' }, '')
             }
 
@@ -205,33 +200,21 @@
         }
       ]
     },
-    // 数据处理
     transform: {
-      // 数据转换器
       dataTransformer: (records) => {
-        // 类型守卫检查
         if (!Array.isArray(records)) {
           return []
         }
-
         return records
       }
     }
   })
 
-  /**
-   * 搜索处理
-   * @param params 参数
-   */
   const handleSearch = (params: Record<string, any>) => {
-    // 搜索参数赋值
     Object.assign(searchParams, params)
     getData()
   }
 
-  /**
-   * 显示通知公告弹窗
-   */
   const showDialog = (type: DialogType, row?: Notice): void => {
     dialogType.value = type
     currentNoticeData.value = row || {}
@@ -240,32 +223,26 @@
     })
   }
 
-  /**
-   * 删除通知公告（单条）
-   */
   const deleteNotice = async (row: Notice): Promise<void> => {
     try {
-      await ElMessageBox.confirm(`确定要删除该通知公告吗？`, '删除通知公告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      await ElMessageBox.confirm(t('system.notice.deleteConfirm'), t('common.tips'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
         type: 'error'
       })
       const id = row.noticeId
       if (id == null) return
       await fetchDeleteNotice([id])
       refreshData()
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
     } catch (error) {
-      handleMutationError(error, '删除失败')
+      handleMutationError(error, t('common.deleteFail'))
     }
   }
 
-  /**
-   * 批量删除通知公告
-   */
   const handleBatchDelete = async (): Promise<void> => {
     if (selectedRows.value.length === 0) {
-      ElMessage.warning('请选择要删除的通知公告')
+      ElMessage.warning(t('common.pleaseSelect'))
       return
     }
     const ids = selectedRows.value
@@ -273,53 +250,38 @@
       .filter((id): id is number => id != null)
     if (ids.length === 0) return
     try {
-      await ElMessageBox.confirm(
-        `确定要删除选中的 ${ids.length} 条通知公告吗？`,
-        '批量删除通知公告',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'error'
-        }
-      )
+      await ElMessageBox.confirm(t('system.notice.deleteConfirm'), t('common.tips'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'error'
+      })
       await fetchDeleteNotice(ids)
       selectedRows.value = []
       refreshData()
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
     } catch (error) {
-      handleMutationError(error, '删除失败')
+      handleMutationError(error, t('common.deleteFail'))
     }
   }
 
-  /**
-   * 处理弹窗提交事件
-   */
   const handleDialogSubmit = async () => {
     try {
       dialogVisible.value = false
       currentNoticeData.value = {}
-      // 刷新列表数据
       refreshData()
     } catch (error) {
       console.error('提交失败:', error)
     }
   }
 
-  /**
-   * 处理表格行选择变化
-   */
   const handleSelectionChange = (selection: Notice[]): void => {
     selectedRows.value = selection
   }
 
-  /**
-   * 初始化加载字典数据
-   */
   const initDictData = async () => {
     await loadDicts(['sys_notice_type', 'sys_notice_status'])
   }
 
-  // 组件挂载时加载字典数据
   onMounted(() => {
     initDictData()
   })

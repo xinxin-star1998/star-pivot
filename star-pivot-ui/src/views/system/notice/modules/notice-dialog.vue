@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    :title="dialogType === 'add' ? '新增通知公告' : '编辑通知公告'"
+    :title="dialogType === 'add' ? t('system.notice.addTitle') : t('system.notice.editTitle')"
     width="60%"
     align-center
   >
@@ -12,39 +12,32 @@
       label-width="100px"
       aria-label="通知公告表单"
     >
-      <ElFormItem label="公告标题" prop="noticeTitle">
-        <ElInput v-model="formData.noticeTitle" placeholder="请输入公告标题" />
+      <ElFormItem :label="t('system.notice.noticeTitle')" prop="noticeTitle">
+        <ElInput
+          v-model="formData.noticeTitle"
+          :placeholder="t('system.notice.titlePlaceholder')"
+        />
       </ElFormItem>
-      <ElFormItem label="公告类型" prop="noticeType">
-        <ElSelect v-model="formData.noticeType" placeholder="请选择公告类型">
-          <!-- 字典类型：sys_notice_type，需要从字典服务获取选项 -->
-          <!-- <ElOption
-            v-for="item in noticeTypeOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          >
-            {{ item.label }}
-          </ElOption> -->
-          <ElOption label="通知" value="1" />
-          <ElOption label="公告" value="2" />
+      <ElFormItem :label="t('system.notice.noticeType')" prop="noticeType">
+        <ElSelect v-model="formData.noticeType" :placeholder="t('common.pleaseSelect')">
+          <ElOption :label="t('system.notice.typeNotice')" value="1" />
+          <ElOption :label="t('system.notice.typeAnnounce')" value="2" />
         </ElSelect>
       </ElFormItem>
-      <ElFormItem label="公告状态" prop="status">
+      <ElFormItem :label="t('system.notice.noticeStatus')" prop="status">
         <ElRadioGroup v-model="formData.status">
-          <!-- 字典类型：sys_notice_status，需要从字典服务获取选项 -->
-          <ElRadio value="0">正常</ElRadio>
-          <ElRadio value="1">停用</ElRadio>
+          <ElRadio value="0">{{ t('common.normal') }}</ElRadio>
+          <ElRadio value="1">{{ t('common.disabled') }}</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
-      <ElFormItem label="公告内容" prop="noticeContent">
+      <ElFormItem :label="t('system.notice.noticeContent')" prop="noticeContent">
         <art-wang-editor v-model="formData.noticeContent" />
       </ElFormItem>
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+        <ElButton @click="dialogVisible = false">{{ t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="handleSubmit">{{ t('common.submit') }}</ElButton>
       </div>
     </template>
   </ElDialog>
@@ -52,7 +45,8 @@
 
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
-  import type { ElOption, FormInstance, FormRules } from 'element-plus'
+  import type { FormInstance, FormRules } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import {
     fetchAddNotice,
     fetchUpdateNotice,
@@ -61,6 +55,7 @@
   } from '@/api/system/notice/notice'
   import { handleMutationError } from '@/utils/http/mutation'
   import { DialogType } from '@/types'
+
   interface Props {
     visible: boolean
     type: DialogType
@@ -74,8 +69,8 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
-  // 对话框显示控制
   const dialogVisible = computed({
     get: () => props.visible,
     set: (value) => emit('update:visible', value)
@@ -83,29 +78,24 @@
 
   const dialogType = computed(() => props.type)
 
-  // 表单实例
   const formRef = ref<FormInstance>()
-  // 表单数据
+
   const formData = reactive({
     noticeTitle: '',
     noticeType: '',
     noticeContent: '',
     status: 0
   })
-  // 表单验证规则
-  const rules: FormRules = {
-    noticeTitle: [{ required: true, message: '公告标题不能为空', trigger: 'blur' }],
-    noticeType: [{ required: true, message: '公告类型不能为空', trigger: 'change' }]
-  }
-  /**
-   * 初始化表单数据
-   * 根据对话框类型（新增/编辑）填充表单
-   */
+
+  const rules = computed<FormRules>(() => ({
+    noticeTitle: [{ required: true, message: t('system.notice.titleRequired'), trigger: 'blur' }],
+    noticeType: [{ required: true, message: t('system.notice.typeRequired'), trigger: 'change' }]
+  }))
+
   const initFormData = async () => {
     const isEdit = props.type === 'edit' && props.noticeData
 
     if (isEdit && props.noticeData?.noticeId) {
-      // 编辑模式：获取完整的通知公告详情
       try {
         const detail = await fetchGetNoticeById(props.noticeData.noticeId)
         console.log('通知公告详情数据:', detail)
@@ -119,8 +109,7 @@
         }
       } catch (error) {
         console.error('获取通知公告详情失败:', error)
-        handleMutationError(error, '获取通知公告详情失败')
-        // 如果获取详情失败，使用列表数据作为回退
+        handleMutationError(error, t('system.notice.loadFail'))
         const row = props.noticeData
         Object.assign(formData, {
           noticeTitle: row.noticeTitle || '',
@@ -130,7 +119,6 @@
         })
       }
     } else {
-      // 新增模式：重置表单
       Object.assign(formData, {
         noticeTitle: '',
         noticeType: '',
@@ -140,10 +128,6 @@
     }
   }
 
-  /**
-   * 监听对话框状态变化
-   * 当对话框打开时初始化表单数据并清除验证状态
-   */
   watch(
     () => [props.visible, props.type, props.noticeData],
     async ([visible]) => {
@@ -157,10 +141,6 @@
     { immediate: true }
   )
 
-  /**
-   * 提交表单
-   * 验证通过后触发提交事件
-   */
   const handleSubmit = async () => {
     if (!formRef.value) return
 
@@ -180,12 +160,17 @@
             submitData.noticeId = props.noticeData?.noticeId
             await fetchUpdateNotice(submitData)
           }
-          ElMessage.success(dialogType.value === 'add' ? '新增成功' : '更新成功')
+          ElMessage.success(
+            dialogType.value === 'add' ? t('common.addSuccess') : t('common.updateSuccess')
+          )
           dialogVisible.value = false
           emit('submit')
         } catch (error) {
           console.error('提交失败:', error)
-          handleMutationError(error, dialogType.value === 'add' ? '新增失败' : '更新失败')
+          handleMutationError(
+            error,
+            dialogType.value === 'add' ? t('common.addFail') : t('common.updateFail')
+          )
         }
       }
     })

@@ -1,18 +1,32 @@
 <template>
-  <ElDialog v-model="visible" title="执行日志" width="800px" align-center>
+  <ElDialog v-model="visible" :title="t('monitor.job.logTitle')" width="800px" align-center>
     <ElTable v-loading="loading" :data="logList" border max-height="400" style="width: 100%">
-      <ElTableColumn prop="jobName" label="任务名称" width="120" />
-      <ElTableColumn prop="jobGroup" label="任务组" width="80" />
-      <ElTableColumn prop="status" label="状态" width="70">
+      <ElTableColumn prop="jobName" :label="t('monitor.job.jobName')" width="120" />
+      <ElTableColumn prop="jobGroup" :label="t('monitor.job.jobGroup')" width="80" />
+      <ElTableColumn prop="status" :label="t('monitor.job.status')" width="70">
         <template #default="{ row }">
           <ElTag :type="row.status === '0' ? 'success' : 'danger'">
-            {{ row.status === '0' ? '成功' : '失败' }}
+            {{
+              row.status === '0'
+                ? t('system.loginLog.statusSuccess')
+                : t('system.loginLog.statusFail')
+            }}
           </ElTag>
         </template>
       </ElTableColumn>
-      <ElTableColumn prop="jobMessage" label="日志信息" min-width="120" show-overflow-tooltip />
-      <ElTableColumn prop="exceptionInfo" label="异常信息" min-width="150" show-overflow-tooltip />
-      <ElTableColumn prop="createTime" label="执行时间" width="160" />
+      <ElTableColumn
+        prop="jobMessage"
+        :label="t('common.remark')"
+        min-width="120"
+        show-overflow-tooltip
+      />
+      <ElTableColumn
+        prop="exceptionInfo"
+        :label="t('system.operLog.errorMsg')"
+        min-width="150"
+        show-overflow-tooltip
+      />
+      <ElTableColumn prop="createTime" :label="t('system.operLog.operTime')" width="160" />
     </ElTable>
     <ElPagination
       v-model:current-page="pageNum"
@@ -25,14 +39,17 @@
       @size-change="loadLogs"
     />
     <template #footer>
-      <ElButton @click="visible = false">关闭</ElButton>
-      <ElButton type="primary" :loading="clearing" @click="handleClear">清空日志</ElButton>
+      <ElButton @click="visible = false">{{ t('common.cancel') }}</ElButton>
+      <ElButton type="primary" :loading="clearing" @click="handleClear">{{
+        t('system.operLog.clear')
+      }}</ElButton>
     </template>
   </ElDialog>
 </template>
 
 <script setup lang="ts">
   import { ElMessage, ElMessageBox } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import { fetchJobLogList, fetchClearJobLog, type SysJobLog } from '@/api/monitor/job'
 
   interface Props {
@@ -49,6 +66,8 @@
   const emit = defineEmits<{
     (e: 'update:modelValue', v: boolean): void
   }>()
+
+  const { t } = useI18n()
 
   const visible = computed({
     get: () => props.modelValue,
@@ -79,13 +98,15 @@
   }
 
   const handleClear = async () => {
-    await ElMessageBox.confirm('确定清空所有执行日志吗？', '提示', {
-      type: 'warning'
+    await ElMessageBox.confirm(t('system.operLog.clearConfirm'), t('common.tips'), {
+      type: 'warning',
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel')
     })
     clearing.value = true
     try {
       await fetchClearJobLog()
-      ElMessage.success('已清空')
+      ElMessage.success(t('common.deleteSuccess'))
       loadLogs()
     } finally {
       clearing.value = false

@@ -14,6 +14,7 @@
 
 <script setup lang="ts">
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+  import { useI18n } from 'vue-i18n'
   import { OPER_BUSINESS_TYPE_OPTIONS } from '../constants'
 
   interface Props {
@@ -26,69 +27,65 @@
   }
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
-  // 表单数据双向绑定
   const searchBarRef = ref()
   const formData = computed({
     get: () => props.modelValue,
     set: (val: Record<string, any>) => emit('update:modelValue', val)
   })
 
-  // 校验规则
   const rules = {}
 
-  // 操作状态选项
-  const statusOptions = [
-    { label: '正常', value: 0 },
-    { label: '异常', value: 1 }
-  ]
+  const statusOptions = computed(() => [
+    { label: t('system.operLog.statusSuccess'), value: 0 },
+    { label: t('system.operLog.statusFail'), value: 1 }
+  ])
 
-  // 表单配置
   const formItems = computed(() => [
     {
-      label: '模块标题',
+      label: t('system.operLog.title'),
       key: 'title',
       type: 'input',
-      placeholder: '请输入模块标题',
+      placeholder: t('system.operLog.searchTitle'),
       clearable: true
     },
     {
-      label: '业务类型',
+      label: t('system.operLog.businessType'),
       key: 'businessType',
       type: 'select',
       props: {
-        placeholder: '请选择业务类型',
+        placeholder: t('common.pleaseSelect'),
         clearable: true,
         options: OPER_BUSINESS_TYPE_OPTIONS
       }
     },
     {
-      label: '操作人员',
+      label: t('system.operLog.operName'),
       key: 'operName',
       type: 'input',
-      placeholder: '请输入操作人员',
+      placeholder: t('system.operLog.searchOperName'),
       clearable: true
     },
     {
-      label: '操作状态',
+      label: t('system.operLog.status'),
       key: 'status',
       type: 'select',
       props: {
-        placeholder: '请选择操作状态',
+        placeholder: t('common.pleaseSelect'),
         clearable: true,
-        options: statusOptions
+        options: statusOptions.value
       }
     },
     {
-      label: '操作时间',
+      label: t('system.operLog.operTime'),
       key: 'dateRange',
       type: 'datetimerange',
       span: 8,
       props: {
         type: 'datetimerange',
-        rangeSeparator: '至',
-        startPlaceholder: '开始时间',
-        endPlaceholder: '结束时间',
+        startPlaceholder: t('common.pleaseInput'),
+        endPlaceholder: t('common.pleaseInput'),
         format: 'YYYY-MM-DD HH:mm:ss',
         valueFormat: 'YYYY-MM-DD HH:mm:ss',
         style: 'width: 100%',
@@ -97,14 +94,12 @@
     }
   ])
 
-  // 事件处理
   function handleReset() {
     emit('reset')
   }
 
   async function handleSearch() {
     await searchBarRef.value.validate()
-    // 处理日期范围，将 dateRange 拆分为 startTime 和 endTime
     const searchParams = { ...formData.value }
     if (
       searchParams.dateRange &&
@@ -117,7 +112,6 @@
       searchParams.startTime = undefined
       searchParams.endTime = undefined
     }
-    // 删除 dateRange，因为后端不需要这个字段
     delete searchParams.dateRange
     emit('search', searchParams)
   }

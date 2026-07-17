@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    :title="dialogType === 'add' ? '创建表' : '编辑表'"
+    :title="dialogType === 'add' ? t('tools.gen.addTitle') : t('tools.gen.editTitle')"
     width="60%"
     align-center
     @closed="handleClosed"
@@ -14,20 +14,22 @@
       label-position="top"
       aria-label="建表SQL表单"
     >
-      <ElFormItem label="创建表语句(支持多个建表语句)：" prop="tableSql">
+      <ElFormItem :label="t('tools.gen.createTableSql')" prop="tableSql">
         <ElInput
           v-model="formData.tableSql"
           type="textarea"
           :rows="12"
-          placeholder="请输入建表SQL语句，支持多个建表语句，用分号分隔&#10;例如：&#10;CREATE TABLE sys_user (&#10;  user_id BIGINT PRIMARY KEY AUTO_INCREMENT,&#10;  username VARCHAR(50) NOT NULL,&#10;  password VARCHAR(100) NOT NULL&#10;) COMMENT='用户表';"
+          :placeholder="t('tools.gen.createTableSqlRequired')"
           clearable
         />
       </ElFormItem>
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="handleCancel">取消</ElButton>
-        <ElButton type="primary" @click="handleSubmit" :loading="submitting">提交</ElButton>
+        <ElButton @click="handleCancel">{{ t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="handleSubmit" :loading="submitting">{{
+          t('common.submit')
+        }}</ElButton>
       </div>
     </template>
   </ElDialog>
@@ -39,6 +41,7 @@
   import { DialogType } from '@/types'
   import { fetchCreateTable } from '@/api/generator/gen-table'
   import { handleMutationError } from '@/utils/http/mutation'
+  import { useI18n } from 'vue-i18n'
 
   interface Props {
     visible: boolean
@@ -52,6 +55,7 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   // 对话框显示控制
   const dialogVisible = computed({
@@ -73,19 +77,18 @@
   })
 
   // 表单验证规则
-  const rules: FormRules = {
+  const rules = computed<FormRules>(() => ({
     tableSql: [
-      { required: true, message: '请输入建表SQL语句', trigger: 'blur' },
+      { required: true, message: t('tools.gen.createTableSqlRequired'), trigger: 'blur' },
       {
-        validator: (rule: any, value: string, callback: (error?: Error) => void) => {
+        validator: (_rule: unknown, value: string, callback: (error?: Error) => void) => {
           if (!value || value.trim() === '') {
-            callback(new Error('请输入建表SQL语句'))
+            callback(new Error(t('tools.gen.createTableSqlRequired')))
             return
           }
-          // 简单的SQL验证：检查是否包含CREATE TABLE关键字
           const sqlUpper = value.toUpperCase().trim()
           if (!sqlUpper.includes('CREATE TABLE')) {
-            callback(new Error('请输入有效的CREATE TABLE语句'))
+            callback(new Error(t('tools.gen.createTableSqlInvalid')))
             return
           }
           callback()
@@ -93,7 +96,7 @@
         trigger: 'blur'
       }
     ]
-  }
+  }))
 
   /**
    * 重置表单数据
@@ -118,12 +121,12 @@
       await formRef.value.validate()
       submitting.value = true
       await fetchCreateTable(formData.tableSql.trim())
-      ElMessage.success('创建表成功')
+      ElMessage.success(t('tools.gen.createTableSuccess'))
       dialogVisible.value = false
       emit('submit', { tableSql: formData.tableSql.trim() })
     } catch (error) {
       console.error('创建表失败:', error)
-      handleMutationError(error, '创建表失败，请检查SQL语句是否正确')
+      handleMutationError(error, t('tools.gen.createTableFail'))
     } finally {
       submitting.value = false
     }

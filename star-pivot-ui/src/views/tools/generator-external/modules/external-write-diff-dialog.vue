@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    title="写盘 Diff 预览"
+    :title="t('tools.genExt.diffTitle')"
     width="90%"
     align-center
     class="write-diff-dialog"
@@ -10,46 +10,59 @@
   >
     <div v-loading="loading" class="diff-wrap">
       <div v-if="diffResult" class="diff-summary">
-        <ElTag type="success" effect="plain">新增 {{ diffResult.newCount }}</ElTag>
-        <ElTag type="warning" effect="plain">修改 {{ diffResult.modifiedCount }}</ElTag>
-        <ElTag type="info" effect="plain">无变化 {{ diffResult.unchangedCount }}</ElTag>
-        <span class="diff-root" :title="diffResult.outputRoot"
-          >根目录：{{ diffResult.outputRoot }}</span
-        >
+        <ElTag type="success" effect="plain">
+          {{ t('tools.genExt.diffNew', { count: diffResult.newCount }) }}
+        </ElTag>
+        <ElTag type="warning" effect="plain">
+          {{ t('tools.genExt.diffModified', { count: diffResult.modifiedCount }) }}
+        </ElTag>
+        <ElTag type="info" effect="plain">
+          {{ t('tools.genExt.diffUnchanged', { count: diffResult.unchangedCount }) }}
+        </ElTag>
+        <span class="diff-root" :title="diffResult.outputRoot">
+          {{ t('tools.genExt.diffRoot', { root: diffResult.outputRoot }) }}
+        </span>
       </div>
 
       <div v-if="diffResult?.files?.length" class="diff-layout">
         <aside class="file-panel">
           <div class="file-panel__toolbar">
             <ElRadioGroup v-model="statusFilter" size="small">
-              <ElRadioButton value="ALL">全部</ElRadioButton>
-              <ElRadioButton value="NEW">新增</ElRadioButton>
-              <ElRadioButton value="MODIFIED">修改</ElRadioButton>
-              <ElRadioButton value="UNCHANGED">无变化</ElRadioButton>
+              <ElRadioButton value="ALL">{{ t('file.all') }}</ElRadioButton>
+              <ElRadioButton value="NEW">{{ t('file.new') }}</ElRadioButton>
+              <ElRadioButton value="MODIFIED">{{ t('tools.genExt.statusModified') }}</ElRadioButton>
+              <ElRadioButton value="UNCHANGED">{{
+                t('tools.genExt.statusUnchanged')
+              }}</ElRadioButton>
             </ElRadioGroup>
             <div v-if="writableFiles.length > 0" class="select-actions">
               <ExternalActionBtn
-                what="勾选全部变更"
-                usage="选中所有「新增」和「修改」状态的文件，用于批量写盘。"
+                :what="t('tools.genExt.selectAllChangedWhat')"
+                :usage="t('tools.genExt.selectAllChangedUsage')"
                 link
                 type="primary"
                 size="small"
                 @click="selectAllWritable"
               >
-                全选变更
+                {{ t('tools.genExt.selectAllChanged') }}
               </ExternalActionBtn>
               <ExternalActionBtn
-                what="取消勾选"
-                usage="清空已选文件列表，写盘按钮将不可用直至重新勾选。"
+                :what="t('tools.genExt.clearSelectionWhat')"
+                :usage="t('tools.genExt.clearSelectionUsage')"
                 link
                 size="small"
                 @click="clearWritableSelection"
               >
-                清空
+                {{ t('tools.genExt.clearSelection') }}
               </ExternalActionBtn>
-              <span class="select-count"
-                >已选 {{ selectedPaths.size }} / {{ writableFiles.length }}</span
-              >
+              <span class="select-count">
+                {{
+                  t('tools.genExt.selectedCount', {
+                    selected: selectedPaths.size,
+                    total: writableFiles.length
+                  })
+                }}
+              </span>
             </div>
           </div>
           <ElScrollbar class="file-panel__scroll">
@@ -73,12 +86,18 @@
                 <span class="file-item__path" :title="file.path">{{ file.path }}</span>
               </div>
             </template>
-            <ElEmpty v-else description="当前筛选下暂无文件" class="file-panel__empty" />
+            <ElEmpty
+              v-else
+              :description="t('tools.genExt.noFileInFilter')"
+              class="file-panel__empty"
+            />
           </ElScrollbar>
         </aside>
 
         <section v-loading="detailLoading" class="code-panel">
-          <div class="code-panel__header" :title="activePath">{{ activePath || '请选择文件' }}</div>
+          <div class="code-panel__header" :title="activePath">
+            {{ activePath || t('tools.genExt.selectFileHint') }}
+          </div>
           <div v-if="activeFile && activeInFiltered" class="code-panel__body">
             <div v-if="activeFile.status === 'MODIFIED'" class="diff-unified">
               <LineDiffView
@@ -91,39 +110,43 @@
             </div>
             <ElEmpty
               v-else-if="activeFile.status === 'UNCHANGED'"
-              description="文件内容与磁盘一致，无需写入"
+              :description="t('tools.genExt.fileUnchanged')"
               class="empty-tip"
             />
           </div>
           <ElEmpty
             v-else-if="filteredFiles.length === 0"
-            description="请切换「全部」或「新增」等标签查看文件"
+            :description="t('tools.genExt.switchFilterHint')"
             class="empty-tip"
           />
-          <ElEmpty v-else description="请选择左侧文件" class="empty-tip" />
+          <ElEmpty v-else :description="t('tools.genExt.selectFileHint')" class="empty-tip" />
         </section>
       </div>
-      <ElEmpty v-else-if="!loading" description="暂无待写入文件" class="empty-tip" />
+      <ElEmpty
+        v-else-if="!loading"
+        :description="t('tools.genExt.noWriteFiles')"
+        class="empty-tip"
+      />
     </div>
 
     <template #footer>
       <ExternalActionBtn
-        what="关闭预览"
-        usage="关闭对话框，不写入任何文件。已选勾选状态不会保留到下次打开。"
+        :what="t('tools.genExt.closePreviewWhat')"
+        :usage="t('tools.genExt.closePreviewUsage')"
         @click="dialogVisible = false"
       >
-        关闭
+        {{ t('file.close') }}
       </ExternalActionBtn>
       <ExternalActionBtn
-        what="写入选中文件"
-        usage="仅将左侧勾选的文件写入写盘根目录，不会写入未勾选或无变化的文件。"
+        :what="t('tools.genExt.writeSelectedWhat')"
+        :usage="t('tools.genExt.writeSelectedUsage')"
         type="warning"
         v-auth="'tool:external:create'"
         :loading="writing"
         :disabled="selectedPaths.size === 0"
         @click="emitConfirmWrite"
       >
-        写入选中 ({{ selectedPaths.size }})
+        {{ t('tools.genExt.writeSelected', { count: selectedPaths.size }) }}
       </ExternalActionBtn>
     </template>
   </ElDialog>
@@ -139,6 +162,7 @@
     ElScrollbar,
     ElTag
   } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import {
     type ExternalGenScope,
     type ExternalWriteDiffItem,
@@ -163,6 +187,8 @@
     'update:visible': [boolean]
     confirmWrite: [string[]]
   }>()
+
+  const { t } = useI18n()
 
   const dialogVisible = computed({
     get: () => props.visible,
@@ -206,9 +232,9 @@
   }
 
   function statusLabel(status: ExternalWriteDiffStatus) {
-    if (status === 'NEW') return '新增'
-    if (status === 'MODIFIED') return '修改'
-    return '相同'
+    if (status === 'NEW') return t('file.new')
+    if (status === 'MODIFIED') return t('tools.genExt.statusModified')
+    return t('tools.genExt.statusSame')
   }
 
   function statusTagType(status: ExternalWriteDiffStatus) {

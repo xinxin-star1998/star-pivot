@@ -22,10 +22,10 @@
       >
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="goBack" v-ripple>返回</ElButton>
+            <ElButton @click="goBack" v-ripple>{{ t('tools.gen.back') }}</ElButton>
           </ElSpace>
           <ElSpace wrap>
-            <ElButton @click="openDialog" v-ripple>添加用户</ElButton>
+            <ElButton @click="openDialog" v-ripple>{{ t('system.role.addUser') }}</ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -52,17 +52,20 @@
 
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetUserListByRoleId, fetchCancelUser } from '@/api/role/role'
+  import { fetchCancelUser, fetchGetUserListByRoleId } from '@/api/role/role'
   import { handleMutationError } from '@/utils/http/mutation'
   import AssignUserSearch from './modules/assign-user-search.vue'
-  import { ElTag, ElButton, ElSpace, ElMessage } from 'element-plus'
+  import { ElButton, ElMessage, ElSpace, ElTag } from 'element-plus'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
 
   const AddUser = defineAsyncComponent(() => import('@views/system/role/modules/add-user.vue'))
 
   defineOptions({ name: 'AssignUser' })
+
+  const { t } = useI18n()
 
   // type UserListItem = Api.SystemManage.UserListItem
 
@@ -110,7 +113,7 @@
       columnsFactory: () => [
         {
           type: 'index',
-          label: '序号',
+          label: t('system.role.index'),
           width: 100,
           index: (index: number) => {
             return (pagination.current - 1) * pagination.size + index + 1
@@ -118,47 +121,49 @@
         },
         {
           prop: 'userName',
-          label: '用户名称',
+          label: t('system.user.userName'),
           width: 120
         },
         {
           prop: 'nickName',
-          label: '用户昵称',
+          label: t('system.user.nickName'),
           width: 120
         },
         {
           prop: 'email',
-          label: '邮箱',
+          label: t('system.user.email'),
           width: 120
         },
         {
           prop: 'phonenumber',
-          label: '手机号',
+          label: t('system.user.phone'),
           formatter: (row) => {
-            return row.phonenumber || '未知'
+            return row.phonenumber || t('system.userCenter.unknown')
           }
         },
         {
           prop: 'status',
-          label: '状态',
+          label: t('common.status'),
           width: 100,
           formatter: (row) => {
             const status = Number(row.status)
             const isEnabled = status === 0
             const tagType = isEnabled ? 'success' : 'danger'
-            const text = isEnabled ? '启用' : '禁用'
+            const text = isEnabled
+              ? t('system.role.statusEnabled')
+              : t('system.role.statusDisabled')
             return h(ElTag, { type: tagType }, () => text)
           }
         },
         {
           prop: 'createTime',
-          label: '创建日期',
+          label: t('system.role.createDate'),
           width: 180,
           sortable: true
         },
         {
           prop: 'operation',
-          label: '操作',
+          label: t('system.role.operation'),
           width: 200,
           formatter: (row) => {
             return h('div', { class: 'flex gap-2' }, [
@@ -173,15 +178,15 @@
                         userId: row.userId,
                         roleId: roleId.value
                       })
-                      ElMessage.success('取消授权成功')
+                      ElMessage.success(t('system.role.removeUserSuccess'))
                       refreshData()
                     } catch (error) {
-                      console.error('取消授权失败:', error)
-                      handleMutationError(error, '取消授权失败')
+                      console.error('cancel auth failed:', error)
+                      handleMutationError(error, t('system.role.removeUserFail'))
                     }
                   }
                 },
-                () => '取消授权'
+                () => t('system.role.removeUser')
               )
             ])
           }
@@ -208,7 +213,7 @@
   const openDialog = () => {
     // 验证 roleId 是否存在
     if (!roleId.value) {
-      ElMessage.warning('角色ID不存在，无法添加用户')
+      ElMessage.warning(t('system.role.roleIdMissing'))
       return
     }
     showAddUserDialog.value = true

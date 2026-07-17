@@ -2,21 +2,34 @@
   <div class="ai-config-page art-full-height">
     <ElCard shadow="never" class="search-card">
       <ElForm :inline="true" :model="searchForm">
-        <ElFormItem label="配置名称">
-          <ElInput v-model="searchForm.configName" clearable placeholder="配置名称" />
+        <ElFormItem :label="t('ai.config.name')">
+          <ElInput
+            v-model="searchForm.configName"
+            clearable
+            :placeholder="t('ai.config.namePlaceholder')"
+          />
         </ElFormItem>
-        <ElFormItem label="助手名称">
-          <ElInput v-model="searchForm.botName" clearable placeholder="助手名称" />
+        <ElFormItem :label="t('ai.config.botName')">
+          <ElInput
+            v-model="searchForm.botName"
+            clearable
+            :placeholder="t('ai.config.botNamePlaceholder')"
+          />
         </ElFormItem>
-        <ElFormItem label="状态">
-          <ElSelect v-model="searchForm.status" clearable placeholder="全部" class="!w-28">
-            <ElOption label="正常" value="0" />
-            <ElOption label="停用" value="1" />
+        <ElFormItem :label="t('common.status')">
+          <ElSelect
+            v-model="searchForm.status"
+            clearable
+            :placeholder="t('ai.common.all')"
+            class="!w-28"
+          >
+            <ElOption :label="t('common.normal')" value="0" />
+            <ElOption :label="t('common.disabled')" value="1" />
           </ElSelect>
         </ElFormItem>
         <ElFormItem>
-          <ElButton type="primary" @click="handleSearch">查询</ElButton>
-          <ElButton @click="resetSearch">重置</ElButton>
+          <ElButton type="primary" @click="handleSearch">{{ t('ai.common.search') }}</ElButton>
+          <ElButton @click="resetSearch">{{ t('common.reset') }}</ElButton>
         </ElFormItem>
       </ElForm>
     </ElCard>
@@ -24,7 +37,9 @@
     <ElCard class="art-table-card" shadow="never">
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
-          <ElButton v-auth="'ai:config:edit'" type="primary" @click="openEdit()">新增配置</ElButton>
+          <ElButton v-auth="'ai:config:edit'" type="primary" @click="openEdit()">
+            {{ t('ai.config.addConfig') }}
+          </ElButton>
         </template>
       </ArtTableHeader>
       <ArtTable
@@ -48,6 +63,7 @@
 
 <script lang="ts" setup>
   import { h } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
   import { useTable } from '@/hooks/core/useTable'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
@@ -65,6 +81,8 @@
   import { handleMutationError } from '@/utils/http/mutation'
 
   defineOptions({ name: 'AiConfig' })
+
+  const { t } = useI18n()
 
   const searchForm = ref({ configName: '', botName: '', status: '' })
   const editVisible = ref(false)
@@ -87,33 +105,33 @@
       apiFn: fetchAiConfigList,
       apiParams: { pageNum: 1, pageSize: 20, ...searchForm.value },
       columnsFactory: () => [
-        { type: 'index', width: 60, label: '序号' },
-        { prop: 'configName', label: '配置名称', minWidth: 110 },
-        { prop: 'botName', label: '助手名称', minWidth: 110 },
-        { prop: 'defaultModel', label: '默认模型', minWidth: 130 },
+        { type: 'index', width: 60, label: t('ai.common.index') },
+        { prop: 'configName', label: t('ai.config.name'), minWidth: 110 },
+        { prop: 'botName', label: t('ai.config.botName'), minWidth: 110 },
+        { prop: 'defaultModel', label: t('ai.config.defaultModel'), minWidth: 130 },
         {
           prop: 'isDefault',
-          label: '默认',
+          label: t('ai.config.isDefault'),
           width: 80,
           formatter: (row: AiConfigItem) =>
             h(ElTag, { type: row.isDefault === '0' ? 'success' : 'info', size: 'small' }, () =>
-              row.isDefault === '0' ? '是' : '否'
+              row.isDefault === '0' ? t('common.yes') : t('common.no')
             )
         },
         {
           prop: 'status',
-          label: '状态',
+          label: t('common.status'),
           width: 80,
           formatter: (row: AiConfigItem) =>
             h(ElTag, { type: row.status === '0' ? 'success' : 'info', size: 'small' }, () =>
-              row.status === '0' ? '正常' : '停用'
+              row.status === '0' ? t('common.normal') : t('common.disabled')
             )
         },
-        { prop: 'updateBy', label: '更新人', minWidth: 90 },
-        { prop: 'updateTime', label: '更新时间', minWidth: 160 },
+        { prop: 'updateBy', label: t('ai.common.updateBy'), minWidth: 90 },
+        { prop: 'updateTime', label: t('ai.common.updateTime'), minWidth: 160 },
         {
           prop: 'actions',
-          label: '操作',
+          label: t('common.operation'),
           width: 220,
           fixed: 'right',
           formatter: (row: AiConfigItem) =>
@@ -121,7 +139,7 @@
               h(
                 'a',
                 { class: 'text-primary cursor-pointer', onClick: () => openEdit(row) },
-                '编辑'
+                t('ai.common.edit')
               ),
               row.isDefault !== '0'
                 ? h(
@@ -130,14 +148,14 @@
                       class: 'text-primary cursor-pointer',
                       onClick: () => handleSetDefault(row)
                     },
-                    '设为默认'
+                    t('ai.config.setDefault')
                   )
                 : null,
               row.isDefault !== '0'
                 ? h(
                     'a',
                     { class: 'text-danger cursor-pointer', onClick: () => handleDelete(row) },
-                    '删除'
+                    t('common.delete')
                   )
                 : null
             ])
@@ -161,7 +179,7 @@
       try {
         currentConfig.value = await fetchAiConfigDetail(row.configId)
       } catch (error) {
-        handleMutationError(error, '加载配置失败')
+        handleMutationError(error, t('ai.config.loadFail'))
         return
       }
     } else {
@@ -174,11 +192,11 @@
     saving.value = true
     try {
       await fetchAiConfigSave(payload)
-      ElMessage.success('保存成功')
+      ElMessage.success(t('ai.common.saveSuccess'))
       editVisible.value = false
       await refreshData()
     } catch (error) {
-      handleMutationError(error, '保存失败')
+      handleMutationError(error, t('ai.common.saveFail'))
     } finally {
       saving.value = false
     }
@@ -188,30 +206,34 @@
     if (!row.configId) return
     try {
       await fetchAiConfigSetDefault(row.configId)
-      ElMessage.success('已设为默认配置')
+      ElMessage.success(t('ai.config.setDefaultSuccess'))
       await refreshData()
     } catch (error) {
-      handleMutationError(error, '操作失败')
+      handleMutationError(error, t('ai.config.setDefaultFail'))
     }
   }
 
   async function handleDelete(row: AiConfigItem): Promise<void> {
     if (!row.configId) return
     try {
-      await ElMessageBox.confirm(`确定删除配置「${row.configName}」吗？`, '提示', {
-        type: 'warning',
-        confirmButtonText: '删除',
-        cancelButtonText: '取消'
-      })
+      await ElMessageBox.confirm(
+        t('ai.config.deleteConfirm', { name: row.configName }),
+        t('common.tips'),
+        {
+          type: 'warning',
+          confirmButtonText: t('common.delete'),
+          cancelButtonText: t('common.cancel')
+        }
+      )
     } catch {
       return
     }
     try {
       await fetchAiConfigRemove(row.configId)
-      ElMessage.success('删除成功')
+      ElMessage.success(t('ai.common.deleteSuccess'))
       await refreshData()
     } catch (error) {
-      handleMutationError(error, '删除失败')
+      handleMutationError(error, t('ai.common.deleteFail'))
     }
   }
 </script>

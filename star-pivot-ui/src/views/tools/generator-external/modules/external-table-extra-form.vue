@@ -2,56 +2,64 @@
   <ElForm :model="meta" label-width="120px" class="external-table-extra">
     <ElRow :gutter="16">
       <ElCol :span="8">
-        <ElFormItem label="实体类名">
+        <ElFormItem :label="t('tools.gen.className')">
           <ElInput v-model="meta.className" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="8">
-        <ElFormItem label="业务名">
-          <ElInput v-model="meta.businessName" placeholder="用于路径、权限" />
+        <ElFormItem :label="t('tools.gen.businessName')">
+          <ElInput v-model="meta.businessName" :placeholder="t('tools.genExt.businessNameHint')" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="8">
-        <ElFormItem label="功能名">
-          <ElInput v-model="meta.functionName" placeholder="中文描述" />
+        <ElFormItem :label="t('tools.gen.functionName')">
+          <ElInput v-model="meta.functionName" :placeholder="t('tools.genExt.functionNameHint')" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="8">
-        <ElFormItem label="表描述">
+        <ElFormItem :label="t('tools.gen.tableComment')">
           <ElInput v-model="meta.tableComment" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="8">
-        <ElFormItem label="上级菜单">
+        <ElFormItem :label="t('tools.gen.parentMenu')">
           <ElTreeSelect
             v-model="meta.parentMenuId"
             :data="menuTreeOptions"
             check-strictly
             :render-after-expand="false"
             clearable
-            placeholder="菜单 SQL 挂载位置"
+            :placeholder="t('tools.genExt.parentMenuHint')"
             class="w-full"
           />
         </ElFormItem>
       </ElCol>
       <ElCol :span="8">
-        <ElFormItem label="页面路径">
-          <ElInput v-model="meta.vuePagePath" placeholder="留空使用全局配置" clearable />
+        <ElFormItem :label="t('tools.genExt.vuePagePath')">
+          <ElInput
+            v-model="meta.vuePagePath"
+            :placeholder="t('tools.genExt.useGlobalConfig')"
+            clearable
+          />
         </ElFormItem>
       </ElCol>
       <ElCol :span="8">
-        <ElFormItem label="API 路径">
-          <ElInput v-model="meta.apiPath" placeholder="留空使用全局配置" clearable />
+        <ElFormItem :label="t('tools.genExt.apiPath')">
+          <ElInput
+            v-model="meta.apiPath"
+            :placeholder="t('tools.genExt.useGlobalConfig')"
+            clearable
+          />
         </ElFormItem>
       </ElCol>
     </ElRow>
 
     <template v-if="tplCategory === 'tree'">
-      <ElDivider content-position="left">树表配置</ElDivider>
+      <ElDivider content-position="left">{{ t('tools.genExt.treeConfig') }}</ElDivider>
       <ElRow :gutter="16">
         <ElCol :span="8">
-          <ElFormItem label="树编码字段">
-            <ElSelect v-model="meta.treeCode" placeholder="请选择" clearable>
+          <ElFormItem :label="t('tools.genExt.treeCode')">
+            <ElSelect v-model="meta.treeCode" :placeholder="t('common.pleaseSelect')" clearable>
               <ElOption
                 v-for="col in columns"
                 :key="col.columnName"
@@ -62,8 +70,12 @@
           </ElFormItem>
         </ElCol>
         <ElCol :span="8">
-          <ElFormItem label="树父编码字段">
-            <ElSelect v-model="meta.treeParentCode" placeholder="请选择" clearable>
+          <ElFormItem :label="t('tools.genExt.treeParentCode')">
+            <ElSelect
+              v-model="meta.treeParentCode"
+              :placeholder="t('common.pleaseSelect')"
+              clearable
+            >
               <ElOption
                 v-for="col in columns"
                 :key="col.columnName"
@@ -74,8 +86,8 @@
           </ElFormItem>
         </ElCol>
         <ElCol :span="8">
-          <ElFormItem label="树名称字段">
-            <ElSelect v-model="meta.treeName" placeholder="请选择" clearable>
+          <ElFormItem :label="t('tools.genExt.treeName')">
+            <ElSelect v-model="meta.treeName" :placeholder="t('common.pleaseSelect')" clearable>
               <ElOption
                 v-for="col in columns"
                 :key="col.columnName"
@@ -89,13 +101,13 @@
     </template>
 
     <template v-if="tplCategory === 'sub'">
-      <ElDivider content-position="left">主子表配置</ElDivider>
+      <ElDivider content-position="left">{{ t('tools.genExt.subTableConfig') }}</ElDivider>
       <ElRow :gutter="16">
         <ElCol :span="12">
-          <ElFormItem label="关联子表">
+          <ElFormItem :label="t('tools.genExt.subTable')">
             <ElSelect
               v-model="meta.subTableName"
-              placeholder="从已选表中选择"
+              :placeholder="t('tools.genExt.subTablePlaceholder')"
               clearable
               @change="onSubTableChange"
             >
@@ -109,8 +121,12 @@
           </ElFormItem>
         </ElCol>
         <ElCol :span="12">
-          <ElFormItem label="子表外键">
-            <ElSelect v-model="meta.subTableFkName" placeholder="请选择" clearable>
+          <ElFormItem :label="t('tools.genExt.subTableFk')">
+            <ElSelect
+              v-model="meta.subTableFkName"
+              :placeholder="t('common.pleaseSelect')"
+              clearable
+            >
               <ElOption
                 v-for="col in subColumns"
                 :key="col.columnName"
@@ -137,6 +153,7 @@
     ElSelect,
     ElTreeSelect
   } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import type { GenTableColumnItem } from '@/api/generator/gen-external'
 
   export interface ExternalTableMeta {
@@ -150,9 +167,7 @@
     treeName?: string
     subTableName?: string
     subTableFkName?: string
-    /** 表级页面路径覆盖（留空用全局 pathProfile） */
     vuePagePath?: string
-    /** 表级 API 路径覆盖 */
     apiPath?: string
   }
 
@@ -171,6 +186,8 @@
     parentMenus: MenuItem[]
     allColumnsMap: Record<string, GenTableColumnItem[]>
   }>()
+
+  const { t } = useI18n()
 
   const subColumns = ref<GenTableColumnItem[]>([])
 

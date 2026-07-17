@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    title="导入表"
+    :title="t('tools.gen.importTitle')"
     width="70%"
     align-center
     :close-on-click-modal="false"
@@ -9,18 +9,26 @@
     <!-- 查询区域 -->
     <div class="search-bar">
       <ElForm :inline="true" :model="searchForm">
-        <ElFormItem label="表名称">
-          <ElInput v-model="searchForm.tableName" placeholder="请输入表名称" clearable />
+        <ElFormItem :label="t('tools.gen.tableName')">
+          <ElInput
+            v-model="searchForm.tableName"
+            :placeholder="t('tools.gen.searchTable')"
+            clearable
+          />
         </ElFormItem>
-        <ElFormItem label="表描述">
-          <ElInput v-model="searchForm.tableComment" placeholder="请输入表描述" clearable />
+        <ElFormItem :label="t('tools.gen.tableComment')">
+          <ElInput
+            v-model="searchForm.tableComment"
+            :placeholder="t('common.pleaseInput')"
+            clearable
+          />
         </ElFormItem>
         <ElFormItem>
           <ElButton type="primary" @click="handleSearch" :loading="loading">
             <ArtSvgIcon icon="ri:file-search-line" class="mr-1" />
-            搜索
+            {{ t('table.searchBar.search') }}
           </ElButton>
-          <ElButton @click="handleReset" class="ml-2">重置</ElButton>
+          <ElButton @click="handleReset" class="ml-2">{{ t('common.reset') }}</ElButton>
         </ElFormItem>
       </ElForm>
     </div>
@@ -38,9 +46,9 @@
     </ArtTable>
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="handleCancel">取消</ElButton>
+        <ElButton @click="handleCancel">{{ t('common.cancel') }}</ElButton>
         <ElButton type="primary" @click="handleConfirm" :disabled="selectedRows.length === 0">
-          确定
+          {{ t('common.confirm') }}
         </ElButton>
       </div>
     </template>
@@ -58,6 +66,7 @@
   import { fetchGetDbList, fetchImportTable } from '@/api/generator/gen-table'
   import { handleMutationError } from '@/utils/http/mutation'
   import type { ColumnOption } from '@/types'
+  import { useI18n } from 'vue-i18n'
 
   interface ImportTableItem {
     /** 表名称 */
@@ -84,6 +93,7 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   // 弹窗显示控制，与父组件形成 v-model:visible
   const dialogVisible = computed({
@@ -102,31 +112,31 @@
   const loading = ref(false)
 
   // 表格列配置
-  const columns = ref<ColumnOption[]>([
+  const columns = computed<ColumnOption[]>(() => [
     {
       type: 'selection',
       width: 55
     },
     {
       prop: 'tableName',
-      label: '表名称',
+      label: t('tools.gen.tableName'),
       minWidth: 160,
       showOverflowTooltip: true
     },
     {
       prop: 'tableComment',
-      label: '表描述',
+      label: t('tools.gen.tableComment'),
       minWidth: 200,
       showOverflowTooltip: true
     },
     {
       prop: 'createTime',
-      label: '创建时间',
+      label: t('common.createTime'),
       width: 180
     },
     {
       prop: 'updateTime',
-      label: '更新时间',
+      label: t('file.updateTime'),
       width: 180
     }
   ])
@@ -178,7 +188,7 @@
         pagination.size = pageResponse.pageSize
       }
       if (!rows.length) {
-        ElMessage.info('未查询到符合条件的表')
+        ElMessage.info(t('tools.gen.noTableFound'))
       }
     } catch (error) {
       // 统一拦截器已处理错误提示，这里仅在开发环境打印日志
@@ -238,21 +248,20 @@
    */
   const handleConfirm = async () => {
     if (selectedRows.value.length === 0) {
-      ElMessage.warning('请至少选择一个表')
+      ElMessage.warning(t('tools.gen.selectImportTable'))
       return
     }
     const tables = selectedRows.value.map((item: ImportTableItem) => item.tableName).join(',')
     try {
       await fetchImportTable(tables)
-      ElMessage.success('导入成功')
-      // 通知父组件刷新列表
+      ElMessage.success(t('tools.gen.importSuccess'))
       emit('success')
       dialogVisible.value = false
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('导入失败：', error)
       }
-      handleMutationError(error, '导入失败')
+      handleMutationError(error, t('tools.gen.importFail'))
     }
   }
 </script>

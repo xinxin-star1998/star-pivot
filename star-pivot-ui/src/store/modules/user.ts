@@ -41,6 +41,7 @@ import { setPageTitle } from '@/utils/router'
 import { resetRouterState } from '@/router/guards/dynamicRouteGuard'
 import { useMenuStore } from './menu'
 import { StorageConfig } from '@/utils/storage/storage-config'
+import { normalizeAppLang } from '@/locales'
 
 /**
  * 清理 Pinia 持久化存储（只清登录态相关）
@@ -67,8 +68,8 @@ function clearAuthRelatedPersistedStorage() {
 export const useUserStore = defineStore(
   'userStore',
   () => {
-    // 语言设置
-    const language = ref(LanguageEnum.ZH)
+    // 语言设置（动态语言码，不限于枚举）
+    const language = ref<string>(LanguageEnum.ZH)
     // 登录状态
     const isLogin = ref(false)
     // 锁屏状态
@@ -115,11 +116,11 @@ export const useUserStore = defineStore(
 
     /**
      * 设置语言
-     * @param lang 语言枚举值
+     * @param lang 语言编码（如 zh / en，后续可扩展）
      */
-    const setLanguage = (lang: LanguageEnum) => {
+    const setLanguage = (lang: string) => {
+      language.value = normalizeAppLang(lang)
       setPageTitle(router.currentRoute.value)
-      language.value = lang
     }
 
     /**

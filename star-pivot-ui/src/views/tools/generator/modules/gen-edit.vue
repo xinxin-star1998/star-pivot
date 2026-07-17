@@ -3,22 +3,22 @@
   <div class="generator-edit-page art-full-height">
     <ElTabs v-model="activeTab">
       <!-- 基本信息 -->
-      <ElTabPane label="基本信息" name="base">
+      <ElTabPane :label="t('tools.gen.baseInfo')" name="base">
         <ElCard shadow="never">
           <ElForm :model="baseForm" label-width="120px">
-            <ElFormItem label="表名称">
+            <ElFormItem :label="t('tools.gen.tableName')">
               <ElInput v-model="baseForm.tableName" disabled />
             </ElFormItem>
-            <ElFormItem label="表描述">
+            <ElFormItem :label="t('tools.gen.tableComment')">
               <ElInput v-model="baseForm.tableComment" />
             </ElFormItem>
-            <ElFormItem label="实体类名称">
+            <ElFormItem :label="t('tools.gen.className')">
               <ElInput v-model="baseForm.className" />
             </ElFormItem>
-            <ElFormItem label="作者">
+            <ElFormItem :label="t('tools.gen.author')">
               <ElInput v-model="baseForm.functionAuthor" />
             </ElFormItem>
-            <ElFormItem label="备注">
+            <ElFormItem :label="t('common.remark')">
               <ElInput v-model="baseForm.remark" type="textarea" :rows="3" />
             </ElFormItem>
           </ElForm>
@@ -26,7 +26,7 @@
       </ElTabPane>
 
       <!-- 字段信息 -->
-      <ElTabPane label="字段信息" name="field">
+      <ElTabPane :label="t('tools.gen.fieldInfo')" name="field">
         <ElCard shadow="never">
           <ElTable
             :data="columnList"
@@ -35,26 +35,31 @@
             style="width: 100%"
             :max-height="tableMaxHeight"
           >
-            <ElTableColumn type="index" label="序号" width="60" class-name="allowDrag" />
+            <ElTableColumn
+              type="index"
+              :label="t('table.column.index')"
+              width="60"
+              class-name="allowDrag"
+            />
             <ElTableColumn
               prop="columnName"
-              label="字段列名"
+              :label="t('tools.gen.fieldColumnName')"
               min-width="120"
               :show-overflow-tooltip="true"
               class-name="allowDrag"
             />
-            <ElTableColumn label="字段描述" min-width="120">
+            <ElTableColumn :label="t('tools.gen.fieldComment')" min-width="120">
               <template #default="{ row }">
                 <ElInput v-model="row.columnComment" />
               </template>
             </ElTableColumn>
             <ElTableColumn
               prop="columnType"
-              label="物理类型"
+              :label="t('tools.gen.fieldType')"
               min-width="120"
               :show-overflow-tooltip="true"
             />
-            <ElTableColumn label="Java类型" min-width="130">
+            <ElTableColumn :label="t('tools.gen.javaType')" min-width="130">
               <template #default="{ row }">
                 <ElSelect v-model="row.javaType">
                   <ElOption label="Long" value="Long" />
@@ -67,32 +72,32 @@
                 </ElSelect>
               </template>
             </ElTableColumn>
-            <ElTableColumn label="java属性" min-width="120">
+            <ElTableColumn :label="t('tools.gen.javaField')" min-width="120">
               <template #default="{ row }">
                 <ElInput v-model="row.javaField" />
               </template>
             </ElTableColumn>
-            <ElTableColumn label="插入" min-width="40">
+            <ElTableColumn :label="t('tools.gen.isInsert')" min-width="40">
               <template #default="{ row }">
                 <ElCheckbox true-value="1" false-value="0" v-model="row.isInsert" />
               </template>
             </ElTableColumn>
-            <ElTableColumn label="编辑" min-width="40">
+            <ElTableColumn :label="t('tools.gen.isEdit')" min-width="40">
               <template #default="{ row }">
                 <ElCheckbox true-value="1" false-value="0" v-model="row.isEdit" />
               </template>
             </ElTableColumn>
-            <ElTableColumn label="列表" min-width="40">
+            <ElTableColumn :label="t('tools.gen.isList')" min-width="40">
               <template #default="{ row }">
                 <ElCheckbox true-value="1" false-value="0" v-model="row.isList" />
               </template>
             </ElTableColumn>
-            <ElTableColumn label="查询" min-width="40">
+            <ElTableColumn :label="t('tools.gen.isQuery')" min-width="40">
               <template #default="{ row }">
                 <ElCheckbox true-value="1" false-value="0" v-model="row.isQuery" />
               </template>
             </ElTableColumn>
-            <ElTableColumn label="查询方式" min-width="130">
+            <ElTableColumn :label="t('tools.gen.queryType')" min-width="130">
               <template #default="{ row }">
                 <ElSelect v-model="row.queryType">
                   <ElOption label="=" value="EQ" />
@@ -106,12 +111,12 @@
                 </ElSelect>
               </template>
             </ElTableColumn>
-            <ElTableColumn label="必填" min-width="50">
+            <ElTableColumn :label="t('tools.gen.isRequired')" min-width="50">
               <template #default="{ row }">
                 <ElCheckbox true-value="1" false-value="0" v-model="row.isRequired" />
               </template>
             </ElTableColumn>
-            <ElTableColumn label="显示类型" min-width="140">
+            <ElTableColumn :label="t('tools.gen.htmlType')" min-width="140">
               <template #default="{ row }">
                 <ElSelect v-model="row.htmlType">
                   <ElOption label="文本框" value="input" />
@@ -126,9 +131,14 @@
                 </ElSelect>
               </template>
             </ElTableColumn>
-            <ElTableColumn label="字典类型" min-width="180">
+            <ElTableColumn :label="t('tools.gen.dictType')" min-width="180">
               <template #default="{ row }">
-                <ElSelect v-model="row.dictType" clearable filterable placeholder="请选择">
+                <ElSelect
+                  v-model="row.dictType"
+                  clearable
+                  filterable
+                  :placeholder="t('common.pleaseSelect')"
+                >
                   <ElOption
                     v-for="dict in dictOptions"
                     :key="dict.dictType"
@@ -148,7 +158,7 @@
       </ElTabPane>
 
       <!-- 生成信息 -->
-      <ElTabPane label="生成信息" name="gen">
+      <ElTabPane :label="t('tools.gen.genInfo')" name="gen">
         <ElCard shadow="never">
           <GenInfoForm
             v-model="genInfoForm"
@@ -162,8 +172,8 @@
 
     <!-- 统一底部操作栏 -->
     <div class="generator-edit-footer">
-      <ElButton @click="handleBack">返回</ElButton>
-      <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+      <ElButton @click="handleBack">{{ t('tools.gen.back') }}</ElButton>
+      <ElButton type="primary" @click="handleSubmit">{{ t('common.submit') }}</ElButton>
     </div>
   </div>
 </template>
@@ -193,6 +203,7 @@
   import { handleMutationError } from '@/utils/http/mutation'
   import { fetchGetDictTypeSelectList, type SysDictType } from '@/api/dict/type'
   import { fetchGetParentMenu } from '@/api/menu/menu'
+  import { useI18n } from 'vue-i18n'
 
   const GenInfoForm = defineAsyncComponent(
     () => import('@views/tools/generator/modules/genInfoForm.vue')
@@ -203,6 +214,7 @@
 
   const route = useRoute()
   const router = useRouter()
+  const { t } = useI18n()
 
   // 基本信息表单数据
   const baseForm = reactive({
@@ -251,7 +263,7 @@
   const loadData = async () => {
     const tableId = Number(route.params.tableId)
     if (!tableId) {
-      ElMessage.error('缺少表ID参数')
+      ElMessage.error(t('tools.gen.missingTableId'))
       router.back()
       return
     }
@@ -300,7 +312,7 @@
       if (import.meta.env.DEV) {
         console.error('获取代码生成信息失败：', error)
       }
-      handleMutationError(error, '获取代码生成信息失败')
+      handleMutationError(error, t('tools.gen.loadFail'))
     } finally {
       loading.value = false
     }
@@ -341,7 +353,7 @@
 
     try {
       await fetchEditSave(genTable)
-      ElMessage.success('修改成功')
+      ElMessage.success(t('tools.gen.saveSuccess'))
       // 修改成功后返回代码生成列表页
       router.push('/tools/generator')
     } catch (error) {

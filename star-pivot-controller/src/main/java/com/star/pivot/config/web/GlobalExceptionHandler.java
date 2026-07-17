@@ -5,6 +5,7 @@ import com.star.pivot.framework.exception.BaseException;
 import com.star.pivot.framework.exception.BizException;
 import com.star.pivot.framework.exception.EnhancedExceptionProcessor;
 import com.star.pivot.framework.exception.ErrorCode;
+import com.star.pivot.framework.utils.MessageUtils;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,6 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Result<Void>> handleBizException(BizException e) {
         ErrorCode errorCode = e.getErrorCode();
         int code = errorCode.getCode();
-        String message = e.getDisplayMessage();
+        String message = MessageUtils.display(errorCode, e.getDetailMessage());
 
         // 记录异常日志
         if (errorCode == ErrorCode.INTERNAL_ERROR) {
@@ -52,14 +52,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Result<Void>> handleAuthenticationException(AuthenticationException e) {
         log.warn("认证异常：{}", e.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-            .body(Result.error(ErrorCode.UNAUTHORIZED.getCode(), "登录凭证无效或已过期，请重新登录"));
+            .body(Result.error(ErrorCode.UNAUTHORIZED.getCode(),
+                MessageUtils.message("auth.credential.invalid", "登录凭证无效或已过期，请重新登录")));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Result<Void>> handleAccessDeniedException(AccessDeniedException e) {
         log.warn("访问拒绝：{}", e.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-            .body(Result.error(ErrorCode.FORBIDDEN.getCode(), "权限不足，无法执行此操作"));
+            .body(Result.error(ErrorCode.FORBIDDEN.getCode(),
+                MessageUtils.message("auth.access.denied", "权限不足，无法执行此操作")));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -167,7 +169,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Result<Void>> handleBaseException(BaseException e) {
         ErrorCode errorCode = e.getErrorCode();
         int code = errorCode.getCode();
-        String message = e.getDisplayMessage();
+        String message = MessageUtils.display(errorCode, e.getDetailMessage());
         log.warn("基础异常：code={}, message={}", code, message);
         return ResponseEntity.status(mapToHttpStatus(code)).body(Result.error(code, message));
     }

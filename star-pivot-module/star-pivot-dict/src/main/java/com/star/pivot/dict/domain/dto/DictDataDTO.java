@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * 字典数据DTO
  *
@@ -68,4 +70,9 @@ public class DictDataDTO {
      * 备注
      */
     private String remark;
+
+    /**
+     * 多语言标签（非默认语言），key 为 langCode
+     */
+    private Map<String, String> translations;
 }

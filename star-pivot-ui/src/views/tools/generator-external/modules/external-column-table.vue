@@ -1,14 +1,24 @@
 <template>
   <ElTable :data="columns" border size="small" :max-height="maxHeight" style="width: 100%">
     <ElTableColumn type="index" label="#" width="50" />
-    <ElTableColumn prop="columnName" label="字段列名" width="130" show-overflow-tooltip />
-    <ElTableColumn label="字段描述" min-width="120">
+    <ElTableColumn
+      prop="columnName"
+      :label="t('tools.gen.fieldColumnName')"
+      width="130"
+      show-overflow-tooltip
+    />
+    <ElTableColumn :label="t('tools.gen.fieldComment')" min-width="120">
       <template #default="{ row }">
         <ElInput v-model="row.columnComment" size="small" />
       </template>
     </ElTableColumn>
-    <ElTableColumn prop="columnType" label="物理类型" width="110" show-overflow-tooltip />
-    <ElTableColumn label="Java类型" width="120">
+    <ElTableColumn
+      prop="columnType"
+      :label="t('tools.gen.fieldType')"
+      width="110"
+      show-overflow-tooltip
+    />
+    <ElTableColumn :label="t('tools.gen.javaType')" width="120">
       <template #default="{ row }">
         <ElSelect v-model="row.javaType" size="small">
           <ElOption label="Long" value="Long" />
@@ -21,32 +31,32 @@
         </ElSelect>
       </template>
     </ElTableColumn>
-    <ElTableColumn label="java属性" width="120">
+    <ElTableColumn :label="t('tools.gen.javaField')" width="120">
       <template #default="{ row }">
         <ElInput v-model="row.javaField" size="small" />
       </template>
     </ElTableColumn>
-    <ElTableColumn label="插入" width="52" align="center">
+    <ElTableColumn :label="t('tools.gen.isInsert')" width="52" align="center">
       <template #default="{ row }">
         <ElCheckbox v-model="row.isInsert" true-value="1" false-value="0" />
       </template>
     </ElTableColumn>
-    <ElTableColumn label="编辑" width="52" align="center">
+    <ElTableColumn :label="t('tools.gen.isEdit')" width="52" align="center">
       <template #default="{ row }">
         <ElCheckbox v-model="row.isEdit" true-value="1" false-value="0" />
       </template>
     </ElTableColumn>
-    <ElTableColumn label="列表" width="52" align="center">
+    <ElTableColumn :label="t('tools.gen.isList')" width="52" align="center">
       <template #default="{ row }">
         <ElCheckbox v-model="row.isList" true-value="1" false-value="0" />
       </template>
     </ElTableColumn>
-    <ElTableColumn label="查询" width="52" align="center">
+    <ElTableColumn :label="t('tools.gen.isQuery')" width="52" align="center">
       <template #default="{ row }">
         <ElCheckbox v-model="row.isQuery" true-value="1" false-value="0" />
       </template>
     </ElTableColumn>
-    <ElTableColumn label="查询方式" width="120">
+    <ElTableColumn :label="t('tools.gen.queryType')" width="120">
       <template #default="{ row }">
         <ElSelect v-model="row.queryType" size="small" :disabled="row.isQuery !== '1'">
           <ElOption label="=" value="EQ" />
@@ -60,33 +70,33 @@
         </ElSelect>
       </template>
     </ElTableColumn>
-    <ElTableColumn label="必填" width="52" align="center">
+    <ElTableColumn :label="t('tools.gen.isRequired')" width="52" align="center">
       <template #default="{ row }">
         <ElCheckbox v-model="row.isRequired" true-value="1" false-value="0" />
       </template>
     </ElTableColumn>
-    <ElTableColumn label="显示类型" width="130">
+    <ElTableColumn :label="t('tools.gen.htmlType')" width="130">
       <template #default="{ row }">
         <ElSelect v-model="row.htmlType" size="small">
-          <ElOption label="文本框" value="input" />
-          <ElOption label="文本域" value="textarea" />
-          <ElOption label="下拉框" value="select" />
-          <ElOption label="单选框" value="radio" />
-          <ElOption label="复选框" value="checkbox" />
-          <ElOption label="日期控件" value="datetime" />
-          <ElOption label="图片上传" value="imageUpload" />
-          <ElOption label="文件上传" value="fileUpload" />
-          <ElOption label="富文本" value="editor" />
+          <ElOption :label="t('tools.genExt.htmlInput')" value="input" />
+          <ElOption :label="t('tools.genExt.htmlTextarea')" value="textarea" />
+          <ElOption :label="t('tools.genExt.htmlSelect')" value="select" />
+          <ElOption :label="t('tools.genExt.htmlRadio')" value="radio" />
+          <ElOption :label="t('tools.genExt.htmlCheckbox')" value="checkbox" />
+          <ElOption :label="t('tools.genExt.htmlDatetime')" value="datetime" />
+          <ElOption :label="t('tools.genExt.htmlImageUpload')" value="imageUpload" />
+          <ElOption :label="t('tools.genExt.htmlFileUpload')" value="fileUpload" />
+          <ElOption :label="t('tools.genExt.htmlEditor')" value="editor" />
         </ElSelect>
       </template>
     </ElTableColumn>
-    <ElTableColumn label="字典类型" min-width="160">
+    <ElTableColumn :label="t('tools.gen.dictType')" min-width="160">
       <template #default="{ row }">
         <ElSelect
           v-model="row.dictType"
           clearable
           filterable
-          placeholder="请选择"
+          :placeholder="t('common.pleaseSelect')"
           size="small"
           :disabled="!['select', 'radio', 'checkbox'].includes(row.htmlType)"
         >
@@ -104,6 +114,7 @@
 
 <script setup lang="ts">
   import { ElCheckbox, ElInput, ElOption, ElSelect, ElTable, ElTableColumn } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import type { GenTableColumnItem } from '@/api/generator/gen-external'
   import type { SysDictType } from '@/api/dict/type'
 
@@ -112,4 +123,6 @@
     dictOptions: SysDictType[]
     maxHeight?: number | string
   }>()
+
+  const { t } = useI18n()
 </script>

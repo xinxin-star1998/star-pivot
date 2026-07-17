@@ -26,6 +26,8 @@ export interface SysMenu {
   label: string
   value: number
   children?: SysMenu[]
+  /** 多语言名称 lang -> 文案 */
+  translations?: Record<string, string>
 }
 
 /** 后端 RouterController 返回的动态路由节点（与 RouterVo 对齐） */

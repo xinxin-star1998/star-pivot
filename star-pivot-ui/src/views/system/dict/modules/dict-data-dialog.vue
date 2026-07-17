@@ -15,15 +15,29 @@
       :rules="rules"
       :span="width > 640 ? 12 : 24"
       :gutter="20"
-      label-width="100px"
+      label-width="auto"
       :show-reset="false"
       :show-submit="false"
-    />
+    >
+      <template #i18nNames>
+        <div class="dict-i18n-fields">
+          <div v-for="lang in nonDefaultLangs" :key="lang.langCode" class="dict-i18n-row">
+            <span class="dict-i18n-label">{{ lang.langName }}</span>
+            <ElInput
+              v-model="form.translations![lang.langCode]"
+              :placeholder="t('system.dict.labelPlaceholder')"
+              clearable
+              maxlength="100"
+            />
+          </div>
+        </div>
+      </template>
+    </ArtForm>
 
     <template #footer>
       <span class="dialog-footer">
-        <ElButton @click="handleCancel">取 消</ElButton>
-        <ElButton type="primary" @click="handleSubmit">确 定</ElButton>
+        <ElButton @click="handleCancel">{{ t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="handleSubmit">{{ t('common.confirm') }}</ElButton>
       </span>
     </template>
   </ElDialog>
@@ -36,8 +50,12 @@
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import { useWindowSize } from '@vueuse/core'
   import type { DictDataFormData } from '@/api/dict/data'
+  import { fetchGetDictDataById } from '@/api/dict/data'
+  import { fetchI18nLangList, type SysLang } from '@/api/system/i18n'
+  import { useI18n } from 'vue-i18n'
 
   const { width } = useWindowSize()
+  const { t } = useI18n()
 
   interface Props {
     visible: boolean
@@ -60,6 +78,7 @@
 
   const formRef = ref()
   const isEdit = ref(false)
+  const langList = ref<SysLang[]>([])
 
   const form = reactive<DictDataFormData>({
     dictSort: 0,
@@ -70,56 +89,80 @@
     listClass: '',
     isDefault: 'N',
     status: '0',
-    remark: ''
+    remark: '',
+    translations: {}
   })
+
+  const defaultLangCode = computed(() => {
+    const def = langList.value.find((l) => l.isDefault === '1')
+    return def?.langCode || 'zh'
+  })
+
+  const defaultLangName = computed(() => {
+    const def = langList.value.find((l) => l.langCode === defaultLangCode.value)
+    return def?.langName || '简体中文'
+  })
+
+  const nonDefaultLangs = computed(() =>
+    langList.value.filter((l) => l.langCode !== defaultLangCode.value && l.status === '0')
+  )
 
   const dialogTitle = computed(() => {
-    return isEdit.value ? '编辑字典数据' : '新增字典数据'
+    return isEdit.value ? t('system.dict.editData') : t('system.dict.addData')
   })
 
-  const rules = reactive<FormRules>({
+  const rules = computed<FormRules>(() => ({
     dictLabel: [
-      { required: true, message: '请输入字典标签', trigger: 'blur' },
-      { max: 100, message: '字典标签长度不能超过100个字符', trigger: 'blur' }
+      { required: true, message: t('system.dict.labelRequired'), trigger: 'blur' },
+      { max: 100, message: t('common.pleaseInput'), trigger: 'blur' }
     ],
     dictValue: [
-      { required: true, message: '请输入字典键值', trigger: 'blur' },
-      { max: 100, message: '字典键值长度不能超过100个字符', trigger: 'blur' }
+      { required: true, message: t('system.dict.valueRequired'), trigger: 'blur' },
+      { max: 100, message: t('common.pleaseInput'), trigger: 'blur' }
     ],
-    dictType: [{ required: true, message: '请选择字典类型', trigger: 'change' }],
+    dictType: [{ required: true, message: t('common.pleaseSelect'), trigger: 'change' }],
     dictSort: [
-      { required: true, message: '请输入字典排序', trigger: 'blur' },
-      { type: 'number', min: 0, message: '字典排序必须大于等于0', trigger: 'blur' }
+      { required: true, message: t('common.pleaseInput'), trigger: 'blur' },
+      { type: 'number', min: 0, message: t('common.pleaseInput'), trigger: 'blur' }
     ],
-    status: [{ required: true, message: '请选择状态', trigger: 'change' }]
-  })
+    status: [{ required: true, message: t('common.pleaseSelect'), trigger: 'change' }]
+  }))
 
   const formItems = computed<FormItem[]>(() => {
     const switchSpan = width.value < 768 ? 24 : 12
     return [
       {
-        label: '字典类型',
+        label: t('system.dict.dictType'),
         key: 'dictType',
         type: 'input',
         props: {
-          placeholder: '请输入字典类型',
+          placeholder: t('system.dict.typePlaceholder'),
           disabled: !!props.dictType || isEdit.value
         }
       },
       {
-        label: '字典标签',
+        label: `${t('system.dict.dictLabel')}（${defaultLangName.value}）`,
         key: 'dictLabel',
         type: 'input',
-        props: { placeholder: '请输入字典标签' }
+        props: { placeholder: t('system.dict.labelPlaceholder') }
       },
+      ...(nonDefaultLangs.value.length
+        ? ([
+            {
+              label: t('system.dict.translations'),
+              key: 'i18nNames',
+              span: 24
+            }
+          ] as FormItem[])
+        : []),
       {
-        label: '字典键值',
+        label: t('system.dict.dictValue'),
         key: 'dictValue',
         type: 'input',
-        props: { placeholder: '请输入字典键值' }
+        props: { placeholder: t('system.dict.valuePlaceholder') }
       },
       {
-        label: '字典排序',
+        label: t('system.dict.dictSort'),
         key: 'dictSort',
         type: 'number',
         props: {
@@ -129,98 +172,127 @@
         }
       },
       {
-        label: '样式属性',
+        label: t('system.dict.cssClass'),
         key: 'cssClass',
         type: 'select',
         props: {
-          placeholder: '请选择样式属性',
+          placeholder: t('common.pleaseSelect'),
           options: [
-            { label: '主要', value: 'primary' },
-            { label: '成功', value: 'success' },
-            { label: '警告', value: 'warning' },
-            { label: '危险', value: 'danger' }
+            { label: 'primary', value: 'primary' },
+            { label: 'success', value: 'success' },
+            { label: 'warning', value: 'warning' },
+            { label: 'danger', value: 'danger' }
           ]
         }
       },
       {
-        label: '回显样式',
+        label: t('system.dict.listClass'),
         key: 'listClass',
         type: 'select',
         props: {
-          placeholder: '请选择回显样式',
+          placeholder: t('common.pleaseSelect'),
           options: [
-            { label: '默认', value: 'default' },
-            { label: '主要', value: 'primary' },
-            { label: '成功', value: 'success' },
-            { label: '信息', value: 'info' },
-            { label: '警告', value: 'warning' },
-            { label: '危险', value: 'danger' }
+            { label: 'default', value: 'default' },
+            { label: 'primary', value: 'primary' },
+            { label: 'success', value: 'success' },
+            { label: 'info', value: 'info' },
+            { label: 'warning', value: 'warning' },
+            { label: 'danger', value: 'danger' }
           ]
         }
       },
       {
-        label: '是否默认',
+        label: t('system.dict.isDefault'),
         key: 'isDefault',
         type: 'radiogroup',
         span: switchSpan,
         props: {
           options: [
-            { label: '是', value: 'Y' },
-            { label: '否', value: 'N' }
+            { label: t('common.yes'), value: 'Y' },
+            { label: t('common.no'), value: 'N' }
           ],
           size: 'default',
           direction: 'horizontal'
         }
       },
       {
-        label: '状态',
+        label: t('common.status'),
         key: 'status',
         type: 'radiogroup',
         span: switchSpan,
         props: {
           options: [
-            { label: '正常', value: '0' },
-            { label: '停用', value: '1' }
+            { label: t('common.normal'), value: '0' },
+            { label: t('common.disabled'), value: '1' }
           ],
           size: 'default',
           direction: 'horizontal'
         }
       },
       {
-        label: '备注',
+        label: t('common.remark'),
         key: 'remark',
         type: 'input',
         span: 24,
-        props: { type: 'textarea', rows: 3, placeholder: '请输入备注' }
+        props: { type: 'textarea', rows: 3, placeholder: t('common.pleaseInput') }
       }
     ]
   })
 
-  /**
-   * 加载表单数据（编辑模式）
-   */
-  const loadFormData = (): void => {
+  const loadLangs = async (): Promise<void> => {
+    try {
+      langList.value = (await fetchI18nLangList()) || []
+    } catch {
+      langList.value = []
+    }
+  }
+
+  const loadFormData = async (): Promise<void> => {
     if (!props.editData) return
 
     isEdit.value = true
+    const emptyTranslations: Record<string, string> = {}
+    nonDefaultLangs.value.forEach((lang) => {
+      emptyTranslations[lang.langCode] = ''
+    })
+
+    let translations = { ...emptyTranslations }
+    let detail = props.editData
+    if (props.editData.dictCode) {
+      try {
+        const res = await fetchGetDictDataById(props.editData.dictCode)
+        if (res) {
+          detail = res
+          if (res.translations) {
+            Object.assign(translations, res.translations)
+          }
+        }
+      } catch {
+        // 回退使用列表行数据
+      }
+    }
+    delete translations[defaultLangCode.value]
+
     Object.assign(form, {
-      dictCode: props.editData.dictCode,
-      dictSort: props.editData.dictSort || 0,
-      dictLabel: props.editData.dictLabel,
-      dictValue: props.editData.dictValue,
-      dictType: props.editData.dictType,
-      cssClass: props.editData.cssClass || '',
-      listClass: props.editData.listClass || '',
-      isDefault: props.editData.isDefault || 'N',
-      status: props.editData.status || '0',
-      remark: props.editData.remark || ''
+      dictCode: detail.dictCode,
+      dictSort: detail.dictSort || 0,
+      dictLabel: detail.dictLabel,
+      dictValue: detail.dictValue,
+      dictType: detail.dictType,
+      cssClass: detail.cssClass || '',
+      listClass: detail.listClass || '',
+      isDefault: detail.isDefault || 'N',
+      status: detail.status || '0',
+      remark: detail.remark || '',
+      translations
     })
   }
 
-  /**
-   * 重置表单数据
-   */
   const resetForm = (): void => {
+    const emptyTranslations: Record<string, string> = {}
+    nonDefaultLangs.value.forEach((lang) => {
+      emptyTranslations[lang.langCode] = ''
+    })
     Object.assign(form, {
       dictCode: undefined,
       dictSort: 0,
@@ -231,7 +303,8 @@
       listClass: '',
       isDefault: 'N',
       status: '0',
-      remark: ''
+      remark: '',
+      translations: emptyTranslations
     })
     nextTick(() => {
       if (formRef.value?.ref) {
@@ -241,14 +314,21 @@
     isEdit.value = false
   }
 
-  /**
-   * 提交表单
-   */
   const handleSubmit = async (): Promise<void> => {
     if (!formRef.value) return
 
     try {
       await formRef.value.validate()
+
+      const translations: Record<string, string> = {}
+      nonDefaultLangs.value.forEach((lang) => {
+        const value = form.translations?.[lang.langCode]
+        if (value != null && String(value).trim()) {
+          translations[lang.langCode] = String(value).trim()
+        } else {
+          translations[lang.langCode] = ''
+        }
+      })
 
       const submitData: DictDataFormData = {
         dictSort: form.dictSort || 0,
@@ -259,10 +339,10 @@
         listClass: form.listClass || '',
         isDefault: form.isDefault || 'N',
         status: form.status || '0',
-        remark: form.remark || ''
+        remark: form.remark || '',
+        translations
       }
 
-      // 如果是编辑模式，添加dictCode
       if (isEdit.value && form.dictCode) {
         submitData.dictCode = form.dictCode
       }
@@ -270,34 +350,26 @@
       emit('submit', submitData)
       handleCancel()
     } catch {
-      ElMessage.error('表单校验失败，请检查输入')
+      ElMessage.error(t('common.pleaseInput'))
     }
   }
 
-  /**
-   * 取消操作
-   */
   const handleCancel = (): void => {
     emit('update:visible', false)
   }
 
-  /**
-   * 对话框关闭后的回调
-   */
   const handleClosed = (): void => {
     resetForm()
   }
 
-  /**
-   * 监听对话框显示状态
-   */
   watch(
     () => props.visible,
     async (newVal) => {
       if (newVal) {
+        await loadLangs()
         await nextTick()
         if (props.editData) {
-          loadFormData()
+          await loadFormData()
         } else {
           resetForm()
         }
@@ -305,9 +377,6 @@
     }
   )
 
-  /**
-   * 监听字典类型变化
-   */
   watch(
     () => props.dictType,
     (newVal) => {
@@ -408,5 +477,25 @@
     display: flex;
     gap: 12px;
     justify-content: flex-end;
+  }
+
+  .dict-i18n-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .dict-i18n-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .dict-i18n-label {
+    flex-shrink: 0;
+    width: 72px;
+    font-size: 13px;
+    color: var(--art-gray-600);
   }
 </style>

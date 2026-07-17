@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="visible"
-    title="分配数据权限"
+    :title="t('system.role.dataScopeTitle')"
     width="800px"
     align-center
     class="el-dialog-border"
@@ -9,41 +9,58 @@
   >
     <div class="permission-dialog">
       <ElForm ref="roleForm" :model="form" :rules="rules" label-width="120px">
-        <ElFormItem label="角色名称" prop="roleName">
-          <ElInput v-model="form.roleName" placeholder="请输入角色名称" disabled />
+        <ElFormItem :label="t('system.role.roleName')" prop="roleName">
+          <ElInput
+            v-model="form.roleName"
+            :placeholder="t('system.role.roleNamePlaceholder')"
+            disabled
+          />
         </ElFormItem>
-        <ElFormItem label="角色编码" prop="roleKey">
-          <ElInput v-model="form.roleKey" placeholder="请输入角色编码" disabled />
+        <ElFormItem :label="t('system.role.roleKey')" prop="roleKey">
+          <ElInput
+            v-model="form.roleKey"
+            :placeholder="t('system.role.roleKeyPlaceholder')"
+            disabled
+          />
         </ElFormItem>
-        <ElFormItem label="数据范围" prop="dataScope">
+        <ElFormItem :label="t('system.role.dataScope')" prop="dataScope">
           <ElSelect
             v-model="form.dataScope"
-            placeholder="请选择数据范围"
+            :placeholder="t('system.role.dataScopePlaceholder')"
             @change="handleDataScopeChange"
           >
-            <ElOption value="1" label="全部数据权限">全部数据权限</ElOption>
-            <ElOption value="2" label="自定数据权限">自定数据权限</ElOption>
-            <ElOption value="3" label="本部门数据权限">本部门数据权限</ElOption>
-            <ElOption value="4" label="本部门及以下数据权限">本部门及以下数据权限</ElOption>
-            <ElOption value="5" label="仅本人数据权限">仅本人数据权限</ElOption>
+            <ElOption value="1" :label="t('system.role.dataScopeAll')">{{
+              t('system.role.dataScopeAll')
+            }}</ElOption>
+            <ElOption value="2" :label="t('system.role.dataScopeCustom')">{{
+              t('system.role.dataScopeCustom')
+            }}</ElOption>
+            <ElOption value="3" :label="t('system.role.dataScopeDept')">{{
+              t('system.role.dataScopeDept')
+            }}</ElOption>
+            <ElOption value="4" :label="t('system.role.dataScopeDeptAndChild')">{{
+              t('system.role.dataScopeDeptAndChild')
+            }}</ElOption>
+            <ElOption value="5" :label="t('system.role.dataScopeSelf')">{{
+              t('system.role.dataScopeSelf')
+            }}</ElOption>
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="部门权限" prop="deptIds" v-if="showDeptTree">
+        <ElFormItem :label="t('system.role.deptPerms')" prop="deptIds" v-if="showDeptTree">
           <div class="dept-permission-wrapper">
-            <!-- 控制选项 -->
             <div class="permission-controls">
               <ElCheckbox v-model="deptExpandAll" @change="toggleDeptExpandAll"
-                >展开/折叠</ElCheckbox
+                >{{ t('common.expand') }}/{{ t('common.collapse') }}</ElCheckbox
               >
               <ElCheckbox
                 v-model="deptSelectAll"
                 :indeterminate="deptSelectAllIndeterminate"
                 @change="toggleDeptSelectAll"
               >
-                全选/全不选
+                {{ t('system.role.selectAllToggle') }}
               </ElCheckbox>
               <ElCheckbox v-model="isDeptParentChildLinked" @change="handleDeptCheckStrictlyChange">
-                父子联动
+                {{ t('system.role.parentChildLink') }}
               </ElCheckbox>
             </div>
             <!-- 树结构容器 -->
@@ -76,8 +93,8 @@
       </ElForm>
     </div>
     <template #footer>
-      <ElButton @click="handleClose">取消</ElButton>
-      <ElButton type="primary" @click="savePermission">保存</ElButton>
+      <ElButton @click="handleClose">{{ t('common.cancel') }}</ElButton>
+      <ElButton type="primary" @click="savePermission">{{ t('common.save') }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -89,6 +106,7 @@
   import { fetchAssignPermission, fetchGetRoleDeptIds } from '@/api/role/role'
   import { useSettingStore } from '@/store/modules/setting'
   import { useCheckableTree } from '@/composables/useCheckableTree'
+  import { useI18n } from 'vue-i18n'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -108,6 +126,7 @@
   })
 
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   // 主题状态
   const settingStore = useSettingStore()
@@ -134,11 +153,11 @@
   /**
    * 表单验证规则
    */
-  const rules = reactive<FormRules>({
-    roleName: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
-    roleKey: [{ required: true, message: '请输入角色编码', trigger: 'blur' }],
-    dataScope: [{ required: true, message: '请选择数据范围', trigger: 'change' }]
-  })
+  const rules = computed<FormRules>(() => ({
+    roleName: [{ required: true, message: t('system.role.roleNameRequired'), trigger: 'blur' }],
+    roleKey: [{ required: true, message: t('system.role.roleKeyRequired'), trigger: 'blur' }],
+    dataScope: [{ required: true, message: t('system.role.dataScopeRequired'), trigger: 'change' }]
+  }))
 
   /**
    * 是否显示部门树（只有自定数据权限时显示）
@@ -430,7 +449,7 @@
       }
       await fetchAssignPermission(updateData)
 
-      ElMessage.success('权限保存成功')
+      ElMessage.success(t('system.role.dataScopeSaveSuccess'))
       emit('success')
       handleClose()
     } catch (error) {

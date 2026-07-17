@@ -3,7 +3,7 @@
   <ElForm ref="genInfoFormRef" :model="form" :rules="rules" label-width="150px">
     <ElRow :gutter="16">
       <ElCol :span="12">
-        <ElFormItem prop="tplCategory" label="生成模板">
+        <ElFormItem prop="tplCategory" :label="t('tools.gen.genType')">
           <ElSelect v-model="form.tplCategory" @change="onTplCategoryChange">
             <ElOption label="单表（增删改查）" value="crud" />
             <ElOption label="树表（增删改查）" value="tree" />
@@ -12,7 +12,7 @@
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
-        <ElFormItem prop="tplWebType" label="前端类型">
+        <ElFormItem prop="tplWebType" :label="t('tools.gen.frontendType')">
           <ElSelect v-model="form.tplWebType">
             <ElOption label="Vue2 Element UI 模版" value="element-ui" />
             <ElOption label="Vue3 Art Design Pro 模版" value="art-design-pro" />
@@ -23,7 +23,7 @@
       <ElCol :span="12">
         <ElFormItem prop="packageName">
           <template #label>
-            生成包路径
+            {{ t('tools.gen.packageName') }}
             <ElTooltip content="生成在哪个 Java 包下，例如 com.star.pivot.system" placement="top">
               <ArtSvgIcon icon="ri:question-line" class="ml-1" />
             </ElTooltip>
@@ -35,7 +35,7 @@
       <ElCol :span="12">
         <ElFormItem prop="moduleName">
           <template #label>
-            生成模块名
+            {{ t('tools.gen.moduleName') }}
             <ElTooltip content="可理解为子系统名，例如 system" placement="top">
               <ArtSvgIcon icon="ri:question-line" class="ml-1" />
             </ElTooltip>
@@ -47,7 +47,7 @@
       <ElCol :span="12">
         <ElFormItem prop="businessName">
           <template #label>
-            生成业务名
+            {{ t('tools.gen.businessName') }}
             <ElTooltip content="可理解为功能英文名，例如 user" placement="top">
               <ArtSvgIcon icon="ri:question-line" class="ml-1" />
             </ElTooltip>
@@ -59,7 +59,7 @@
       <ElCol :span="12">
         <ElFormItem prop="functionName">
           <template #label>
-            生成功能名
+            {{ t('tools.gen.functionName') }}
             <ElTooltip content="用作类描述，例如 用户" placement="top">
               <ArtSvgIcon icon="ri:question-line" class="ml-1" />
             </ElTooltip>
@@ -71,7 +71,7 @@
       <ElCol :span="12">
         <ElFormItem>
           <template #label>
-            上级菜单
+            {{ t('tools.gen.parentMenu') }}
             <ElTooltip content="分配到指定菜单下，例如 系统管理" placement="top">
               <ArtSvgIcon icon="ri:question-line" class="ml-1" />
             </ElTooltip>
@@ -81,7 +81,7 @@
             :data="menuTreeOptions"
             check-strictly
             :render-after-expand="false"
-            placeholder="请选择系统菜单"
+            :placeholder="t('tools.gen.parentMenuPlaceholder')"
           />
         </ElFormItem>
       </ElCol>
@@ -200,6 +200,9 @@
    */
   import type { FormInstance, FormRules } from 'element-plus'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import { useI18n } from 'vue-i18n'
+
+  const { t } = useI18n()
 
   interface GenInfoFormModel {
     tplCategory?: string
@@ -272,11 +275,11 @@
 
   // 表单校验规则
   const rules = computed<FormRules>(() => ({
-    tplCategory: [{ required: true, message: '请选择生成模板', trigger: 'change' }],
-    packageName: [{ required: true, message: '请输入生成包路径', trigger: 'blur' }],
-    moduleName: [{ required: true, message: '请输入生成模块名', trigger: 'blur' }],
-    businessName: [{ required: true, message: '请输入生成业务名', trigger: 'blur' }],
-    functionName: [{ required: true, message: '请输入生成功能名', trigger: 'blur' }]
+    tplCategory: [{ required: true, message: t('common.pleaseSelect'), trigger: 'change' }],
+    packageName: [{ required: true, message: t('common.pleaseInput'), trigger: 'blur' }],
+    moduleName: [{ required: true, message: t('common.pleaseInput'), trigger: 'blur' }],
+    businessName: [{ required: true, message: t('common.pleaseInput'), trigger: 'blur' }],
+    functionName: [{ required: true, message: t('common.pleaseInput'), trigger: 'blur' }]
   }))
 
   /**

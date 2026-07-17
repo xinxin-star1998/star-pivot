@@ -5,17 +5,20 @@ import com.star.pivot.system.domain.bo.MetaVo;
 import com.star.pivot.system.domain.bo.RouterVo;
 import com.star.pivot.system.domain.entity.SysMenu;
 import com.star.pivot.system.domain.entity.SysUser;
+import com.star.pivot.system.service.interfaces.SysI18nService;
 import com.star.pivot.system.service.interfaces.SysMenuService;
 import com.star.pivot.system.service.interfaces.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 路由与当前用户菜单控制器
@@ -38,6 +42,7 @@ public class RouterController {
 
     private final SysMenuService sysMenuService;
     private final SysUserService sysUserService;
+    private final SysI18nService sysI18nService;
 
     /**
      * 获取当前用户的菜单树（根据用户权限）
@@ -73,6 +78,7 @@ public class RouterController {
      * 获取动态路由
      * <p>
      * 根据当前用户权限获取菜单树并转为路由列表（仅本人路由，已登录即可访问）。
+     * meta.title 按请求语言（X-Lang / Accept-Language）从 sys_i18n 解析，缺失回退 menu_name。
      * </p>
      *
      * @param authentication Spring Security 认证对象
@@ -84,12 +90,14 @@ public class RouterController {
     })
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/dynamic-routes")
-    public Result<List<RouterVo>> getDynamicRoutes(Authentication authentication) {
+    public Result<List<RouterVo>> getDynamicRoutes(Authentication authentication, HttpServletRequest request) {
         List<SysMenu> menuTree = getCurrentUserMenuTree(authentication);
         if (menuTree == null || menuTree.isEmpty()) {
             return Result.success(Collections.emptyList());
         }
-        return Result.success(buildRouterTree(menuTree));
+        String lang = sysI18nService.resolveRequestLang(request);
+        Map<Long, String> titleMap = sysI18nService.getMenuTitleMap(lang);
+        return Result.success(buildRouterTree(menuTree, titleMap));
     }
 
     /**
@@ -109,36 +117,38 @@ public class RouterController {
         }
         return sysMenuService.getUserMenuTree(user.getUserId());
     }
-    
+
     /**
      * 构建路由树
      * @param menuTree 菜单树
+     * @param titleMap 菜单标题多语言映射
      * @return 路由树
      */
-    private List<RouterVo> buildRouterTree(List<SysMenu> menuTree) {
+    private List<RouterVo> buildRouterTree(List<SysMenu> menuTree, Map<Long, String> titleMap) {
         List<RouterVo> routerTree = new ArrayList<>();
-        
+
         for (SysMenu menu : menuTree) {
-            RouterVo router = convertMenuToRouter(menu);
-            
+            RouterVo router = convertMenuToRouter(menu, titleMap);
+
             // 递归构建子路由
             if (menu.getChildren() != null && !menu.getChildren().isEmpty()) {
-                List<RouterVo> children = buildRouterTree(menu.getChildren());
+                List<RouterVo> children = buildRouterTree(menu.getChildren(), titleMap);
                 router.setChildren(children);
             }
-            
+
             routerTree.add(router);
         }
-        
+
         return routerTree;
     }
-    
+
     /**
      * 将SysMenu转换为RouterVo
      * @param menu 菜单
+     * @param titleMap 菜单标题多语言映射
      * @return 路由
      */
-    private RouterVo convertMenuToRouter(SysMenu menu) {
+    private RouterVo convertMenuToRouter(SysMenu menu, Map<Long, String> titleMap) {
         RouterVo router = new RouterVo();
         router.setMenuId(menu.getMenuId());
         router.setPerms(menu.getPerms());
@@ -149,20 +159,21 @@ public class RouterController {
         router.setHidden("1".equals(menu.getVisible()));
         router.setComponent(menu.getComponent());
         router.setQuery(menu.getQuery());
-        
-        // 构建Meta信息
+
+        // 构建Meta信息：优先多语言标题，缺失回退 menu_name
         MetaVo meta = new MetaVo();
-        meta.setTitle(menu.getMenuName());
+        String localizedTitle = titleMap != null ? titleMap.get(menu.getMenuId()) : null;
+        meta.setTitle(StringUtils.hasText(localizedTitle) ? localizedTitle : menu.getMenuName());
         meta.setIcon(menu.getIcon());
         meta.setNoCache(menu.getIsCache() != null && menu.getIsCache() == 1);
-        
+
         // 设置link（如果是外链）
         if (menu.getIsFrame() != null && menu.getIsFrame() == 0 && menu.getPath() != null && (menu.getPath().startsWith("http://") || menu.getPath().startsWith("https://"))) {
             meta.setLink(menu.getPath());
         }
-        
+
         router.setMeta(meta);
-        
+
        return router;
     }
 }

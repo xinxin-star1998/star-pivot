@@ -3,45 +3,52 @@
     <ElCard class="art-table-card" shadow="never">
       <ArtTableHeader :loading="loading" @refresh="loadData">
         <template #left>
-          <span class="page-title">我的分享</span>
+          <span class="page-title">{{ t('file.myShares') }}</span>
           <ElInput
             v-model="keyword"
             clearable
-            placeholder="搜索文件名"
+            :placeholder="t('file.searchFileNamePlaceholder')"
             style="width: 220px; margin-left: 12px"
           />
         </template>
       </ArtTableHeader>
 
       <ElTable v-loading="loading" :data="filteredList" stripe>
-        <ElTableColumn prop="fileName" label="文件" min-width="180" show-overflow-tooltip />
-        <ElTableColumn label="分享链接" min-width="260">
+        <ElTableColumn
+          prop="fileName"
+          :label="t('file.fileName')"
+          min-width="180"
+          show-overflow-tooltip
+        />
+        <ElTableColumn :label="t('file.shareLink')" min-width="260">
           <template #default="{ row }">
             <div class="link-cell">
               <span class="link-text">{{ displayUrl(row) }}</span>
-              <ElButton link type="primary" @click="copyLink(row)">复制</ElButton>
+              <ElButton link type="primary" @click="copyLink(row)">{{ t('file.copy') }}</ElButton>
             </div>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="密码" width="80" align="center">
+        <ElTableColumn :label="t('file.sharePassword')" width="80" align="center">
           <template #default="{ row }">
             <ElTag :type="row.hasPassword ? 'warning' : 'info'" size="small">
-              {{ row.hasPassword ? '有' : '无' }}
+              {{ row.hasPassword ? t('common.yes') : t('common.no') }}
             </ElTag>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="访问" width="100" align="center">
+        <ElTableColumn :label="t('file.accessViews')" width="100" align="center">
           <template #default="{ row }">
             {{ row.viewCount ?? 0 }}{{ row.maxViews != null ? ` / ${row.maxViews}` : '' }}
           </template>
         </ElTableColumn>
-        <ElTableColumn prop="expireTime" label="过期时间" width="168">
-          <template #default="{ row }">{{ row.expireTime || '永不过期' }}</template>
+        <ElTableColumn prop="expireTime" :label="t('file.shareExpire')" width="168">
+          <template #default="{ row }">{{ row.expireTime || t('file.neverExpireLong') }}</template>
         </ElTableColumn>
-        <ElTableColumn prop="createTime" label="创建时间" width="168" />
-        <ElTableColumn label="操作" width="100" fixed="right">
+        <ElTableColumn prop="createTime" :label="t('common.createTime')" width="168" />
+        <ElTableColumn :label="t('common.operation')" width="100" fixed="right">
           <template #default="{ row }">
-            <ElButton link type="danger" @click="handleRevoke(row)">取消分享</ElButton>
+            <ElButton link type="danger" @click="handleRevoke(row)">{{
+              t('file.cancelShare')
+            }}</ElButton>
           </template>
         </ElTableColumn>
       </ElTable>
@@ -56,8 +63,11 @@
   import { handleMutationError } from '@/utils/http/mutation'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { computed, onMounted, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'FileShares' })
+
+  const { t } = useI18n()
 
   const loading = ref(false)
   const list = ref<SysFileShare[]>([])
@@ -79,7 +89,7 @@
     try {
       list.value = (await fetchMyShares()) || []
     } catch (e) {
-      handleMutationError(e, '加载分享列表失败')
+      handleMutationError(e, t('file.shareListLoadFail'))
     } finally {
       loading.value = false
     }
@@ -88,21 +98,23 @@
   async function copyLink(row: SysFileShare) {
     try {
       await navigator.clipboard.writeText(displayUrl(row))
-      ElMessage.success('已复制链接')
+      ElMessage.success(t('file.copiedLink'))
     } catch {
-      ElMessage.error('复制失败')
+      ElMessage.error(t('file.copyFail'))
     }
   }
 
   async function handleRevoke(row: SysFileShare) {
     if (!row.shareId) return
     try {
-      await ElMessageBox.confirm('确认取消该分享外链？', '提示', { type: 'warning' })
+      await ElMessageBox.confirm(t('file.shareRevokeConfirm'), t('common.tips'), {
+        type: 'warning'
+      })
       await revokeFileShare(row.shareId)
-      ElMessage.success('已取消分享')
+      ElMessage.success(t('file.shareRevokedSuccess'))
       await loadData()
     } catch (e) {
-      if (e !== 'cancel') handleMutationError(e, '取消失败')
+      if (e !== 'cancel') handleMutationError(e, t('file.shareRevokeFail'))
     }
   }
 

@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    :title="dialogType === 'add' ? '新增岗位' : '编辑岗位'"
+    :title="dialogType === 'add' ? t('system.post.addTitle') : t('system.post.editTitle')"
     width="30%"
     align-center
   >
@@ -12,35 +12,40 @@
       label-width="100px"
       aria-label="岗位信息表单"
     >
-      <ElFormItem label="岗位编码" prop="postCode">
-        <ElInput v-model="formData.postCode" placeholder="请输入岗位编码" />
+      <ElFormItem :label="t('system.post.postCode')" prop="postCode">
+        <ElInput v-model="formData.postCode" :placeholder="t('system.post.postCodePlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="岗位名称" prop="postName">
-        <ElInput v-model="formData.postName" placeholder="请输入岗位名称" />
+      <ElFormItem :label="t('system.post.postName')" prop="postName">
+        <ElInput v-model="formData.postName" :placeholder="t('system.post.postNamePlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="显示顺序" prop="postSort">
+      <ElFormItem :label="t('system.post.postSort')" prop="postSort">
         <ElInputNumber
           v-model="formData.postSort"
           :min="0"
           :max="999"
-          placeholder="请输入显示顺序"
+          :placeholder="t('common.pleaseInput')"
           style="width: 100%"
         />
       </ElFormItem>
-      <ElFormItem label="状态" prop="status">
+      <ElFormItem :label="t('common.status')" prop="status">
         <ElRadioGroup v-model="formData.status">
-          <ElRadio :value="'0'">正常</ElRadio>
-          <ElRadio :value="'1'">停用</ElRadio>
+          <ElRadio :value="'0'">{{ t('common.normal') }}</ElRadio>
+          <ElRadio :value="'1'">{{ t('common.disabled') }}</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
-      <ElFormItem label="备注" prop="remark">
-        <ElInput type="textarea" v-model="formData.remark" :rows="4" placeholder="请输入备注" />
+      <ElFormItem :label="t('common.remark')" prop="remark">
+        <ElInput
+          type="textarea"
+          v-model="formData.remark"
+          :rows="4"
+          :placeholder="t('common.pleaseInput')"
+        />
       </ElFormItem>
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+        <ElButton @click="dialogVisible = false">{{ t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="handleSubmit">{{ t('common.submit') }}</ElButton>
       </div>
     </template>
   </ElDialog>
@@ -49,6 +54,7 @@
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import { fetchAddPost, fetchUpdatePost, fetchGetPostById, type SysPost } from '@/api/post/post'
   import { handleMutationError } from '@/utils/http/mutation'
 
@@ -65,8 +71,8 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
-  // 对话框显示控制
   const dialogVisible = computed({
     get: () => props.visible,
     set: (value) => emit('update:visible', value)
@@ -74,10 +80,8 @@
 
   const dialogType = computed(() => props.type)
 
-  // 表单实例
   const formRef = ref<FormInstance>()
 
-  // 表单数据
   const formData = reactive({
     postId: 0,
     postCode: '',
@@ -87,29 +91,23 @@
     remark: ''
   })
 
-  // 表单验证规则
-  const rules: FormRules = {
+  const rules = computed<FormRules>(() => ({
     postCode: [
-      { required: true, message: '请输入岗位编码', trigger: 'blur' },
-      { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+      { required: true, message: t('system.post.postCodeRequired'), trigger: 'blur' },
+      { min: 2, max: 50, message: t('common.pleaseInput'), trigger: 'blur' }
     ],
     postName: [
-      { required: true, message: '请输入岗位名称', trigger: 'blur' },
-      { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+      { required: true, message: t('system.post.postNameRequired'), trigger: 'blur' },
+      { min: 2, max: 50, message: t('common.pleaseInput'), trigger: 'blur' }
     ],
-    postSort: [{ required: true, message: '请输入显示顺序', trigger: 'blur' }],
-    status: [{ required: true, message: '请选择状态', trigger: 'change' }]
-  }
+    postSort: [{ required: true, message: t('common.pleaseInput'), trigger: 'blur' }],
+    status: [{ required: true, message: t('common.pleaseSelect'), trigger: 'change' }]
+  }))
 
-  /**
-   * 初始化表单数据
-   * 根据对话框类型（新增/编辑）填充表单
-   */
   const initFormData = async () => {
     const isEdit = props.type === 'edit' && props.postData
 
     if (isEdit && props.postData?.postId) {
-      // 编辑模式：获取完整的岗位详情
       try {
         const postDetail = await fetchGetPostById(props.postData.postId)
         if (postDetail) {
@@ -124,8 +122,7 @@
         }
       } catch (error) {
         console.error('获取岗位详情失败:', error)
-        handleMutationError(error, '获取岗位详情失败')
-        // 如果获取详情失败，使用列表数据作为回退
+        handleMutationError(error, t('system.post.loadFail'))
         const row = props.postData
         Object.assign(formData, {
           postId: row.postId || 0,
@@ -137,7 +134,6 @@
         })
       }
     } else {
-      // 新增模式：重置表单
       Object.assign(formData, {
         postId: 0,
         postCode: '',
@@ -149,10 +145,6 @@
     }
   }
 
-  /**
-   * 监听对话框状态变化
-   * 当对话框打开时初始化表单数据并清除验证状态
-   */
   watch(
     () => [props.visible, props.type, props.postData],
     async ([visible]) => {
@@ -166,10 +158,6 @@
     { immediate: true }
   )
 
-  /**
-   * 提交表单
-   * 验证通过后触发提交事件
-   */
   const handleSubmit = async () => {
     if (!formRef.value) return
 
@@ -190,11 +178,16 @@
             submitData.postId = formData.postId
             await fetchUpdatePost(submitData)
           }
-          ElMessage.success(dialogType.value === 'add' ? '新增成功' : '更新成功')
+          ElMessage.success(
+            dialogType.value === 'add' ? t('common.addSuccess') : t('common.updateSuccess')
+          )
           dialogVisible.value = false
           emit('submit')
         } catch (error) {
-          handleMutationError(error, dialogType.value === 'add' ? '新增失败' : '更新失败')
+          handleMutationError(
+            error,
+            dialogType.value === 'add' ? t('common.addFail') : t('common.updateFail')
+          )
         }
       }
     })

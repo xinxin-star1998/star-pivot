@@ -310,11 +310,18 @@ export class MenuProcessor {
         // 如果有子菜单，先递归过滤子菜单
         if (item.children && item.children.length > 0) {
           const filteredChildren = this.filterEmptyMenus(item.children)
-          // 保留菜单项，即使过滤后的子菜单为空数组
-          // 因为目录菜单本身应该被保留，不管是否有子菜单
+          // 过滤后若无子节点，去掉 children，避免树表叶子误显示展开箭头
+          if (filteredChildren.length > 0) {
+            return {
+              ...item,
+              children: filteredChildren,
+              hasChildren: true
+            }
+          }
+          const { children: _removed, ...rest } = item
           return {
-            ...item,
-            children: filteredChildren
+            ...rest,
+            hasChildren: false
           }
         }
         return item
@@ -322,8 +329,8 @@ export class MenuProcessor {
       .filter((item): item is AppRouteRecord => {
         if (!item) return false
 
-        // 如果有子菜单数组（即使为空），说明这是一个目录菜单，应该保留
-        if ('children' in item && Array.isArray(item.children)) {
+        // 有非空子菜单的目录应保留
+        if (item.children && item.children.length > 0) {
           return true
         }
 

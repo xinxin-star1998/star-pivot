@@ -1,7 +1,6 @@
 <!-- 登录日志页面 -->
 <template>
   <div class="logininfor-page art-full-height">
-    <!-- 搜索栏 -->
     <ElCollapseTransition>
       <div v-show="showSearchBar">
         <LogininforSearch v-model="searchForm" @search="handleSearch" @reset="handleReset" />
@@ -13,7 +12,6 @@
       shadow="never"
       :style="{ 'margin-top': showSearchBar ? '12px' : '0' }"
     >
-      <!-- 表格头部 -->
       <ArtTableHeader
         v-model:columns="columnChecks"
         v-model:showSearchBar="showSearchBar"
@@ -29,16 +27,15 @@
               v-ripple
               v-auth="AUTH_DELETE"
             >
-              批量删除
+              {{ t('common.batchDelete') }}
             </ElButton>
             <ElButton type="danger" @click="handleClean" v-ripple v-auth="AUTH_DELETE">
-              清空日志
+              {{ t('system.loginLog.clear') }}
             </ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
 
-      <!-- 表格 -->
       <ArtTable
         :loading="loading"
         :data="data"
@@ -49,7 +46,6 @@
         @pagination:current-change="handleCurrentChange"
       />
 
-      <!-- 详情对话框 -->
       <LogininforDetail v-model:visible="detailDialogVisible" :logininfor="currentLogininfor" />
     </ElCard>
   </div>
@@ -58,11 +54,12 @@
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
   import {
-    fetchGetLogininforList,
+    fetchCleanLogininfor,
     fetchDeleteLogininfor,
-    fetchCleanLogininfor
+    fetchGetLogininforList
   } from '@/api/log/logininfor'
-  import { ElMessageBox, ElMessage, ElTag, ElButton, ElCollapseTransition } from 'element-plus'
+  import { ElButton, ElCollapseTransition, ElMessage, ElMessageBox, ElTag } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
@@ -72,27 +69,20 @@
 
   defineOptions({ name: 'Logininfor' })
 
-  // ==================== 常量定义 ====================
-  /** 权限标识 */
   const AUTH_DELETE = 'system:logininfor:delete'
 
-  /** 登录状态值 */
   const LOGIN_STATUS = {
     SUCCESS: '0',
     FAILED: '1'
   } as const
 
-  /** 默认分页大小 */
   const DEFAULT_PAGE_SIZE = 20
 
-  // ==================== 组合式函数 ====================
   const { hasAuth } = useAuth()
+  const { t } = useI18n()
 
-  // ==================== 响应式数据 ====================
-  /** 搜索栏显示状态 */
   const showSearchBar = ref(true)
 
-  /** 搜索表单（包含 dateRange 用于搜索组件） */
   const searchForm = ref<LogininforSearchParams & { dateRange?: [string, string] | null }>({
     userName: undefined,
     ipaddr: undefined,
@@ -102,20 +92,12 @@
     dateRange: null
   })
 
-  /** 选中的行数据 */
   const selectedRows = ref<LogininforListItem[]>([])
-
-  /** 详情对话框显示状态 */
   const detailDialogVisible = ref(false)
-
-  /** 当前查看的登录日志 */
   const currentLogininfor = ref<LogininforListItem | null>(null)
 
-  // ==================== 计算属性 ====================
-  /** 是否有选中的行 */
   const hasSelectedRows = computed(() => selectedRows.value.length > 0)
 
-  // ==================== 表格配置 ====================
   const {
     columns,
     columnChecks,
@@ -137,49 +119,46 @@
     }
   })
 
-  /**
-   * 创建表格列配置
-   */
   function createTableColumns() {
     return [
       { type: 'selection' as const },
-      { type: 'index' as const, width: 60, label: '序号' },
+      { type: 'index' as const, width: 60, label: t('table.column.index') },
       {
         prop: 'loginTime',
-        label: '登录时间',
+        label: t('system.loginLog.loginTime'),
         width: 180,
         sortable: true
       },
       {
         prop: 'userName',
-        label: '用户账号',
+        label: t('system.loginLog.userName'),
         width: 120
       },
       {
         prop: 'ipaddr',
-        label: '登录IP',
+        label: t('system.loginLog.ipaddr'),
         width: 140
       },
       {
         prop: 'loginLocation',
-        label: '登录地点',
+        label: t('system.loginLog.loginLocation'),
         width: 150
       },
       {
         prop: 'browser',
-        label: '浏览器',
+        label: t('system.loginLog.browser'),
         width: 180,
         showOverflowTooltip: true
       },
       {
         prop: 'os',
-        label: '操作系统',
+        label: t('system.loginLog.os'),
         width: 150,
         showOverflowTooltip: true
       },
       {
         prop: 'status',
-        label: '登录状态',
+        label: t('system.loginLog.status'),
         width: 100,
         formatter: (row: LogininforListItem) => {
           const isSuccess = row.status === LOGIN_STATUS.SUCCESS
@@ -189,19 +168,19 @@
               type: isSuccess ? 'success' : 'danger',
               size: 'small'
             },
-            () => (isSuccess ? '成功' : '失败')
+            () => (isSuccess ? t('system.loginLog.statusSuccess') : t('system.loginLog.statusFail'))
           )
         }
       },
       {
         prop: 'msg',
-        label: '提示消息',
+        label: t('system.loginLog.msg'),
         minWidth: 200,
         showOverflowTooltip: true
       },
       {
         prop: 'operation',
-        label: '操作',
+        label: t('common.operation'),
         width: 120,
         fixed: 'right' as const,
         formatter: (row: LogininforListItem) => {
@@ -214,7 +193,7 @@
                 size: 'small',
                 onClick: () => handleShowDetail(row)
               },
-              () => '详情'
+              () => t('system.operLog.detail')
             ),
             hasAuth(AUTH_DELETE) &&
               h(
@@ -225,7 +204,7 @@
                   size: 'small',
                   onClick: () => handleDelete(row)
                 },
-                () => '删除'
+                () => t('common.delete')
               )
           ])
         }
@@ -233,25 +212,14 @@
     ]
   }
 
-  // ==================== 搜索相关方法 ====================
-  /**
-   * 处理搜索
-   * @param params 搜索参数（已由搜索组件处理日期范围转换）
-   */
   const handleSearch = (params?: LogininforSearchParams) => {
-    // 如果传入了参数，使用传入的参数（搜索组件已处理日期范围）
     if (params) {
       Object.assign(searchForm.value, params)
     }
-    // 执行搜索，会自动重置到第一页
     getData(searchForm.value)
   }
 
-  /**
-   * 处理重置
-   */
   const handleReset = () => {
-    // 重置搜索表单
     searchForm.value = {
       userName: undefined,
       ipaddr: undefined,
@@ -260,52 +228,40 @@
       endTime: undefined,
       dateRange: null
     }
-    // 直接使用重置后的搜索表单重新获取数据（getData 内部会重置到第一页）
     getData(searchForm.value)
   }
 
-  // ==================== 详情相关方法 ====================
-  /**
-   * 显示详情
-   */
   const handleShowDetail = (row: LogininforListItem) => {
     currentLogininfor.value = row
     detailDialogVisible.value = true
   }
 
-  // ==================== 删除相关方法 ====================
-  /**
-   * 删除单条日志
-   */
   const handleDelete = async (row: LogininforListItem) => {
     if (!row.infoId) {
-      ElMessage.warning('日志ID不存在')
+      ElMessage.warning(t('common.pleaseSelect'))
       return
     }
 
     try {
-      await ElMessageBox.confirm('确定要删除这条登录日志吗？', '提示', {
+      await ElMessageBox.confirm(t('system.loginLog.deleteConfirm'), t('common.tips'), {
         type: 'warning',
-        confirmButtonText: '确定',
-        cancelButtonText: '取消'
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel')
       })
 
       await fetchDeleteLogininfor([row.infoId])
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
       refreshData()
     } catch (error: any) {
       if (error !== 'cancel') {
-        ElMessage.error(error?.message || '删除失败')
+        ElMessage.error(error?.message || t('common.deleteFail'))
       }
     }
   }
 
-  /**
-   * 批量删除
-   */
   const handleBatchDelete = async () => {
     if (!hasSelectedRows.value) {
-      ElMessage.warning('请选择要删除的日志')
+      ElMessage.warning(t('common.pleaseSelect'))
       return
     }
 
@@ -314,61 +270,50 @@
       .filter((id: number | undefined): id is number => Boolean(id))
 
     if (infoIds.length === 0) {
-      ElMessage.warning('所选日志中没有有效的ID')
+      ElMessage.warning(t('common.pleaseSelect'))
       return
     }
 
     try {
-      await ElMessageBox.confirm(`确定要删除选中的 ${infoIds.length} 条登录日志吗？`, '提示', {
+      await ElMessageBox.confirm(t('system.loginLog.deleteConfirm'), t('common.tips'), {
         type: 'warning',
-        confirmButtonText: '确定',
-        cancelButtonText: '取消'
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel')
       })
 
       await fetchDeleteLogininfor(infoIds)
-      ElMessage.success('删除成功')
-      // 清空选中项
+      ElMessage.success(t('common.deleteSuccess'))
       selectedRows.value = []
       refreshData()
     } catch (error: any) {
       if (error !== 'cancel') {
-        ElMessage.error(error?.message || '删除失败')
+        ElMessage.error(error?.message || t('common.deleteFail'))
       }
     }
   }
 
-  /**
-   * 清空所有日志
-   */
   const handleClean = async () => {
     try {
-      await ElMessageBox.confirm('确定要清空所有登录日志吗？此操作不可恢复！', '警告', {
+      await ElMessageBox.confirm(t('system.loginLog.clearConfirm'), t('common.tips'), {
         type: 'warning',
-        confirmButtonText: '确定清空',
-        cancelButtonText: '取消'
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel')
       })
 
       await fetchCleanLogininfor()
-      ElMessage.success('清空成功')
+      ElMessage.success(t('common.deleteSuccess'))
       refreshData()
     } catch (error: any) {
       if (error !== 'cancel') {
-        ElMessage.error(error?.message || '清空失败')
+        ElMessage.error(error?.message || t('common.deleteFail'))
       }
     }
   }
 
-  // ==================== 表格事件处理 ====================
-  /**
-   * 处理选中行变化
-   */
   const handleSelectionChange = (selection: LogininforListItem[]) => {
     selectedRows.value = selection
   }
 
-  /**
-   * 处理刷新
-   */
   const handleRefresh = () => {
     refreshData()
   }

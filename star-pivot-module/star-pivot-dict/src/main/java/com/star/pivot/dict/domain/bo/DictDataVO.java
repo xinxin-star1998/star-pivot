@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * 字典数据VO
@@ -69,4 +70,9 @@ public class DictDataVO {
      * 备注
      */
     private String remark;
+
+    /**
+     * 多语言标签（详情回显），key 为 langCode
+     */
+    private Map<String, String> translations;
 }

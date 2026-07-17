@@ -22,7 +22,11 @@
               fit="cover"
               class="file-timeline__img"
             />
-            <ArtSvgIcon v-else :icon="getMediaTypeIcon(row.mediaType)" class="file-timeline__icon" />
+            <ArtSvgIcon
+              v-else
+              :icon="getMediaTypeIcon(row.mediaType)"
+              class="file-timeline__icon"
+            />
           </div>
           <div class="file-timeline__main">
             <div :title="row.fileName" class="file-timeline__name">{{ row.fileName }}</div>
@@ -35,7 +39,11 @@
         </div>
       </div>
     </div>
-    <ElEmpty v-if="!groups.length && !loading" :image-size="80" description="暂无文件" />
+    <ElEmpty
+      v-if="!groups.length && !loading"
+      :image-size="80"
+      :description="t('file.timelineEmpty')"
+    />
   </div>
 </template>
 
@@ -45,6 +53,7 @@
   import { formatFileSize, resolveFileDisplayUrl } from '@/utils/file/file-center'
   import { getMediaTypeIcon } from '../constants'
   import { computed } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   const props = defineProps<{
     data: SysFile[]
@@ -59,30 +68,37 @@
     'update:selectedRows': [rows: SysFile[]]
   }>()
 
+  const { t } = useI18n()
+
   const groups = computed(() => {
     const field = props.timeField || 'createTime'
     const buckets: Record<string, SysFile[]> = {
-      今天: [],
-      昨天: [],
-      本周: [],
-      更早: []
+      [t('file.timelineToday')]: [],
+      [t('file.timelineYesterday')]: [],
+      [t('file.timelineThisWeek')]: [],
+      [t('file.timelineEarlier')]: []
     }
     const now = new Date()
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const startOfYesterday = new Date(startOfToday.getTime() - 86400000)
     const startOfWeek = new Date(startOfToday.getTime() - startOfToday.getDay() * 86400000)
 
+    const earlierKey = t('file.timelineEarlier')
+    const todayKey = t('file.timelineToday')
+    const yesterdayKey = t('file.timelineYesterday')
+    const weekKey = t('file.timelineThisWeek')
+
     for (const row of props.data) {
       const raw = row[field]
       const d = raw ? new Date(String(raw).replace(/-/g, '/')) : null
       if (!d || Number.isNaN(d.getTime())) {
-        buckets['更早'].push(row)
+        buckets[earlierKey].push(row)
         continue
       }
-      if (d >= startOfToday) buckets['今天'].push(row)
-      else if (d >= startOfYesterday) buckets['昨天'].push(row)
-      else if (d >= startOfWeek) buckets['本周'].push(row)
-      else buckets['更早'].push(row)
+      if (d >= startOfToday) buckets[todayKey].push(row)
+      else if (d >= startOfYesterday) buckets[yesterdayKey].push(row)
+      else if (d >= startOfWeek) buckets[weekKey].push(row)
+      else buckets[earlierKey].push(row)
     }
 
     return Object.entries(buckets)

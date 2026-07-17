@@ -32,23 +32,28 @@
  * @author Art Design Pro Team
  */
 
-import { $t } from '@/locales'
+import { $t, currentLocale } from '@/locales'
 import type { ColumnOption } from '@/types/component'
 
 /**
- * 特殊列类型
+ * 特殊列类型（每次调用时取文案，避免语言切换后标题滞留）
  */
-const SPECIAL_COLUMNS: Record<string, { prop: string; label: string }> = {
-  selection: { prop: '__selection__', label: $t('table.column.selection') },
-  expand: { prop: '__expand__', label: $t('table.column.expand') },
-  index: { prop: '__index__', label: $t('table.column.index') }
+const getSpecialColumn = (
+  type: string
+): { prop: string; label: string } | undefined => {
+  const map: Record<string, { prop: string; label: string }> = {
+    selection: { prop: '__selection__', label: $t('table.column.selection') },
+    expand: { prop: '__expand__', label: $t('table.column.expand') },
+    index: { prop: '__index__', label: $t('table.column.index') }
+  }
+  return map[type]
 }
 
 /**
  * 获取列的唯一标识
  */
 export const getColumnKey = <T>(col: ColumnOption<T>) =>
-  SPECIAL_COLUMNS[col.type as keyof typeof SPECIAL_COLUMNS]?.prop ?? (col.prop as string)
+  getSpecialColumn(col.type as string)?.prop ?? (col.prop as string)
 
 /**
  * 获取列的显示状态
@@ -68,7 +73,7 @@ export const getColumnVisibility = <T>(col: ColumnOption<T>): boolean => {
  */
 export const getColumnChecks = <T>(columns: ColumnOption<T>[]) =>
   columns.map((col) => {
-    const special = col.type && SPECIAL_COLUMNS[col.type]
+    const special = col.type ? getSpecialColumn(col.type) : undefined
     const visibility = getColumnVisibility(col)
 
     if (special) {
@@ -166,6 +171,11 @@ export function useTableColumns<T = any>(
     },
     { deep: true }
   )
+
+  // 语言切换后重新生成列（工厂内的 t() 文案会随之更新）
+  watch(currentLocale, () => {
+    dynamicColumns.value = columnsFactory()
+  })
 
   // 当前显示列（基于 columnChecks 的 checked 或 visible）
   const columns = computed(() => {

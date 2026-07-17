@@ -16,6 +16,7 @@ export interface SysDictData {
   createTime?: string
   updateBy?: string
   updateTime?: string
+  translations?: Record<string, string>
 }
 
 // 字典数据表单数据
@@ -30,6 +31,7 @@ export interface DictDataFormData {
   isDefault?: string
   status?: string
   remark?: string
+  translations?: Record<string, string>
 }
 
 // 字典数据搜索参数（分页）

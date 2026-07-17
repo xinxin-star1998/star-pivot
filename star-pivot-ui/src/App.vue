@@ -1,28 +1,23 @@
 <template>
-  <ElConfigProvider size="default" :locale="locales[language]" :z-index="3000">
+  <ElConfigProvider size="default" :locale="elementLocale" :z-index="3000">
     <RouterView></RouterView>
   </ElConfigProvider>
 </template>
 
 <script setup lang="ts">
-  import { useUserStore } from './store/modules/user'
+  import { computed, onBeforeMount, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
-  import zh from 'element-plus/es/locale/lang/zh-cn'
-  import en from 'element-plus/es/locale/lang/en'
+  import { useUserStore } from './store/modules/user'
+  import { resolveElementLocale } from './locales'
   import { systemUpgrade } from './utils/sys'
   import { toggleTransition } from './utils/ui/animation'
   import { checkStorageCompatibility } from './utils/storage'
   import { initializeTheme } from './hooks/core/useTheme'
-  // 添加缺失的Vue生命周期钩子导入
-  import { onBeforeMount, onMounted } from 'vue'
 
   const userStore = useUserStore()
   const { language } = storeToRefs(userStore)
 
-  const locales = {
-    zh: zh,
-    en: en
-  }
+  const elementLocale = computed(() => resolveElementLocale(language.value))
 
   onBeforeMount(() => {
     toggleTransition(true)

@@ -12,6 +12,7 @@
 
 <script lang="ts" setup>
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+  import { useI18n } from 'vue-i18n'
 
   interface Props {
     modelValue: Record<string, any>
@@ -27,58 +28,55 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
-  // 表单数据双向绑定
   const searchBarRef = ref()
   const formData = computed({
     get: () => props.modelValue,
     set: (val) => emit('update:modelValue', val)
   })
 
-  // 校验规则
   const rules = {}
 
-  // 表单配置
-  const configTypeOptions = ref([
-    { label: '是', value: 'Y' },
-    { label: '否', value: 'N' }
+  const configTypeOptions = computed(() => [
+    { label: t('system.config.yes'), value: 'Y' },
+    { label: t('system.config.no'), value: 'N' }
   ])
 
   const formItems = computed(() => [
     {
-      label: '参数名称',
+      label: t('system.config.configName'),
       key: 'configName',
       type: 'input',
-      placeholder: '请输入参数名称',
+      placeholder: t('system.config.searchName'),
       clearable: true
     },
     {
-      label: '参数键名',
+      label: t('system.config.configKey'),
       key: 'configKey',
       type: 'input',
-      placeholder: '请输入参数键名',
+      placeholder: t('system.config.searchKey'),
       clearable: true
     },
     {
-      label: '参数键值',
+      label: t('system.config.configValue'),
       key: 'configValue',
       type: 'input',
-      placeholder: '请输入参数键值',
+      placeholder: t('system.config.valuePlaceholder'),
       clearable: true
     },
     {
-      label: '系统内置',
+      label: t('system.config.builtIn'),
       key: 'configType',
       type: 'select',
       props: {
-        placeholder: '请选择系统内置',
+        placeholder: t('common.pleaseSelect'),
         options: configTypeOptions.value,
         clearable: true
       }
     }
   ])
 
-  // 事件
   function handleReset() {
     emit('reset')
   }

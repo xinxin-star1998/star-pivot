@@ -27,7 +27,7 @@
         @drop.prevent="onMainDrop"
       >
         <div v-if="dragOverMain && activeTab === 'all'" class="drop-mask">
-          松开以上传到{{ selectedFolderId ? '当前文件夹' : '所选目标（将打开上传框）' }}
+          {{ selectedFolderId ? t('file.dropUploadCurrent') : t('file.dropUploadSelect') }}
         </div>
         <FileSearch
           v-model="searchForm"
@@ -40,8 +40,8 @@
           <div class="file-table-card__top">
             <div class="panel-toolbar">
               <ElTabs v-model="activeTab" class="panel-tabs" @tab-change="handleTabChange">
-                <ElTabPane label="全部文件" name="all" />
-                <ElTabPane label="回收站" name="recycle" />
+                <ElTabPane :label="t('file.allFiles')" name="all" />
+                <ElTabPane :label="t('file.recycle')" name="recycle" />
               </ElTabs>
 
               <div v-if="activeTab === 'all' && locationText" class="location-bar">
@@ -52,7 +52,7 @@
 
             <div v-if="activeTab === 'all'" class="media-filter">
               <ElRadioGroup v-model="mediaTypeFilter" size="small" @change="handleSearch">
-                <ElRadioButton v-for="item in MEDIA_TYPES" :key="item.code" :value="item.code">
+                <ElRadioButton v-for="item in mediaTypeOptions" :key="item.code" :value="item.code">
                   <ArtSvgIcon
                     v-if="item.code"
                     :icon="getMediaTypeIcon(item.code)"
@@ -65,7 +65,7 @@
                 v-if="hasAuth('file:resource:tag')"
                 v-model="tagFilterId"
                 clearable
-                placeholder="标签筛选"
+                :placeholder="t('file.tagFilter')"
                 style="width: 140px"
                 size="small"
                 @change="handleSearch"
@@ -95,7 +95,7 @@
                     @click="uploadVisible = true"
                   >
                     <ArtSvgIcon class="mr-1" icon="ri:upload-2-line" />
-                    上传
+                    {{ t('file.upload') }}
                   </ElButton>
                   <ElButton
                     v-if="activeTab === 'all'"
@@ -105,7 +105,7 @@
                     @click="openMoveDialog(selectedRows.map((r) => r.fileId!))"
                   >
                     <ArtSvgIcon class="mr-1" icon="ri:folder-transfer-line" />
-                    迁移
+                    {{ t('file.move') }}
                   </ElButton>
                   <ElButton
                     v-if="activeTab === 'all'"
@@ -116,7 +116,7 @@
                     @click="handleBatchZipDownload"
                   >
                     <ArtSvgIcon class="mr-1" icon="ri:download-cloud-2-line" />
-                    打包下载
+                    {{ t('file.zipDownload') }}
                   </ElButton>
                   <ElButton
                     v-if="activeTab === 'all'"
@@ -126,15 +126,18 @@
                     @click="openTagBind(selectedRows.map((r) => r.fileId!))"
                   >
                     <ArtSvgIcon class="mr-1" icon="ri:price-tag-3-line" />
-                    打标签
+                    {{ t('file.tagBind') }}
                   </ElButton>
                   <ElButton
                     v-if="activeTab === 'all'"
                     v-auth="'file:resource:tag'"
                     v-ripple
-                    @click="tagDialogMode = 'manage'; tagDialogVisible = true"
+                    @click="
+                      tagDialogMode = 'manage'
+                      tagDialogVisible = true
+                    "
                   >
-                    标签管理
+                    {{ t('file.tagManage') }}
                   </ElButton>
                   <ElButton
                     v-if="activeTab === 'all'"
@@ -144,7 +147,7 @@
                     type="danger"
                     @click="handleBatchDelete"
                   >
-                    批量删除
+                    {{ t('common.batchDelete') }}
                   </ElButton>
                   <ElButton
                     v-if="activeTab === 'recycle'"
@@ -154,7 +157,7 @@
                     type="primary"
                     @click="handleBatchRestore"
                   >
-                    批量恢复
+                    {{ t('file.batchRestore') }}
                   </ElButton>
                   <ElButton
                     v-if="activeTab === 'recycle'"
@@ -164,7 +167,7 @@
                     type="danger"
                     @click="handleBatchPurge"
                   >
-                    彻底删除
+                    {{ t('file.purge') }}
                   </ElButton>
                   <ElButton
                     v-if="activeTab === 'recycle'"
@@ -174,7 +177,7 @@
                     plain
                     @click="handleClearRecycle"
                   >
-                    清空回收站
+                    {{ t('file.clearRecycle') }}
                   </ElButton>
                 </ElSpace>
               </template>
@@ -234,7 +237,10 @@
       :default-folder-id="uploadTargetFolderId ?? selectedFolderId"
       :seed-files="uploadSeedFiles"
       @success="onUploadSuccess"
-      @closed="uploadSeedFiles = []; uploadTargetFolderId = undefined"
+      @closed="
+        uploadSeedFiles = []
+        uploadTargetFolderId = undefined
+      "
     />
 
     <FilePreviewDialog
@@ -271,16 +277,13 @@
       @success="onTagSuccess"
     />
 
-    <FileVersionDialog
-      v-model="versionDialogVisible"
-      :file="versionFile"
-      @success="refreshData"
-    />
+    <FileVersionDialog v-model="versionDialogVisible" :file="versionFile" @success="refreshData" />
   </div>
 </template>
 
 <script lang="ts" setup>
   import {
+    clearRecycleBin,
     deleteFiles,
     downloadFilesZip,
     fetchFileList,
@@ -289,7 +292,6 @@
     fetchRecycleList,
     moveFiles,
     purgeFiles,
-    clearRecycleBin,
     renameFile,
     restoreFiles,
     toggleFileFavorite
@@ -307,6 +309,7 @@
   import { handleMutationError } from '@/utils/http/mutation'
   import { ElImage, ElMessage, ElMessageBox, ElTag } from 'element-plus'
   import { computed, h, onActivated, onMounted, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
   import { getCategoryLabel, getMediaTypeIcon, MEDIA_TYPE_TAG, MEDIA_TYPES } from './constants'
   import FileFolderTree from './modules/file-folder-tree.vue'
   import FileGridView from './modules/file-grid-view.vue'
@@ -322,6 +325,7 @@
   defineOptions({ name: 'FileManage' })
 
   const { hasAuth } = useAuth()
+  const { t } = useI18n()
 
   const activeTab = ref<'all' | 'recycle'>('all')
   /** 与 activeTab 同步，供 listApi 读取，避免 Tab 切换瞬间 API 选错 */
@@ -337,11 +341,26 @@
   const tagOptions = ref<SysFileTag[]>([])
   const selectedRows = ref<SysFile[]>([])
   const viewMode = ref<'table' | 'grid' | 'timeline'>('table')
-  const viewModeOptions = [
-    { label: '列表', value: 'table' },
-    { label: '网格', value: 'grid' },
-    { label: '时间', value: 'timeline' }
-  ]
+  const viewModeOptions = computed(() => [
+    { label: t('file.viewList'), value: 'table' },
+    { label: t('file.viewGrid'), value: 'grid' },
+    { label: t('file.viewTimeline'), value: 'timeline' }
+  ])
+
+  const mediaTypeOptions = computed(() => {
+    const labelKey: Record<string, string> = {
+      '': 'file.mediaAll',
+      IMAGE: 'file.mediaImage',
+      VIDEO: 'file.mediaVideo',
+      DOCUMENT: 'file.mediaDocument',
+      AUDIO: 'file.mediaAudio',
+      OTHER: 'file.mediaOther'
+    }
+    return MEDIA_TYPES.map((item) => ({
+      code: item.code,
+      label: t(labelKey[item.code] || 'file.mediaOther')
+    }))
+  })
 
   const uploadVisible = ref(false)
   const uploadSeedFiles = ref<File[]>([])
@@ -379,15 +398,15 @@
   const isRecycle = computed(() => activeTab.value === 'recycle')
 
   const locationText = computed(() => {
-    if (fileListScope.value === 'favorite') return '我的收藏'
-    if (fileListScope.value === 'recent') return '最近访问'
-    if (!selectedFolderId.value) return '全部文件'
+    if (fileListScope.value === 'favorite') return t('file.myFavorite')
+    if (fileListScope.value === 'recent') return t('file.recentAccess')
+    if (!selectedFolderId.value) return t('file.allFiles')
     const found = findFolderInTree(categoryTree.value, selectedFolderId.value)
     if (found?.pathNames?.length) {
       return found.pathNames.join(' / ')
     }
     const catLabel = getCategoryLabel(selectedCategory.value)
-    return `${catLabel} / ${selectedFolderName.value || '默认'}`
+    return `${catLabel} / ${selectedFolderName.value || t('file.defaultFolder')}`
   })
 
   const listApi = (params: Record<string, unknown>) => {
@@ -445,10 +464,10 @@
   function buildColumns(recycle: boolean) {
     const cols = [
       { type: 'selection' as const },
-      { type: 'index' as const, width: 60, label: '序号' },
+      { type: 'index' as const, width: 60, label: t('table.column.index') },
       {
         prop: 'fileName',
-        label: '文件名',
+        label: t('file.fileName'),
         minWidth: 280,
         formatter: (row: SysFile) =>
           h(
@@ -498,7 +517,7 @@
     if (recycle || !selectedFolderId.value) {
       cols.push({
         prop: 'categoryLabel',
-        label: '业务分类',
+        label: t('file.category'),
         width: 110,
         formatter: (row: SysFile) => row.categoryLabel || getCategoryLabel(row.category)
       } as never)
@@ -507,7 +526,7 @@
     cols.push(
       {
         prop: 'mediaTypeLabel',
-        label: '类型',
+        label: t('file.type'),
         width: 96,
         formatter: (row: SysFile) =>
           h(
@@ -518,23 +537,23 @@
       } as never,
       {
         prop: 'fileSize',
-        label: '大小',
+        label: t('file.size'),
         width: 96,
         formatter: (row: SysFile) => formatFileSize(row.fileSize)
       } as never,
       {
         prop: recycle ? 'deleteBy' : 'createBy',
-        label: recycle ? '删除人' : '上传人',
+        label: recycle ? t('file.deleter') : t('file.uploader'),
         width: 100
       } as never,
       {
         prop: recycle ? 'deleteTime' : 'createTime',
-        label: recycle ? '删除时间' : '上传时间',
+        label: recycle ? t('file.deleteTime') : t('file.uploadTime'),
         width: 168
       } as never,
       {
         prop: 'operation',
-        label: '操作',
+        label: t('common.operation'),
         width: recycle ? 160 : 240,
         fixed: 'right' as const,
         formatter: (row: SysFile) =>
@@ -546,42 +565,40 @@
               hasAuth('file:resource:query') &&
               h(ArtButtonTable, {
                 type: 'download',
-                tooltip: '下载',
+                tooltip: t('file.download'),
                 onClick: () => handleDownload(row)
               }),
             !recycle &&
               hasAuth('file:resource:query') &&
               h(ArtButtonTable, {
                 icon: row.favorited ? 'ri:star-fill' : 'ri:star-line',
-                iconClass: row.favorited
-                  ? 'bg-warning/12 text-warning'
-                  : 'bg-g-300/40 text-g-600',
-                tooltip: row.favorited ? '取消收藏' : '收藏',
+                iconClass: row.favorited ? 'bg-warning/12 text-warning' : 'bg-g-300/40 text-g-600',
+                tooltip: row.favorited ? t('file.unfavorite') : t('file.favorite'),
                 onClick: () => handleToggleFavorite(row)
               }),
             !recycle &&
               hasAuth('file:resource:tag') &&
               h(ArtButtonTable, {
                 icon: 'ri:price-tag-3-line',
-                tooltip: '打标签',
+                tooltip: t('file.tagBind'),
                 onClick: () =>
                   openTagBind(
                     [row.fileId!],
-                    (row.tags || []).map((t) => t.tagId!).filter(Boolean)
+                    (row.tags || []).map((tag) => tag.tagId!).filter(Boolean)
                   )
               }),
             !recycle &&
               hasAuth('file:resource:version') &&
               h(ArtButtonTable, {
                 icon: 'ri:history-line',
-                tooltip: '版本',
+                tooltip: t('file.version'),
                 onClick: () => openVersionDialog(row)
               }),
             !recycle &&
               hasAuth('file:resource:move') &&
               h(ArtButtonTable, {
                 type: 'edit',
-                tooltip: '迁移',
+                tooltip: t('file.move'),
                 onClick: () => openMoveDialog([row.fileId!])
               }),
             !recycle &&
@@ -589,7 +606,7 @@
               h(ArtButtonTable, {
                 icon: 'ri:text',
                 iconClass: 'bg-warning/12 text-warning',
-                tooltip: '重命名',
+                tooltip: t('file.rename'),
                 onClick: () => handleRename(row)
               }),
             !recycle &&
@@ -602,7 +619,7 @@
               hasAuth('file:resource:purge') &&
               h(ArtButtonTable, {
                 type: 'delete',
-                tooltip: '彻底删除',
+                tooltip: t('file.purge'),
                 onClick: () => handlePurge([row.fileId!])
               })
           ])
@@ -802,12 +819,12 @@
     try {
       const res = await toggleFileFavorite(file.fileId)
       file.favorited = res.favorited
-      ElMessage.success(res.favorited ? '已收藏' : '已取消收藏')
+      ElMessage.success(res.favorited ? t('file.favoriteSuccess') : t('file.unfavoriteSuccess'))
       if (fileListScope.value === 'favorite' && !res.favorited) {
         refreshData()
       }
     } catch (error) {
-      handleMutationError(error, '收藏操作失败')
+      handleMutationError(error, t('file.favoriteFail'))
     }
   }
 
@@ -836,9 +853,9 @@
     zipDownloading.value = true
     try {
       await downloadFilesZip(ids)
-      ElMessage.success('打包下载已开始')
+      ElMessage.success(t('file.zipDownloadStart'))
     } catch (error) {
-      handleMutationError(error, '打包下载失败')
+      handleMutationError(error, t('file.zipDownloadFail'))
     } finally {
       zipDownloading.value = false
     }
@@ -847,24 +864,24 @@
   async function handleRename(file: SysFile) {
     if (!file.fileId) return
     try {
-      const { value } = await ElMessageBox.prompt('请输入新的文件名', '重命名', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      const { value } = await ElMessageBox.prompt(t('file.renamePrompt'), t('file.rename'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
         inputValue: file.fileName || '',
-        inputPlaceholder: '例如：avatar1.webp',
+        inputPlaceholder: 'avatar1.webp',
         inputValidator: (val) => {
           const name = val?.trim()
-          if (!name) return '文件名不能为空'
-          if (name.includes('/') || name.includes('\\')) return '文件名不能包含路径分隔符'
+          if (!name) return t('file.nameEmpty')
+          if (name.includes('/') || name.includes('\\')) return t('file.nameInvalid')
           return true
         }
       })
       const fileName = value.trim()
       await renameFile({ fileId: file.fileId, fileName })
-      ElMessage.success('重命名成功')
+      ElMessage.success(t('file.renameSuccess'))
       refreshData()
     } catch (error) {
-      handleMutationError(error, '重命名失败')
+      handleMutationError(error, t('file.renameFail'))
     }
   }
 
@@ -908,11 +925,11 @@
 
   async function handleDeleteFolder(folderId: number) {
     try {
-      await ElMessageBox.confirm('删除后文件夹不可恢复，且须为空文件夹。确认删除？', '提示', {
+      await ElMessageBox.confirm(t('file.folderDeleteConfirm'), t('common.tips'), {
         type: 'warning'
       })
       await deleteFolder(folderId)
-      ElMessage.success('文件夹已删除')
+      ElMessage.success(t('file.folderDeleteSuccess'))
       if (selectedFolderId.value === folderId) {
         selectedFolderId.value = undefined
         selectedCategory.value = ''
@@ -924,20 +941,20 @@
         await handleSearch()
       }
     } catch (error) {
-      handleMutationError(error, '删除文件夹失败')
+      handleMutationError(error, t('file.folderDeleteFail'))
     }
   }
 
   async function handleDelete(ids: number[]) {
     try {
-      await ElMessageBox.confirm('确认将选中文件移入回收站？', '提示', { type: 'warning' })
+      await ElMessageBox.confirm(t('file.deleteConfirm'), t('common.tips'), { type: 'warning' })
       await deleteFiles(ids)
-      ElMessage.success('已移入回收站')
+      ElMessage.success(t('file.moveToRecycleSuccess'))
       selectedRows.value = []
       refreshData()
       loadFolderTree()
     } catch (error) {
-      handleMutationError(error, '删除失败')
+      handleMutationError(error, t('common.deleteFail'))
     }
   }
 
@@ -947,13 +964,13 @@
 
   async function handleRestore(ids: number[]) {
     try {
-      await ElMessageBox.confirm('确认恢复选中文件？', '提示', { type: 'info' })
+      await ElMessageBox.confirm(t('file.restoreConfirm'), t('common.tips'), { type: 'info' })
       await restoreFiles(ids)
-      ElMessage.success('恢复成功')
+      ElMessage.success(t('file.restoreSuccess'))
       selectedRows.value = []
       refreshData()
     } catch (error) {
-      handleMutationError(error, '恢复失败')
+      handleMutationError(error, t('file.restoreFail'))
     }
   }
 
@@ -963,18 +980,14 @@
 
   async function handlePurge(ids: number[]) {
     try {
-      await ElMessageBox.confirm(
-        '彻底删除后不可恢复，并将清理无引用的 OSS 对象。确认继续？',
-        '彻底删除',
-        { type: 'warning' }
-      )
+      await ElMessageBox.confirm(t('file.purgeConfirm'), t('file.purge'), { type: 'warning' })
       await purgeFiles(ids)
-      ElMessage.success('已彻底删除')
+      ElMessage.success(t('file.purgeSuccess'))
       selectedRows.value = []
       refreshData()
       loadFolderTree()
     } catch (error) {
-      handleMutationError(error, '彻底删除失败')
+      handleMutationError(error, t('file.purgeFail'))
     }
   }
 
@@ -984,18 +997,16 @@
 
   async function handleClearRecycle() {
     try {
-      await ElMessageBox.confirm(
-        '将清空当前权限范围内回收站全部文件，且不可恢复。确认继续？',
-        '清空回收站',
-        { type: 'warning' }
-      )
+      await ElMessageBox.confirm(t('file.clearRecycleConfirm'), t('file.clearRecycle'), {
+        type: 'warning'
+      })
       const count = await clearRecycleBin()
-      ElMessage.success(count ? `已清空 ${count} 个文件` : '回收站已为空')
+      ElMessage.success(count ? t('file.clearRecycleSuccess') : t('file.clearRecycleEmpty'))
       selectedRows.value = []
       refreshData()
       loadFolderTree()
     } catch (error) {
-      handleMutationError(error, '清空回收站失败')
+      handleMutationError(error, t('file.clearRecycleFail'))
     }
   }
 
@@ -1020,7 +1031,7 @@
   function openUploadWithFiles(files: File[], folderId?: number) {
     if (!files.length) return
     if (!hasAuth('file:resource:add')) {
-      ElMessage.warning('无上传权限')
+      ElMessage.warning(t('file.noUploadPermission'))
       return
     }
     uploadSeedFiles.value = files
@@ -1075,18 +1086,18 @@
 
   async function onDropMoveToFolder(payload: { folderId: number; fileIds: number[] }) {
     if (!hasAuth('file:resource:move')) {
-      ElMessage.warning('无迁移权限')
+      ElMessage.warning(t('file.noMovePermission'))
       return
     }
     if (!payload.fileIds.length) return
     try {
       await moveFiles(payload.fileIds, payload.folderId)
-      ElMessage.success('已迁移到目标文件夹')
+      ElMessage.success(t('file.movedToFolder'))
       selectedRows.value = []
       refreshData()
       loadFolderTree()
     } catch (error) {
-      handleMutationError(error, '迁移失败')
+      handleMutationError(error, t('file.moveFail'))
     }
   }
 

@@ -11,6 +11,8 @@
 
 <script lang="ts" setup>
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+  import { FILE_CATEGORIES } from '../constants'
+  import { useI18n } from 'vue-i18n'
 
   const props = defineProps<{
     modelValue: Record<string, unknown>
@@ -23,6 +25,8 @@
     reset: []
   }>()
 
+  const { t } = useI18n()
+
   const searchBarRef = ref()
   const formData = computed({
     get: () => props.modelValue,
@@ -31,55 +35,55 @@
 
   const rules = {}
 
+  const categoryOptions = computed(() =>
+    FILE_CATEGORIES.map((item) => ({
+      label: t(`file.cat.${item.code}`),
+      value: item.code
+    }))
+  )
+
   const formItems = computed(() => {
     const items = [
       {
-        label: props.recycle ? '文件名' : '关键词',
+        label: props.recycle ? t('file.fileName') : t('file.searchName'),
         key: 'fileName',
         type: 'input',
-        placeholder: props.recycle ? '请输入文件名' : '文件名 / 备注 / 标签',
+        placeholder: props.recycle
+          ? t('file.searchFileNamePlaceholder')
+          : t('file.searchKeywordPlaceholder'),
         clearable: true
       },
       {
-        label: props.recycle ? '删除人' : '上传人',
+        label: props.recycle ? t('file.deleter') : t('file.uploader'),
         key: props.recycle ? 'deleteBy' : 'createBy',
         type: 'input',
-        placeholder: props.recycle ? '请输入删除人' : '请输入上传人',
+        placeholder: props.recycle
+          ? t('file.searchDeleterPlaceholder')
+          : t('file.searchUploaderPlaceholder'),
         clearable: true
       },
       {
-        label: props.recycle ? '删除时间' : '上传时间',
+        label: props.recycle ? t('file.deleteTime') : t('file.uploadTime'),
         key: 'timeRange',
         type: 'datetimerange',
         props: {
           type: 'datetimerange',
           valueFormat: 'YYYY-MM-DD HH:mm:ss',
-          startPlaceholder: '开始时间',
-          endPlaceholder: '结束时间',
+          startPlaceholder: t('file.startTime'),
+          endPlaceholder: t('file.endTime'),
           clearable: true
         }
       }
     ]
     if (props.recycle) {
       items.splice(1, 0, {
-        label: '业务分类',
+        label: t('file.category'),
         key: 'category',
         type: 'select',
         props: {
-          placeholder: '全部分类',
+          placeholder: t('file.categoryAll'),
           clearable: true,
-          options: [
-            { label: '系统通用', value: 'SYSTEM' },
-            { label: '办公审批', value: 'OA' },
-            { label: '合同档案', value: 'CONTRACT' },
-            { label: '资质证件', value: 'CERT' },
-            { label: '项目资料', value: 'PROJECT' },
-            { label: '客户资料', value: 'CUSTOMER' },
-            { label: '商品素材', value: 'GOODS' },
-            { label: '财务单据', value: 'FINANCE' },
-            { label: '人事档案', value: 'HR' },
-            { label: '其他附件', value: 'OTHER' }
-          ]
+          options: categoryOptions.value
         }
       })
     }

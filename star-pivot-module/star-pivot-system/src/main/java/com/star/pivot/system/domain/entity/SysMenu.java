@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.io.Serial;
@@ -12,6 +13,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 菜单权限表(SysMenu)表实体类
@@ -111,7 +113,13 @@ public class SysMenu implements Serializable {
     private String label;
     //子菜单
     @TableField(exist = false)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<SysMenu> children = new ArrayList<>();
+    /**
+     * 多语言名称（lang -> 名称），仅详情接口填充
+     */
+    @TableField(exist = false)
+    private Map<String, String> translations;
 
     @Serial
     private static final long serialVersionUID = 1L;

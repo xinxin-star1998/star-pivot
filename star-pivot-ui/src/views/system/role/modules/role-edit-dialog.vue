@@ -1,41 +1,40 @@
 <template>
   <ElDialog
     v-model="visible"
-    :title="dialogType === 'add' ? '新增角色' : '编辑角色'"
+    :title="dialogType === 'add' ? t('system.role.addTitle') : t('system.role.editTitle')"
     width="30%"
     align-center
     @close="handleClose"
   >
     <ElForm ref="roleForm" :model="form" :rules="rules" label-width="120px">
-      <ElFormItem label="角色名称" prop="roleName">
-        <ElInput v-model="form.roleName" placeholder="请输入角色名称" />
+      <ElFormItem :label="t('system.role.roleName')" prop="roleName">
+        <ElInput v-model="form.roleName" :placeholder="t('system.role.roleNamePlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="角色编码" prop="roleKey">
-        <ElInput v-model="form.roleKey" placeholder="请输入角色编码" />
+      <ElFormItem :label="t('system.role.roleKey')" prop="roleKey">
+        <ElInput v-model="form.roleKey" :placeholder="t('system.role.roleKeyPlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="显示顺序" prop="roleSort">
-        <ElInput v-model="form.roleSort" placeholder="请输入显示顺序" />
+      <ElFormItem :label="t('common.displayOrder')" prop="roleSort">
+        <ElInput v-model="form.roleSort" :placeholder="t('common.pleaseInput')" />
       </ElFormItem>
-      <ElFormItem label="备注" prop="description">
-        <ElInput v-model="form.remark" type="textarea" :rows="3" placeholder="请输入角色描述" />
+      <ElFormItem :label="t('common.remark')" prop="description">
+        <ElInput v-model="form.remark" type="textarea" :rows="3" :placeholder="t('system.role.roleDescPlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="状态">
+      <ElFormItem :label="t('common.status')">
         <ElSwitch v-model="statusSwitch" />
       </ElFormItem>
-      <ElFormItem label="菜单权限">
+      <ElFormItem :label="t('system.role.menuPerms')">
         <div class="permission-tree-wrapper">
-          <!-- 控制选项 -->
           <div class="permission-controls">
-            <ElCheckbox v-model="menuExpandAll" @change="toggleMenuExpandAll">展开/折叠</ElCheckbox>
+            <ElCheckbox v-model="menuExpandAll" @change="toggleMenuExpandAll">{{ t('common.expand') }}/{{ t('common.collapse') }}</ElCheckbox>
             <ElCheckbox
               v-model="menuSelectAll"
               :indeterminate="menuSelectAllIndeterminate"
               @change="toggleMenuSelectAll"
             >
-              全选/全不选
+              {{ t('system.role.selectAllToggle') }}
             </ElCheckbox>
             <ElCheckbox v-model="isMenuParentChildLinked" @change="handleMenuCheckStrictlyChange">
-              父子联动
+              {{ t('system.role.parentChildLink') }}
             </ElCheckbox>
           </div>
           <!-- 树结构容器 -->
@@ -65,8 +64,8 @@
       </ElFormItem>
     </ElForm>
     <template #footer>
-      <ElButton @click="handleClose">取消</ElButton>
-      <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+      <ElButton @click="handleClose">{{ t('common.cancel') }}</ElButton>
+      <ElButton type="primary" @click="handleSubmit">{{ t('common.submit') }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -78,6 +77,7 @@
   import { fetchGetRoleMenus } from '@/api/role/role'
   import { useSettingStore } from '@/store/modules/setting'
   import { useCheckableTree } from '@/composables/useCheckableTree'
+  import { useI18n } from 'vue-i18n'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -99,6 +99,7 @@
   })
 
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const roleForm = ref<FormInstance>()
   const menuTree = useCheckableTree<SysMenu>({ keyField: 'menuId', childrenField: 'children' })
@@ -149,17 +150,17 @@
   /**
    * 表单验证规则
    */
-  const rules = reactive<FormRules>({
+  const rules = computed<FormRules>(() => ({
     roleName: [
-      { required: true, message: '请输入角色名称', trigger: 'blur' },
-      { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+      { required: true, message: t('system.role.roleNameRequired'), trigger: 'blur' },
+      { min: 2, max: 20, message: t('system.role.roleNameLength'), trigger: 'blur' }
     ],
     roleKey: [
-      { required: true, message: '请输入角色编码', trigger: 'blur' },
-      { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+      { required: true, message: t('system.role.roleKeyRequired'), trigger: 'blur' },
+      { min: 2, max: 50, message: t('system.role.roleKeyLength'), trigger: 'blur' }
     ],
-    remark: [{ required: true, message: '请输入角色描述', trigger: 'blur' }]
-  })
+    remark: [{ required: true, message: t('system.role.roleDescRequired'), trigger: 'blur' }]
+  }))
 
   /**
    * 表单数据

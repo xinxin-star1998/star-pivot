@@ -36,7 +36,7 @@
               {{ userDetail.userName || userInfo.user?.username }}
             </h2>
             <p class="mt-2 text-sm transition-colors" :class="isDark ? 'text-g-400' : 'text-g-600'">
-              {{ userDetail.remark || '专注于用户体验跟视觉设计' }}
+              {{ userDetail.remark || t('system.userCenter.defaultRemark') }}
             </p>
 
             <div class="mt-6 space-y-3">
@@ -115,7 +115,7 @@
                 class="mb-3 text-sm font-semibold transition-colors"
                 :class="isDark ? 'text-g-200' : 'text-g-800'"
               >
-                角色
+                {{ t('system.user.role') }}
               </h3>
               <div class="flex flex-wrap justify-center gap-2">
                 <div
@@ -142,15 +142,15 @@
               class="text-xl font-semibold transition-colors"
               :class="isDark ? 'text-g-100' : 'text-g-900'"
             >
-              基本设置
+              {{ t('system.userCenter.basicSettings') }}
             </h1>
             <p class="mt-1 text-sm transition-colors" :class="isDark ? 'text-g-400' : 'text-g-500'">
-              查看您的基本信息或修改登录密码
+              {{ t('system.userCenter.basicSettingsHint') }}
             </p>
           </div>
 
           <ElTabs v-model="activeTab" class="px-6 pb-6 user-center-tabs">
-            <ElTabPane label="基本资料" name="basic">
+            <ElTabPane :label="t('system.userCenter.basicInfo')" name="basic">
               <ElForm
                 :model="form"
                 class="box-border pt-4 space-y-6"
@@ -158,7 +158,7 @@
                 label-position="top"
               >
                 <ElRow class="gap-6">
-                  <ElFormItem label="用户名" class="flex-1">
+                  <ElFormItem :label="t('system.user.userName')" class="flex-1">
                     <ElInput v-model="form.userName" class="transition-all duration-300">
                       <template #prefix>
                         <ArtSvgIcon
@@ -169,7 +169,7 @@
                       </template>
                     </ElInput>
                   </ElFormItem>
-                  <ElFormItem label="性别" class="flex-1">
+                  <ElFormItem :label="t('system.userCenter.sex')" class="flex-1">
                     <ElSelect v-model="form.sex" class="w-full transition-all duration-300">
                       <ElOption
                         v-for="item in options"
@@ -182,7 +182,7 @@
                 </ElRow>
 
                 <ElRow class="gap-6">
-                  <ElFormItem label="昵称" class="flex-1">
+                  <ElFormItem :label="t('system.userCenter.nickName')" class="flex-1">
                     <ElInput v-model="form.nickName" class="transition-all duration-300">
                       <template #prefix>
                         <ArtSvgIcon
@@ -193,7 +193,7 @@
                       </template>
                     </ElInput>
                   </ElFormItem>
-                  <ElFormItem label="邮箱" class="flex-1">
+                  <ElFormItem :label="t('system.userCenter.email')" class="flex-1">
                     <ElInput v-model="form.email" class="transition-all duration-300">
                       <template #prefix>
                         <ArtSvgIcon
@@ -207,7 +207,7 @@
                 </ElRow>
 
                 <ElRow class="gap-6">
-                  <ElFormItem label="手机" class="flex-1">
+                  <ElFormItem :label="t('system.userCenter.phone')" class="flex-1">
                     <ElInput v-model="form.phonenumber" class="transition-all duration-300">
                       <template #prefix>
                         <ArtSvgIcon
@@ -220,7 +220,7 @@
                   </ElFormItem>
                 </ElRow>
 
-                <ElFormItem label="个人介绍" class="h-32">
+                <ElFormItem :label="t('system.userCenter.intro')" class="h-32">
                   <ElInput
                     type="textarea"
                     :rows="4"
@@ -237,13 +237,15 @@
                   </ElInput>
                 </ElFormItem>
                 <ElFormItem>
-                  <ElButton type="primary" @click="submitBasicProfile">保存</ElButton>
-                  <ElButton plain @click="resetBasicProfile">重置</ElButton>
+                  <ElButton type="primary" @click="submitBasicProfile">{{
+                    t('common.save')
+                  }}</ElButton>
+                  <ElButton plain @click="resetBasicProfile">{{ t('common.reset') }}</ElButton>
                 </ElFormItem>
               </ElForm>
             </ElTabPane>
 
-            <ElTabPane label="修改密码" name="password">
+            <ElTabPane :label="t('system.userCenter.updatePwd')" name="password">
               <ElForm
                 ref="passwordFormRef"
                 :model="passwordForm"
@@ -252,39 +254,39 @@
                 label-width="90px"
                 label-position="left"
               >
-                <ElFormItem label="旧密码" prop="oldPassword">
+                <ElFormItem :label="t('system.userCenter.oldPassword')" prop="oldPassword">
                   <ElInput
                     v-model="passwordForm.oldPassword"
                     type="password"
                     show-password
                     autocomplete="current-password"
-                    placeholder="请输入旧密码"
+                    :placeholder="t('system.userCenter.oldPwdPlaceholder')"
                   />
                 </ElFormItem>
-                <ElFormItem label="新密码" prop="newPassword">
+                <ElFormItem :label="t('system.userCenter.newPassword')" prop="newPassword">
                   <ElInput
                     v-model="passwordForm.newPassword"
                     type="password"
                     show-password
                     autocomplete="new-password"
-                    placeholder="请输入新密码"
+                    :placeholder="t('system.userCenter.newPwdPlaceholder')"
                   />
                 </ElFormItem>
-                <ElFormItem label="确认密码" prop="confirmPassword">
+                <ElFormItem :label="t('system.userCenter.confirmPassword')" prop="confirmPassword">
                   <ElInput
                     v-model="passwordForm.confirmPassword"
                     type="password"
                     show-password
                     autocomplete="new-password"
-                    placeholder="请确认新密码"
+                    :placeholder="t('system.userCenter.confirmPwdPlaceholder')"
                   />
                 </ElFormItem>
                 <ElFormItem>
-                  <ElButton type="primary" @click="submitPassword">保存</ElButton>
+                  <ElButton type="primary" @click="submitPassword">{{ t('common.save') }}</ElButton>
                 </ElFormItem>
               </ElForm>
             </ElTabPane>
-            <ElTabPane label="会话管理" name="session">
+            <ElTabPane :label="t('system.userCenter.sessionManagement')" name="session">
               <div class="session-management pt-4">
                 <!-- 操作按钮 -->
                 <div class="flex items-center gap-3 mb-4">
@@ -295,14 +297,14 @@
                     @click="handleLogoutAll"
                   >
                     <el-icon><SwitchButton /></el-icon>
-                    强制下线所有会话
+                    {{ t('system.userCenter.forceLogoutAll') }}
                   </el-button>
                   <el-button :loading="sessionLoading" @click="loadSessions">
                     <el-icon><Refresh /></el-icon>
-                    刷新
+                    {{ t('file.refresh') }}
                   </el-button>
                   <el-tag v-if="sessionList.length > 0" type="info" size="small" class="ml-2">
-                    共 {{ sessionList.length }} 个活跃会话
+                    {{ t('system.userCenter.activeSessionCount', { count: sessionList.length }) }}
                   </el-tag>
                 </div>
 
@@ -311,55 +313,77 @@
                   v-loading="sessionLoading"
                   :data="sessionList"
                   style="width: 100%"
-                  empty-text="暂无活跃会话"
+                  :empty-text="t('system.userCenter.noActiveSession')"
                   :row-class-name="sessionRowClassName"
                 >
-                  <el-table-column type="index" label="序号" width="60" align="center" />
-                  <el-table-column label="设备信息" min-width="200">
+                  <el-table-column
+                    type="index"
+                    :label="t('system.user.index')"
+                    width="60"
+                    align="center"
+                  />
+                  <el-table-column :label="t('system.userCenter.deviceInfo')" min-width="200">
                     <template #default="{ row }">
                       <div class="device-info">
                         <span class="font-medium">{{ getDeviceText(row) }}</span>
                         <div class="text-xs text-g-500">
                           <el-icon><Location /></el-icon>
-                          {{ row.ipaddr || '未知IP' }}
+                          {{ row.ipaddr || t('system.userCenter.unknownIp') }}
                         </div>
                       </div>
                     </template>
                   </el-table-column>
                   <el-table-column
-                    label="浏览器"
+                    :label="t('monitor.online.browser')"
                     prop="browser"
                     min-width="120"
                     show-overflow-tooltip
                   />
                   <el-table-column
-                    label="操作系统"
+                    :label="t('monitor.online.os')"
                     prop="os"
                     min-width="100"
                     show-overflow-tooltip
                   />
-                  <el-table-column label="登录时间" min-width="160">
+                  <el-table-column :label="t('monitor.online.loginTime')" min-width="160">
                     <template #default="{ row }">
                       {{ formatDateTime(row.createdAt) }}
                     </template>
                   </el-table-column>
-                  <el-table-column label="最后访问" min-width="160">
+                  <el-table-column :label="t('system.userCenter.lastAccess')" min-width="160">
                     <template #default="{ row }">
                       {{ formatDateTime(row.lastAccessTime) }}
                     </template>
                   </el-table-column>
-                  <el-table-column label="会话时长" width="110" align="center">
+                  <el-table-column
+                    :label="t('system.userCenter.sessionDuration')"
+                    width="110"
+                    align="center"
+                  >
                     <template #default="{ row }">
                       <el-tag type="info" size="small">{{ row.sessionDuration || '-' }}</el-tag>
                     </template>
                   </el-table-column>
-                  <el-table-column label="当前会话" width="90" align="center">
+                  <el-table-column
+                    :label="t('system.userCenter.currentSession')"
+                    width="90"
+                    align="center"
+                  >
                     <template #default="{ row }">
-                      <el-tag v-if="isCurrentSession(row)" type="success" size="small">当前</el-tag>
-                      <el-tag v-else type="info" size="small">其他</el-tag>
+                      <el-tag v-if="isCurrentSession(row)" type="success" size="small">{{
+                        t('system.userCenter.current')
+                      }}</el-tag>
+                      <el-tag v-else type="info" size="small">{{
+                        t('system.userCenter.other')
+                      }}</el-tag>
                     </template>
                   </el-table-column>
-                  <el-table-column label="操作" width="90" fixed="right" align="center">
+                  <el-table-column
+                    :label="t('common.operation')"
+                    width="90"
+                    fixed="right"
+                    align="center"
+                  >
                     <template #default="{ row }">
                       <el-button
                         v-if="!isCurrentSession(row)"
@@ -369,7 +393,7 @@
                         :loading="row.logoutLoading"
                         @click="handleLogoutSession(row)"
                       >
-                        下线
+                        {{ t('system.userCenter.logout') }}
                       </el-button>
                       <el-text v-else type="info" size="small">-</el-text>
                     </template>
@@ -409,10 +433,12 @@
   import { extractOssObjectPath, needsOssPresignedDisplay } from '@/utils/storage/oss-object-path'
   import dayjs from 'dayjs'
   import { useRoute } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'UserCenter' })
 
   const route = useRoute()
+  const { t } = useI18n()
 
   // 主题状态
   const settingStore = useSettingStore()
@@ -469,14 +495,16 @@
     confirmPassword: ''
   })
 
-  const passwordRules: FormRules<typeof passwordForm> = {
-    oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
+  const passwordRules = computed<FormRules<typeof passwordForm>>(() => ({
+    oldPassword: [
+      { required: true, message: t('system.userCenter.oldPwdRequired'), trigger: 'blur' }
+    ],
     newPassword: [
-      { required: true, message: '请输入新密码', trigger: 'blur' },
-      { min: 6, max: 20, message: '密码长度应为 6-20 位', trigger: 'blur' },
+      { required: true, message: t('system.userCenter.newPwdRequired'), trigger: 'blur' },
+      { min: 6, max: 20, message: t('system.userCenter.pwdLength'), trigger: 'blur' },
       {
         pattern: /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z\d]{6,20}$/,
-        message: '密码必须包含字母和数字，且仅允许字母和数字',
+        message: t('system.userCenter.pwdPattern'),
         trigger: 'blur'
       },
       {
@@ -486,7 +514,7 @@
             return
           }
           if (value === passwordForm.oldPassword) {
-            callback(new Error('新密码不能与旧密码相同'))
+            callback(new Error(t('system.userCenter.pwdSameAsOld')))
             return
           }
           callback()
@@ -495,15 +523,15 @@
       }
     ],
     confirmPassword: [
-      { required: true, message: '请确认新密码', trigger: 'blur' },
+      { required: true, message: t('system.userCenter.confirmPwdRequired'), trigger: 'blur' },
       {
         validator: (_rule, value, callback) => {
           if (!value) {
-            callback(new Error('请确认新密码'))
+            callback(new Error(t('system.userCenter.confirmPwdRequired')))
             return
           }
           if (value !== passwordForm.newPassword) {
-            callback(new Error('两次输入的新密码不一致'))
+            callback(new Error(t('system.userCenter.pwdNotMatch')))
             return
           }
           callback()
@@ -511,16 +539,16 @@
         trigger: 'blur'
       }
     ]
-  }
+  }))
 
   /**
    * 性别选项
    */
-  const options = [
-    { value: '0', label: '男' },
-    { value: '1', label: '女' },
-    { value: '2', label: '未知' }
-  ]
+  const options = computed(() => [
+    { value: '0', label: t('system.userCenter.male') },
+    { value: '1', label: t('system.userCenter.female') },
+    { value: '2', label: t('system.userCenter.unknown') }
+  ])
 
   // ==================== 会话管理 ====================
   const sessionLoading = ref(false)
@@ -532,7 +560,7 @@
     try {
       const userId = userStore.getUserInfo?.user?.userId
       if (!userId) {
-        ElMessage.warning('用户未登录')
+        ElMessage.warning(t('system.userCenter.notLoggedIn'))
         return
       }
       const res = await fetchUserSessions(userId)
@@ -541,7 +569,7 @@
         logoutLoading: false
       }))
     } catch (error: any) {
-      handleMutationError(error, '获取会话列表失败')
+      handleMutationError(error, t('system.userCenter.loadSessionFail'))
     } finally {
       sessionLoading.value = false
     }
@@ -559,7 +587,7 @@
     const parts: string[] = []
     if (session.browser) parts.push(session.browser)
     if (session.os) parts.push(session.os)
-    return parts.length > 0 ? parts.join(' / ') : '未知设备'
+    return parts.length > 0 ? parts.join(' / ') : t('system.userCenter.unknownDevice')
   }
 
   const formatDateTime = (dateStr?: string) => {
@@ -572,11 +600,14 @@
   ) => {
     try {
       await ElMessageBox.confirm(
-        `确定要强制下线该会话吗？<br/>设备：${getDeviceText(session)}<br/>IP：${session.ipaddr || '未知'}`,
-        '警告',
+        t('system.userCenter.logoutSessionConfirm', {
+          device: getDeviceText(session),
+          ip: session.ipaddr || t('system.userCenter.unknown')
+        }),
+        t('common.tips'),
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning',
           dangerouslyUseHTMLString: true
         }
@@ -593,14 +624,14 @@
       if (!userId) return
 
       await forceLogoutSession(userId, session.deviceSessionId)
-      ElMessage.success('会话已强制下线')
+      ElMessage.success(t('system.userCenter.logoutSessionSuccess'))
 
       if (index > -1) {
         sessionList.value.splice(index, 1)
       }
     } catch (error: any) {
       if (error !== 'cancel') {
-        handleMutationError(error, '强制下线失败')
+        handleMutationError(error, t('system.userCenter.logoutSessionFail'))
       }
     } finally {
       const idx = sessionList.value.findIndex((s) => s.deviceSessionId === session.deviceSessionId)
@@ -612,27 +643,23 @@
 
   const handleLogoutAll = async () => {
     try {
-      await ElMessageBox.confirm(
-        '确定要强制下线所有会话吗？这将导致所有设备上的账户退出登录。',
-        '警告',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      )
+      await ElMessageBox.confirm(t('system.userCenter.logoutAllConfirm'), t('common.tips'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      })
 
       logoutAllLoading.value = true
       const userId = userStore.getUserInfo?.user?.userId
       if (!userId) return
 
       await forceLogoutAllSessions(userId)
-      ElMessage.success('所有会话已强制下线')
+      ElMessage.success(t('system.userCenter.logoutAllSuccess'))
 
       userStore.logOut()
     } catch (error: any) {
       if (error !== 'cancel') {
-        handleMutationError(error, '操作失败')
+        handleMutationError(error, t('system.userCenter.logoutAllFail'))
       }
     } finally {
       logoutAllLoading.value = false
@@ -771,7 +798,7 @@
           oldPassword: passwordForm.oldPassword,
           newPassword: passwordForm.newPassword
         })
-        ElMessage.success('密码修改成功，请重新登录')
+        ElMessage.success(t('system.userCenter.pwdSuccess'))
         fetchLogout()
           .catch(() => void 0)
           .finally(() => {
@@ -779,7 +806,7 @@
             userStore.logOut()
           })
       } catch (error) {
-        handleMutationError(error, '密码修改失败，请检查旧密码或稍后重试')
+        handleMutationError(error, t('system.userCenter.pwdFail'))
         if (import.meta.env.DEV) {
           console.error('修改密码失败:', error)
         }
@@ -800,7 +827,7 @@
 
   const submitBasicProfile = async () => {
     if (!form.userId) {
-      ElMessage.error('用户信息未加载完成，请稍后重试')
+      ElMessage.error(t('system.userCenter.profileNotReady'))
       return
     }
     try {
@@ -822,9 +849,9 @@
         email: form.email,
         avatar: form.avatar
       } as any)
-      ElMessage.success('基本资料保存成功')
+      ElMessage.success(t('system.userCenter.saveSuccess'))
     } catch (error) {
-      handleMutationError(error, '基本资料保存失败')
+      handleMutationError(error, t('system.userCenter.profileFail'))
       if (import.meta.env.DEV) {
         console.error('保存基本资料失败:', error)
       }
@@ -842,7 +869,7 @@
   }
 
   const handleAvatarUploadError = (error: any) => {
-    handleMutationError(error, '头像上传失败，请稍后重试')
+    handleMutationError(error, t('system.userCenter.avatarFail'))
   }
 </script>
 

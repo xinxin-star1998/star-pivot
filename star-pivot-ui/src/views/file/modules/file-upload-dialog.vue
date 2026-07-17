@@ -2,24 +2,24 @@
   <ElDialog
     v-model="visible"
     destroy-on-close
-    title="上传文件"
+    :title="t('file.uploadTitle')"
     width="540px"
     @closed="onDialogClosed"
   >
     <ElForm class="upload-form" label-width="88px">
-      <ElFormItem label="目标文件夹" required>
+      <ElFormItem :label="t('file.moveTarget')" required>
         <ElCascader
           v-model="selectedPath"
           :options="cascaderOptions"
           :props="cascaderProps"
           clearable
           filterable
-          placeholder="请选择业务分类与文件夹"
+          :placeholder="t('file.folderPlaceholder')"
           style="width: 100%"
         />
       </ElFormItem>
-      <ElFormItem label="备注">
-        <ElInput v-model="remark" :rows="2" placeholder="可选" type="textarea" />
+      <ElFormItem :label="t('common.remark')">
+        <ElInput v-model="remark" :rows="2" :placeholder="t('file.optional')" type="textarea" />
       </ElFormItem>
     </ElForm>
 
@@ -36,11 +36,11 @@
       multiple
     >
       <ArtSvgIcon class="upload-icon" icon="ri:upload-cloud-2-line" />
-      <div class="el-upload__text">拖拽文件到此处，或 <em>点击选择</em></div>
+      <div class="el-upload__text">
+        {{ t('file.uploadDragHint') }} <em>{{ t('file.clickSelect') }}</em>
+      </div>
       <template #tip>
-        <div class="upload-tip">
-          单次最多 20 个文件；大文件自动分片上传，支持秒传与断点续传
-        </div>
+        <div class="upload-tip">{{ t('file.uploadTip') }}</div>
       </template>
     </ElUpload>
 
@@ -51,13 +51,15 @@
       class="upload-progress"
     />
     <div v-if="uploading && currentFileName" class="upload-status">
-      正在处理：{{ currentFileName }}
+      {{ t('file.processing') }}：{{ currentFileName }}
     </div>
 
     <template #footer>
-      <ElButton :disabled="uploading" @click="visible = false">取消</ElButton>
+      <ElButton :disabled="uploading" @click="visible = false">{{ t('common.cancel') }}</ElButton>
       <ElButton :disabled="!targetFolderId" :loading="uploading" type="primary" @click="submit">
-        {{ uploading ? `上传中 ${uploadDone}/${uploadTotal}` : '开始上传' }}
+        {{
+          uploading ? `${t('file.uploading')} ${uploadDone}/${uploadTotal}` : t('file.startUpload')
+        }}
       </ElButton>
     </template>
   </ElDialog>
@@ -83,6 +85,7 @@
   import type { UploadFile, UploadInstance } from 'element-plus'
   import { ElMessage } from 'element-plus'
   import { computed, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   const visible = defineModel<boolean>('visible', { default: false })
 
@@ -97,6 +100,8 @@
     success: [folderId: number]
     closed: []
   }>()
+
+  const { t } = useI18n()
 
   const uploadRef = ref<UploadInstance>()
   const fileList = ref<UploadFile[]>([])
@@ -133,7 +138,7 @@
     // Cascader 需要完整 value path：分类 + 各级 folderId
     const path: Array<string | number> = [found.category]
     const walk = (
-      folders: typeof props.categories[0]['children'],
+      folders: (typeof props.categories)[0]['children'],
       target: number,
       acc: number[]
     ): boolean => {
@@ -193,7 +198,7 @@
   }
 
   function handleExceed() {
-    ElMessage.warning('单次最多上传 20 个文件')
+    ElMessage.warning(t('file.uploadTip'))
   }
 
   function reset() {
@@ -334,12 +339,12 @@
   async function submit() {
     const folderId = targetFolderId.value
     if (!folderId) {
-      ElMessage.warning('请选择目标文件夹')
+      ElMessage.warning(t('file.selectTargetFolder'))
       return
     }
     const items = fileList.value.filter((f) => f.raw)
     if (items.length === 0) {
-      ElMessage.warning('请选择文件')
+      ElMessage.warning(t('file.selectFile'))
       return
     }
 
@@ -370,16 +375,21 @@
       if (failed === 0) {
         ElMessage.success(
           instantCount > 0
-            ? `成功处理 ${items.length} 个文件（含秒传）`
-            : `成功上传 ${items.length} 个文件`
+            ? t('file.uploadProcessedSuccess', { count: items.length })
+            : t('file.uploadAllSuccess', { count: items.length })
         )
         visible.value = false
         emit('success', folderId)
       } else if (failed < items.length) {
-        ElMessage.warning(`部分上传失败：成功 ${items.length - failed}，失败 ${failed}`)
+        ElMessage.warning(
+          t('file.uploadPartialFail', {
+            success: items.length - failed,
+            failed
+          })
+        )
         emit('success', folderId)
       } else {
-        ElMessage.error('上传失败，请重试')
+        ElMessage.error(t('file.uploadFailRetry'))
       }
     } finally {
       uploading.value = false

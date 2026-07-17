@@ -23,15 +23,15 @@
               v-auth="'tool:gen:create'"
             >
               <ArtSvgIcon icon="ri:download-line" class="mr-1" />
-              生成
+              {{ t('tools.gen.genCode') }}
             </ElButton>
             <ElButton @click="handleCreateTable" v-ripple v-auth="'tool:gen:add'">
               <ArtSvgIcon icon="ri:add-line" class="mr-1" />
-              创建表
+              {{ t('tools.gen.createTable') }}
             </ElButton>
             <ElButton @click="handleImportTable" v-ripple v-auth="'tool:gen:import'">
               <ArtSvgIcon icon="ri:file-upload-line" class="mr-1" />
-              导入表
+              {{ t('tools.gen.importTable') }}
             </ElButton>
             <ElButton
               type="danger"
@@ -41,7 +41,7 @@
               v-auth="'tool:gen:delete'"
             >
               <ArtSvgIcon icon="ri:delete-bin-line" class="mr-1" />
-              删除
+              {{ t('common.delete') }}
             </ElButton>
           </ElSpace>
         </template>
@@ -73,27 +73,28 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import { useTable } from '@/hooks/core/useTable'
-import { useAuth } from '@/hooks/core/useAuth'
-import { handleMutationError } from '@/utils/http/mutation'
-import ArtTable from '@/components/core/tables/art-table/index.vue'
-import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
-import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-import { ElButton, ElMessage, ElMessageBox, ElSpace, ElTag } from 'element-plus'
-import {
-  fetchBatchGenerateCode,
-  fetchDeleteTable,
-  fetchGenerateCode,
-  fetchGetGenTableList,
-  fetchSyncDatabase
-} from '@/api/generator/gen-table'
-import FileSaver from 'file-saver'
-import { DialogType } from '@/types'
+  import { useRouter } from 'vue-router'
+  import { useTable } from '@/hooks/core/useTable'
+  import { useAuth } from '@/hooks/core/useAuth'
+  import { handleMutationError } from '@/utils/http/mutation'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import { ElButton, ElMessage, ElMessageBox, ElSpace, ElTag } from 'element-plus'
+  import {
+    fetchBatchGenerateCode,
+    fetchDeleteTable,
+    fetchGenerateCode,
+    fetchGetGenTableList,
+    fetchSyncDatabase
+  } from '@/api/generator/gen-table'
+  import FileSaver from 'file-saver'
+  import { DialogType } from '@/types'
+  import { useI18n } from 'vue-i18n'
 
-const genAddDialog = defineAsyncComponent(
+  const genAddDialog = defineAsyncComponent(
     () => import('@views/tools/generator/modules/gen-add-dialog.vue')
   )
   const ImportDialog = defineAsyncComponent(
@@ -107,6 +108,7 @@ const genAddDialog = defineAsyncComponent(
 
   // 权限检查
   const { hasAuth } = useAuth()
+  const { t } = useI18n()
   const router = useRouter()
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
@@ -131,22 +133,22 @@ const genAddDialog = defineAsyncComponent(
   // 搜索表单配置
   const formItems = computed(() => [
     {
-      label: '表名称',
+      label: t('tools.gen.tableName'),
       key: 'tableName',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入表名称' }
+      props: { clearable: true, placeholder: t('tools.gen.searchTable') }
     },
     {
-      label: '表描述',
+      label: t('tools.gen.tableComment'),
       key: 'tableComment',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入表描述' }
+      props: { clearable: true, placeholder: t('common.pleaseInput') }
     },
     {
-      label: '实体类名称',
+      label: t('tools.gen.className'),
       key: 'className',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入实体类名称' }
+      props: { clearable: true, placeholder: t('common.pleaseInput') }
     }
   ])
 
@@ -172,34 +174,34 @@ const genAddDialog = defineAsyncComponent(
         ...searchForm.value
       },
       columnsFactory: () => [
-        { type: 'selection' }, // 勾选列
-        { type: 'index', width: 60, label: '序号' }, // 序号
+        { type: 'selection' },
+        { type: 'index', width: 60, label: t('table.column.index') },
         {
           prop: 'tableName',
-          label: '表名称',
+          label: t('tools.gen.tableName'),
           minWidth: 150,
           showOverflowTooltip: true
         },
         {
           prop: 'tableComment',
-          label: '表描述',
+          label: t('tools.gen.tableComment'),
           minWidth: 150,
           showOverflowTooltip: true
         },
         {
           prop: 'className',
-          label: '实体类名称',
+          label: t('tools.gen.className'),
           minWidth: 150,
           showOverflowTooltip: true
         },
         {
           prop: 'tplCategory',
-          label: '模板类型',
+          label: t('tools.gen.tplCategory'),
           width: 120,
           formatter: (row: GenTableListItem) => {
             const tplMap: Record<string, { text: string; type: 'success' | 'info' | 'warning' }> = {
-              crud: { text: '单表操作', type: 'success' },
-              tree: { text: '树表操作', type: 'info' }
+              crud: { text: t('tools.gen.tplCrud'), type: 'success' },
+              tree: { text: t('tools.gen.tplTree'), type: 'info' }
             }
             const config = tplMap[row.tplCategory || ''] || {
               text: row.tplCategory || '-',
@@ -210,7 +212,7 @@ const genAddDialog = defineAsyncComponent(
         },
         {
           prop: 'tplWebType',
-          label: '前端模板',
+          label: t('tools.gen.tplWebType'),
           width: 120,
           formatter: (row: GenTableListItem) => {
             const webTypeMap: Record<
@@ -230,19 +232,19 @@ const genAddDialog = defineAsyncComponent(
         },
         {
           prop: 'functionName',
-          label: '功能名称',
+          label: t('tools.gen.functionLabel'),
           minWidth: 120,
           showOverflowTooltip: true
         },
         {
           prop: 'createTime',
-          label: '创建时间',
+          label: t('common.createTime'),
           width: 180,
           sortable: true
         },
         {
           prop: 'action',
-          label: '操作',
+          label: t('common.operation'),
           width: 200,
           fixed: 'right',
           align: 'center',
@@ -389,22 +391,25 @@ const genAddDialog = defineAsyncComponent(
       // 查找对应的表信息用于提示
       const tableList = (data.value ?? []) as GenTableListItem[]
       const table = tableList.find((item) => item.tableId === tableId)
-      const tableName = table?.tableName || '该表'
+      const tableName = table?.tableName || tableId
 
-      await ElMessageBox.confirm(`确定要删除表"${tableName}"吗？此操作不可恢复！`, '删除确认', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
+      await ElMessageBox.confirm(
+        t('tools.gen.deleteConfirm', { name: tableName }),
+        t('tools.gen.deleteTitle'),
+        {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
+          type: 'warning'
+        }
+      )
 
       await fetchDeleteTable([tableId])
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
       refreshData()
     } catch (error) {
-      // 用户取消删除时不显示错误
       if (error !== 'cancel') {
         console.error('删除表失败:', error)
-        handleMutationError(error, '删除失败')
+        handleMutationError(error, t('common.deleteFail'))
       }
     }
   }
@@ -426,23 +431,21 @@ const genAddDialog = defineAsyncComponent(
     try {
       const displayName = tableComment || tableName
       await ElMessageBox.confirm(
-        `确定要同步表"${displayName}"的数据库结构吗？\n同步操作将更新表的字段信息。`,
-        '同步确认',
+        t('tools.gen.syncConfirm', { name: displayName }),
+        t('tools.gen.syncTitle'),
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning'
         }
       )
       await fetchSyncDatabase(tableName)
-      ElMessage.success('同步成功')
-      // 同步成功后刷新数据
+      ElMessage.success(t('tools.gen.syncSuccess'))
       refreshData()
     } catch (error) {
-      // 用户取消同步时不显示错误
       if (error !== 'cancel') {
         console.error('同步数据库失败:', error)
-        handleMutationError(error, '同步失败，请稍后重试')
+        handleMutationError(error, t('tools.gen.syncFail'))
       }
     }
   }
@@ -452,7 +455,7 @@ const genAddDialog = defineAsyncComponent(
    */
   const handleBatchGenerateCode = async (selectedRows: GenTableListItem[]): Promise<void> => {
     if (selectedRows.length === 0) {
-      ElMessage.warning('请选择要生成代码的表')
+      ElMessage.warning(t('tools.gen.selectGenTable'))
       return
     }
 
@@ -460,26 +463,23 @@ const genAddDialog = defineAsyncComponent(
     const tableNamesStr = tableNames.join('、')
     try {
       await ElMessageBox.confirm(
-        `确定要批量生成以下 ${selectedRows.length} 个表的代码吗？\n${tableNamesStr}\n代码将以 zip 压缩包形式下载。`,
-        '批量生成代码确认',
+        t('tools.gen.batchGenConfirm', { count: selectedRows.length, names: tableNamesStr }),
+        t('tools.gen.batchGenTitle'),
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'info'
         }
       )
 
-      // 调用批量生成代码接口
       const blob = await fetchBatchGenerateCode(tableNames)
-      // 下载 zip 文件
       const fileName = `starPivot_${new Date().getTime()}.zip`
       FileSaver.saveAs(blob, fileName)
-      ElMessage.success('代码生成成功，文件已下载')
+      ElMessage.success(t('tools.gen.genSuccess'))
     } catch (error) {
-      // 用户取消时不显示错误
       if (error !== 'cancel') {
         console.error('批量生成代码失败:', error)
-        handleMutationError(error, '批量生成代码失败，请稍后重试')
+        handleMutationError(error, t('tools.gen.batchGenFail'))
       }
     }
   }
@@ -491,11 +491,11 @@ const genAddDialog = defineAsyncComponent(
     const tableName = row.tableName
     try {
       await ElMessageBox.confirm(
-        `确定要生成表"${tableName}"的代码吗？\n代码将以 zip 压缩包形式下载。`,
-        '生成代码确认',
+        t('tools.gen.genCodeConfirm', { name: tableName }),
+        t('tools.gen.genCodeTitle'),
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'info'
         }
       )
@@ -503,9 +503,9 @@ const genAddDialog = defineAsyncComponent(
       const blob = await fetchGenerateCode(tableName)
       const fileName = `${tableName}_${new Date().getTime()}.zip`
       FileSaver.saveAs(blob, fileName)
-      ElMessage.success('代码生成成功，文件已下载')
+      ElMessage.success(t('tools.gen.genSuccess'))
     } catch (error) {
-      handleMutationError(error, '生成代码失败，请稍后重试')
+      handleMutationError(error, t('tools.gen.genCodeFail'))
     }
   }
 
@@ -514,32 +514,34 @@ const genAddDialog = defineAsyncComponent(
    */
   const handleDeleteTable = async (): Promise<void> => {
     if (selectedRows.value.length === 0) {
-      ElMessage.warning('请选择要删除的表')
+      ElMessage.warning(t('tools.gen.selectDeleteTable'))
       return
     }
 
     try {
       const tableNames = selectedRows.value.map((row: GenTableListItem) => row.tableName).join(',')
       await ElMessageBox.confirm(
-        `确定要删除以下 ${selectedRows.value.length} 个表吗？\n${tableNames}\n此操作不可恢复！`,
-        '批量删除确认',
+        t('tools.gen.batchDeleteConfirm', {
+          count: selectedRows.value.length,
+          names: tableNames
+        }),
+        t('tools.gen.batchDeleteTitle'),
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning'
         }
       )
 
       const tableIds = selectedRows.value.map((row: GenTableListItem) => row.tableId as number)
       await fetchDeleteTable(tableIds)
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
       selectedRows.value = []
       refreshData()
     } catch (error) {
-      // 用户取消删除时不显示错误
       if (error !== 'cancel') {
         console.error('批量删除表失败:', error)
-        handleMutationError(error, '删除失败')
+        handleMutationError(error, t('common.deleteFail'))
       }
     }
   }

@@ -10,7 +10,7 @@
         <template #left>
           <ElSpace wrap>
             <ElButton @click="showDialog('add')" v-ripple v-auth="'system:post:add'">
-              新增岗位
+              {{ t('system.post.addPost') }}
             </ElButton>
             <ElButton
               type="danger"
@@ -19,7 +19,7 @@
               v-ripple
               v-auth="'system:post:delete'"
             >
-              批量删除
+              {{ t('common.batchDelete') }}
             </ElButton>
           </ElSpace>
         </template>
@@ -52,6 +52,7 @@
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { useAuth } from '@/hooks/core/useAuth'
+  import { useI18n } from 'vue-i18n'
   import { fetchDeletePost, fetchGetPostList, fetchUpdatePost } from '@/api/post/post'
   import { handleMutationError } from '@/utils/http/mutation'
   import PostSearch from './modules/post-search.vue'
@@ -63,8 +64,8 @@
 
   defineOptions({ name: 'Post' })
 
-  // 权限检查
   const { hasAuth } = useAuth()
+  const { t } = useI18n()
 
   type PostListItem = Api.Post.PostListItem
 
@@ -105,35 +106,34 @@
         ...searchForm.value
       },
       columnsFactory: (): ColumnOption<PostListItem>[] => [
-        { type: 'selection' }, // 勾选列
-        // { type: 'index', width: 60, label: '序号' }, // 序号
+        { type: 'selection' },
         {
           prop: 'postId',
-          label: '岗位ID',
+          label: t('system.post.postId'),
           width: 100,
           sortable: true
         },
         {
           prop: 'postCode',
-          label: '岗位编码',
+          label: t('system.post.postCode'),
           width: 150,
           sortable: true
         },
         {
           prop: 'postName',
-          label: '岗位名称',
+          label: t('system.post.postName'),
           width: 150,
           sortable: true
         },
         {
           prop: 'postSort',
-          label: '显示顺序',
+          label: t('system.post.postSort'),
           width: 120,
           sortable: true
         },
         {
           prop: 'status',
-          label: '状态',
+          label: t('common.status'),
           width: 100,
           formatter: (row: Api.Post.PostListItem) => {
             return h(ElSwitch, {
@@ -148,25 +148,24 @@
         },
         {
           prop: 'remark',
-          label: '备注',
+          label: t('common.remark'),
           minWidth: 200,
           showOverflowTooltip: true
         },
         {
           prop: 'createTime',
-          label: '创建时间',
+          label: t('common.createTime'),
           width: 180,
           sortable: true
         },
         {
           prop: 'operation',
-          label: '操作',
+          label: t('common.operation'),
           width: 120,
-          fixed: 'right', // 固定列
+          fixed: 'right',
           formatter: (row) => {
             const actions: any[] = []
 
-            // 编辑岗位按钮权限：system:post:edit
             if (hasAuth('system:post:edit')) {
               actions.push(
                 h(ArtButtonTable, {
@@ -176,7 +175,6 @@
               )
             }
 
-            // 删除岗位按钮权限：system:post:remove
             if (hasAuth('system:post:delete')) {
               actions.push(
                 h(ArtButtonTable, {
@@ -187,7 +185,6 @@
             }
 
             if (actions.length === 0) {
-              // 无任何操作权限时返回空占位
               return h('span', { style: 'color: var(--art-gray-500)' }, '')
             }
 
@@ -203,7 +200,6 @@
    * @param params 参数
    */
   const handleSearch = (params: Record<string, any>) => {
-    // 搜索参数赋值
     Object.assign(searchParams, params)
     getData()
   }
@@ -223,18 +219,18 @@
    * 删除岗位
    */
   const deletePost = (row: PostListItem): void => {
-    ElMessageBox.confirm(`确定要删除岗位"${row.postName}"吗？`, '删除岗位', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    ElMessageBox.confirm(t('system.post.deleteConfirm'), t('common.tips'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       type: 'error'
     })
       .then(async () => {
         await fetchDeletePost([row.postId])
-        ElMessage.success('删除成功')
+        ElMessage.success(t('common.deleteSuccess'))
         refreshData()
       })
       .catch((error) => {
-        handleMutationError(error, '删除失败')
+        handleMutationError(error, t('system.post.deleteFail'))
       })
   }
 
@@ -243,24 +239,23 @@
    */
   const handleBatchDelete = (): void => {
     if (selectedRows.value.length === 0) {
-      ElMessage.warning('请选择要删除的岗位')
+      ElMessage.warning(t('common.pleaseSelect'))
       return
     }
-    const postNames = selectedRows.value.map((row) => row.postName).join('、')
-    ElMessageBox.confirm(`确定要删除以下岗位吗？\n${postNames}`, '批量删除岗位', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    ElMessageBox.confirm(t('system.post.deleteConfirm'), t('common.tips'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       type: 'error'
     })
       .then(async () => {
         const postIds = selectedRows.value.map((row) => row.postId)
         await fetchDeletePost(postIds)
         selectedRows.value = []
-        ElMessage.success('删除成功')
+        ElMessage.success(t('common.deleteSuccess'))
         refreshData()
       })
       .catch((error) => {
-        handleMutationError(error, '删除失败')
+        handleMutationError(error, t('system.post.deleteFail'))
       })
   }
 
@@ -271,7 +266,6 @@
     try {
       dialogVisible.value = false
       currentPostData.value = {}
-      // 刷新列表数据
       refreshData()
     } catch (error) {
       console.error('提交失败:', error)
@@ -291,7 +285,6 @@
   const handleStatusChange = async (row: PostListItem, value: boolean) => {
     try {
       const newStatus = value ? '0' : '1'
-      // 调用更新岗位API来更新状态
       await fetchUpdatePost({
         postId: row.postId,
         postCode: row.postCode,
@@ -300,13 +293,11 @@
         status: newStatus,
         remark: row.remark || ''
       })
-      ElMessage.success(value ? '启用成功' : '停用成功')
-      // 更新本地数据
+      ElMessage.success(t('common.updateSuccess'))
       row.status = value ? 0 : 1
-      // 刷新列表
       refreshData()
     } catch (error) {
-      handleMutationError(error, '更新状态失败')
+      handleMutationError(error, t('common.updateFail'))
       refreshData()
     }
   }

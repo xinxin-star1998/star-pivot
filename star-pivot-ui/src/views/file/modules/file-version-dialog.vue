@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="visible"
-    :title="`版本历史 - ${file?.fileName || ''}`"
+    :title="t('file.versionTitle', { name: file?.fileName || '' })"
     width="720px"
     destroy-on-close
     @open="loadVersions"
@@ -14,29 +14,46 @@
         :on-change="onFileChange"
         :on-remove="() => (uploadFile = null)"
       >
-        <ElButton type="primary" plain>选择新版本文件</ElButton>
+        <ElButton type="primary" plain>{{ t('file.versionSelectFile') }}</ElButton>
       </ElUpload>
-      <ElInput v-model="remark" class="version-remark" clearable placeholder="备注（可选）" />
+      <ElInput
+        v-model="remark"
+        class="version-remark"
+        clearable
+        :placeholder="t('file.versionRemarkPlaceholder')"
+      />
       <ElButton type="primary" :loading="uploading" :disabled="!uploadFile" @click="handleUpload">
-        上传新版本
+        {{ t('file.versionUpload') }}
       </ElButton>
     </div>
 
     <ElTable v-loading="loading" :data="versions" size="small" max-height="400">
-      <ElTableColumn label="版本" width="100">
+      <ElTableColumn :label="t('file.version')" width="100">
         <template #default="{ row }">
-          <ElTag v-if="row.current" type="success" size="small">当前 v{{ row.versionNo }}</ElTag>
+          <ElTag v-if="row.current" type="success" size="small">
+            {{ t('file.currentVersion', { no: row.versionNo }) }}
+          </ElTag>
           <span v-else>v{{ row.versionNo }}</span>
         </template>
       </ElTableColumn>
-      <ElTableColumn prop="fileName" label="文件名" min-width="160" show-overflow-tooltip />
-      <ElTableColumn label="大小" width="100">
+      <ElTableColumn
+        prop="fileName"
+        :label="t('file.fileName')"
+        min-width="160"
+        show-overflow-tooltip
+      />
+      <ElTableColumn :label="t('file.size')" width="100">
         <template #default="{ row }">{{ formatFileSize(row.fileSize) }}</template>
       </ElTableColumn>
-      <ElTableColumn prop="createBy" label="操作人" width="100" />
-      <ElTableColumn prop="createTime" label="时间" width="168" />
-      <ElTableColumn prop="remark" label="备注" min-width="100" show-overflow-tooltip />
-      <ElTableColumn label="操作" width="140" fixed="right">
+      <ElTableColumn prop="createBy" :label="t('file.operBy')" width="100" />
+      <ElTableColumn prop="createTime" :label="t('file.time')" width="168" />
+      <ElTableColumn
+        prop="remark"
+        :label="t('common.remark')"
+        min-width="100"
+        show-overflow-tooltip
+      />
+      <ElTableColumn :label="t('common.operation')" width="140" fixed="right">
         <template #default="{ row }">
           <ElButton
             v-if="!row.current && row.versionId"
@@ -44,7 +61,7 @@
             type="primary"
             @click="handleRestore(row)"
           >
-            恢复
+            {{ t('file.restoreVersion') }}
           </ElButton>
           <ElButton
             v-if="!row.current && row.versionId"
@@ -52,7 +69,7 @@
             type="danger"
             @click="handleDelete(row)"
           >
-            删除
+            {{ t('common.delete') }}
           </ElButton>
         </template>
       </ElTableColumn>
@@ -72,6 +89,7 @@
   import { handleMutationError } from '@/utils/http/mutation'
   import { ElMessage, ElMessageBox, type UploadFile } from 'element-plus'
   import { computed, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   const props = defineProps<{
     modelValue: boolean
@@ -82,6 +100,8 @@
     'update:modelValue': [value: boolean]
     success: []
   }>()
+
+  const { t } = useI18n()
 
   const visible = computed({
     get: () => props.modelValue,
@@ -100,7 +120,7 @@
     try {
       versions.value = (await fetchFileVersions(props.file.fileId)) || []
     } catch (e) {
-      handleMutationError(e, '加载版本失败')
+      handleMutationError(e, t('file.versionLoadFail'))
     } finally {
       loading.value = false
     }
@@ -118,13 +138,13 @@
       form.append('file', uploadFile.value)
       if (remark.value.trim()) form.append('remark', remark.value.trim())
       await uploadFileVersion(props.file.fileId, form)
-      ElMessage.success('新版本已上传')
+      ElMessage.success(t('file.versionUploadSuccess'))
       uploadFile.value = null
       remark.value = ''
       await loadVersions()
       emit('success')
     } catch (e) {
-      handleMutationError(e, '上传新版本失败')
+      handleMutationError(e, t('file.versionUploadFail'))
     } finally {
       uploading.value = false
     }
@@ -133,27 +153,33 @@
   async function handleRestore(row: SysFileVersion) {
     if (!props.file?.fileId || !row.versionId) return
     try {
-      await ElMessageBox.confirm(`确认恢复到 v${row.versionNo}？当前内容将自动归档。`, '恢复版本', {
-        type: 'warning'
-      })
+      await ElMessageBox.confirm(
+        t('file.restoreVersionConfirm', { no: row.versionNo }),
+        t('file.restoreVersion'),
+        { type: 'warning' }
+      )
       await restoreFileVersion(props.file.fileId, row.versionId)
-      ElMessage.success('已恢复')
+      ElMessage.success(t('file.restoreVersionSuccess'))
       await loadVersions()
       emit('success')
     } catch (e) {
-      if (e !== 'cancel') handleMutationError(e, '恢复失败')
+      if (e !== 'cancel') handleMutationError(e, t('file.restoreVersionFail'))
     }
   }
 
   async function handleDelete(row: SysFileVersion) {
     if (!props.file?.fileId || !row.versionId) return
     try {
-      await ElMessageBox.confirm(`确认删除历史版本 v${row.versionNo}？`, '提示', { type: 'warning' })
+      await ElMessageBox.confirm(
+        t('file.versionDeleteConfirm', { no: row.versionNo }),
+        t('common.tips'),
+        { type: 'warning' }
+      )
       await deleteFileVersion(props.file.fileId, row.versionId)
-      ElMessage.success('已删除')
+      ElMessage.success(t('common.deleteSuccess'))
       await loadVersions()
     } catch (e) {
-      if (e !== 'cancel') handleMutationError(e, '删除失败')
+      if (e !== 'cancel') handleMutationError(e, t('common.deleteFail'))
     }
   }
 </script>

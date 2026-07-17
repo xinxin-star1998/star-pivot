@@ -26,7 +26,7 @@
       <div :title="row.fileName" class="file-grid__name">{{ row.fileName }}</div>
       <div class="file-grid__meta">{{ formatFileSize(row.fileSize) }}</div>
     </div>
-    <ElEmpty v-if="!data.length && !loading" :image-size="80" description="暂无文件" />
+    <ElEmpty v-if="!data.length && !loading" :image-size="80" :description="t('file.noFiles')" />
   </div>
 </template>
 
@@ -35,6 +35,7 @@
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import { formatFileSize, resolveFileDisplayUrl } from '@/utils/file/file-center'
   import { getMediaTypeIcon } from '../constants'
+  import { useI18n } from 'vue-i18n'
 
   const props = defineProps<{
     data: SysFile[]
@@ -46,6 +47,8 @@
     preview: [file: SysFile]
     'update:selectedRows': [rows: SysFile[]]
   }>()
+
+  const { t } = useI18n()
 
   function isSelected(row: SysFile) {
     return props.selectedRows.some((r) => r.fileId === row.fileId)
@@ -80,7 +83,9 @@
     cursor: pointer;
     border: 1px solid var(--el-border-color-lighter);
     border-radius: 10px;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
 
     &:hover,
     &.is-selected {

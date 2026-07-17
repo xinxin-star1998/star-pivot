@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.Map;
+
 /**
  * 菜单DTO
  *
@@ -98,5 +100,10 @@ public class MenuDTO {
      * 备注
      */
     private String remark;
+
+    /**
+     * 多语言名称（lang -> 名称）。默认语言以 menuName 为准，其余写入 sys_i18n。
+     */
+    private Map<String, String> translations;
 }
 

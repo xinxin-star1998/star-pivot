@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    :title="dialogType === 'add' ? '添加用户' : '编辑用户'"
+    :title="dialogType === 'add' ? t('system.user.addTitle') : t('system.user.editTitle')"
     width="40%"
     align-center
   >
@@ -12,20 +12,20 @@
       label-width="80px"
       aria-label="用户信息表单"
     >
-      <ElFormItem label="用户名" prop="username">
-        <ElInput v-model="formData.userName" placeholder="请输入用户名" />
+      <ElFormItem :label="t('system.user.userName')" prop="username">
+        <ElInput v-model="formData.userName" :placeholder="t('system.user.userNamePlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="用户密码" prop="username" v-if="dialogType === 'add'">
-        <ElInput v-model="formData.password" placeholder="请输入用户密码" />
+      <ElFormItem :label="t('system.user.password')" prop="username" v-if="dialogType === 'add'">
+        <ElInput v-model="formData.password" :placeholder="t('system.user.passwordPlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="用户昵称" prop="nickName">
-        <ElInput v-model="formData.nickName" placeholder="请输入用户昵称" />
+      <ElFormItem :label="t('system.user.nickName')" prop="nickName">
+        <ElInput v-model="formData.nickName" :placeholder="t('system.user.nickNamePlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="邮箱" prop="email">
-        <ElInput v-model="formData.email" placeholder="请输入邮箱" />
+      <ElFormItem :label="t('system.user.email')" prop="email">
+        <ElInput v-model="formData.email" :placeholder="t('system.user.emailPlaceholder')" />
       </ElFormItem>
 
-      <ElFormItem label="头像">
+      <ElFormItem :label="t('system.userCenter.avatar')">
         <art-avatar-upload
           ref="avatarUploadRef"
           v-model="formData.avatar"
@@ -36,23 +36,23 @@
         />
       </ElFormItem>
 
-      <ElFormItem label="手机号" prop="phone">
-        <ElInput v-model="formData.phonenumber" placeholder="请输入手机号" />
+      <ElFormItem :label="t('system.user.phone')" prop="phone">
+        <ElInput v-model="formData.phonenumber" :placeholder="t('system.user.phonePlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="性别" prop="gender">
+      <ElFormItem :label="t('system.user.sex')" prop="gender">
         <ElRadioGroup v-model="formData.sex">
-          <ElRadio :value="'0'">男</ElRadio>
-          <ElRadio :value="'1'">女</ElRadio>
-          <ElRadio :value="'2'">未知</ElRadio>
+          <ElRadio :value="'0'">{{ t('system.userCenter.male') }}</ElRadio>
+          <ElRadio :value="'1'">{{ t('system.userCenter.female') }}</ElRadio>
+          <ElRadio :value="'2'">{{ t('system.userCenter.unknown') }}</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
-      <ElFormItem label="状态" prop="status">
+      <ElFormItem :label="t('common.status')" prop="status">
         <ElRadioGroup v-model="formData.status">
-          <ElRadio :value="'0'">启用</ElRadio>
-          <ElRadio :value="'1'">禁用</ElRadio>
+          <ElRadio :value="'0'">{{ t('common.normal') }}</ElRadio>
+          <ElRadio :value="'1'">{{ t('common.disabled') }}</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
-      <ElFormItem label="角色" prop="role">
+      <ElFormItem :label="t('system.user.role')" prop="role">
         <ElSelect v-model="formData.roleIds" multiple>
           <ElOption
             v-for="role in roleList"
@@ -62,7 +62,7 @@
           />
         </ElSelect>
       </ElFormItem>
-      <ElFormItem label="岗位" prop="post">
+      <ElFormItem :label="t('system.user.post')" prop="post">
         <ElSelect v-model="formData.postIds" multiple>
           <ElOption
             v-for="post in postList"
@@ -72,25 +72,25 @@
           />
         </ElSelect>
       </ElFormItem>
-      <ElFormItem label="部门" prop="deptId">
+      <ElFormItem :label="t('system.user.dept')" prop="deptId">
         <ElTreeSelect
           v-model="formData.deptId"
           :data="deptTreeData"
           :props="deptTreeProps"
-          placeholder="请选择部门"
+          :placeholder="t('system.user.deptPlaceholder')"
           clearable
           check-strictly
           :render-after-expand="false"
         />
       </ElFormItem>
-      <ElFormItem label="备注" prop="remark">
-        <ElInput type="textarea" v-model="formData.remark" placeholder="请输入备注" />
+      <ElFormItem :label="t('common.remark')" prop="remark">
+        <ElInput type="textarea" v-model="formData.remark" :placeholder="t('common.pleaseInput')" />
       </ElFormItem>
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+        <ElButton @click="dialogVisible = false">{{ t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="handleSubmit">{{ t('common.submit') }}</ElButton>
       </div>
     </template>
   </ElDialog>
@@ -107,6 +107,7 @@
   import { fetchAddUser, fetchUpdateUser, fetchGetUserById } from '@/api/user/user'
   import { handleMutationError } from '@/utils/http/mutation'
   import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
+  import { useI18n } from 'vue-i18n'
 
   // 角色列表项类型（扩展 RoleListItem，添加 roleCode 字段）
   type RoleOption = Api.SystemManage.RoleListItem & { roleCode: string }
@@ -125,6 +126,7 @@
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
   const userStore = useUserStore()
+  const { t } = useI18n()
 
   // 角色列表数据
   const roleList = ref<RoleOption[]>([])
@@ -169,18 +171,18 @@
   })
 
   // 表单验证规则
-  const rules: FormRules = {
+  const rules = computed<FormRules>(() => ({
     userName: [
-      { required: true, message: '请输入用户名', trigger: 'blur' },
-      { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+      { required: true, message: t('system.user.userNameRequired'), trigger: 'blur' },
+      { min: 2, max: 20, message: t('system.user.userNameLength'), trigger: 'blur' }
     ],
     phonenumber: [
-      { required: true, message: '请输入手机号', trigger: 'blur' },
-      { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' }
+      { required: true, message: t('system.user.phoneRequired'), trigger: 'blur' },
+      { pattern: /^1[3-9]\d{9}$/, message: t('system.user.phoneInvalid'), trigger: 'blur' }
     ],
-    sex: [{ required: true, message: '请选择性别', trigger: 'blur' }],
-    roleIds: [{ required: true, message: '请选择角色', trigger: 'blur' }]
-  }
+    sex: [{ required: true, message: t('system.user.sexRequired'), trigger: 'blur' }],
+    roleIds: [{ required: true, message: t('system.user.roleRequired'), trigger: 'blur' }]
+  }))
 
   /**
    * 初始化表单数据
@@ -232,7 +234,7 @@
         }
       } catch (error) {
         console.error('获取用户详情失败:', error)
-        handleMutationError(error, '获取用户详情失败')
+        handleMutationError(error, t('system.user.loadDetailFail'))
         // 如果获取详情失败，使用列表数据作为回退
         Object.assign(formData, {
           userId: row.userId || 0,
@@ -332,12 +334,12 @@
             }
           }
 
-          ElMessage.success(dialogType.value === 'add' ? '添加成功' : '更新成功')
+          ElMessage.success(dialogType.value === 'add' ? t('common.addSuccess') : t('common.updateSuccess'))
           dialogVisible.value = false
           emit('submit')
         } catch (error) {
           console.error('提交失败:', error)
-          handleMutationError(error, dialogType.value === 'add' ? '添加失败' : '更新失败')
+          handleMutationError(error, dialogType.value === 'add' ? t('common.addFail') : t('common.updateFail'))
         }
       }
     })
@@ -360,7 +362,7 @@
     } catch (error) {
       console.error('获取角色列表失败:', error)
       roleList.value = []
-      handleMutationError(error, '获取角色列表失败')
+      handleMutationError(error, t('system.user.loadRoleFail'))
     }
   }
   /**
@@ -377,7 +379,7 @@
     } catch (error) {
       console.error('获取岗位列表失败:', error)
       postList.value = []
-      handleMutationError(error, '获取岗位列表失败')
+      handleMutationError(error, t('system.user.loadPostFail'))
     }
   }
   /**
@@ -394,7 +396,7 @@
     } catch (error) {
       console.error('获取部门树失败:', error)
       deptTreeData.value = []
-      handleMutationError(error, '获取部门树失败')
+      handleMutationError(error, t('system.dept.loadTreeFail'))
     }
   }
 </script>

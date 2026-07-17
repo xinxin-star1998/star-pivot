@@ -17,7 +17,7 @@
         >
           <span
             class="block max-w-46 overflow-hidden text-ellipsis whitespace-nowrap px-1.5 text-sm text-g-600 dark:text-g-800"
-            >{{ formatMenuTitle(item.meta?.title as string) }}</span
+            >{{ resolveBreadcrumbTitle(item) }}</span
           >
         </div>
         <div
@@ -33,9 +33,11 @@
 </template>
 
 <script setup lang="ts">
-  import { useRouter, useRoute } from 'vue-router'
   import type { RouteLocationMatched, RouteRecordRaw } from 'vue-router'
+  import { useRoute, useRouter } from 'vue-router'
   import { formatMenuTitle } from '@/utils/router'
+  import { useMenuStore } from '@/store/modules/menu'
+  import type { AppRouteRecord } from '@/types/router'
 
   defineOptions({ name: 'ArtBreadcrumb' })
 
@@ -46,6 +48,29 @@
 
   const route = useRoute()
   const router = useRouter()
+  const menuStore = useMenuStore()
+
+  /** 菜单 path -> 当前语言标题（随菜单重载更新） */
+  const menuTitleMap = computed(() => {
+    const map = new Map<string, string>()
+    const walk = (menus: AppRouteRecord[]) => {
+      for (const menu of menus) {
+        if (menu.path && menu.meta?.title) {
+          map.set(menu.path, String(menu.meta.title))
+        }
+        if (menu.children?.length) {
+          walk(menu.children)
+        }
+      }
+    }
+    walk(menuStore.menuList)
+    return map
+  })
+
+  const resolveBreadcrumbTitle = (item: BreadcrumbItem): string => {
+    const fromMenu = menuTitleMap.value.get(item.path)
+    return formatMenuTitle(fromMenu || (item.meta?.title as string) || '')
+  }
 
   // 使用computed替代watch，提高性能
   const breadcrumbItems = computed<BreadcrumbItem[]>(() => {

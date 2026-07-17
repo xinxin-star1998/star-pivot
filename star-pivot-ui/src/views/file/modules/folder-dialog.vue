@@ -1,38 +1,44 @@
 <template>
   <ElDialog
     v-model="visible"
-    :title="isEdit ? '编辑文件夹' : '新建文件夹'"
+    :title="isEdit ? t('file.editFolder') : t('file.newFolder')"
     destroy-on-close
     width="480px"
     @closed="reset"
   >
     <ElForm ref="formRef" :model="form" :rules="rules" label-width="90px">
-      <ElFormItem v-if="!isEdit" label="业务分类" prop="category">
-        <ElSelect v-model="form.category" placeholder="请选择分类" style="width: 100%">
+      <ElFormItem v-if="!isEdit" :label="t('file.category')" prop="category">
+        <ElSelect
+          v-model="form.category"
+          :placeholder="t('file.selectCategory')"
+          style="width: 100%"
+        >
           <ElOption
-            v-for="item in FILE_CATEGORIES"
+            v-for="item in categoryOptions"
             :key="item.code"
             :label="item.label"
             :value="item.code"
           />
         </ElSelect>
       </ElFormItem>
-      <ElFormItem v-if="!isEdit && parentLabel" label="上级目录">
+      <ElFormItem v-if="!isEdit && parentLabel" :label="t('file.parentFolder')">
         <ElInput :model-value="parentLabel" disabled />
       </ElFormItem>
-      <ElFormItem label="文件夹名" prop="folderName">
-        <ElInput v-model="form.folderName" placeholder="请输入文件夹名称" />
+      <ElFormItem :label="t('file.folderName')" prop="folderName">
+        <ElInput v-model="form.folderName" :placeholder="t('file.nameRequired')" />
       </ElFormItem>
-      <ElFormItem label="排序">
+      <ElFormItem :label="t('common.orderNum')">
         <ElInputNumber v-model="form.orderNum" :min="0" />
       </ElFormItem>
-      <ElFormItem label="备注">
+      <ElFormItem :label="t('common.remark')">
         <ElInput v-model="form.remark" :rows="2" type="textarea" />
       </ElFormItem>
     </ElForm>
     <template #footer>
-      <ElButton @click="visible = false">取消</ElButton>
-      <ElButton :loading="submitting" type="primary" @click="submit">确定</ElButton>
+      <ElButton @click="visible = false">{{ t('common.cancel') }}</ElButton>
+      <ElButton :loading="submitting" type="primary" @click="submit">{{
+        t('common.confirm')
+      }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -44,6 +50,7 @@
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage } from 'element-plus'
   import { computed, reactive, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   const visible = defineModel<boolean>('visible', { default: false })
 
@@ -59,6 +66,8 @@
     success: []
   }>()
 
+  const { t } = useI18n()
+
   const formRef = ref<FormInstance>()
   const submitting = ref(false)
 
@@ -72,10 +81,17 @@
 
   const isEdit = computed(() => props.type === 'edit')
 
-  const rules: FormRules = {
-    category: [{ required: true, message: '请选择业务分类', trigger: 'change' }],
-    folderName: [{ required: true, message: '请输入文件夹名称', trigger: 'blur' }]
-  }
+  const categoryOptions = computed(() =>
+    FILE_CATEGORIES.map((item) => ({
+      code: item.code,
+      label: t(`file.cat.${item.code}`)
+    }))
+  )
+
+  const rules = computed<FormRules>(() => ({
+    category: [{ required: true, message: t('file.categoryRequired'), trigger: 'change' }],
+    folderName: [{ required: true, message: t('file.nameRequired'), trigger: 'blur' }]
+  }))
 
   watch(
     () => visible.value,
@@ -106,10 +122,10 @@
     try {
       if (isEdit.value) {
         await updateFolder({ ...form })
-        ElMessage.success('更新成功')
+        ElMessage.success(t('common.updateSuccess'))
       } else {
         await createFolder({ ...form, parentId: form.parentId || 0 })
-        ElMessage.success('创建成功')
+        ElMessage.success(t('file.createSuccess'))
       }
       visible.value = false
       emit('success')

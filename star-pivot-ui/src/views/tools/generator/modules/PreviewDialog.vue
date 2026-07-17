@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    title="代码预览"
+    :title="t('tools.gen.previewTitle')"
     width="85%"
     align-center
     class="code-preview-dialog"
@@ -13,7 +13,7 @@
     </div>
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="handleClose">关闭</ElButton>
+        <ElButton @click="handleClose">{{ t('file.close') }}</ElButton>
       </div>
     </template>
   </ElDialog>
@@ -28,6 +28,7 @@
   import { fetchPreviewCode } from '@/api/generator/gen-table'
   import { handleMutationError } from '@/utils/http/mutation'
   import CodePreviewTreePanel from './code-preview-tree-panel.vue'
+  import { useI18n } from 'vue-i18n'
 
   interface Props {
     /** 弹窗可见性，由父组件控制 */
@@ -43,6 +44,7 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const dialogVisible = computed({
     get: () => props.visible,
@@ -55,7 +57,7 @@
 
   const loadPreviewCode = async (tableId: number): Promise<void> => {
     if (!tableId) {
-      ElMessage.warning('表ID不能为空')
+      ElMessage.warning(t('tools.gen.tableIdRequired'))
       return
     }
 
@@ -64,12 +66,12 @@
       const res = await fetchPreviewCode(tableId)
       previewCodeMap.value = res as unknown as Record<string, string>
       if (Object.keys(previewCodeMap.value).length === 0) {
-        ElMessage.warning('未获取到预览代码')
+        ElMessage.warning(t('tools.gen.previewEmpty'))
       }
       panelRef.value?.selectFirstFile()
     } catch (error) {
       console.error('预览代码失败:', error)
-      handleMutationError(error, '预览代码失败')
+      handleMutationError(error, t('tools.gen.previewFail'))
       previewCodeMap.value = {}
       panelRef.value?.reset()
     } finally {

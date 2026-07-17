@@ -93,4 +93,6 @@ export interface AppRouteRecord extends Omit<RouteRecordRaw, 'meta' | 'children'
   menuType?: 'M' | 'C' | 'F'
   /** 权限标识 */
   perms?: string
+  /** 树表是否还有子节点（Element Plus tree-props.hasChildren） */
+  hasChildren?: boolean
 }

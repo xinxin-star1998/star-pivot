@@ -2,23 +2,23 @@
   <div class="file-stats-page art-full-height">
     <ElCard shadow="never" class="toolbar-card">
       <ElRadioGroup v-model="groupBy" @change="loadData">
-        <ElRadioButton value="user">按用户</ElRadioButton>
-        <ElRadioButton value="dept">按部门</ElRadioButton>
+        <ElRadioButton value="user">{{ t('file.groupByUser') }}</ElRadioButton>
+        <ElRadioButton value="dept">{{ t('file.groupByDept') }}</ElRadioButton>
       </ElRadioGroup>
-      <ElButton class="ml-3" :loading="loading" @click="loadData">刷新</ElButton>
+      <ElButton class="ml-3" :loading="loading" @click="loadData">{{ t('file.refresh') }}</ElButton>
     </ElCard>
 
     <div class="summary-grid">
       <ElCard shadow="never">
-        <div class="summary-label">文件数</div>
+        <div class="summary-label">{{ t('file.fileCount') }}</div>
         <div class="summary-value">{{ summary.fileCount ?? 0 }}</div>
       </ElCard>
       <ElCard shadow="never">
-        <div class="summary-label">逻辑用量</div>
+        <div class="summary-label">{{ t('file.logicalUsage') }}</div>
         <div class="summary-value">{{ formatFileSize(summary.totalBytes) }}</div>
       </ElCard>
       <ElCard shadow="never">
-        <div class="summary-label">去重对象数</div>
+        <div class="summary-label">{{ t('file.uniqueObjects') }}</div>
         <div class="summary-value">{{ summary.uniqueObjects ?? 0 }}</div>
       </ElCard>
     </div>
@@ -26,17 +26,22 @@
     <ElCard class="art-table-card" shadow="never">
       <ElTable v-loading="loading" :data="summary.items || []" stripe>
         <ElTableColumn
-          :label="groupBy === 'dept' ? '部门' : '用户'"
+          :label="groupBy === 'dept' ? t('file.dept') : t('file.user')"
           prop="groupName"
           min-width="160"
         />
         <ElTableColumn prop="groupId" label="ID" width="100" />
-        <ElTableColumn prop="fileCount" label="文件数" width="120" sortable />
-        <ElTableColumn label="逻辑用量" width="140" sortable :sort-method="sortByBytes">
+        <ElTableColumn prop="fileCount" :label="t('file.fileCount')" width="120" sortable />
+        <ElTableColumn
+          :label="t('file.logicalUsage')"
+          width="140"
+          sortable
+          :sort-method="sortByBytes"
+        >
           <template #default="{ row }">{{ formatFileSize(row.totalBytes) }}</template>
         </ElTableColumn>
-        <ElTableColumn prop="uniqueObjects" label="去重对象" width="120" sortable />
-        <ElTableColumn label="占比" min-width="180">
+        <ElTableColumn prop="uniqueObjects" :label="t('file.uniqueObjects')" width="120" sortable />
+        <ElTableColumn :label="t('file.ratio')" min-width="180">
           <template #default="{ row }">
             <ElProgress
               :percentage="percentOf(row.totalBytes)"
@@ -56,8 +61,11 @@
   import { formatFileSize } from '@/utils/file/file-center'
   import { handleMutationError } from '@/utils/http/mutation'
   import { onMounted, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'FileStats' })
+
+  const { t } = useI18n()
 
   const loading = ref(false)
   const groupBy = ref<'user' | 'dept'>('user')
@@ -88,7 +96,7 @@
         items: []
       }
     } catch (e) {
-      handleMutationError(e, '加载统计失败')
+      handleMutationError(e, t('file.statsLoadFail'))
     } finally {
       loading.value = false
     }

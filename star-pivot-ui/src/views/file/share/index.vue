@@ -1,7 +1,7 @@
 <template>
   <div class="share-page">
     <div class="share-card">
-      <div class="share-brand">StarPivot 文件分享</div>
+      <div class="share-brand">{{ t('file.shareBrand') }}</div>
 
       <template v-if="meta">
         <h1 class="share-title">{{ meta.fileName }}</h1>
@@ -15,7 +15,7 @@
           v-if="meta.expired"
           :closable="false"
           show-icon
-          title="该分享链接已过期"
+          :title="t('file.shareExpired')"
           type="warning"
         />
 
@@ -26,7 +26,7 @@
             autocomplete="off"
             @submit.prevent="handleUnlock"
           >
-            <ElFormItem label="访问密码">
+            <ElFormItem :label="t('file.sharePassword')">
               <div class="access-code-field">
                 <ElInput
                   v-model="password"
@@ -35,19 +35,21 @@
                   type="text"
                   :readonly="accessCodeReadonly"
                   :class="{ 'is-masked': !showAccessCode }"
-                  placeholder="请输入访问密码"
+                  :placeholder="t('common.pleaseInput')"
                   @focus="accessCodeReadonly = false"
                   @keyup.enter="handleUnlock"
                 />
                 <ElButton link type="primary" @click="showAccessCode = !showAccessCode">
-                  {{ showAccessCode ? '隐藏' : '显示' }}
+                  {{ showAccessCode ? t('file.hide') : t('file.show') }}
                 </ElButton>
               </div>
             </ElFormItem>
-            <ElButton :loading="loading" type="primary" @click="handleUnlock">查看文件</ElButton>
+            <ElButton :loading="loading" type="primary" @click="handleUnlock">
+              {{ t('file.viewFile') }}
+            </ElButton>
           </ElForm>
           <ElButton v-else :loading="loading" type="primary" @click="handleUnlock">
-            打开文件
+            {{ t('file.openFile') }}
           </ElButton>
         </template>
 
@@ -78,7 +80,7 @@
                 class="share-preview__frame"
                 title="preview"
               />
-              <div v-else class="share-preview__fallback">此类型请下载后查看</div>
+              <div v-else class="share-preview__fallback">{{ t('file.previewFallback') }}</div>
             </FileWatermarkOverlay>
           </div>
           <ElButton
@@ -86,12 +88,12 @@
             type="primary"
             @click="openFileUrl(unlockedUrl, meta.fileName)"
           >
-            下载文件
+            {{ t('file.downloadFile') }}
           </ElButton>
         </template>
       </template>
 
-      <ElEmpty v-else-if="!loading" description="分享不存在或已取消" />
+      <ElEmpty v-else-if="!loading" :description="t('file.shareNotFound')" />
     </div>
   </div>
 </template>
@@ -109,8 +111,10 @@
   import { ElMessage } from 'element-plus'
   import { computed, onMounted, ref } from 'vue'
   import { useRoute } from 'vue-router'
+  import { useI18n } from 'vue-i18n'
 
   const route = useRoute()
+  const { t } = useI18n()
   const loading = ref(false)
   const password = ref('')
   const showAccessCode = ref(false)
@@ -123,15 +127,18 @@
 
   const unlocked = computed(() => !!unlockedUrl.value || !!meta.value?.unlocked)
 
-  const mode = computed(() =>
-    getPreviewMode(meta.value?.mediaType, meta.value?.fileExt)
-  )
+  const mode = computed(() => getPreviewMode(meta.value?.mediaType, meta.value?.fileExt))
 
   const previewSrc = computed(() => {
     if (mode.value === 'office') {
       return viewerUrl.value || (unlockedUrl.value ? buildOfficeViewerUrl(unlockedUrl.value) : '')
     }
-    if (mode.value === 'pdf' || mode.value === 'image' || mode.value === 'video' || mode.value === 'audio') {
+    if (
+      mode.value === 'pdf' ||
+      mode.value === 'image' ||
+      mode.value === 'video' ||
+      mode.value === 'audio'
+    ) {
       return viewerUrl.value || unlockedUrl.value
     }
     return ''
@@ -160,9 +167,8 @@
       meta.value = res
       unlockedUrl.value = res.url || ''
       viewerUrl.value = res.viewerUrl || ''
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : '访问失败'
-      ElMessage.error(msg)
+    } catch {
+      ElMessage.error(t('file.loadFail'))
     } finally {
       loading.value = false
     }
@@ -178,8 +184,7 @@
     padding: 24px;
     background:
       radial-gradient(circle at 20% 20%, rgb(64 158 255 / 12%), transparent 40%),
-      radial-gradient(circle at 80% 0%, rgb(103 194 58 / 10%), transparent 35%),
-      #f5f7fa;
+      radial-gradient(circle at 80% 0%, rgb(103 194 58 / 10%), transparent 35%), #f5f7fa;
   }
 
   .share-card {

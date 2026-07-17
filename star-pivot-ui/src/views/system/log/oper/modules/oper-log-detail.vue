@@ -2,7 +2,7 @@
 <template>
   <ElDrawer
     v-model="dialogVisible"
-    title="操作日志详情"
+    :title="t('system.operLog.detail')"
     direction="rtl"
     :close-on-click-modal="false"
     :close-on-press-escape="true"
@@ -17,19 +17,18 @@
   >
     <div v-if="isLoading" class="loading-container">
       <div class="loading-spinner"></div>
-      <span class="loading-text">加载中...</span>
     </div>
 
     <div v-else-if="loadError" class="error-container">
-      <ElResult status="error" title="加载失败" :subTitle="loadErrorMsg">
+      <ElResult status="error" :title="t('system.operLog.loadFail')" :subTitle="loadErrorMsg">
         <template #extra>
-          <ElButton type="primary" @click="handleRetry"> 重新加载 </ElButton>
+          <ElButton type="primary" @click="handleRetry">{{ t('monitor.server.refresh') }}</ElButton>
         </template>
       </ElResult>
     </div>
 
     <div v-else-if="!operLog" class="empty-container">
-      <ElEmpty description="暂无日志数据" />
+      <ElEmpty :description="t('common.empty')" />
     </div>
 
     <div v-else class="log-detail-container">
@@ -41,6 +40,7 @@
 <script setup lang="ts">
   import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
   import { ElButton, ElDrawer, ElEmpty, ElResult } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import type { OperLogListItem } from '@/types/api/operlog'
   import OperLogDetailFields from './oper-log-detail-fields.vue'
 
@@ -61,6 +61,7 @@
     loading: false
   })
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const loadError = ref(false)
   const loadErrorMsg = ref('')
@@ -94,7 +95,7 @@
 
     timeoutTimer = setTimeout(() => {
       loadError.value = true
-      loadErrorMsg.value = '网络请求超时，请检查网络连接后重试'
+      loadErrorMsg.value = t('system.operLog.loadFail')
     }, LOAD_TIMEOUT)
   }
 

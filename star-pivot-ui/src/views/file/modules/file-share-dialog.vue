@@ -1,9 +1,15 @@
 <template>
-  <ElDialog v-model="visible" destroy-on-close title="分享文件" width="520px" @closed="reset">
+  <ElDialog
+    v-model="visible"
+    destroy-on-close
+    :title="t('file.shareTitle')"
+    width="520px"
+    @closed="reset"
+  >
     <div v-if="file" class="share-file-name">{{ file.fileName }}</div>
 
     <ElForm label-width="96px" autocomplete="off" @submit.prevent>
-      <ElFormItem label="访问密码">
+      <ElFormItem :label="t('file.sharePassword')">
         <div class="access-code-field">
           <ElInput
             v-model="password"
@@ -13,57 +19,67 @@
             type="text"
             :readonly="accessCodeReadonly"
             :class="{ 'is-masked': !showAccessCode }"
-            placeholder="可选，留空则无需密码"
+            :placeholder="t('file.passwordOptional')"
             @focus="accessCodeReadonly = false"
           />
-          <ElButton class="access-code-toggle" link type="primary" @click="showAccessCode = !showAccessCode">
-            {{ showAccessCode ? '隐藏' : '显示' }}
+          <ElButton
+            class="access-code-toggle"
+            link
+            type="primary"
+            @click="showAccessCode = !showAccessCode"
+          >
+            {{ showAccessCode ? t('file.hide') : t('file.show') }}
           </ElButton>
         </div>
       </ElFormItem>
-      <ElFormItem label="有效期">
+      <ElFormItem :label="t('file.shareExpire')">
         <ElSelect v-model="expirePreset" style="width: 100%">
-          <ElOption label="1 天" value="1d" />
-          <ElOption label="7 天" value="7d" />
-          <ElOption label="30 天" value="30d" />
-          <ElOption label="永久" value="never" />
+          <ElOption :label="t('file.expire1d')" value="1d" />
+          <ElOption :label="t('file.expire7d')" value="7d" />
+          <ElOption :label="t('file.expire30d')" value="30d" />
+          <ElOption :label="t('file.neverExpire')" value="never" />
         </ElSelect>
       </ElFormItem>
-      <ElFormItem label="访问次数">
-        <ElInputNumber v-model="maxViews" :min="0" controls-position="right" placeholder="0=不限" />
-        <span class="form-hint">0 表示不限制</span>
+      <ElFormItem :label="t('file.accessViews')">
+        <ElInputNumber v-model="maxViews" :min="0" controls-position="right" placeholder="0" />
+        <span class="form-hint">{{ t('file.unlimited') }}</span>
       </ElFormItem>
-      <ElFormItem label="允许下载">
+      <ElFormItem :label="t('file.allowDownload')">
         <ElSwitch v-model="allowDownload" />
       </ElFormItem>
     </ElForm>
 
     <div v-if="createdShare" class="share-result">
-      <div class="share-result__label">分享链接</div>
+      <div class="share-result__label">{{ t('file.shareLink') }}</div>
       <div class="share-result__row">
         <ElInput :model-value="displayShareUrl" readonly />
-        <ElButton type="primary" @click="copyLink">复制</ElButton>
+        <ElButton type="primary" @click="copyLink">{{ t('file.copy') }}</ElButton>
       </div>
     </div>
 
     <div v-if="existingShares.length" class="share-list">
-      <div class="share-list__title">已有分享</div>
+      <div class="share-list__title">{{ t('file.existingShares') }}</div>
       <div v-for="item in existingShares" :key="item.shareId" class="share-list__item">
         <div class="share-list__meta">
           <span>{{ item.shareUrl || `/s/${item.shareCode}` }}</span>
           <span class="share-list__sub">
-            {{ item.hasPassword ? '有密码' : '无密码' }}
-            · 访问 {{ item.viewCount || 0 }}{{ item.maxViews ? `/${item.maxViews}` : '' }}
-            · {{ item.expireTime || '永久' }}
+            {{ item.hasPassword ? t('file.permissionPassword') : t('file.permissionPublic') }}
+            · {{ t('file.accessViews') }} {{ item.viewCount || 0
+            }}{{ item.maxViews ? `/${item.maxViews}` : '' }} ·
+            {{ item.expireTime || t('file.neverExpire') }}
           </span>
         </div>
-        <ElButton link type="danger" @click="handleRevoke(item.shareId!)">取消</ElButton>
+        <ElButton link type="danger" @click="handleRevoke(item.shareId!)">
+          {{ t('file.cancelShare') }}
+        </ElButton>
       </div>
     </div>
 
     <template #footer>
-      <ElButton @click="visible = false">关闭</ElButton>
-      <ElButton :loading="creating" type="primary" @click="handleCreate">创建分享</ElButton>
+      <ElButton @click="visible = false">{{ t('file.close') }}</ElButton>
+      <ElButton :loading="creating" type="primary" @click="handleCreate">
+        {{ t('file.createShare') }}
+      </ElButton>
     </template>
   </ElDialog>
 </template>
@@ -73,12 +89,15 @@
   import type { SysFile, SysFileShare } from '@/api/file/types'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { computed, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   const visible = defineModel<boolean>('visible', { default: false })
 
   const props = defineProps<{
     file?: SysFile | null
   }>()
+
+  const { t } = useI18n()
 
   const password = ref('')
   const showAccessCode = ref(false)
@@ -145,7 +164,7 @@
         maxViews: maxViews.value > 0 ? maxViews.value : undefined,
         allowDownload: allowDownload.value
       })
-      ElMessage.success('分享已创建')
+      ElMessage.success(t('file.shareCreated'))
       existingShares.value = (await fetchFileShares(props.file.fileId)) || []
     } finally {
       creating.value = false
@@ -155,16 +174,16 @@
   async function copyLink() {
     try {
       await navigator.clipboard.writeText(displayShareUrl.value)
-      ElMessage.success('链接已复制')
+      ElMessage.success(t('file.copySuccess'))
     } catch {
-      ElMessage.error('复制失败')
+      ElMessage.error(t('file.copyFail'))
     }
   }
 
   async function handleRevoke(shareId: number) {
-    await ElMessageBox.confirm('确认取消该分享链接？', '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('file.cancelShareConfirm'), t('common.tips'), { type: 'warning' })
     await revokeFileShare(shareId)
-    ElMessage.success('已取消')
+    ElMessage.success(t('file.shareRevoked'))
     if (props.file?.fileId) {
       existingShares.value = (await fetchFileShares(props.file.fileId)) || []
     }

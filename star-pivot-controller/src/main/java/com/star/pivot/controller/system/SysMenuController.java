@@ -6,8 +6,10 @@ import com.star.pivot.framework.domain.DeleteRequest;
 import com.star.pivot.framework.domain.Result;
 import com.star.pivot.framework.exception.ErrorCode;
 import com.star.pivot.framework.exception.BizException;
+import com.star.pivot.system.domain.constant.I18nConstants;
 import com.star.pivot.system.domain.dto.MenuDTO;
 import com.star.pivot.system.domain.entity.SysMenu;
+import com.star.pivot.system.service.interfaces.SysI18nService;
 import com.star.pivot.system.service.interfaces.SysMenuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,12 +18,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 菜单管理控制器
@@ -36,20 +42,25 @@ import java.util.List;
 public class SysMenuController {
 
     private final SysMenuService sysMenuService;
+    private final SysI18nService sysI18nService;
 
     /**
      * 查询所有菜单树接口（管理员使用）
+     * <p>
+     * menuName 按请求语言（X-Lang / Accept-Language）从 sys_i18n 解析，缺失回退表字段。
+     * </p>
      *
      * @return 菜单树列表，包含所有菜单项及其层级关系
      */
-    @Operation(summary = "查询菜单树", description = "获取所有菜单的树形结构（管理员使用）")
+    @Operation(summary = "查询菜单树", description = "获取所有菜单的树形结构（管理员使用），menuName 按请求语言解析")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "查询成功")
     })
     @PreAuthorize("hasAuthority('system:menu:query')")
     @GetMapping("/menuTree")
-    public Result<List<SysMenu>> menuTree() {
+    public Result<List<SysMenu>> menuTree(HttpServletRequest request) {
         List<SysMenu> menuTree = sysMenuService.menuTree();
+        applyLocalizedMenuNames(menuTree, request);
         return Result.success(menuTree);
     }
 
@@ -111,18 +122,22 @@ public class SysMenuController {
     }
     /**
      * 获取上级菜单树接口
-     * 
+     * <p>
+     * menuName 按请求语言解析，与菜单列表、侧栏一致。
+     * </p>
+     *
      * @return 上级菜单列表，用于菜单选择或层级展示
      */
-    @Operation(summary = "获取上级菜单树", description = "获取所有可作为上级菜单的菜单列表，用于菜单选择")
+    @Operation(summary = "获取上级菜单树", description = "获取所有可作为上级菜单的菜单列表，menuName 按请求语言解析")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "查询成功")
     })
     @PreAuthorize("hasAuthority('system:menu:query')")
     @GetMapping("/getParent")
-    public Result<List<SysMenu>> getParent(){
+    public Result<List<SysMenu>> getParent(HttpServletRequest request) {
         List<SysMenu> list = sysMenuService.getParent();
-        return Result.success("查询成功",list);
+        applyLocalizedMenuNames(list, request);
+        return Result.success("查询成功", list);
     }
     /**
      * 根据ID获取菜单接口
@@ -139,6 +154,18 @@ public class SysMenuController {
     @GetMapping("/getById/{menuId}")
     public Result<SysMenu> getById(@Parameter(description = "菜单ID") @PathVariable("menuId") Long menuId){
         SysMenu menu = sysMenuService.getById(menuId);
+        if (menu != null) {
+            Map<String, String> translations = sysI18nService.getResourceTranslations(
+                    I18nConstants.NAMESPACE_MENU,
+                    String.valueOf(menuId),
+                    I18nConstants.FIELD_MENU_NAME);
+            if (translations == null || translations.isEmpty()) {
+                translations = new LinkedHashMap<>();
+            }
+            String defaultLang = sysI18nService.getDefaultLangCode();
+            translations.putIfAbsent(defaultLang, menu.getMenuName());
+            menu.setTranslations(translations);
+        }
         return Result.success("查询成功",menu);
     }
 
@@ -150,5 +177,34 @@ public class SysMenuController {
             throw new BizException(ErrorCode.PARAM_INVALID, "删除ID不能为空");
         }
         return ids;
+    }
+
+    /**
+     * 按请求语言覆盖菜单树中的 menuName（缺失回退原值）
+     */
+    private void applyLocalizedMenuNames(List<SysMenu> menus, HttpServletRequest request) {
+        if (menus == null || menus.isEmpty()) {
+            return;
+        }
+        String lang = sysI18nService.resolveRequestLang(request);
+        Map<Long, String> titleMap = sysI18nService.getMenuTitleMap(lang);
+        if (titleMap == null || titleMap.isEmpty()) {
+            return;
+        }
+        applyLocalizedMenuNames(menus, titleMap);
+    }
+
+    private void applyLocalizedMenuNames(List<SysMenu> menus, Map<Long, String> titleMap) {
+        for (SysMenu menu : menus) {
+            if (menu.getMenuId() != null) {
+                String localized = titleMap.get(menu.getMenuId());
+                if (StringUtils.hasText(localized)) {
+                    menu.setMenuName(localized);
+                }
+            }
+            if (menu.getChildren() != null && !menu.getChildren().isEmpty()) {
+                applyLocalizedMenuNames(menu.getChildren(), titleMap);
+            }
+        }
     }
 }

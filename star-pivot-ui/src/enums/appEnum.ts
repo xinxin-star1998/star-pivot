@@ -61,7 +61,7 @@ export enum MenuWidth {
 }
 
 /**
- * 语言类型
+ * 语言类型（本地兜底；运行时列表以后端 sys_lang 为准）
  */
 export enum LanguageEnum {
   /** 中文 */

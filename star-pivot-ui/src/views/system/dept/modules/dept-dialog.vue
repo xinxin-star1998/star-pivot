@@ -1,72 +1,75 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    :title="dialogType === 'add' ? '添加部门' : '编辑部门'"
+    :title="dialogType === 'add' ? t('system.dept.addTitle') : t('system.dept.editTitle')"
     width="40%"
     align-center
   >
-    <ElForm
-      ref="formRef"
-      :model="formData"
-      :rules="rules"
-      label-width="100px"
-      aria-label="部门信息表单"
-    >
-      <ElFormItem label="上级部门" prop="parentId">
+    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="100px">
+      <ElFormItem :label="t('system.dept.parentDept')" prop="parentId">
         <ElTreeSelect
           v-model="formData.parentId"
           :data="deptTreeData"
           :props="deptTreeProps"
-          placeholder="请选择上级部门"
+          :placeholder="t('system.dept.parentPlaceholder')"
           clearable
           check-strictly
           :render-after-expand="false"
           :disabled="dialogType === 'edit' && formData.deptId === formData.parentId"
         />
       </ElFormItem>
-      <ElFormItem label="部门名称" prop="deptName">
-        <ElInput v-model="formData.deptName" placeholder="请输入部门名称" />
+      <ElFormItem :label="t('system.dept.deptName')" prop="deptName">
+        <ElInput v-model="formData.deptName" :placeholder="t('system.dept.deptNamePlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="显示顺序" prop="orderNum">
-        <ElInputNumber v-model="formData.orderNum" :min="0" placeholder="请输入显示顺序" />
+      <ElFormItem :label="t('common.displayOrder')" prop="orderNum">
+        <ElInputNumber
+          v-model="formData.orderNum"
+          :min="0"
+          :placeholder="t('system.dept.orderPlaceholder')"
+        />
       </ElFormItem>
-      <ElFormItem label="负责人" prop="leader">
-        <ElInput v-model="formData.leader" placeholder="请输入负责人" />
+      <ElFormItem :label="t('system.dept.leader')" prop="leader">
+        <ElInput v-model="formData.leader" :placeholder="t('system.dept.leaderPlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="联系电话" prop="phone">
-        <ElInput v-model="formData.phone" placeholder="请输入联系电话" />
+      <ElFormItem :label="t('system.dept.phone')" prop="phone">
+        <ElInput v-model="formData.phone" :placeholder="t('system.dept.phonePlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="邮箱" prop="email">
-        <ElInput v-model="formData.email" placeholder="请输入邮箱" />
+      <ElFormItem :label="t('system.dept.email')" prop="email">
+        <ElInput v-model="formData.email" :placeholder="t('system.dept.emailPlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="状态" prop="status">
+      <ElFormItem :label="t('common.status')" prop="status">
         <ElRadioGroup v-model="formData.status">
-          <ElRadio :value="'0'">正常</ElRadio>
-          <ElRadio :value="'1'">停用</ElRadio>
+          <ElRadio :value="'0'">{{ t('common.normal') }}</ElRadio>
+          <ElRadio :value="'1'">{{ t('common.disabled') }}</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
-      <ElFormItem label="备注" prop="remark">
-        <ElInput type="textarea" v-model="formData.remark" placeholder="请输入备注" :rows="3" />
+      <ElFormItem :label="t('common.remark')" prop="remark">
+        <ElInput
+          type="textarea"
+          v-model="formData.remark"
+          :placeholder="t('system.dept.remarkPlaceholder')"
+          :rows="3"
+        />
       </ElFormItem>
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="handleSubmit">提交</ElButton>
+        <ElButton @click="dialogVisible = false">{{ t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="handleSubmit">{{ t('common.submit') }}</ElButton>
       </div>
     </template>
   </ElDialog>
 </template>
 
 <script setup lang="ts">
-  import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { ElTreeSelect } from 'element-plus'
+  import { ElMessage, ElTreeSelect } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import {
-    fetchGetDeptTree,
     fetchAddDept,
-    fetchUpdateDept,
     fetchGetDeptById,
+    fetchGetDeptTree,
+    fetchUpdateDept,
     type SysDept
   } from '@/api/dept/dept'
   import { handleMutationError } from '@/utils/http/mutation'
@@ -85,27 +88,22 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
-  // 部门树数据
   const deptTreeData = ref<SysDept[]>([])
-  // 部门树配置
   const deptTreeProps = {
     value: 'deptId',
     label: 'deptName',
     children: 'children'
   }
-  // 对话框显示控制
   const dialogVisible = computed({
     get: () => props.visible,
     set: (value) => emit('update:visible', value)
   })
 
   const dialogType = computed(() => props.type)
-
-  // 表单实例
   const formRef = ref<FormInstance>()
 
-  // 表单数据
   const formData = reactive({
     deptId: undefined as number | undefined,
     parentId: 0,
@@ -118,28 +116,20 @@
     remark: ''
   })
 
-  // 表单验证规则
-  const rules: FormRules = {
+  const rules = computed<FormRules>(() => ({
     deptName: [
-      { required: true, message: '请输入部门名称', trigger: 'blur' },
-      { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+      { required: true, message: t('system.dept.nameRequired'), trigger: 'blur' },
+      { min: 2, max: 50, message: t('system.dept.nameLength'), trigger: 'blur' }
     ],
-    phone: [{ pattern: /^1[3-9]\d{9}$|^$/, message: '请输入正确的手机号格式', trigger: 'blur' }],
-    email: [{ type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }]
-  }
+    phone: [
+      { pattern: /^1[3-9]\d{9}$|^$/, message: t('system.dept.phoneInvalid'), trigger: 'blur' }
+    ],
+    email: [{ type: 'email', message: t('system.dept.emailInvalid'), trigger: 'blur' }]
+  }))
 
-  /**
-   * 检查部门是否为指定部门的子部门
-   * @param dept 要检查的部门
-   * @param excludeId 要排除的部门ID
-   * @param allDepts 所有部门列表（用于查找）
-   * @returns 是否为子部门
-   */
   const isChildOf = (dept: SysDept, excludeId: number, allDepts: SysDept[]): boolean => {
     if (dept.deptId === excludeId) return true
     if (dept.parentId === excludeId) return true
-
-    // 递归检查父部门
     if (dept.parentId) {
       const parent = findDeptById(dept.parentId, allDepts)
       if (parent) {
@@ -149,12 +139,6 @@
     return false
   }
 
-  /**
-   * 根据ID查找部门
-   * @param deptId 部门ID
-   * @param depts 部门列表
-   * @returns 找到的部门
-   */
   const findDeptById = (deptId: number, depts: SysDept[]): SysDept | null => {
     for (const dept of depts) {
       if (dept.deptId === deptId) return dept
@@ -166,23 +150,12 @@
     return null
   }
 
-  /**
-   * 过滤部门树，排除当前编辑的部门及其所有子部门
-   * @param tree 部门树
-   * @param excludeId 要排除的部门ID
-   * @param allDepts 所有部门列表（用于查找关系）
-   * @returns 过滤后的部门树
-   */
   const filterDeptTree = (tree: SysDept[], excludeId?: number, allDepts?: SysDept[]): SysDept[] => {
     if (!excludeId) return tree
-
     const allDeptsList = allDepts || tree
-
     return tree
       .filter((dept) => {
-        // 排除自己
         if (dept.deptId === excludeId) return false
-        // 排除所有子部门
         return !isChildOf(dept, excludeId, allDeptsList)
       })
       .map((dept) => {
@@ -194,15 +167,10 @@
       })
   }
 
-  /**
-   * 初始化表单数据
-   * 根据对话框类型（新增/编辑）填充表单
-   */
   const initFormData = async () => {
     const isEdit = props.type === 'edit' && props.deptData
 
     if (isEdit && props.deptData?.deptId) {
-      // 编辑模式：获取完整的部门详情
       try {
         const deptDetail = await fetchGetDeptById(props.deptData.deptId)
         if (deptDetail) {
@@ -220,8 +188,7 @@
         }
       } catch (error) {
         console.error('获取部门详情失败:', error)
-        handleMutationError(error, '获取部门详情失败')
-        // 如果获取详情失败，使用列表数据作为回退
+        handleMutationError(error, t('system.dept.loadDetailFail'))
         Object.assign(formData, {
           deptId: props.deptData.deptId,
           parentId: props.deptData.parentId || 0,
@@ -235,7 +202,6 @@
         })
       }
     } else {
-      // 新增模式：重置表单
       Object.assign(formData, {
         deptId: undefined,
         parentId: props.deptData?.parentId || 0,
@@ -250,14 +216,10 @@
     }
   }
 
-  /**
-   * 获取部门树数据
-   */
   const getDeptTree = async () => {
     try {
       const res = await fetchGetDeptTree()
       if (Array.isArray(res) && res.length > 0) {
-        // 编辑模式下，过滤掉当前部门及其所有子部门
         if (props.type === 'edit' && formData.deptId) {
           deptTreeData.value = filterDeptTree(res, formData.deptId, res)
         } else {
@@ -269,21 +231,15 @@
     } catch (error) {
       console.error('获取部门树失败:', error)
       deptTreeData.value = []
-      handleMutationError(error, '获取部门树失败')
+      handleMutationError(error, t('system.dept.loadTreeFail'))
     }
   }
 
-  /**
-   * 监听对话框状态变化
-   * 当对话框打开时初始化表单数据并清除验证状态
-   */
   watch(
     () => [props.visible, props.type, props.deptData],
     async ([visible]) => {
       if (visible) {
-        // 先初始化表单数据（编辑模式需要先获取详情）
         await initFormData()
-        // 再获取部门树（编辑模式需要过滤）
         await getDeptTree()
         nextTick(() => {
           formRef.value?.clearValidate()
@@ -293,10 +249,6 @@
     { immediate: true }
   )
 
-  /**
-   * 提交表单
-   * 验证通过后触发提交事件
-   */
   const handleSubmit = async () => {
     if (!formRef.value) return
 
@@ -310,16 +262,19 @@
 
           if (dialogType.value === 'add') {
             await fetchAddDept(submitData)
-            ElMessage.success('添加成功')
+            ElMessage.success(t('common.addSuccess'))
           } else {
             await fetchUpdateDept(submitData)
-            ElMessage.success('更新成功')
+            ElMessage.success(t('common.updateSuccess'))
           }
           dialogVisible.value = false
           emit('submit')
         } catch (error) {
           console.error('提交失败:', error)
-          handleMutationError(error, dialogType.value === 'add' ? '添加失败' : '更新失败')
+          handleMutationError(
+            error,
+            dialogType.value === 'add' ? t('common.addFail') : t('common.updateFail')
+          )
         }
       }
     })

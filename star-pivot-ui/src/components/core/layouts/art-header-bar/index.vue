@@ -172,12 +172,16 @@
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'
   import { useFullscreen, useWindowSize } from '@vueuse/core'
-  import { LanguageEnum, MenuTypeEnum } from '@/enums/appEnum'
+  import { MenuTypeEnum } from '@/enums/appEnum'
   import { useSettingStore } from '@/store/modules/setting'
   import { useUserStore } from '@/store/modules/user'
   import { useMenuStore } from '@/store/modules/menu'
   import AppConfig from '@/config'
-  import { languageOptions } from '@/locales'
+  import { languageOptions, normalizeAppLang, switchAppLanguage } from '@/locales'
+  import { reloadDynamicRoutes } from '@/router/guards/dynamicRouteGuard'
+  import { useWorktabStore } from '@/store/modules/worktab'
+  import type { AppRouteRecord } from '@/types/router'
+  import { setPageTitle } from '@/utils/router'
   import { mittBus } from '@/utils/sys'
   import { themeAnimation } from '@/utils/ui/animation'
   import { useCommon } from '@/hooks/core/useCommon'
@@ -290,14 +294,64 @@
   }
 
   /**
-   * 切换系统语言
-   * @param {LanguageEnum} lang - 目标语言类型
+   * 从菜单树收集 path -> title，用于同步标签页标题
    */
-  const changeLanguage = (lang: LanguageEnum): void => {
-    if (locale.value === lang) return
-    locale.value = lang
-    userStore.setLanguage(lang)
-    reload(50)
+  const collectMenuTitleMap = (
+    menus: AppRouteRecord[],
+    map: Map<string, string> = new Map()
+  ): Map<string, string> => {
+    for (const menu of menus) {
+      if (menu.path && menu.meta?.title) {
+        map.set(menu.path, String(menu.meta.title))
+      }
+      if (menu.children?.length) {
+        collectMenuTitleMap(menu.children, map)
+      }
+    }
+    return map
+  }
+
+  /**
+   * 切换系统语言（顶栏）：更新偏好 → 拉 UI 包 → 按 X-Lang 重拉菜单（无整页刷新）
+   * @param lang 目标语言编码
+   */
+  const changeLanguage = async (lang: string): Promise<void> => {
+    const target = normalizeAppLang(lang)
+    if (!target) return
+    // 先写 store，后续请求才会带上新的 X-Lang（即使已是同语言也强制同步，修复 store/i18n 漂移）
+    userStore.setLanguage(target)
+    await switchAppLanguage(target)
+    // 强制刷新页面内容（含 KeepAlive 缓存页），确保表格/表单文案立即切换
+    settingStore.reload()
+    // 失效菜单缓存，避免继续用旧语言标题
+    menuStore.clearMenuCacheMeta()
+    try {
+      await reloadDynamicRoutes()
+      const titleMap = collectMenuTitleMap(menuStore.menuList)
+      const worktabStore = useWorktabStore()
+      worktabStore.opened.forEach((tab) => {
+        const title = titleMap.get(tab.path)
+        if (title) {
+          tab.title = title
+        }
+      })
+      if (worktabStore.current?.path) {
+        const currentTitle = titleMap.get(worktabStore.current.path)
+        if (currentTitle) {
+          worktabStore.current.title = currentTitle
+        }
+      }
+      // 当前 matched 仍指向旧路由记录，同步 meta.title，避免面包屑滞留上一语言
+      router.currentRoute.value.matched.forEach((record) => {
+        const title = titleMap.get(record.path)
+        if (title) {
+          record.meta.title = title
+        }
+      })
+      setPageTitle(router.currentRoute.value)
+    } catch (error) {
+      console.warn('[i18n] 切换语言后刷新菜单失败:', error)
+    }
   }
 
   /**

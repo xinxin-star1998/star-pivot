@@ -20,7 +20,7 @@
           >
             <template #left>
               <ElButton @click="handleAdd" v-ripple v-auth="'system:type:add'">
-                新增字典类型
+                {{ t('system.dict.addType') }}
               </ElButton>
             </template>
           </ArtTableHeader>
@@ -64,14 +64,14 @@
       <div class="drawer-shell">
         <div class="drawer-header">
           <div class="drawer-title">
-            <span class="title">字典数据管理</span>
+            <span class="title">{{ t('system.dict.dataTitle') }}</span>
             <div v-if="selectedDictType" class="selected-meta">
-              <span class="label">当前选中：</span>
+              <span class="label">{{ t('system.dict.dictName') }}：</span>
               <span class="name">{{ selectedDictName || '-' }}</span>
               <ElTag type="info" effect="plain">{{ selectedDictType }}</ElTag>
             </div>
           </div>
-          <ElButton text @click="drawerVisible = false">关闭</ElButton>
+          <ElButton text @click="drawerVisible = false">{{ t('common.cancel') }}</ElButton>
         </div>
 
         <div class="drawer-body">
@@ -103,6 +103,9 @@
   import { useAuth } from '@/hooks/core/useAuth'
   import { handleMutationError } from '@/utils/http/mutation'
   import { useWindowSize } from '@vueuse/core'
+  import { useI18n } from 'vue-i18n'
+
+  const { t } = useI18n()
 
   const DictTypeDialog = defineAsyncComponent(
     () => import('@views/system/dict/modules/dict-type-dialog.vue')
@@ -151,37 +154,36 @@
 
   const formItems = computed(() => [
     {
-      label: '字典名称',
+      label: t('system.dict.searchName'),
       key: 'dictName',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入字典名称' }
+      props: { clearable: true, placeholder: t('system.dict.namePlaceholder') }
     },
     {
-      label: '字典类型',
+      label: t('system.dict.searchType'),
       key: 'dictType',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入字典类型' }
+      props: { clearable: true, placeholder: t('system.dict.typePlaceholder') }
     },
     {
-      label: '状态',
+      label: t('common.status'),
       key: 'status',
       type: 'select',
       props: {
         clearable: true,
-        placeholder: '请选择状态',
+        placeholder: t('common.pleaseSelect'),
         options: [
-          { label: '正常', value: '0' },
-          { label: '停用', value: '1' }
+          { label: t('common.normal'), value: '0' },
+          { label: t('common.disabled'), value: '1' }
         ]
       }
     }
   ])
 
-  // 状态配置
-  const STATUS_CONFIG = {
-    '0': { text: '正常', type: 'success' as const },
-    '1': { text: '停用', type: 'danger' as const }
-  }
+  const STATUS_CONFIG = computed(() => ({
+    '0': { text: t('common.normal'), type: 'success' as const },
+    '1': { text: t('common.disabled'), type: 'danger' as const }
+  }))
   // 新增：字典类型点击事件处理函数
   const handleDictTypeClick = (row: SysDictType) => {
     selectedDictType.value = row.dictType
@@ -213,7 +215,7 @@
   const { columnChecks, columns } = useTableColumns(() => [
     {
       type: 'index',
-      label: '序号',
+      label: t('common.orderNum'),
       width: 100,
       index: (index: number) => {
         return (pagination.current - 1) * pagination.size + index + 1
@@ -221,12 +223,12 @@
     },
     {
       prop: 'dictName',
-      label: '字典名称',
+      label: t('system.dict.dictName'),
       minWidth: 150
     },
     {
       prop: 'dictType',
-      label: '字典类型',
+      label: t('system.dict.dictType'),
       minWidth: 150,
       // 新增：自定义单元格渲染，添加点击事件和样式
       formatter: (row: SysDictType) => {
@@ -246,33 +248,35 @@
     },
     {
       prop: 'status',
-      label: '状态',
+      label: t('common.status'),
       width: 100,
       formatter: (row: SysDictType) => {
-        const status = (row.status || '0') as keyof typeof STATUS_CONFIG
-        const statusInfo = STATUS_CONFIG[status] || STATUS_CONFIG['0']
+        const status = (row.status || '0') as '0' | '1'
+        const statusInfo = STATUS_CONFIG.value[status] || STATUS_CONFIG.value['0']
         return h(ElTag, { type: statusInfo.type }, () => statusInfo.text)
       }
     },
     {
       prop: 'remark',
-      label: '备注',
+      label: t('common.remark'),
       minWidth: 200,
       formatter: (row: SysDictType) => {
-        return row.remark || h('span', { style: 'color: var(--art-gray-500)' }, '无')
+        return row.remark || h('span', { style: 'color: var(--art-gray-500)' }, t('common.empty'))
       }
     },
     {
       prop: 'createTime',
-      label: '创建时间',
+      label: t('common.createTime'),
       width: 180,
       formatter: (row: SysDictType) => {
-        return row.createTime || h('span', { style: 'color: var(--art-gray-500)' }, '暂无')
+        return (
+          row.createTime || h('span', { style: 'color: var(--art-gray-500)' }, t('common.empty'))
+        )
       }
     },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('common.operation'),
       width: 180,
       align: 'right',
       formatter: (row: SysDictType) => {
@@ -387,7 +391,7 @@
       }
     } catch (error) {
       safeError('获取字典类型列表失败:', error)
-      handleMutationError(error, '获取字典类型列表失败')
+      handleMutationError(error, t('system.dict.loadFail'))
     } finally {
       loading.value = false
     }
@@ -465,19 +469,19 @@
    */
   const handleDelete = async (row: SysDictType): Promise<void> => {
     if (!row.dictId) {
-      ElMessage.warning('字典类型ID不存在，无法删除')
+      ElMessage.warning(t('common.deleteFail'))
       return
     }
 
     try {
-      await ElMessageBox.confirm(`确定要删除字典类型"${row.dictName}"吗？删除后无法恢复`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      await ElMessageBox.confirm(t('system.dict.deleteTypeConfirm'), t('common.tips'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning'
       })
 
       await fetchDeleteDictType([row.dictId])
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
       // 如果当前页没有数据了，且不是第一页，则跳转到上一页
       if (tableData.value.length === 1 && pagination.current > 1) {
         pagination.current--
@@ -486,7 +490,7 @@
     } catch (error) {
       if (error !== 'cancel' && error !== 'close') {
         safeError('删除字典类型失败:', error)
-        handleMutationError(error, '删除失败')
+        handleMutationError(error, t('common.deleteFail'))
       }
     }
   }
@@ -499,16 +503,16 @@
       const isEdit = !!formData.dictId
       if (isEdit) {
         await fetchUpdateDictType(formData)
-        ElMessage.success('修改字典类型成功')
+        ElMessage.success(t('common.updateSuccess'))
       } else {
         await fetchAddDictType(formData)
-        ElMessage.success('新增字典类型成功')
+        ElMessage.success(t('common.addSuccess'))
       }
       dialogVisible.value = false
       await getDictTypeList()
     } catch (error) {
       safeError('保存字典类型失败:', error)
-      handleMutationError(error, formData.dictId ? '修改字典类型失败' : '新增字典类型失败')
+      handleMutationError(error, formData.dictId ? t('common.updateFail') : t('common.addFail'))
     }
   }
 </script>

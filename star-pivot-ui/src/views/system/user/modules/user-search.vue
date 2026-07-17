@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
   interface Props {
     modelValue: Record<string, any>
   }
@@ -21,29 +23,24 @@
   }
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
-  // 表单数据双向绑定
   const searchBarRef = ref()
   const formData = computed({
     get: () => props.modelValue,
     set: (val) => emit('update:modelValue', val)
   })
 
-  // 校验规则
-  const rules = {
-    // userName: [{ required: true, message: '请输入用户名', trigger: 'blur' }]
-  }
+  const rules = {}
 
-  // 动态 options
   const statusOptions = ref<{ label: string; value: string; disabled?: boolean }[]>([])
 
-  // 模拟接口返回状态数据
   function fetchStatusOptions(): Promise<typeof statusOptions.value> {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve([
-          { label: '在线', value: '0' },
-          { label: '离线', value: '1' }
+          { label: t('system.user.online'), value: '0' },
+          { label: t('system.user.offline'), value: '1' }
         ])
       }, 1000)
     })
@@ -53,51 +50,49 @@
     statusOptions.value = await fetchStatusOptions()
   })
 
-  // 表单配置
   const formItems = computed(() => [
     {
-      label: '用户名',
+      label: t('system.user.userName'),
       key: 'userName',
       type: 'input',
-      placeholder: '请输入用户名',
+      placeholder: t('system.user.userNamePlaceholder'),
       clearable: true
     },
     {
-      label: '手机号',
+      label: t('system.user.phone'),
       key: 'phonenumber',
       type: 'input',
-      props: { placeholder: '请输入手机号', maxlength: '11' }
+      props: { placeholder: t('system.user.phonePlaceholder'), maxlength: '11' }
     },
     {
-      label: '邮箱',
+      label: t('system.user.email'),
       key: 'email',
       type: 'input',
-      props: { placeholder: '请输入邮箱' }
+      props: { placeholder: t('system.user.emailPlaceholder') }
     },
     {
-      label: '状态',
+      label: t('common.status'),
       key: 'status',
       type: 'select',
       props: {
-        placeholder: '请选择状态',
+        placeholder: t('common.pleaseSelect'),
         options: statusOptions.value
       }
     },
     {
-      label: '性别',
+      label: t('system.user.sex'),
       key: 'sex',
       type: 'select',
       props: {
         options: [
-          { label: '男', value: '0' },
-          { label: '女', value: '1' },
-          { label: '未知', value: '2' }
+          { label: t('system.userCenter.male'), value: '0' },
+          { label: t('system.userCenter.female'), value: '1' },
+          { label: t('system.userCenter.unknown'), value: '2' }
         ]
       }
     }
   ])
 
-  // 事件
   function handleReset() {
     emit('reset')
   }

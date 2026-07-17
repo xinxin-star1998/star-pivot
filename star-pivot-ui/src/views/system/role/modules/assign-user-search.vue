@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
   interface Props {
     modelValue: Record<string, any>
   }
@@ -21,35 +23,32 @@
   }
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
-  // 表单数据双向绑定
   const searchBarRef = ref()
   const formData = computed({
     get: () => props.modelValue,
     set: (val) => emit('update:modelValue', val)
   })
 
-  // 校验规则
   const rules = {}
 
-  // 表单配置
   const formItems = computed(() => [
     {
-      label: '用户名称',
+      label: t('system.user.userName'),
       key: 'userName',
       type: 'input',
-      placeholder: '请输入用户名称',
+      placeholder: t('system.user.userNamePlaceholder'),
       clearable: true
     },
     {
-      label: '手机号',
+      label: t('system.user.phone'),
       key: 'phonenumber',
       type: 'input',
-      props: { placeholder: '请输入手机号', maxlength: '11' }
+      props: { placeholder: t('system.user.phonePlaceholder'), maxlength: '11' }
     }
   ])
 
-  // 事件
   function handleReset() {
     emit('reset')
   }

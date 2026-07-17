@@ -1,25 +1,31 @@
 <template>
-  <ElDialog v-model="visible" destroy-on-close title="迁移到文件夹" width="480px" @closed="reset">
+  <ElDialog
+    v-model="visible"
+    destroy-on-close
+    :title="t('file.moveTitle')"
+    width="480px"
+    @closed="reset"
+  >
     <p class="move-tip">
-      已选择 <strong>{{ fileIds.length }}</strong> 个文件，将更新所属文件夹（OSS 对象路径不变）。
+      {{ t('file.moveTip', { count: fileIds.length }) }}
     </p>
     <ElForm label-width="88px">
-      <ElFormItem label="目标文件夹" required>
+      <ElFormItem :label="t('file.moveTarget')" required>
         <ElCascader
           v-model="selectedPath"
           :options="cascaderOptions"
           :props="cascaderProps"
           clearable
           filterable
-          placeholder="请选择业务分类与文件夹"
+          :placeholder="t('file.folderPlaceholder')"
           style="width: 100%"
         />
       </ElFormItem>
     </ElForm>
     <template #footer>
-      <ElButton @click="visible = false">取消</ElButton>
+      <ElButton @click="visible = false">{{ t('common.cancel') }}</ElButton>
       <ElButton :disabled="!targetFolderId" :loading="submitting" type="primary" @click="submit">
-        确认迁移
+        {{ t('file.confirmMove') }}
       </ElButton>
     </template>
   </ElDialog>
@@ -28,12 +34,10 @@
 <script lang="ts" setup>
   import { moveFiles } from '@/api/file/file'
   import type { FileCategoryNode } from '@/api/file/types'
-  import {
-    mapCategoryCascaderOptions,
-    resolveFolderIdFromPath
-  } from '@/utils/file/folder-tree'
+  import { mapCategoryCascaderOptions, resolveFolderIdFromPath } from '@/utils/file/folder-tree'
   import { ElMessage } from 'element-plus'
   import { computed, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   const visible = defineModel<boolean>('visible', { default: false })
 
@@ -46,6 +50,8 @@
   const emit = defineEmits<{
     success: [targetFolderId: number]
   }>()
+
+  const { t } = useI18n()
 
   const submitting = ref(false)
   const selectedPath = ref<Array<string | number> | undefined>()
@@ -78,17 +84,17 @@
   async function submit() {
     const folderId = targetFolderId.value
     if (!folderId) {
-      ElMessage.warning('请选择目标文件夹')
+      ElMessage.warning(t('file.selectTargetFolder'))
       return
     }
     if (props.fileIds.length === 0) {
-      ElMessage.warning('请选择要迁移的文件')
+      ElMessage.warning(t('file.selectMoveFiles'))
       return
     }
     submitting.value = true
     try {
       await moveFiles(props.fileIds, folderId)
-      ElMessage.success('迁移成功')
+      ElMessage.success(t('file.moveSuccess'))
       visible.value = false
       emit('success', folderId)
     } finally {

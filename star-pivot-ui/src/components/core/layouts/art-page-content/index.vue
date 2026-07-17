@@ -25,7 +25,7 @@
             v-if="routeSlot.meta.keepAlive"
             :class="isLayoutComponent(Component, routeSlot) ? '' : 'art-page-view'"
             :is="Component"
-            :key="routeSlot.path"
+            :key="`${routeSlot.path}__${locale}`"
             :style="isLayoutComponent(Component, routeSlot) ? undefined : contentStyle"
           />
         </KeepAlive>
@@ -37,7 +37,7 @@
           v-if="!routeSlot.meta.keepAlive"
           :class="isLayoutComponent(Component, routeSlot) ? '' : 'art-page-view'"
           :is="Component"
-          :key="routeSlot.path"
+          :key="`${routeSlot.path}__${locale}`"
           :style="isLayoutComponent(Component, routeSlot) ? undefined : contentStyle"
         />
       </Transition>
@@ -54,16 +54,18 @@
 </template>
 <script setup lang="ts">
   type StyleObject = Record<string, string | number>
-  import { useRoute, RouterView } from 'vue-router'
+  import { RouterView, useRoute } from 'vue-router'
   import { useAutoLayoutHeight } from '@/hooks/core/useLayoutHeight'
   import { useSettingStore } from '@/store/modules/setting'
   import { useWorktabStore } from '@/store/modules/worktab'
-  import { computed, ref, shallowRef, watch, nextTick, onMounted } from 'vue'
+  import { computed, nextTick, onMounted, ref, shallowRef, watch } from 'vue'
   import { storeToRefs } from 'pinia'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'ArtPageContent' })
 
   const route = useRoute()
+  const { locale } = useI18n()
   const { containerMinHeight } = useAutoLayoutHeight()
   const { pageTransition, containerWidth, refresh } = storeToRefs(useSettingStore())
   const { keepAliveExclude } = storeToRefs(useWorktabStore())

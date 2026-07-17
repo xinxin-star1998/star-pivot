@@ -32,6 +32,7 @@
 
 import { defineStore } from 'pinia'
 import { fetchGetDictDataByType, type SysDictData } from '@/api/dict/data'
+import { useUserStore } from './user'
 
 /**
  * 字典数据存储结构
@@ -50,11 +51,33 @@ export const useDictStore = defineStore(
 
     const loading = ref<Set<string>>(new Set())
 
+    /** 当前缓存对应的语言，切换语言后强制刷新 */
+    const cachedLang = ref<string | null>(null)
+
+    const syncLangOrClear = (): boolean => {
+      const userStore = useUserStore()
+      const currentLang = userStore.language
+      if (cachedLang.value !== null && cachedLang.value !== currentLang) {
+        dictCache.value.clear()
+        cachedLang.value = currentLang
+        return true
+      }
+      if (cachedLang.value === null) {
+        cachedLang.value = currentLang
+      }
+      return false
+    }
+
     const getDictMap = (dictType: string): Map<string, SysDictData> => {
       return dictCache.value.get(dictType) || new Map()
     }
 
     const loadDict = async (dictType: string, force = false): Promise<boolean> => {
+      const langChanged = syncLangOrClear()
+      if (langChanged) {
+        force = true
+      }
+
       if (!force && dictCache.value.has(dictType)) {
         return true
       }
@@ -167,6 +190,7 @@ export const useDictStore = defineStore(
         dictCache.value.delete(dictType)
       } else {
         dictCache.value.clear()
+        cachedLang.value = null
       }
     }
 
@@ -181,6 +205,7 @@ export const useDictStore = defineStore(
     return {
       dictCache,
       loading,
+      cachedLang,
       getDictMap,
       loadDict,
       loadDicts,
@@ -209,7 +234,8 @@ export const useDictStore = defineStore(
           })
           return JSON.stringify({
             dictCache: serializedCache,
-            loading: Array.from(state.loading)
+            loading: Array.from(state.loading),
+            cachedLang: state.cachedLang
           })
         },
         deserialize: (str) => {
@@ -229,13 +255,15 @@ export const useDictStore = defineStore(
             }
             return {
               dictCache,
-              loading: new Set(parsed.loading || [])
+              loading: new Set(parsed.loading || []),
+              cachedLang: parsed.cachedLang ?? null
             }
           } catch (error) {
             console.error('反序列化字典数据失败:', error)
             return {
               dictCache: new Map(),
-              loading: new Set()
+              loading: new Set(),
+              cachedLang: null
             }
           }
         }

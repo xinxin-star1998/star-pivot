@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { LanguageEnum } from '@/enums/appEnum'
 import { useUserStore } from './user'
 
 /**
@@ -13,8 +12,8 @@ export const usePreferenceStore = defineStore('preferenceStore', () => {
   const userStore = useUserStore()
 
   const language = computed({
-    get: () => userStore.language as LanguageEnum,
-    set: (val: LanguageEnum) => userStore.setLanguage(val)
+    get: () => userStore.language,
+    set: (val: string) => userStore.setLanguage(val)
   })
 
   const searchHistory = computed({

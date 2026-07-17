@@ -5,8 +5,10 @@
       <template #header>
         <div class="card-header">
           <div class="header-title">
-            <span class="title-main">服务器监控</span>
-            <span class="title-sub">实时查看主机资源与运行状态</span>
+            <span class="title-main"
+              >{{ t('monitor.server.cpu') }} / {{ t('monitor.server.mem') }}</span
+            >
+            <span class="title-sub">{{ t('monitor.server.refresh') }}</span>
           </div>
           <div class="header-actions">
             <div :class="`is-${healthStatus.level}`" class="health-indicator">
@@ -25,17 +27,19 @@
               </div>
             </div>
             <ElRadioGroup v-model="densityMode" class="density-switch" size="small">
-              <ElRadioButton value="comfortable">舒适</ElRadioButton>
-              <ElRadioButton value="compact">紧凑</ElRadioButton>
+              <ElRadioButton value="comfortable">{{
+                t('table.sizeOptions.default')
+              }}</ElRadioButton>
+              <ElRadioButton value="compact">{{ t('table.sizeOptions.small') }}</ElRadioButton>
             </ElRadioGroup>
             <ElButton :icon="Refresh" :loading="loading" type="primary" @click="refreshData">
-              刷新
+              {{ t('monitor.server.refresh') }}
             </ElButton>
           </div>
         </div>
         <div class="header-meta">
-          <span>最后更新时间：{{ lastUpdatedText }}</span>
-          <span>自动刷新：{{ refreshCountdownText }}</span>
+          <span>{{ t('common.createTime') }}：{{ lastUpdatedText }}</span>
+          <span>{{ t('monitor.server.refresh') }}：{{ refreshCountdownText }}</span>
         </div>
       </template>
 
@@ -48,7 +52,7 @@
                 <div class="overview-value">{{ item.value }}</div>
                 <div class="overview-extra">{{ item.extra }}</div>
                 <span v-if="item.level !== 'normal'" class="overview-alert">
-                  {{ item.level === 'danger' ? '告警' : '预警' }}
+                  {{ item.level === 'danger' ? t('common.tips') : t('common.status') }}
                 </span>
               </div>
             </ElCol>
@@ -59,8 +63,10 @@
               <ElCard class="section-card section-card--cpu" shadow="hover">
                 <template #header>
                   <div class="section-title">
-                    <span>CPU</span>
-                    <ElTag effect="light" type="info">核心 {{ serverInfo.cpu?.cpuNum ?? 0 }}</ElTag>
+                    <span>{{ t('monitor.server.cpu') }}</span>
+                    <ElTag effect="light" type="info"
+                      >{{ t('monitor.server.cpu') }} {{ serverInfo.cpu?.cpuNum ?? 0 }}</ElTag
+                    >
                   </div>
                 </template>
                 <div class="meter-group">
@@ -81,8 +87,8 @@
                   </div>
                 </div>
                 <ElTable :data="cpuRows" border size="small">
-                  <ElTableColumn label="属性" min-width="140" prop="label" />
-                  <ElTableColumn label="值" min-width="120" prop="value" />
+                  <ElTableColumn :label="t('common.status')" min-width="140" prop="label" />
+                  <ElTableColumn :label="t('common.operation')" min-width="120" prop="value" />
                 </ElTable>
               </ElCard>
             </ElCol>
@@ -90,8 +96,10 @@
               <ElCard class="section-card section-card--memory" shadow="hover">
                 <template #header>
                   <div class="section-title">
-                    <span>内存</span>
-                    <ElTag effect="light" type="success">系统 / JVM</ElTag>
+                    <span>{{ t('monitor.server.mem') }}</span>
+                    <ElTag effect="light" type="success"
+                      >{{ t('monitor.server.mem') }} / {{ t('monitor.server.jvm') }}</ElTag
+                    >
                   </div>
                 </template>
                 <div class="meter-group">
@@ -112,9 +120,9 @@
                   </div>
                 </div>
                 <ElTable :data="memoryRows" border size="small">
-                  <ElTableColumn label="属性" min-width="140" prop="label" />
-                  <ElTableColumn label="内存" min-width="120" prop="memory" />
-                  <ElTableColumn label="JVM" min-width="120" prop="jvm" />
+                  <ElTableColumn :label="t('common.status')" min-width="140" prop="label" />
+                  <ElTableColumn :label="t('monitor.server.mem')" min-width="120" prop="memory" />
+                  <ElTableColumn :label="t('monitor.server.jvm')" min-width="120" prop="jvm" />
                 </ElTable>
               </ElCard>
             </ElCol>
@@ -123,7 +131,7 @@
           <ElCard class="section-card section-card--server" shadow="hover">
             <template #header>
               <div class="section-title">
-                <span>服务器信息</span>
+                <span>{{ t('monitor.server.cpu') }}</span>
               </div>
             </template>
             <ElDescriptions :column="2" border size="small">
@@ -136,7 +144,7 @@
           <ElCard class="section-card section-card--jvm" shadow="hover">
             <template #header>
               <div class="section-title">
-                <span>Java虚拟机信息</span>
+                <span>{{ t('monitor.server.jvm') }}</span>
               </div>
             </template>
             <ElDescriptions :column="2" border size="small">
@@ -149,17 +157,17 @@
           <ElCard class="section-card section-card--disk" shadow="hover">
             <template #header>
               <div class="section-title">
-                <span>磁盘状态</span>
+                <span>{{ t('monitor.server.disk') }}</span>
               </div>
             </template>
             <ElTable :data="diskRows" border size="small">
-              <ElTableColumn label="盘符路径" min-width="120" prop="mount" />
-              <ElTableColumn label="文件系统" min-width="100" prop="fileSystem" />
-              <ElTableColumn label="磁盘类型" min-width="140" prop="typeName" />
-              <ElTableColumn label="总大小" min-width="90" prop="total" />
-              <ElTableColumn label="可用大小" min-width="90" prop="usable" />
-              <ElTableColumn label="已用大小" min-width="90" prop="used" />
-              <ElTableColumn label="已用百分比" min-width="120" prop="usage">
+              <ElTableColumn :label="t('monitor.server.disk')" min-width="120" prop="mount" />
+              <ElTableColumn :label="t('common.status')" min-width="100" prop="fileSystem" />
+              <ElTableColumn :label="t('monitor.server.disk')" min-width="140" prop="typeName" />
+              <ElTableColumn :label="t('monitor.server.total')" min-width="90" prop="total" />
+              <ElTableColumn :label="t('monitor.server.free')" min-width="90" prop="usable" />
+              <ElTableColumn :label="t('monitor.server.usage')" min-width="90" prop="used" />
+              <ElTableColumn :label="t('monitor.server.usage')" min-width="120" prop="usage">
                 <template #default="{ row }">
                   <ElTag :type="row.usageType" effect="light">{{ row.usage }}</ElTag>
                 </template>
@@ -177,11 +185,13 @@
   import { fetchGetServerInfo } from '@/api/monitor/server'
   import { usePageVisibility } from '@/hooks/core/usePageVisibility'
   import { useSettingStore } from '@/store/modules/setting'
+  import { useI18n } from 'vue-i18n'
   import type { ServerInfo } from '@/types/api/monitor'
 
   defineOptions({ name: 'ServerMonitor' })
   const settingStore = useSettingStore()
   const { isDark } = storeToRefs(settingStore)
+  const { t } = useI18n()
 
   const loading = ref(false)
   const serverInfo = ref<ServerInfo | null>(null)
@@ -238,13 +248,13 @@
     const days = Math.floor(hours / 24)
 
     if (days > 0) {
-      return `${days}天 ${hours % 24}小时 ${minutes % 60}分钟`
+      return `${days}d ${hours % 24}h ${minutes % 60}m`
     } else if (hours > 0) {
-      return `${hours}小时 ${minutes % 60}分钟`
+      return `${hours}h ${minutes % 60}m`
     } else if (minutes > 0) {
-      return `${minutes}分钟 ${seconds % 60}秒`
+      return `${minutes}m ${seconds % 60}s`
     } else {
-      return `${seconds}秒`
+      return `${seconds}s`
     }
   }
 
@@ -260,10 +270,10 @@
     if (!serverInfo.value) return []
     const cpu = serverInfo.value.cpu
     return [
-      { label: '核心数', value: cpu?.cpuNum ?? 0 },
-      { label: '用户使用率', value: formatPercent(cpu?.used ?? 0) },
-      { label: '系统使用率', value: formatPercent(cpu?.sys ?? 0) },
-      { label: '当前空闲率', value: formatPercent(cpu?.free ?? 0) }
+      { label: t('monitor.server.cpu'), value: cpu?.cpuNum ?? 0 },
+      { label: t('monitor.server.usage'), value: formatPercent(cpu?.used ?? 0) },
+      { label: t('monitor.server.usage'), value: formatPercent(cpu?.sys ?? 0) },
+      { label: t('monitor.server.free'), value: formatPercent(cpu?.free ?? 0) }
     ]
   })
 
@@ -273,22 +283,22 @@
     const jvm = serverInfo.value.jvm
     return [
       {
-        label: '总内存',
+        label: t('monitor.server.total'),
         memory: `${formatNumber(memory?.total ?? 0)} MB`,
         jvm: `${formatNumber(jvm?.total ?? 0)} MB`
       },
       {
-        label: '已用内存',
+        label: t('monitor.server.usage'),
         memory: `${formatNumber(memory?.used ?? 0)} MB`,
         jvm: `${formatNumber(jvm?.used ?? 0)} MB`
       },
       {
-        label: '剩余内存',
+        label: t('monitor.server.free'),
         memory: `${formatNumber(memory?.free ?? 0)} MB`,
         jvm: `${formatNumber(jvm?.free ?? 0)} MB`
       },
       {
-        label: '使用率',
+        label: t('monitor.server.usage'),
         memory: formatPercent(memory?.usage ?? 0),
         jvm: formatPercent(jvm?.usage ?? 0)
       }
@@ -299,19 +309,19 @@
     const cpu = serverInfo.value?.cpu
     return [
       {
-        label: '用户使用率',
+        label: t('monitor.server.usage'),
         value: clampPercent(cpu?.used ?? 0),
         color: '#6366f1',
         level: getUsageLevel(cpu?.used ?? 0)
       },
       {
-        label: '系统使用率',
+        label: t('monitor.server.usage'),
         value: clampPercent(cpu?.sys ?? 0),
         color: '#f59e0b',
         level: getUsageLevel(cpu?.sys ?? 0)
       },
       {
-        label: '当前空闲率',
+        label: t('monitor.server.free'),
         value: clampPercent(cpu?.free ?? 0),
         color: '#10b981',
         level: 'normal'
@@ -324,13 +334,13 @@
     const jvm = serverInfo.value?.jvm
     return [
       {
-        label: '系统内存使用率',
+        label: t('monitor.server.mem'),
         value: clampPercent(memory?.usage ?? 0),
         color: '#ef4444',
         level: getUsageLevel(memory?.usage ?? 0)
       },
       {
-        label: 'JVM使用率',
+        label: t('monitor.server.jvm'),
         value: clampPercent(jvm?.usage ?? 0),
         color: '#06b6d4',
         level: getUsageLevel(jvm?.usage ?? 0)
@@ -345,27 +355,27 @@
     const diskCount = serverInfo.value?.disk?.stores?.length ?? 0
     return [
       {
-        label: 'CPU使用率',
+        label: t('monitor.server.cpu'),
         value: formatPercent(cpu?.used ?? 0),
-        extra: `空闲 ${formatPercent(cpu?.free ?? 0)}`,
+        extra: `${t('monitor.server.free')} ${formatPercent(cpu?.free ?? 0)}`,
         level: getUsageLevel(cpu?.used ?? 0)
       },
       {
-        label: '系统内存使用率',
+        label: t('monitor.server.mem'),
         value: formatPercent(memory?.usage ?? 0),
-        extra: `总内存 ${formatNumber(memory?.total ?? 0)} MB`,
+        extra: `${t('monitor.server.total')} ${formatNumber(memory?.total ?? 0)} MB`,
         level: getUsageLevel(memory?.usage ?? 0)
       },
       {
-        label: 'JVM使用率',
+        label: t('monitor.server.jvm'),
         value: formatPercent(jvm?.usage ?? 0),
-        extra: `运行 ${formatDuration(jvm?.runTime ?? 0)}`,
+        extra: formatDuration(jvm?.runTime ?? 0),
         level: getUsageLevel(jvm?.usage ?? 0)
       },
       {
-        label: '磁盘数量',
-        value: `${diskCount} 个`,
-        extra: `服务器 ${serverInfo.value?.system?.computerName || '-'}`,
+        label: t('monitor.server.disk'),
+        value: `${diskCount}`,
+        extra: serverInfo.value?.system?.computerName || '-',
         level: 'normal'
       }
     ]
@@ -379,18 +389,34 @@
       ...(serverInfo.value?.disk?.stores?.map((item) => item.usage ?? 0) ?? [0])
     )
     return [
-      { label: 'CPU', value: formatPercent(cpuUsage), level: getUsageLevel(cpuUsage) },
-      { label: '内存', value: formatPercent(memoryUsage), level: getUsageLevel(memoryUsage) },
-      { label: 'JVM', value: formatPercent(jvmUsage), level: getUsageLevel(jvmUsage) },
-      { label: '磁盘峰值', value: formatPercent(diskMaxUsage), level: getUsageLevel(diskMaxUsage) }
+      {
+        label: t('monitor.server.cpu'),
+        value: formatPercent(cpuUsage),
+        level: getUsageLevel(cpuUsage)
+      },
+      {
+        label: t('monitor.server.mem'),
+        value: formatPercent(memoryUsage),
+        level: getUsageLevel(memoryUsage)
+      },
+      {
+        label: t('monitor.server.jvm'),
+        value: formatPercent(jvmUsage),
+        level: getUsageLevel(jvmUsage)
+      },
+      {
+        label: t('monitor.server.disk'),
+        value: formatPercent(diskMaxUsage),
+        level: getUsageLevel(diskMaxUsage)
+      }
     ]
   })
 
   const healthStatus = computed(() => {
     const levels = statusPills.value.map((item) => item.level)
-    if (levels.includes('danger')) return { level: 'danger', label: '系统告警' }
-    if (levels.includes('warning')) return { level: 'warning', label: '系统预警' }
-    return { level: 'normal', label: '运行正常' }
+    if (levels.includes('danger')) return { level: 'danger', label: t('common.tips') }
+    if (levels.includes('warning')) return { level: 'warning', label: t('common.status') }
+    return { level: 'normal', label: t('common.normal') }
   })
 
   const lastUpdatedText = computed(() => {
@@ -399,7 +425,7 @@
   })
 
   const refreshCountdownText = computed(() => {
-    if (!nextRefreshAt.value) return '暂停'
+    if (!nextRefreshAt.value) return t('common.disabled')
     return `${refreshCountdown.value}s`
   })
 
@@ -431,10 +457,10 @@
     if (!serverInfo.value) return []
     const system = serverInfo.value.system
     return [
-      { label: '服务器名称', value: system?.computerName || '-' },
-      { label: '操作系统', value: system?.osName || '-' },
-      { label: '服务器IP', value: system?.computerIp || '-' },
-      { label: '系统架构', value: system?.osArch || '-' }
+      { label: t('monitor.server.cpu'), value: system?.computerName || '-' },
+      { label: t('monitor.server.mem'), value: system?.osName || '-' },
+      { label: t('monitor.server.jvm'), value: system?.computerIp || '-' },
+      { label: t('monitor.server.disk'), value: system?.osArch || '-' }
     ]
   })
 
@@ -442,13 +468,13 @@
     if (!serverInfo.value) return []
     const jvm = serverInfo.value.jvm
     return [
-      { label: 'Java名称', value: jvm?.name || '-' },
-      { label: 'Java版本', value: jvm?.version || '-' },
-      { label: '启动时间', value: formatTime(jvm?.startTime || 0) },
-      { label: '运行时长', value: formatDuration(jvm?.runTime || 0) },
-      { label: '安装路径', value: jvm?.home || '-' },
-      { label: '项目路径', value: jvm?.userDir || '-' },
-      { label: '运行参数', value: jvm?.inputArgs || '-' }
+      { label: t('monitor.server.jvm'), value: jvm?.name || '-' },
+      { label: t('monitor.server.jvm'), value: jvm?.version || '-' },
+      { label: t('common.createTime'), value: formatTime(jvm?.startTime || 0) },
+      { label: t('monitor.server.usage'), value: formatDuration(jvm?.runTime || 0) },
+      { label: t('monitor.server.total'), value: jvm?.home || '-' },
+      { label: t('monitor.server.disk'), value: jvm?.userDir || '-' },
+      { label: t('common.remark'), value: jvm?.inputArgs || '-' }
     ]
   })
 

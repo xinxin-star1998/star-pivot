@@ -1,23 +1,26 @@
 /**
  * 菜单管理页面常量配置
  */
+import type { ComposerTranslation } from 'vue-i18n'
 
 /**
  * 菜单类型配置
  */
-export const MENU_TYPE_CONFIG = {
-  M: { text: '目录', color: 'info' as const },
-  C: { text: '菜单', color: 'primary' as const },
-  F: { text: '按钮', color: 'danger' as const }
-} as const
+export const getMenuTypeConfig = (t: ComposerTranslation) =>
+  ({
+    M: { text: t('system.menu.typeDir'), color: 'info' as const },
+    C: { text: t('system.menu.typeMenu'), color: 'primary' as const },
+    F: { text: t('system.menu.typeButton'), color: 'danger' as const }
+  }) as const
 
 /**
  * 状态配置
  */
-export const STATUS_CONFIG = {
-  '0': { text: '正常', type: 'success' as const },
-  '1': { text: '停用', type: 'danger' as const }
-} as const
+export const getStatusConfig = (t: ComposerTranslation) =>
+  ({
+    '0': { text: t('common.normal'), type: 'success' as const },
+    '1': { text: t('common.disabled'), type: 'danger' as const }
+  }) as const
 
 /**
  * 初始搜索状态

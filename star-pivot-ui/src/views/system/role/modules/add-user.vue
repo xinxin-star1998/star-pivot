@@ -1,32 +1,38 @@
 <template>
-  <ElDialog v-model="visible" title="选择用户" width="60%" align-center @close="handleClose">
-    <!-- 搜索栏 -->
+  <ElDialog
+    v-model="visible"
+    :title="t('system.role.selectUser')"
+    width="60%"
+    align-center
+    @close="handleClose"
+  >
     <div class="search-bar">
       <ElForm :model="searchForm" inline>
-        <ElFormItem label="用户名称">
+        <ElFormItem :label="t('system.user.userName')">
           <ElInput
             v-model="searchForm.userName"
-            placeholder="请输入用户名称"
+            :placeholder="t('system.user.userNamePlaceholder')"
             clearable
             style="width: 200px"
           />
         </ElFormItem>
-        <ElFormItem label="手机号码">
+        <ElFormItem :label="t('system.user.phone')">
           <ElInput
             v-model="searchForm.phonenumber"
-            placeholder="请输入手机号码"
+            :placeholder="t('system.user.phonePlaceholder')"
             clearable
             style="width: 200px"
           />
         </ElFormItem>
         <ElFormItem>
-          <ElButton type="primary" :icon="Search" @click="handleSearch">搜索</ElButton>
-          <ElButton :icon="Refresh" @click="handleReset">重置</ElButton>
+          <ElButton type="primary" :icon="Search" @click="handleSearch">
+            {{ t('table.searchBar.search') }}
+          </ElButton>
+          <ElButton :icon="Refresh" @click="handleReset">{{ t('table.searchBar.reset') }}</ElButton>
         </ElFormItem>
       </ElForm>
     </div>
 
-    <!-- 用户列表表格 -->
     <ElTable
       ref="tableRef"
       v-loading="loading"
@@ -35,20 +41,19 @@
       style="margin-top: 20px"
     >
       <ElTableColumn type="selection" width="55" />
-      <ElTableColumn prop="userName" label="用户名称" width="120" />
-      <ElTableColumn prop="nickName" label="用户昵称" width="120" />
-      <ElTableColumn prop="email" label="邮箱" width="180" />
-      <ElTableColumn prop="phonenumber" label="手机" width="150" />
-      <ElTableColumn prop="status" label="状态" width="100">
+      <ElTableColumn prop="userName" :label="t('system.user.userName')" width="120" />
+      <ElTableColumn prop="nickName" :label="t('system.user.nickName')" width="120" />
+      <ElTableColumn prop="email" :label="t('system.user.email')" width="180" />
+      <ElTableColumn prop="phonenumber" :label="t('system.user.phone')" width="150" />
+      <ElTableColumn prop="status" :label="t('common.status')" width="100">
         <template #default="{ row }">
           <ElTag :type="row.status === '0' ? 'success' : 'danger'">
-            {{ row.status === '0' ? '正常' : '停用' }}
+            {{ row.status === '0' ? t('common.normal') : t('common.disabled') }}
           </ElTag>
         </template>
       </ElTableColumn>
-      <ElTableColumn prop="createTime" label="创建时间" width="180" />
+      <ElTableColumn prop="createTime" :label="t('common.createTime')" width="180" />
     </ElTable>
-    <!-- 分页 -->
     <div class="pagination-wrapper">
       <ElPagination
         v-model:current-page="pagination.pageNum"
@@ -60,11 +65,10 @@
         @current-change="handleCurrentChange"
       />
     </div>
-    <!-- 底部按钮 -->
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="handleClose">取消</ElButton>
-        <ElButton type="primary" @click="handleConfirm">确定</ElButton>
+        <ElButton @click="handleClose">{{ t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="handleConfirm">{{ t('common.confirm') }}</ElButton>
       </div>
     </template>
   </ElDialog>
@@ -73,6 +77,7 @@
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
   import { Refresh, Search } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
   import { fetchAssignUser, fetchGetUserListNotInByRoleId } from '@/api/role/role'
   import { handleMutationError } from '@/utils/http/mutation'
 
@@ -92,20 +97,16 @@
   })
 
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
-  // 弹窗显示状态双向绑定
   const visible = computed({
     get: () => props.modelValue,
     set: (val: boolean) => emit('update:modelValue', val)
   })
 
-  // 表格引用
   const tableRef = ref()
-
-  // 加载状态
   const loading = ref(false)
 
-  // 搜索表单
   const searchForm = ref({
     roleId: props.roleId,
     userName: undefined as string | undefined,
@@ -114,22 +115,15 @@
     pageSize: 10
   })
 
-  // 表格数据
   const tableData = ref<Api.SystemManage.UserListItem[]>([])
-
-  // 选中的用户
   const selectedUsers = ref<Api.SystemManage.UserListItem[]>([])
 
-  // 分页信息
   const pagination = ref({
     pageNum: 1,
     pageSize: 10,
     total: 0
   })
 
-  /**
-   * 获取用户列表
-   */
   const fetchUserList = async () => {
     if (props.roleId == null) {
       tableData.value = []
@@ -137,16 +131,13 @@
     }
     try {
       loading.value = true
-      // 同步分页参数到 searchForm
       searchForm.value.pageNum = pagination.value.pageNum
       searchForm.value.pageSize = pagination.value.pageSize
       const response = await fetchGetUserListNotInByRoleId({
         ...searchForm.value,
         roleId: props.roleId
       })
-      // 后端返回的数据结构使用 rows 字段
       tableData.value = (response as any)?.rows || ([] as Api.SystemManage.UserListItem[])
-      // 更新分页信息
       if ((response as any)?.total !== undefined) {
         pagination.value.total = (response as any).total
       }
@@ -156,26 +147,19 @@
       if ((response as any)?.pageSize !== undefined) {
         pagination.value.pageSize = (response as any).pageSize
       }
-      ElMessage.success('获取用户列表成功')
     } catch (error) {
-      console.error('获取用户列表失败:', error)
-      handleMutationError(error, '获取用户列表失败')
+      console.error('fetch user list failed:', error)
+      handleMutationError(error, t('system.role.loadUserListFail'))
     } finally {
       loading.value = false
     }
   }
 
-  /**
-   * 搜索处理
-   */
   const handleSearch = () => {
     pagination.value.pageNum = 1
     fetchUserList()
   }
 
-  /**
-   * 重置搜索
-   */
   const handleReset = () => {
     searchForm.value.userName = undefined
     searchForm.value.phonenumber = undefined
@@ -183,40 +167,28 @@
     fetchUserList()
   }
 
-  /**
-   * 分页大小变化
-   */
   const handleSizeChange = (size: number) => {
     pagination.value.pageSize = size
     pagination.value.pageNum = 1
     fetchUserList()
   }
 
-  /**
-   * 当前页变化
-   */
   const handleCurrentChange = (page: number) => {
     pagination.value.pageNum = page
     fetchUserList()
   }
 
-  /**
-   * 选择变化
-   */
   const handleSelectionChange = (selection: Api.SystemManage.UserListItem[]) => {
     selectedUsers.value = selection
   }
 
-  /**
-   * 确定按钮处理
-   */
   const handleConfirm = async () => {
     if (selectedUsers.value.length === 0) {
-      ElMessage.warning('请至少选择一个用户')
+      ElMessage.warning(t('system.role.selectUserRequired'))
       return
     }
     if (props.roleId == null) {
-      ElMessage.warning('角色ID无效')
+      ElMessage.warning(t('system.role.roleIdInvalid'))
       return
     }
     const userIds = selectedUsers.value.map((user: Api.SystemManage.UserListItem) => user.userId)
@@ -225,31 +197,25 @@
       userIds: userIds
     }
     await fetchAssignUser(UserRoleDTO)
-    ElMessage.success('分配成功')
+    ElMessage.success(t('system.role.assignSuccess'))
     emit('confirm', userIds)
     handleClose()
   }
 
-  /**
-   * 关闭弹窗并重置表单
-   */
   const handleClose = () => {
     visible.value = false
     emit('close')
-    // 重置状态
     searchForm.value.userName = undefined
     searchForm.value.phonenumber = undefined
     pagination.value.pageNum = 1
     pagination.value.pageSize = 10
     selectedUsers.value = []
     tableData.value = []
-    // 清空表格选择
     if (tableRef.value) {
       tableRef.value.clearSelection()
     }
   }
 
-  // 监听弹窗显示状态，打开时加载数据
   watch(
     () => visible.value,
     (newVal: boolean) => {

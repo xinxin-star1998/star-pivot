@@ -3,34 +3,34 @@
     <ElCard shadow="never" class="step-card">
       <template #header>
         <div class="card-header">
-          <span class="title">外部库代码生成</span>
+          <span class="title">{{ t('tools.genExt.pageTitle') }}</span>
           <ElSpace>
             <ElTag v-if="sessionId" type="success" effect="plain">
-              已连接 · {{ dbInfo }}
+              {{ t('tools.genExt.connected') }} · {{ dbInfo }}
               <span v-if="sessionRemainingText" class="session-ttl">
                 · {{ sessionRemainingText }}</span
               >
             </ElTag>
             <ExternalActionBtn
               v-if="sessionId"
-              what="结束当前会话"
-              usage="断开 JDBC 连接并清除会话缓存。未完成的工作请先下载 ZIP 或写盘。"
+              :what="t('tools.genExt.disconnectWhat')"
+              :usage="t('tools.genExt.disconnectUsage')"
               link
               type="danger"
               @click="handleDisconnect"
             >
-              断开连接
+              {{ t('tools.genExt.disconnect') }}
             </ExternalActionBtn>
           </ElSpace>
         </div>
       </template>
 
       <ElSteps :active="currentStep" finish-status="success" align-center class="mb-6">
-        <ElStep title="连接数据库" />
-        <ElStep title="选择数据表" />
-        <ElStep title="生成模板" />
-        <ElStep title="路径配置" />
-        <ElStep title="预览与下载" />
+        <ElStep :title="t('tools.genExt.stepConnect')" />
+        <ElStep :title="t('tools.genExt.stepSelectTable')" />
+        <ElStep :title="t('tools.genExt.stepTemplate')" />
+        <ElStep :title="t('tools.genExt.pathConfig')" />
+        <ElStep :title="t('tools.genExt.stepPreviewDownload')" />
       </ElSteps>
 
       <!-- Step 0: 连接 -->
@@ -38,10 +38,10 @@
         <ElForm label-width="100px" class="conn-preset-bar mb-4">
           <ElRow :gutter="16">
             <ElCol :span="8">
-              <ElFormItem label="连接预设">
+              <ElFormItem :label="t('tools.genExt.connPreset')">
                 <ElSelect
                   v-model="selectedConnPreset"
-                  placeholder="我的连接"
+                  :placeholder="t('tools.genExt.myConnPreset')"
                   clearable
                   class="w-full"
                   @change="applyConnPreset"
@@ -56,32 +56,32 @@
               </ElFormItem>
             </ElCol>
             <ElCol :span="10">
-              <ElFormItem label="保存预设">
-                <ElInput v-model="newConnPresetName" placeholder="名称" maxlength="32" />
+              <ElFormItem :label="t('tools.genExt.savePreset')">
+                <ElInput v-model="newConnPresetName" :placeholder="t('tools.genExt.presetName')" maxlength="32" />
               </ElFormItem>
             </ElCol>
             <ElCol :span="6">
               <ElFormItem label-width="0">
-                <ElCheckbox v-model="saveConnPassword">记住密码</ElCheckbox>
+                <ElCheckbox v-model="saveConnPassword">{{ t('tools.genExt.rememberPassword') }}</ElCheckbox>
                 <ExternalActionBtn
-                  what="存到浏览器"
-                  usage="将当前连接参数保存为预设，下次可快速填充。勾选「记住密码」会本地保存密码。"
+                  :what="t('tools.genExt.saveConnWhat')"
+                  :usage="t('tools.genExt.saveConnUsage')"
                   link
                   type="primary"
                   class="ml-2"
                   @click="saveConnPreset"
                 >
-                  保存
+                  {{ t('common.save') }}
                 </ExternalActionBtn>
                 <ExternalActionBtn
                   v-if="selectedConnPreset"
-                  what="删预设"
-                  usage="从浏览器本地存储删除当前选中的连接预设，不影响已连接会话。"
+                  :what="t('tools.genExt.deleteConnPresetWhat')"
+                  :usage="t('tools.genExt.deleteConnPresetUsage')"
                   link
                   type="danger"
                   @click="deleteConnPreset"
                 >
-                  删除
+                  {{ t('common.delete') }}
                 </ExternalActionBtn>
               </ElFormItem>
             </ElCol>
@@ -96,7 +96,7 @@
         >
           <ElRow :gutter="16">
             <ElCol :span="8">
-              <ElFormItem label="数据库类型">
+              <ElFormItem :label="t('tools.genExt.dbType')">
                 <ElSelect v-model="connection.dbType" class="w-full" @change="onDbTypeChange">
                   <ElOption label="MySQL" value="mysql" />
                   <ElOption label="PostgreSQL" value="postgresql" />
@@ -106,21 +106,21 @@
               </ElFormItem>
             </ElCol>
             <ElCol :span="8">
-              <ElFormItem label="主机" prop="host">
+              <ElFormItem :label="t('tools.genExt.host')" prop="host">
                 <ElInput v-model="connection.host" placeholder="127.0.0.1" />
               </ElFormItem>
             </ElCol>
             <ElCol :span="8">
-              <ElFormItem label="端口" prop="port">
+              <ElFormItem :label="t('tools.genExt.port')" prop="port">
                 <ElInputNumber v-model="connection.port" :min="1" :max="65535" class="w-full" />
               </ElFormItem>
             </ElCol>
             <ElCol v-if="connection.dbType === 'oracle'" :span="8">
-              <ElFormItem label="连接模式">
+              <ElFormItem :label="t('tools.genExt.connectMode')">
                 <ElSelect v-model="connection.oracleConnectMode" class="w-full">
-                  <ElOption label="Service（含 RAC SCAN）" value="service" />
+                  <ElOption :label="t('tools.genExt.oracleService')" value="service" />
                   <ElOption label="SID" value="sid" />
-                  <ElOption label="TNS 描述符" value="tns" />
+                  <ElOption :label="t('tools.genExt.oracleTns')" value="tns" />
                 </ElSelect>
               </ElFormItem>
             </ElCol>
@@ -138,17 +138,17 @@
               </ElFormItem>
             </ElCol>
             <ElCol :span="8">
-              <ElFormItem label="用户名" prop="username">
+              <ElFormItem :label="t('tools.genExt.username')" prop="username">
                 <ElInput v-model="connection.username" />
               </ElFormItem>
             </ElCol>
             <ElCol :span="8">
-              <ElFormItem label="密码" prop="password">
+              <ElFormItem :label="t('tools.genExt.password')" prop="password">
                 <ElInput v-model="connection.password" type="password" show-password />
               </ElFormItem>
             </ElCol>
             <ElCol :span="16">
-              <ElFormItem label="JDBC 参数">
+              <ElFormItem :label="t('tools.genExt.jdbcParams')">
                 <ElInput v-model="connection.params" :placeholder="jdbcParamsPlaceholder" />
               </ElFormItem>
             </ElCol>
@@ -159,28 +159,28 @@
       <!-- Step 1: 选表 -->
       <div v-show="currentStep === 1" class="step-panel">
         <ElForm :inline="true" :model="tableSearch" class="mb-3">
-          <ElFormItem label="表名称">
-            <ElInput v-model="tableSearch.tableName" clearable placeholder="模糊搜索" />
+          <ElFormItem :label="t('tools.gen.tableName')">
+            <ElInput v-model="tableSearch.tableName" clearable :placeholder="t('tools.genExt.fuzzySearch')" />
           </ElFormItem>
-          <ElFormItem label="表描述">
-            <ElInput v-model="tableSearch.tableComment" clearable placeholder="模糊搜索" />
+          <ElFormItem :label="t('tools.gen.tableComment')">
+            <ElInput v-model="tableSearch.tableComment" clearable :placeholder="t('tools.genExt.fuzzySearch')" />
           </ElFormItem>
           <ElFormItem>
             <ExternalActionBtn
-              what="查外部库表"
-              usage="按表名/表描述模糊查询当前连接库中的表（已过滤 qrtz、gen 开头系统表）。"
+              :what="t('tools.genExt.searchTableWhat')"
+              :usage="t('tools.genExt.searchTableUsage')"
               type="primary"
               :loading="tableLoading"
               @click="loadTables"
             >
-              搜索
+              {{ t('table.searchBar.search') }}
             </ExternalActionBtn>
             <ExternalActionBtn
-              what="清空条件"
-              usage="清除搜索条件并重新加载第一页表列表。"
+              :what="t('tools.genExt.resetSearchWhat')"
+              :usage="t('tools.genExt.resetSearchUsage')"
               @click="resetTableSearch"
             >
-              重置
+              {{ t('table.searchBar.reset') }}
             </ExternalActionBtn>
           </ElFormItem>
         </ElForm>
@@ -198,13 +198,13 @@
       <!-- Step 2: 模板 -->
       <div v-show="currentStep === 2" class="step-panel">
         <ElForm label-width="120px" class="tpl-form">
-          <ElFormItem label="已选表">
-            <ElTag v-for="t in selectedTableNames" :key="t" class="mr-2 mb-2">{{ t }}</ElTag>
+          <ElFormItem :label="t('tools.genExt.selectedTables')">
+            <ElTag v-for="tName in selectedTableNames" :key="tName" class="mr-2 mb-2">{{ tName }}</ElTag>
           </ElFormItem>
           <ElRow :gutter="16">
             <ElCol :span="12">
-              <ElFormItem label="生成模板">
-                <ElSelect v-model="genConfig.tplCategory" placeholder="请选择">
+              <ElFormItem :label="t('tools.gen.genType')">
+                <ElSelect v-model="genConfig.tplCategory" :placeholder="t('common.pleaseSelect')">
                   <ElOption
                     v-for="item in templateOptions.categories"
                     :key="item.value"
@@ -215,8 +215,8 @@
               </ElFormItem>
             </ElCol>
             <ElCol :span="12">
-              <ElFormItem label="前端类型">
-                <ElSelect v-model="genConfig.tplWebType" placeholder="请选择">
+              <ElFormItem :label="t('tools.gen.frontendType')">
+                <ElSelect v-model="genConfig.tplWebType" :placeholder="t('common.pleaseSelect')">
                   <ElOption
                     v-for="item in templateOptions.webTypes"
                     :key="item.value"
@@ -229,7 +229,7 @@
           </ElRow>
         </ElForm>
 
-        <ElDivider content-position="left">表生成信息（按表）</ElDivider>
+        <ElDivider content-position="left">{{ t('tools.genExt.tableExtra') }}</ElDivider>
         <ElTabs v-model="activeTableTab" type="border-card">
           <ElTabPane v-for="name in selectedTableNames" :key="name" :label="name" :name="name">
             <ExternalTableExtraForm
@@ -259,85 +259,85 @@
       <!-- Step 4: 预览下载 -->
       <div v-show="currentStep === 4" class="step-panel">
         <ElForm label-width="100px" class="mb-4">
-          <ElFormItem label="生成范围">
-            <ElCheckbox v-model="genScope.genBackend">后端（Java + XML）</ElCheckbox>
-            <ElCheckbox v-model="genScope.genFrontend">前端（API + Vue）</ElCheckbox>
-            <ElCheckbox v-model="genScope.genSql">菜单 SQL</ElCheckbox>
+          <ElFormItem :label="t('tools.genExt.genScope')">
+            <ElCheckbox v-model="genScope.genBackend">{{ t('tools.genExt.genBackend') }}</ElCheckbox>
+            <ElCheckbox v-model="genScope.genFrontend">{{ t('tools.genExt.genFrontend') }}</ElCheckbox>
+            <ElCheckbox v-model="genScope.genSql">{{ t('tools.genExt.genSql') }}</ElCheckbox>
           </ElFormItem>
         </ElForm>
         <ElForm :inline="true" class="mb-4">
-          <ElFormItem label="预览表">
-            <ElSelect v-model="previewTableName" placeholder="选择表" style="width: 240px">
+          <ElFormItem :label="t('tools.genExt.previewTable')">
+            <ElSelect v-model="previewTableName" :placeholder="t('tools.genExt.selectTable')" style="width: 240px">
               <ElOption v-for="t in selectedTableNames" :key="t" :label="t" :value="t" />
             </ElSelect>
           </ElFormItem>
           <ElFormItem>
             <div class="action-btn-row">
               <ExternalActionBtn
-                what="弹窗看代码"
-                usage="打开对话框，左树右码预览当前选中表将生成的文件。需权限 tool:external:preview。"
+                :what="t('tools.genExt.previewWhat')"
+                :usage="t('tools.genExt.previewUsage')"
                 type="primary"
                 v-auth="'tool:external:preview'"
                 @click="openPreview"
               >
-                预览代码
+                {{ t('tools.genExt.previewCode') }}
               </ExternalActionBtn>
               <ExternalActionBtn
-                what="打包下载"
-                usage="按「生成范围」勾选，将所有已选表代码打成 ZIP 下载到本地，不写入项目目录。"
+                :what="t('tools.genExt.downloadWhat')"
+                :usage="t('tools.genExt.downloadUsage')"
                 type="success"
                 v-auth="'tool:external:create'"
                 :loading="downloading"
                 @click="handleDownload"
               >
-                下载 ZIP
+                {{ t('tools.genExt.downloadZip') }}
               </ExternalActionBtn>
               <ExternalActionBtn
-                what="进主库配置"
-                usage="把外部库表结构导入系统 gen_table，便于在主「代码生成」菜单继续维护。可勾选是否覆盖已有配置。"
+                :what="t('tools.genExt.importWhat')"
+                :usage="t('tools.genExt.importUsage')"
                 v-auth="'tool:external:create'"
                 :loading="importing"
                 @click="handleImportGenTable"
               >
-                导入代码生成
+                {{ t('tools.genExt.importTable') }}
               </ExternalActionBtn>
             </div>
           </ElFormItem>
         </ElForm>
         <template v-if="writeToDiskEnabled">
           <ElForm :inline="true" class="mb-4">
-            <ElFormItem label="写盘根目录">
+            <ElFormItem :label="t('tools.genExt.outputRoot')">
               <ElAutocomplete
                 v-model="outputRoot"
                 :fetch-suggestions="queryOutputRoots"
-                placeholder="服务端项目绝对路径"
+                :placeholder="t('tools.genExt.outputRootPlaceholder')"
                 style="width: 360px"
                 clearable
               />
               <ExternalActionBtn
-                what="浏览服务端目录"
-                usage="写盘在后端服务器执行，此处选择服务器磁盘上的目录（非浏览器本机文件夹）。开发环境前后端同机时即为本地项目路径。"
+                :what="t('tools.genExt.browseDirWhat')"
+                :usage="t('tools.genExt.browseDirUsage')"
                 class="ml-2"
                 @click="outputRootPickerVisible = true"
               >
-                浏览目录
+                {{ t('tools.genExt.browseDir') }}
               </ExternalActionBtn>
             </ElFormItem>
-            <ElFormItem label="会话模板目录">
+            <ElFormItem :label="t('tools.genExt.sessionTemplateDir')">
               <ElInput
                 v-model="sessionTemplateDir"
-                placeholder="留空用全局 gen.external.template-dir"
+                :placeholder="t('tools.genExt.sessionTemplatePlaceholder')"
                 style="width: 320px"
                 clearable
               />
             </ElFormItem>
             <ElFormItem>
               <ExternalActionBtn
-                what="覆盖会话模板"
-                usage="保存自定义 Velocity 模板目录到当前会话，优先于 application.yml 中的 gen.external.template-dir。留空则恢复用全局/内置模板。"
+                :what="t('tools.genExt.saveTemplateWhat')"
+                :usage="t('tools.genExt.saveTemplateUsage')"
                 @click="handleSaveTemplateDir"
               >
-                保存模板
+                {{ t('tools.genExt.saveTemplate') }}
               </ExternalActionBtn>
             </ElFormItem>
           </ElForm>
@@ -345,55 +345,49 @@
             <ElFormItem>
               <div class="action-btn-row">
                 <ExternalActionBtn
-                  what="写盘前先对比"
-                  usage="填写写盘根目录后打开。对比磁盘与即将生成的内容，可勾选文件后确认写入。大项目仅加载摘要，点文件再看 diff。"
+                  :what="t('tools.genExt.writeDiffWhat')"
+                  :usage="t('tools.genExt.writeDiffUsage')"
                   type="info"
                   v-auth="'tool:external:preview'"
                   :loading="writeDiffLoading"
                   @click="openWriteDiff"
                 >
-                  写盘 Diff 预览
+                  {{ t('tools.genExt.writeDiff') }}
                 </ExternalActionBtn>
                 <ExternalActionBtn
-                  what="直接写进项目"
-                  usage="将代码写入「写盘根目录」下对应路径。勾选「跳过无变化文件」时不会覆盖未改动的文件。需在服务端配置允许路径白名单。"
+                  :what="t('tools.genExt.writeCodeWhat')"
+                  :usage="t('tools.genExt.writeCodeUsage')"
                   type="warning"
                   v-auth="'tool:external:create'"
                   :loading="writing"
                   @click="handleWriteToDisk"
                 >
-                  写盘生成
+                  {{ t('tools.genExt.writeCode') }}
                 </ExternalActionBtn>
               </div>
             </ElFormItem>
           </ElForm>
           <ElForm :inline="true" class="mb-4">
             <ElFormItem>
-              <ElTooltip
-                content="开启后，覆盖已有文件前会先备份到项目下 .star-pivot-gen-backup/ 目录，写盘后可一键回退。"
-                placement="top"
-              >
-                <ElCheckbox v-model="backupBeforeWrite">覆盖前自动备份（可回退）</ElCheckbox>
+              <ElTooltip :content="t('tools.genExt.backupTooltip')" placement="top">
+                <ElCheckbox v-model="backupBeforeWrite">{{ t('tools.genExt.backupBeforeWrite') }}</ElCheckbox>
               </ElTooltip>
             </ElFormItem>
             <ElFormItem>
-              <ElTooltip
-                content="开启后，「写盘生成」不会覆盖内容与生成结果一致的文件；Diff 确认写盘不受此项影响（按勾选写入）。"
-                placement="top"
-              >
-                <ElCheckbox v-model="writeOnlyChanged">写盘时跳过无变化文件</ElCheckbox>
+              <ElTooltip :content="t('tools.genExt.skipUnchangedTooltip')" placement="top">
+                <ElCheckbox v-model="writeOnlyChanged">{{ t('tools.genExt.skipExisting') }}</ElCheckbox>
               </ElTooltip>
             </ElFormItem>
             <ElFormItem v-if="lastWriteBackup">
               <ExternalActionBtn
-                what="恢复备份文件"
-                usage="将上次写盘备份的原文件写回项目目录。仅恢复曾被覆盖的文件，不会删除本次新增的文件。"
+                :what="t('tools.genExt.rollbackWhat')"
+                :usage="t('tools.genExt.rollbackUsage')"
                 type="danger"
                 :loading="rollingBack"
                 v-auth="'tool:external:create'"
                 @click="handleRollbackWrite"
               >
-                回退上次写盘
+                {{ t('tools.genExt.rollbackWrite') }}
               </ExternalActionBtn>
             </ElFormItem>
           </ElForm>
@@ -404,35 +398,32 @@
           :closable="false"
           show-icon
           class="mb-4"
-          title="当前环境已关闭服务端写盘，请使用「下载 ZIP」将代码保存到本地。"
+          :title="t('tools.genExt.writeDiskDisabled')"
         />
         <ElForm :inline="true" class="mb-4">
           <ElFormItem>
-            <ElTooltip
-              content="导入到 gen_table 时，若表名已存在：勾选则覆盖原配置，不勾选则跳过该表。"
-              placement="top"
-            >
-              <ElCheckbox v-model="importOverwrite">覆盖已存在的 gen_table 配置</ElCheckbox>
+            <ElTooltip :content="t('tools.genExt.overwriteTooltip')" placement="top">
+              <ElCheckbox v-model="importOverwrite">{{ t('tools.genExt.overwrite') }}</ElCheckbox>
             </ElTooltip>
           </ElFormItem>
         </ElForm>
         <ElDescriptions :column="2" border size="small">
-          <ElDescriptionsItem label="模板"
+          <ElDescriptionsItem :label="t('tools.gen.genType')"
             >{{ genConfig.tplCategory }} / {{ genConfig.tplWebType }}</ElDescriptionsItem
           >
-          <ElDescriptionsItem label="生效模板目录">{{
-            effectiveTemplateDir || 'classpath 内置 vm/'
+          <ElDescriptionsItem :label="t('tools.genExt.effectiveTemplateDir')">{{
+            effectiveTemplateDir || t('tools.genExt.builtinTemplate')
           }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="基础包">{{ pathProfile.basePackage }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="API 路径">{{ pathProfile.apiPath }}</ElDescriptionsItem>
-          <ElDescriptionsItem label="页面路径">{{ pathProfile.vuePagePath }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="t('tools.gen.packageName')">{{ pathProfile.basePackage }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="t('tools.genExt.apiPath')">{{ pathProfile.apiPath }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="t('tools.genExt.vuePagePath')">{{ pathProfile.vuePagePath }}</ElDescriptionsItem>
         </ElDescriptions>
       </div>
 
       <div class="step-footer">
-        <ElButton v-if="currentStep > 0" @click="prevStep">上一步</ElButton>
+        <ElButton v-if="currentStep > 0" @click="prevStep">{{ t('tools.genExt.prevStep') }}</ElButton>
         <ElButton v-if="currentStep < 4" type="primary" :loading="stepLoading" @click="nextStep">
-          下一步
+          {{ t('tools.genExt.nextStep') }}
         </ElButton>
       </div>
     </ElCard>
@@ -541,8 +532,11 @@
     saveLastConnection,
     toPresetConnection
   } from '@/utils/generator/external-connection-presets'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'GenExternal' })
+
+  const { t } = useI18n()
 
   const SESSION_KEY = 'gen_external_session_id'
 
@@ -558,7 +552,7 @@
     if (s <= 0) return ''
     const m = Math.floor(s / 60)
     const sec = s % 60
-    return `剩余 ${m}:${sec.toString().padStart(2, '0')}`
+    return t('tools.genExt.sessionRemaining', { time: `${m}:${sec.toString().padStart(2, '0')}` })
   })
 
   const connPresets = ref<ConnectionPreset[]>([])
@@ -579,13 +573,13 @@
   })
 
   const connFormRef = ref<FormInstance>()
-  const connRules: FormRules = {
-    host: [{ required: true, message: '请输入主机', trigger: 'blur' }],
-    port: [{ required: true, message: '请输入端口', trigger: 'blur' }],
-    database: [{ required: true, message: '请输入库名', trigger: 'blur' }],
-    username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-    password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
-  }
+  const connRules = computed<FormRules>(() => ({
+    host: [{ required: true, message: t('tools.genExt.hostRequired'), trigger: 'blur' }],
+    port: [{ required: true, message: t('tools.genExt.portRequired'), trigger: 'blur' }],
+    database: [{ required: true, message: t('tools.genExt.databaseRequired'), trigger: 'blur' }],
+    username: [{ required: true, message: t('tools.genExt.usernameRequired'), trigger: 'blur' }],
+    password: [{ required: true, message: t('tools.genExt.passwordRequired'), trigger: 'blur' }]
+  }))
 
   const tableSearch = reactive({ tableName: '', tableComment: '' })
   const tableLoading = ref(false)
@@ -593,11 +587,11 @@
   const selectedTables = ref<ExternalTableItem[]>([])
   const tablePagination = reactive({ current: 1, size: 10, total: 0 })
 
-  const tableColumns = ref<ColumnOption[]>([
+  const tableColumns = computed<ColumnOption[]>(() => [
     { type: 'selection', width: 55 },
-    { prop: 'tableName', label: '表名称', minWidth: 160 },
-    { prop: 'tableComment', label: '表描述', minWidth: 200 },
-    { prop: 'createTime', label: '创建时间', width: 180 }
+    { prop: 'tableName', label: t('tools.gen.tableName'), minWidth: 160 },
+    { prop: 'tableComment', label: t('tools.gen.tableComment'), minWidth: 200 },
+    { prop: 'createTime', label: t('common.createTime'), width: 180 }
   ])
 
   const templateOptions = reactive<{
@@ -646,7 +640,7 @@
 
   const schemaPlaceholder = computed(() => {
     if (connection.dbType === 'postgresql') return 'public'
-    if (connection.dbType === 'oracle') return '用户名大写'
+    if (connection.dbType === 'oracle') return t('tools.genExt.schemaOracle')
     if (connection.dbType === 'sqlserver') return 'dbo'
     return ''
   })
@@ -659,10 +653,10 @@
   }
 
   const oracleDatabaseLabel = computed(() => {
-    if (connection.dbType !== 'oracle') return '库名'
+    if (connection.dbType !== 'oracle') return t('tools.genExt.databaseName')
     if (connection.oracleConnectMode === 'sid') return 'SID'
-    if (connection.oracleConnectMode === 'tns') return 'TNS / Service'
-    return 'Service 名'
+    if (connection.oracleConnectMode === 'tns') return t('tools.genExt.tnsOrService')
+    return t('tools.genExt.serviceName')
   })
 
   const oracleDatabasePlaceholder = computed(() => {
@@ -676,7 +670,7 @@
 
   const jdbcParamsPlaceholder = computed(() => {
     if (connection.dbType === 'oracle' && connection.oracleConnectMode === 'tns') {
-      return '可填完整 jdbc:oracle:thin:@(DESCRIPTION=...) 或留空使用上方 TNS'
+      return t('tools.genExt.jdbcTnsHint')
     }
     if (connection.dbType === 'sqlserver') return 'encrypt=false;trustServerCertificate=true'
     if (connection.dbType === 'postgresql') return 'sslmode=disable'
@@ -698,9 +692,9 @@
       templateOptions.webTypes = res.webTypes ?? []
     } catch {
       templateOptions.categories = [
-        { value: 'crud', label: '单表（增删改查）' },
-        { value: 'tree', label: '树表（增删改查）' },
-        { value: 'sub', label: '主子表（增删改查）' }
+        { value: 'crud', label: t('tools.gen.tplCrud') },
+        { value: 'tree', label: t('tools.gen.tplTree') },
+        { value: 'sub', label: t('tools.genExt.tplSub') }
       ]
       templateOptions.webTypes = [
         { value: 'art-design-pro', label: 'Vue3 Art Design Pro' },
@@ -723,7 +717,7 @@
       startSessionTimer()
       await refreshSessionTemplateDir()
       restoreLastWriteBackup()
-      ElMessage.success(`连接成功，会话 ${res.expireMinutes} 分钟内有效`)
+      ElMessage.success(t('tools.genExt.connectSuccess', { minutes: res.expireMinutes }))
       return true
     } finally {
       stepLoading.value = false
@@ -753,11 +747,11 @@
         dbInfo.value = `${status.database}${status.dbVersion ? ` · MySQL ${status.dbVersion}` : ''}`
       }
       if (sessionRemainingSeconds.value <= 0) {
-        ElMessage.warning('会话已过期，请重新连接')
+        ElMessage.warning(t('tools.genExt.sessionExpired'))
         await handleDisconnect()
       } else if (sessionRemainingSeconds.value <= 300 && !sessionExpireWarned.value) {
         sessionExpireWarned.value = true
-        ElMessage.warning(`会话即将过期（${sessionRemainingText.value}），请及时完成或重新连接`)
+        ElMessage.warning(t('tools.genExt.sessionExpiring', { time: sessionRemainingText.value }))
       }
     } catch {
       stopSessionTimer()
@@ -795,7 +789,7 @@
   function saveConnPreset() {
     const name = newConnPresetName.value.trim() || selectedConnPreset.value
     if (!name) {
-      ElMessage.warning('请输入预设名称')
+      ElMessage.warning(t('tools.genExt.presetNameRequired'))
       return
     }
     const entry: ConnectionPreset = {
@@ -813,7 +807,7 @@
     persistConnectionPresets(connPresets.value)
     selectedConnPreset.value = name
     newConnPresetName.value = ''
-    ElMessage.success('连接预设已保存')
+    ElMessage.success(t('tools.genExt.connPresetSaved'))
   }
 
   function deleteConnPreset() {
@@ -822,7 +816,7 @@
     connPresets.value = connPresets.value.filter((p) => p.name !== name)
     persistConnectionPresets(connPresets.value)
     selectedConnPreset.value = ''
-    ElMessage.success('已删除连接预设')
+    ElMessage.success(t('tools.genExt.connPresetDeleted'))
   }
 
   async function handleDisconnect() {
@@ -839,7 +833,7 @@
     clearLastWriteBackup()
     dbInfo.value = ''
     currentStep.value = 0
-    ElMessage.info('已断开连接')
+    ElMessage.info(t('tools.genExt.disconnected'))
   }
 
   async function loadTables() {
@@ -929,7 +923,7 @@
       for (const name of selectedTableNames.value) {
         const meta = tableMeta[name]
         if (!meta?.treeCode || !meta?.treeParentCode || !meta?.treeName) {
-          ElMessage.warning(`表 ${name}：请完整配置树编码、树父编码、树名称字段`)
+          ElMessage.warning(t('tools.genExt.treeConfigRequired', { name }))
           activeTableTab.value = name
           return false
         }
@@ -939,7 +933,7 @@
       for (const name of selectedTableNames.value) {
         const meta = tableMeta[name]
         if (!meta?.subTableName || !meta?.subTableFkName) {
-          ElMessage.warning(`表 ${name}：请配置关联子表及外键字段`)
+          ElMessage.warning(t('tools.genExt.subTableConfigRequired', { name }))
           activeTableTab.value = name
           return false
         }
@@ -1003,7 +997,7 @@
     }
     if (currentStep.value === 1) {
       if (selectedTables.value.length === 0) {
-        ElMessage.warning('请至少选择一张表')
+        ElMessage.warning(t('tools.genExt.selectAtLeastOneTable'))
         return
       }
       stepLoading.value = true
@@ -1018,7 +1012,7 @@
     }
     if (currentStep.value === 2) {
       if (!genConfig.tplCategory || !genConfig.tplWebType) {
-        ElMessage.warning('请选择模板类型')
+        ElMessage.warning(t('tools.genExt.selectTplType'))
         return
       }
       if (!validateStep2Config()) return
@@ -1058,7 +1052,7 @@
     }
     if (currentStep.value === 3) {
       if (!pathProfile.value.basePackage?.trim()) {
-        ElMessage.warning('请填写基础包名')
+        ElMessage.warning(t('tools.genExt.fillBasePackage'))
         return
       }
       stepLoading.value = true
@@ -1078,7 +1072,7 @@
 
   function validateGenScope(): boolean {
     if (!genScope.genBackend && !genScope.genFrontend && !genScope.genSql) {
-      ElMessage.warning('请至少选择一种生成范围')
+      ElMessage.warning(t('tools.genExt.selectGenScope'))
       return false
     }
     return true
@@ -1090,9 +1084,13 @@
     }
     try {
       await ElMessageBox.confirm(
-        '未填写写盘根目录，将使用服务端 default-output-root 或 Java 工作目录（user.dir）。是否继续？',
-        '写盘根目录',
-        { type: 'warning', confirmButtonText: '继续', cancelButtonText: '取消' }
+        t('tools.genExt.outputRootConfirm'),
+        t('tools.genExt.outputRoot'),
+        {
+          type: 'warning',
+          confirmButtonText: t('tools.genExt.continue'),
+          cancelButtonText: t('common.cancel')
+        }
       )
       return true
     } catch {
@@ -1110,7 +1108,7 @@
 
   function openPreview() {
     if (!previewTableName.value) {
-      ElMessage.warning('请选择要预览的表')
+      ElMessage.warning(t('tools.genExt.selectPreviewTable'))
       return
     }
     if (!validateGenScope()) return
@@ -1124,7 +1122,7 @@
     try {
       const blob = await fetchExternalDownload(sessionId.value, selectedTableNames.value, genScope)
       FileSaver.saveAs(blob, `codegen_external_${Date.now()}.zip`)
-      ElMessage.success('下载成功')
+      ElMessage.success(t('tools.genExt.downloadSuccess'))
     } finally {
       downloading.value = false
     }
@@ -1174,7 +1172,7 @@
     if (!sessionId.value) return
     await fetchExternalSaveTemplateDir(sessionId.value, sessionTemplateDir.value.trim())
     await refreshSessionTemplateDir()
-    ElMessage.success('会话模板目录已保存')
+    ElMessage.success(t('tools.genExt.templateDirSaved'))
   }
 
   async function refreshSessionTemplateDir() {
@@ -1208,17 +1206,23 @@
       })
     }
     const backupTip =
-      res.backedUpCount && res.backedUpCount > 0 ? `，已备份 ${res.backedUpCount} 个原文件` : ''
-    ElMessage.success(`已写入 ${res.fileCount} 个文件到 ${res.outputRoot}${backupTip}`)
+      res.backedUpCount && res.backedUpCount > 0
+        ? t('tools.genExt.writeBackupTip', { count: res.backedUpCount })
+        : ''
+    ElMessage.success(
+      t('tools.genExt.writeSuccess', {
+        count: res.fileCount,
+        root: res.outputRoot,
+        backup: backupTip
+      })
+    )
   }
 
   async function handleRollbackWrite() {
     if (!sessionId.value || !lastWriteBackup.value) return
-    await ElMessageBox.confirm(
-      '将用备份覆盖恢复上次写盘改动的文件，是否继续？（不会删除本次新增的文件）',
-      '回退写盘',
-      { type: 'warning' }
-    )
+    await ElMessageBox.confirm(t('tools.genExt.rollbackConfirm'), t('tools.genExt.rollbackWrite'), {
+      type: 'warning'
+    })
     rollingBack.value = true
     try {
       const res = await fetchExternalWriteRollback(
@@ -1226,7 +1230,7 @@
         lastWriteBackup.value.backupId,
         lastWriteBackup.value.outputRoot
       )
-      ElMessage.success(`已恢复 ${res.fileCount} 个文件`)
+      ElMessage.success(t('tools.genExt.rollbackSuccess', { count: res.fileCount }))
       lastWriteBackup.value = null
       clearLastWriteBackup()
     } finally {
@@ -1284,10 +1288,13 @@
         importOverwrite.value
       )
       const parts: string[] = []
-      if (res.imported?.length) parts.push(`新增 ${res.imported.length} 张`)
-      if (res.updated?.length) parts.push(`覆盖 ${res.updated.length} 张`)
-      if (res.skipped?.length) parts.push(`跳过 ${res.skipped.length} 张`)
-      ElMessage.success(parts.length ? parts.join('，') : '导入完成')
+      if (res.imported?.length)
+        parts.push(t('tools.genExt.importAdded', { count: res.imported.length }))
+      if (res.updated?.length)
+        parts.push(t('tools.genExt.importUpdated', { count: res.updated.length }))
+      if (res.skipped?.length)
+        parts.push(t('tools.genExt.importSkipped', { count: res.skipped.length }))
+      ElMessage.success(parts.length ? parts.join('，') : t('tools.genExt.importDone'))
     } finally {
       importing.value = false
     }
@@ -1324,9 +1331,9 @@
       .catch(() => {})
     restoreLastWriteBackup()
     if (sessionId.value) {
-      ElMessageBox.confirm('检测到未断开的生成会话，是否继续使用？', '提示', {
-        confirmButtonText: '继续',
-        cancelButtonText: '重新连接',
+      ElMessageBox.confirm(t('tools.genExt.sessionRestoreConfirm'), t('common.tips'), {
+        confirmButtonText: t('tools.genExt.continue'),
+        cancelButtonText: t('tools.genExt.reconnect'),
         type: 'info'
       })
         .then(() => {

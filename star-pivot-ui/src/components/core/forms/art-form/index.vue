@@ -4,9 +4,11 @@
 <template>
   <section class="px-4 pb-0 pt-4 md:px-4 md:pt-4">
     <ElForm
+      :key="locale"
       ref="formRef"
       :model="modelValue"
       :label-position="labelPosition"
+      :label-width="labelWidth"
       v-bind="{ ...$attrs }"
     >
       <ElRow class="flex flex-wrap" :gutter="gutter">
@@ -19,10 +21,7 @@
           :lg="getColSpan(item.span, 'lg')"
           :xl="getColSpan(item.span, 'xl')"
         >
-          <ElFormItem
-            :prop="item.key"
-            :label-width="item.label ? item.labelWidth || labelWidth : undefined"
-          >
+          <ElFormItem :prop="item.key" :label-width="item.label ? item.labelWidth : undefined">
             <template #label v-if="item.label">
               <component v-if="typeof item.label !== 'string'" :is="item.label" />
               <span v-else>{{ item.label }}</span>
@@ -99,16 +98,14 @@
 <script setup lang="ts">
   import { useWindowSize } from '@vueuse/core'
   import { useI18n } from 'vue-i18n'
-  // Component 类型从全局类型中获取（由 auto-imports.d.ts 提供）
-  type Component = ComponentPublicInstance
   import {
     ElCascader,
     ElCheckbox,
     ElCheckboxGroup,
     ElDatePicker,
     ElInput,
-    ElInputTag,
     ElInputNumber,
+    ElInputTag,
     ElRadioGroup,
     ElRate,
     ElSelect,
@@ -120,6 +117,8 @@
     type FormInstance
   } from 'element-plus'
   import { calculateResponsiveSpan, type ResponsiveBreakpoint } from '@/utils/form/responsive'
+  // Component 类型从全局类型中获取（由 auto-imports.d.ts 提供）
+  type Component = ComponentPublicInstance
 
   defineOptions({ name: 'ArtForm' })
 
@@ -145,7 +144,7 @@
   }
 
   const { width } = useWindowSize()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const isMobile = computed(() => width.value < 500)
 
   const formInstance = useTemplateRef<FormInstance>('formRef')
@@ -204,7 +203,8 @@
     span: 6,
     gutter: 12,
     labelPosition: 'right',
-    labelWidth: '70px',
+    /** auto：随语言文案长度自适应，避免英文标签换行挤压 */
+    labelWidth: 'auto',
     buttonLeftLimit: 2,
     showReset: true,
     showSubmit: true,

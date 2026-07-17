@@ -2,21 +2,21 @@
   <ElForm ref="formRef" :model="model" label-width="160px" class="path-config-form">
     <ElRow :gutter="16">
       <ElCol :span="24">
-        <ElFormItem label="模块预设">
+        <ElFormItem :label="t('tools.genExt.modulePreset')">
           <ElSelect
             v-model="preset"
-            placeholder="内置预设"
+            :placeholder="t('tools.genExt.builtinPreset')"
             clearable
             style="width: 180px"
             @change="applyBuiltinPreset"
           >
-            <ElOption label="system 模块" value="system" />
-            <ElOption label="file 模块" value="file" />
-            <ElOption label="monitor 模块" value="monitor" />
+            <ElOption :label="t('tools.genExt.presetSystem')" value="system" />
+            <ElOption :label="t('tools.genExt.presetFile')" value="file" />
+            <ElOption :label="t('tools.genExt.presetMonitor')" value="monitor" />
           </ElSelect>
           <ElSelect
             v-model="savedPresetKey"
-            placeholder="我的预设"
+            :placeholder="t('tools.genExt.myPreset')"
             clearable
             style="width: 180px"
             class="ml-2"
@@ -30,51 +30,51 @@
             />
           </ElSelect>
           <ExternalActionBtn
-            what="自动填子路径"
-            usage="根据「基础包名」推导 entity/dto/controller 等 Java 包路径及 mapper、api、vue 目录。"
+            :what="t('tools.genExt.syncFromBaseWhat')"
+            :usage="t('tools.genExt.syncFromBaseUsage')"
             link
             type="primary"
             class="ml-3"
             @click="syncFromBasePackage"
           >
-            根据基础包填充子路径
+            {{ t('tools.genExt.syncFromBase') }}
           </ExternalActionBtn>
         </ElFormItem>
       </ElCol>
 
       <ElCol :span="24">
-        <ElFormItem label="保存为预设">
+        <ElFormItem :label="t('tools.genExt.saveAsPreset')">
           <ElInput
             v-model="newPresetName"
-            placeholder="预设名称，如 system-post"
+            :placeholder="t('tools.genExt.presetNamePlaceholder')"
             style="width: 220px"
             maxlength="32"
           />
           <ExternalActionBtn
-            what="存路径预设"
-            usage="将当前路径配置保存到浏览器 localStorage，可在「我的预设」中快速切换。"
+            :what="t('tools.genExt.savePresetWhat')"
+            :usage="t('tools.genExt.savePresetUsage')"
             type="primary"
             class="ml-2"
             @click="saveCurrentAsPreset"
           >
-            保存预设
+            {{ t('tools.genExt.savePreset') }}
           </ExternalActionBtn>
           <ExternalActionBtn
             v-if="savedPresetKey"
-            what="删路径预设"
-            usage="删除当前选中的「我的预设」，不影响已填写的表单内容。"
+            :what="t('tools.genExt.deletePresetWhat')"
+            :usage="t('tools.genExt.deletePresetUsage')"
             link
             type="danger"
             class="ml-2"
             @click="deleteSavedPreset"
           >
-            删除当前预设
+            {{ t('tools.genExt.deleteCurrentPreset') }}
           </ExternalActionBtn>
         </ElFormItem>
       </ElCol>
 
       <ElCol :span="12">
-        <ElFormItem label="基础包名" required>
+        <ElFormItem :label="t('tools.gen.packageName')" required>
           <ElInput
             v-model="model.basePackage"
             placeholder="com.star.pivot.system"
@@ -83,14 +83,14 @@
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
-        <ElFormItem label="作者">
-          <ElInput v-model="author" placeholder="代码注释作者" />
+        <ElFormItem :label="t('tools.gen.author')">
+          <ElInput v-model="author" :placeholder="t('tools.genExt.authorPlaceholder')" />
         </ElFormItem>
       </ElCol>
 
-      <ElCol :span="24"><div class="section-title">Java 包路径</div></ElCol>
+      <ElCol :span="24"><div class="section-title">{{ t('tools.genExt.javaPackagePath') }}</div></ElCol>
       <ElCol :span="12">
-        <ElFormItem label="实体 Entity">
+        <ElFormItem :label="t('tools.genExt.entityPackage')">
           <ElInput
             v-model="model.entityPackage"
             placeholder="com.star.pivot.system.domain.entity"
@@ -103,12 +103,12 @@
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
-        <ElFormItem label="VO (Bo)">
+        <ElFormItem :label="t('tools.genExt.voPackage')">
           <ElInput v-model="model.voPackage" placeholder="com.star.pivot.system.domain.bo" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
-        <ElFormItem label="Bo (ReqBo)">
+        <ElFormItem :label="t('tools.genExt.boPackage')">
           <ElInput v-model="model.boPackage" placeholder="com.star.pivot.system.domain.bo" />
         </ElFormItem>
       </ElCol>
@@ -139,28 +139,26 @@
         </ElFormItem>
       </ElCol>
       <ElCol :span="24">
-        <ElFormItem label="Mapper XML 目录">
+        <ElFormItem :label="t('tools.genExt.mapperXmlPath')">
           <ElInput v-model="model.mapperXmlPath" placeholder="main/resources/mapper/system" />
-          <div class="field-hint"
-            >写盘/Diff 中显示为 main/resources/mapper/...，对应 star-pivot-module 下资源目录</div
-          >
+          <div class="field-hint">{{ t('tools.genExt.mapperXmlHint') }}</div>
         </ElFormItem>
       </ElCol>
 
-      <ElCol :span="24"><div class="section-title">写盘相对路径（相对项目根目录）</div></ElCol>
+      <ElCol :span="24"><div class="section-title">{{ t('tools.genExt.relativePathTitle') }}</div></ElCol>
       <ElCol :span="12">
-        <ElFormItem label="API 目录">
+        <ElFormItem :label="t('tools.genExt.apiPath')">
           <ElInput v-model="model.apiPath" placeholder="star-pivot-ui/src/api/system" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
-        <ElFormItem label="页面目录">
+        <ElFormItem :label="t('tools.genExt.vuePagePath')">
           <ElInput v-model="model.vuePagePath" placeholder="star-pivot-ui/src/views/system/post" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="24">
-        <ElFormItem label="子组件 modules">
-          <ElInput v-model="model.vueModulesPath" placeholder="留空则使用 {页面目录}/modules" />
+        <ElFormItem :label="t('tools.genExt.vueModulesPath')">
+          <ElInput v-model="model.vueModulesPath" :placeholder="t('tools.genExt.vueModulesPlaceholder')" />
         </ElFormItem>
       </ElCol>
     </ElRow>
@@ -169,6 +167,7 @@
 
 <script setup lang="ts">
   import { ElForm, ElFormItem, ElInput, ElMessage, ElOption, ElSelect } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import ExternalActionBtn from './external-action-btn.vue'
   import type { GenPathProfile } from '@/api/generator/gen-external'
 
@@ -182,6 +181,7 @@
 
   const model = defineModel<GenPathProfile>({ required: true })
   const author = defineModel<string>('author', { default: '' })
+  const { t } = useI18n()
 
   const preset = ref<string>()
   const savedPresetKey = ref<string>()
@@ -264,11 +264,11 @@
   function saveCurrentAsPreset() {
     const name = newPresetName.value.trim()
     if (!name) {
-      ElMessage.warning('请输入预设名称')
+      ElMessage.warning(t('tools.genExt.presetNameRequired'))
       return
     }
     if (!model.value.basePackage?.trim()) {
-      ElMessage.warning('请先填写基础包名')
+      ElMessage.warning(t('tools.genExt.basePackageRequired'))
       return
     }
     const idx = savedPresetList.value.findIndex((p) => p.name === name)
@@ -281,7 +281,7 @@
     persistSavedPresets()
     savedPresetKey.value = name
     newPresetName.value = ''
-    ElMessage.success('预设已保存到浏览器本地')
+    ElMessage.success(t('tools.genExt.presetSavedLocal'))
   }
 
   function deleteSavedPreset() {
@@ -290,7 +290,7 @@
     savedPresetList.value = savedPresetList.value.filter((p) => p.name !== name)
     persistSavedPresets()
     savedPresetKey.value = undefined
-    ElMessage.success('预设已删除')
+    ElMessage.success(t('tools.genExt.presetDeleted'))
   }
 
   function onBasePackageBlur() {

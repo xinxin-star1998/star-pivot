@@ -14,7 +14,11 @@ public class GlobalPermitAllPathProvider implements PermitAllPathProvider {
                 "/auth/register",
                 "/api/auth/register",
                 "/file/share/public/**",
-                "/api/file/share/public/**"
+                "/api/file/share/public/**",
+                "/system/i18n/bundle/ui",
+                "/api/system/i18n/bundle/ui",
+                "/system/i18n/lang/list",
+                "/api/system/i18n/lang/list"
         );
     }
 }

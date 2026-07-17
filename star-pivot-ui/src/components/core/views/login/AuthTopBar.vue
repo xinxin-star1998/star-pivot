@@ -76,8 +76,7 @@
   import { useUserStore } from '@/store/modules/user'
   import { useHeaderBar } from '@/hooks/core/useHeaderBar'
   import { themeAnimation } from '@/utils/ui/animation'
-  import { languageOptions } from '@/locales'
-  import { LanguageEnum } from '@/enums/appEnum'
+  import { languageOptions, normalizeAppLang, switchAppLanguage } from '@/locales'
   import AppConfig from '@/config'
 
   defineOptions({ name: 'AuthTopBar' })
@@ -91,10 +90,11 @@
   const mainColors = AppConfig.systemMainColor
   const color = systemThemeColor // css v-bind 使用
 
-  const changeLanguage = (lang: LanguageEnum) => {
-    if (locale.value === lang) return
-    locale.value = lang
-    userStore.setLanguage(lang)
+  const changeLanguage = async (lang: string) => {
+    const target = normalizeAppLang(lang)
+    if (!target) return
+    userStore.setLanguage(target)
+    await switchAppLanguage(target)
   }
 
   const changeThemeColor = (color: string) => {

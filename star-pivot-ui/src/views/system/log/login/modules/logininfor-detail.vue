@@ -2,33 +2,43 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    title="登录日志详情"
+    :title="t('system.operLog.detail')"
     width="800px"
     :close-on-click-modal="false"
     @update:model-value="handleDialogChange"
   >
     <ElDescriptions :column="2" border v-if="logininfor">
-      <ElDescriptionsItem label="日志ID">{{ logininfor.infoId }}</ElDescriptionsItem>
-      <ElDescriptionsItem label="用户账号">{{ logininfor.userName }}</ElDescriptionsItem>
-      <ElDescriptionsItem label="登录状态">
+      <ElDescriptionsItem label="ID">{{ logininfor.infoId }}</ElDescriptionsItem>
+      <ElDescriptionsItem :label="t('system.loginLog.userName')">{{
+        logininfor.userName
+      }}</ElDescriptionsItem>
+      <ElDescriptionsItem :label="t('system.loginLog.status')">
         <ElTag :type="logininfor.status === '0' ? 'success' : 'danger'">
-          {{ logininfor.status === '0' ? '成功' : '失败' }}
+          {{
+            logininfor.status === '0'
+              ? t('system.loginLog.statusSuccess')
+              : t('system.loginLog.statusFail')
+          }}
         </ElTag>
       </ElDescriptionsItem>
-      <ElDescriptionsItem label="登录时间">{{ logininfor.loginTime }}</ElDescriptionsItem>
-      <ElDescriptionsItem label="登录IP">{{ logininfor.ipaddr }}</ElDescriptionsItem>
-      <ElDescriptionsItem label="登录地点">
-        {{ logininfor.loginLocation || '未知' }}
+      <ElDescriptionsItem :label="t('system.loginLog.loginTime')">{{
+        logininfor.loginTime
+      }}</ElDescriptionsItem>
+      <ElDescriptionsItem :label="t('system.loginLog.ipaddr')">{{
+        logininfor.ipaddr
+      }}</ElDescriptionsItem>
+      <ElDescriptionsItem :label="t('system.loginLog.loginLocation')">
+        {{ logininfor.loginLocation || t('common.empty') }}
       </ElDescriptionsItem>
-      <ElDescriptionsItem label="浏览器类型">
-        {{ logininfor.browser || '未知' }}
+      <ElDescriptionsItem :label="t('system.loginLog.browser')">
+        {{ logininfor.browser || t('common.empty') }}
       </ElDescriptionsItem>
-      <ElDescriptionsItem label="操作系统">
-        {{ logininfor.os || '未知' }}
+      <ElDescriptionsItem :label="t('system.loginLog.os')">
+        {{ logininfor.os || t('common.empty') }}
       </ElDescriptionsItem>
-      <ElDescriptionsItem label="提示消息" :span="2">
+      <ElDescriptionsItem :label="t('system.loginLog.msg')" :span="2">
         <ElText :type="logininfor.status === '0' ? 'success' : 'danger'">
-          {{ logininfor.msg || '无' }}
+          {{ logininfor.msg || t('common.empty') }}
         </ElText>
       </ElDescriptionsItem>
     </ElDescriptions>
@@ -37,6 +47,7 @@
 
 <script setup lang="ts">
   import { ElTag, ElText, ElDescriptions, ElDescriptionsItem } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import type { LogininforListItem } from '@/types/api/logininfor'
 
   interface Props {
@@ -50,16 +61,13 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
-  // 对话框显示状态
   const dialogVisible = computed({
     get: () => props.visible,
     set: (value) => emit('update:visible', value)
   })
 
-  /**
-   * 对话框状态变化处理
-   */
   const handleDialogChange = (value: boolean) => {
     emit('update:visible', value)
   }

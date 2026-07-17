@@ -2,8 +2,13 @@
   <div class="file-audit-page art-full-height">
     <ElCard shadow="never" class="search-card">
       <ElForm :inline="true" :model="searchForm">
-        <ElFormItem label="动作">
-          <ElSelect v-model="searchForm.action" clearable placeholder="全部" style="width: 140px">
+        <ElFormItem :label="t('file.action')">
+          <ElSelect
+            v-model="searchForm.action"
+            clearable
+            :placeholder="t('file.all')"
+            style="width: 140px"
+          >
             <ElOption
               v-for="item in actionOptions"
               :key="item.value"
@@ -12,24 +17,24 @@
             />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="文件名">
-          <ElInput v-model="searchForm.fileName" clearable placeholder="文件名" />
+        <ElFormItem :label="t('file.fileName')">
+          <ElInput v-model="searchForm.fileName" clearable :placeholder="t('file.fileName')" />
         </ElFormItem>
-        <ElFormItem label="操作人">
-          <ElInput v-model="searchForm.operBy" clearable placeholder="操作人" />
+        <ElFormItem :label="t('file.operBy')">
+          <ElInput v-model="searchForm.operBy" clearable :placeholder="t('file.operBy')" />
         </ElFormItem>
-        <ElFormItem label="时间">
+        <ElFormItem :label="t('file.time')">
           <ElDatePicker
             v-model="timeRange"
             type="datetimerange"
             value-format="YYYY-MM-DD HH:mm:ss"
-            start-placeholder="开始"
-            end-placeholder="结束"
+            :start-placeholder="t('file.startTime')"
+            :end-placeholder="t('file.endTime')"
           />
         </ElFormItem>
         <ElFormItem>
-          <ElButton type="primary" @click="handleQuery">查询</ElButton>
-          <ElButton @click="handleReset">重置</ElButton>
+          <ElButton type="primary" @click="handleQuery">{{ t('file.query') }}</ElButton>
+          <ElButton @click="handleReset">{{ t('common.reset') }}</ElButton>
         </ElFormItem>
       </ElForm>
     </ElCard>
@@ -55,24 +60,32 @@
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { ElTag } from 'element-plus'
-  import { h, onMounted, ref } from 'vue'
+  import { computed, h, onMounted, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'FileAudit' })
 
-  const actionOptions = [
-    { label: '上传', value: 'UPLOAD' },
-    { label: '下载', value: 'DOWNLOAD' },
-    { label: '移入回收站', value: 'DELETE' },
-    { label: '恢复', value: 'RESTORE' },
-    { label: '彻底删除', value: 'PURGE' },
-    { label: '迁移', value: 'MOVE' },
-    { label: '重命名', value: 'RENAME' },
-    { label: '分享', value: 'SHARE' },
-    { label: '取消分享', value: 'SHARE_REVOKE' },
-    { label: '新版本', value: 'VERSION_UPLOAD' },
-    { label: '恢复版本', value: 'VERSION_RESTORE' },
-    { label: '打包下载', value: 'ZIP_DOWNLOAD' }
-  ]
+  const { t } = useI18n()
+
+  const actionOptions = computed(() =>
+    [
+      'UPLOAD',
+      'DOWNLOAD',
+      'DELETE',
+      'RESTORE',
+      'PURGE',
+      'MOVE',
+      'RENAME',
+      'SHARE',
+      'SHARE_REVOKE',
+      'VERSION_UPLOAD',
+      'VERSION_RESTORE',
+      'ZIP_DOWNLOAD'
+    ].map((value) => ({
+      value,
+      label: t(`file.auditAction.${value}`)
+    }))
+  )
 
   const searchForm = ref({
     action: undefined as string | undefined,
@@ -98,19 +111,19 @@
       apiParams: { pageNum: 1, pageSize: 20 },
       immediate: false,
       columnsFactory: () => [
-        { type: 'index', width: 60, label: '序号' },
+        { type: 'index', width: 60, label: t('table.column.index') },
         {
           prop: 'actionLabel',
-          label: '动作',
+          label: t('file.action'),
           width: 120,
           formatter: (row: SysFileAudit) =>
             h(ElTag, { size: 'small' }, () => row.actionLabel || row.action)
         },
-        { prop: 'fileName', label: '文件', minWidth: 180 },
-        { prop: 'detail', label: '详情', minWidth: 200 },
-        { prop: 'operBy', label: '操作人', width: 110 },
+        { prop: 'fileName', label: t('file.fileName'), minWidth: 180 },
+        { prop: 'detail', label: t('file.detail'), minWidth: 200 },
+        { prop: 'operBy', label: t('file.operBy'), width: 110 },
         { prop: 'operIp', label: 'IP', width: 130 },
-        { prop: 'operTime', label: '时间', width: 168 }
+        { prop: 'operTime', label: t('file.time'), width: 168 }
       ]
     }
   })

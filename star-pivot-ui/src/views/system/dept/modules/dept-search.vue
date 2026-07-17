@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
   interface Props {
     modelValue: Record<string, any>
   }
@@ -21,48 +23,45 @@
   }
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
-  // 表单数据双向绑定
   const searchBarRef = ref()
   const formData = computed({
     get: () => props.modelValue,
     set: (val) => emit('update:modelValue', val)
   })
 
-  // 校验规则
   const rules = {}
 
-  // 表单配置
   const formItems = computed(() => [
     {
-      label: '部门名称',
+      label: t('system.dept.deptName'),
       key: 'deptName',
       type: 'input',
-      placeholder: '请输入部门名称',
+      placeholder: t('system.dept.deptNamePlaceholder'),
       clearable: true
     },
     {
-      label: '负责人',
+      label: t('system.dept.leader'),
       key: 'leader',
       type: 'input',
-      props: { placeholder: '请输入负责人' }
+      props: { placeholder: t('system.dept.leaderPlaceholder') }
     },
     {
-      label: '状态',
+      label: t('common.status'),
       key: 'status',
       type: 'select',
       props: {
-        placeholder: '请选择状态',
+        placeholder: t('common.pleaseSelect'),
         clearable: true,
         options: [
-          { label: '正常', value: '0' },
-          { label: '停用', value: '1' }
+          { label: t('common.normal'), value: '0' },
+          { label: t('common.disabled'), value: '1' }
         ]
       }
     }
   ])
 
-  // 事件
   function handleReset() {
     emit('reset')
   }

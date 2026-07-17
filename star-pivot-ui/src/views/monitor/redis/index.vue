@@ -4,20 +4,19 @@
     <ElCard class="art-table-card" shadow="never">
       <template #header>
         <div class="card-header">
-          <span>缓存管理</span>
+          <span>{{ t('monitor.redis.info') }}</span>
           <ElButton type="primary" :icon="Refresh" @click="handleRefresh" :loading="loading">
-            刷新
+            {{ t('monitor.redis.refresh') }}
           </ElButton>
         </div>
       </template>
 
       <div class="cache-container">
-        <!-- 左侧：缓存列表 -->
         <div class="cache-list-panel">
           <ElCard shadow="hover" class="panel-card">
             <template #header>
               <div class="panel-header">
-                <span>缓存列表</span>
+                <span>{{ t('monitor.redis.info') }}</span>
                 <ElButton
                   :icon="Refresh"
                   circle
@@ -35,10 +34,10 @@
               @current-change="handleCacheSelect"
               v-loading="loadingCacheList"
             >
-              <ElTableColumn type="index" label="序号" width="60" />
-              <ElTableColumn prop="cacheName" label="缓存名称" />
-              <ElTableColumn prop="remark" label="备注" />
-              <ElTableColumn label="操作" width="80">
+              <ElTableColumn type="index" :label="t('table.column.index')" width="60" />
+              <ElTableColumn prop="cacheName" :label="t('monitor.redis.info')" />
+              <ElTableColumn prop="remark" :label="t('common.remark')" />
+              <ElTableColumn :label="t('common.operation')" width="80">
                 <template #default="{ row }">
                   <ElButton
                     type="danger"
@@ -54,12 +53,11 @@
           </ElCard>
         </div>
 
-        <!-- 中间：键名列表（虚拟滚动，适用于大量键） -->
         <div class="key-list-panel">
           <ElCard shadow="hover" class="panel-card">
             <template #header>
               <div class="panel-header">
-                <span>键名列表</span>
+                <span>{{ t('monitor.redis.dbSize') }}</span>
                 <ElButton
                   :icon="Refresh"
                   circle
@@ -70,13 +68,11 @@
               </div>
             </template>
             <div v-loading="loadingKeys" class="key-list-wrapper">
-              <!-- 表头 -->
               <div class="key-list-header">
-                <span class="col-index">序号</span>
-                <span class="col-key">缓存键名</span>
-                <span class="col-action">操作</span>
+                <span class="col-index">{{ t('table.column.index') }}</span>
+                <span class="col-key">{{ t('monitor.redis.info') }}</span>
+                <span class="col-action">{{ t('common.operation') }}</span>
               </div>
-              <!-- 虚拟滚动列表 -->
               <ArtVirtualList
                 ref="keyListRef"
                 :data="keyList"
@@ -112,12 +108,11 @@
           </ElCard>
         </div>
 
-        <!-- 右侧：缓存内容 -->
         <div class="cache-content-panel">
           <ElCard shadow="hover" class="panel-card">
             <template #header>
               <div class="panel-header">
-                <span>缓存内容</span>
+                <span>{{ t('monitor.redis.memory') }}</span>
                 <div>
                   <ElButton
                     type="danger"
@@ -125,7 +120,7 @@
                     @click="handleClearAll"
                     :loading="clearingAll"
                   >
-                    清理全部
+                    {{ t('system.operLog.clear') }}
                   </ElButton>
                   <ElButton
                     :icon="Refresh"
@@ -138,13 +133,13 @@
               </div>
             </template>
             <ElForm :model="cacheContent" label-width="100px">
-              <ElFormItem label="缓存名称">
+              <ElFormItem :label="t('monitor.redis.info')">
                 <ElInput v-model="cacheContent.cacheName" disabled />
               </ElFormItem>
-              <ElFormItem label="缓存键名">
+              <ElFormItem :label="t('monitor.redis.dbSize')">
                 <ElInput v-model="cacheContent.key" disabled />
               </ElFormItem>
-              <ElFormItem label="缓存内容">
+              <ElFormItem :label="t('monitor.redis.memory')">
                 <ElInput v-model="cacheContent.content" type="textarea" :rows="15" disabled />
               </ElFormItem>
             </ElForm>
@@ -167,10 +162,13 @@
   } from '@/api/monitor/cache'
   import type { CacheContentInfo, CacheKeyInfo, RedisCacheInfo } from '@/types/api/monitor'
   import { ElMessage, ElMessageBox } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import { handleMutationError } from '@/utils/http/mutation'
   import ArtVirtualList from '@/components/core/lists/art-virtual-list/index.vue'
 
   defineOptions({ name: 'CacheManage' })
+
+  const { t } = useI18n()
 
   const loading = ref(false)
   const keyListRef = ref<InstanceType<typeof ArtVirtualList> | null>(null)
@@ -200,10 +198,6 @@
     ttl: -2
   })
 
-  /**
-   * 获取缓存列表
-   */
-  /** 列表刷新后，若当前选中的分组已不存在（例如已删空），清除高亮与中间栏 */
   const syncSelectionWithCacheList = () => {
     const name = selectedCache.value?.cacheName
     if (!name) {
@@ -232,22 +226,17 @@
       cacheList.value = data ?? []
       syncSelectionWithCacheList()
     } catch (error) {
-      console.error('获取缓存列表失败:', error)
+      console.error('get cache list failed:', error)
+      handleMutationError(error, t('monitor.redis.loadFail'))
     } finally {
       loadingCacheList.value = false
     }
   }
 
-  /**
-   * 刷新缓存列表
-   */
   const refreshCacheList = () => {
     getCacheList()
   }
 
-  /**
-   * 处理缓存选择
-   */
   const handleCacheSelect = async (cache: RedisCacheInfo | null) => {
     selectedCache.value = cache
     selectedKey.value = null
@@ -272,9 +261,6 @@
     }
   }
 
-  /**
-   * 获取键名列表
-   */
   const getCacheKeys = async (cacheName: string) => {
     loadingKeys.value = true
     try {
@@ -282,25 +268,19 @@
       keyList.value = data
       nextTick(() => keyListRef.value?.scrollToTop())
     } catch (error) {
-      console.error('获取键名列表失败:', error)
-      handleMutationError(error, '获取键名列表失败')
+      console.error('get cache keys failed:', error)
+      handleMutationError(error, t('monitor.redis.loadFail'))
     } finally {
       loadingKeys.value = false
     }
   }
 
-  /**
-   * 刷新键名列表
-   */
   const refreshKeys = () => {
     if (selectedCache.value) {
       getCacheKeys(selectedCache.value.cacheName)
     }
   }
 
-  /**
-   * 处理键选择
-   */
   const handleKeySelect = async (key: CacheKeyInfo | null) => {
     selectedKey.value = key
     if (key && selectedCache.value) {
@@ -316,87 +296,71 @@
     }
   }
 
-  /**
-   * 获取缓存内容
-   */
   const getCacheContent = async (cacheName: string, key: string) => {
     loadingContent.value = true
     try {
       const data = await fetchGetCacheContent(cacheName, key)
       cacheContent.value = data
     } catch (error) {
-      console.error('获取缓存内容失败:', error)
-      handleMutationError(error, '获取缓存内容失败')
+      console.error('get cache content failed:', error)
+      handleMutationError(error, t('monitor.redis.loadFail'))
     } finally {
       loadingContent.value = false
     }
   }
 
-  /**
-   * 刷新缓存内容
-   */
   const refreshContent = () => {
     if (selectedCache.value && selectedKey.value) {
       getCacheContent(selectedCache.value.cacheName, selectedKey.value.key)
     }
   }
 
-  /**
-   * 删除缓存
-   */
   const handleDeleteCache = async (cache: RedisCacheInfo) => {
     try {
-      await ElMessageBox.confirm(
-        `确定要删除缓存 "${cache.cacheName}" 的所有键吗？此操作不可恢复！`,
-        '提示',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      )
+      await ElMessageBox.confirm(t('common.deleteConfirm'), t('common.tips'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      })
 
       deletingCache.value = cache.cacheName
       try {
         const deletedCount = await fetchDeleteCache(cache.cacheName)
         if (deletedCount > 0) {
-          ElMessage.success(`删除成功，共删除 ${deletedCount} 个键`)
+          ElMessage.success(t('common.deleteSuccess'))
         } else {
-          ElMessage.warning('未匹配到可删除的键（可能已被删除或键格式与分组不一致）')
+          ElMessage.warning(t('common.empty'))
         }
         await getCacheList()
         if (selectedCache.value?.cacheName === cache.cacheName) {
           await getCacheKeys(cache.cacheName)
         }
       } catch (error) {
-        console.error('删除缓存失败:', error)
-        handleMutationError(error, '删除缓存失败')
+        console.error('delete cache failed:', error)
+        handleMutationError(error, t('common.deleteFail'))
       } finally {
         deletingCache.value = null
       }
     } catch {
-      // 用户取消
+      // cancelled
     }
   }
 
-  /**
-   * 删除键
-   */
   const handleDeleteKey = async (key: CacheKeyInfo) => {
     if (!selectedCache.value) {
       return
     }
 
     try {
-      await ElMessageBox.confirm(`确定要删除键 "${key.key}" 吗？此操作不可恢复！`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      await ElMessageBox.confirm(t('common.deleteConfirm'), t('common.tips'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning'
       })
       deletingKey.value = key.key
       try {
         await fetchDeleteCacheKey(selectedCache.value.cacheName, key.key)
-        ElMessage.success('删除成功')
+        ElMessage.success(t('common.deleteSuccess'))
         await getCacheKeys(selectedCache.value.cacheName)
         if (keyList.value.length === 0) {
           await getCacheList()
@@ -409,30 +373,27 @@
           ttl: -2
         }
       } catch (error) {
-        console.error('删除键失败:', error)
-        handleMutationError(error, '删除键失败')
+        console.error('delete key failed:', error)
+        handleMutationError(error, t('common.deleteFail'))
       } finally {
         deletingKey.value = null
       }
     } catch {
-      // 用户取消
+      // cancelled
     }
   }
 
-  /**
-   * 清空所有缓存
-   */
   const handleClearAll = async () => {
     try {
-      await ElMessageBox.confirm('确定要清空所有缓存吗？此操作不可恢复！', '警告', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      await ElMessageBox.confirm(t('system.operLog.clearConfirm'), t('common.tips'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning'
       })
       clearingAll.value = true
       try {
         await fetchClearAllCache()
-        ElMessage.success('清空成功')
+        ElMessage.success(t('common.deleteSuccess'))
         cacheTableRef.value?.setCurrentRow(undefined)
         selectedCache.value = null
         selectedKey.value = null
@@ -446,19 +407,16 @@
           ttl: -2
         }
       } catch (error) {
-        console.error('清空缓存失败:', error)
-        handleMutationError(error, '清空缓存失败')
+        console.error('clear cache failed:', error)
+        handleMutationError(error, t('common.deleteFail'))
       } finally {
         clearingAll.value = false
       }
     } catch {
-      // 用户取消
+      // cancelled
     }
   }
 
-  /**
-   * 处理刷新按钮点击
-   */
   const handleRefresh = async () => {
     await getCacheList()
     if (selectedCache.value) {

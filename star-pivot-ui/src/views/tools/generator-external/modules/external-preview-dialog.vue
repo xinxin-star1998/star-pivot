@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    title="代码预览"
+    :title="t('tools.genExt.previewTitle')"
     width="85%"
     align-center
     class="code-preview-dialog"
@@ -12,13 +12,14 @@
       <CodePreviewTreePanel ref="panelRef" :preview-code-map="previewCodeMap" />
     </div>
     <template #footer>
-      <ElButton @click="dialogVisible = false">关闭</ElButton>
+      <ElButton @click="dialogVisible = false">{{ t('file.close') }}</ElButton>
     </template>
   </ElDialog>
 </template>
 
 <script setup lang="ts">
   import { ElButton, ElDialog } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import { type ExternalGenScope, fetchExternalPreview } from '@/api/generator/gen-external'
   import CodePreviewTreePanel from '@views/tools/generator/modules/code-preview-tree-panel.vue'
 
@@ -31,6 +32,7 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<{ 'update:visible': [boolean] }>()
+  const { t } = useI18n()
 
   const dialogVisible = computed({
     get: () => props.visible,

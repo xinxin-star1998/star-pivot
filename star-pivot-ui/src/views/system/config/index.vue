@@ -20,7 +20,7 @@
               class="action-btn"
               @click="showDialog('add')"
             >
-              新增参数配置
+              {{ t('system.config.addConfig') }}
             </ElButton>
             <ElButton
               v-auth="'system:config:export'"
@@ -30,7 +30,7 @@
               type="primary"
               @click="handleExport"
             >
-              参数导出
+              {{ t('system.config.exportConfig') }}
             </ElButton>
             <ElButton
               v-auth="'system:config:delete'"
@@ -40,7 +40,7 @@
               type="danger"
               @click="handleBatchDelete"
             >
-              批量删除
+              {{ t('common.batchDelete') }}
             </ElButton>
           </ElSpace>
         </template>
@@ -73,6 +73,7 @@
 <script lang="ts" setup>
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
+  import { useI18n } from 'vue-i18n'
   import {
     type Config,
     fetchDeleteConfig,
@@ -82,27 +83,26 @@
   import ConfigSearch from './modules/config-search.vue'
   import ConfigDialog from './modules/config-dialog.vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
+  import type { ColumnOption } from '@/types'
   import { DialogType } from '@/types'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
   import { handleMutationError } from '@/utils/http/mutation'
-  import { ref, nextTick, h } from 'vue'
+  import { h, nextTick, ref } from 'vue'
 
   defineOptions({ name: 'Config' })
 
   const { hasAuth } = useAuth()
+  const { t } = useI18n()
 
-  // 弹窗相关
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const currentConfigData = ref<Partial<Config>>({})
 
-  // 选中行
   const selectedRows = ref<Config[]>([])
   const exporting = ref(false)
 
-  // 搜索表单
   const searchForm = ref({
     configName: undefined,
     configKey: undefined,
@@ -123,7 +123,6 @@
     handleCurrentChange,
     refreshData
   } = useTable({
-    // 核心配置
     core: {
       apiFn: fetchGetConfigList,
       apiParams: {
@@ -131,48 +130,52 @@
         pageSize: 20,
         ...searchForm.value
       },
-      columnsFactory: () => [
-        { type: 'selection' }, // 勾选列
-        { type: 'index', width: 60, label: '序号' }, // 序号
+      columnsFactory: (): ColumnOption<Config>[] => [
+        { type: 'selection' },
+        { type: 'index', width: 60, label: t('table.column.index') },
         {
           prop: 'configName',
-          label: '参数名称',
+          label: t('system.config.configName'),
           width: 200,
           showOverflowTooltip: true
         },
         {
           prop: 'configKey',
-          label: '参数键名',
+          label: t('system.config.configKey'),
           width: 200,
           showOverflowTooltip: true
         },
         {
           prop: 'configValue',
-          label: '参数键值',
+          label: t('system.config.configValue'),
           minWidth: 100,
           showOverflowTooltip: true
         },
         {
           prop: 'configType',
-          label: '系统内置（Y是 N否）',
+          label: t('system.config.builtIn'),
           width: 120,
-          showOverflowTooltip: true
+          showOverflowTooltip: true,
+          formatter: (row: Config) => {
+            if (row.configType === 'Y') return t('system.config.yes')
+            if (row.configType === 'N') return t('system.config.no')
+            return row.configType || t('common.empty')
+          }
         },
         {
           prop: 'remark',
-          label: '备注',
+          label: t('common.remark'),
           minWidth: 120,
           showOverflowTooltip: true
         },
         {
           prop: 'operation',
-          label: '操作',
+          label: t('common.operation'),
           width: 120,
-          fixed: 'right', // 固定列
+          fixed: 'right',
           formatter: (row) => {
             const actions: any[] = []
 
-            // 编辑参数配置按钮权限：system:config:edit
             if (hasAuth('system:config:edit')) {
               actions.push(
                 h(ArtButtonTable, {
@@ -182,7 +185,6 @@
               )
             }
 
-            // 删除参数配置按钮权限：system:config:remove
             if (hasAuth('system:config:delete')) {
               actions.push(
                 h(ArtButtonTable, {
@@ -193,7 +195,6 @@
             }
 
             if (actions.length === 0) {
-              // 无任何操作权限时返回空占位
               return h('span', { style: 'color: var(--art-gray-500)' }, '')
             }
 
@@ -202,33 +203,21 @@
         }
       ]
     },
-    // 数据处理
     transform: {
-      // 数据转换器
       dataTransformer: (records) => {
-        // 类型守卫检查
         if (!Array.isArray(records)) {
           return []
         }
-
         return records
       }
     }
   })
 
-  /**
-   * 搜索处理
-   * @param params 参数
-   */
   const handleSearch = (params: Record<string, any>) => {
-    // 搜索参数赋值
     Object.assign(searchParams, params)
     getData()
   }
 
-  /**
-   * 显示参数配置弹窗
-   */
   const showDialog = (type: DialogType, row?: Config): void => {
     dialogType.value = type
     currentConfigData.value = row || {}
@@ -237,43 +226,36 @@
     })
   }
 
-  /**
-   * 删除参数配置
-   */
   const deleteConfig = async (row: Config): Promise<void> => {
     if (!row.configId) {
-      ElMessage.warning('参数ID不存在，无法删除')
+      ElMessage.warning(t('common.pleaseSelect'))
       return
     }
     try {
-      await ElMessageBox.confirm(`确定要删除该参数配置吗？`, '删除参数配置', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      await ElMessageBox.confirm(t('system.config.deleteConfirm'), t('common.tips'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
         type: 'error'
       })
       await fetchDeleteConfig([row.configId])
       refreshData()
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
     } catch (error) {
       if (error !== 'cancel') {
         console.error('删除参数配置失败:', error)
-        handleMutationError(error, '删除失败')
+        handleMutationError(error, t('common.deleteFail'))
       }
     }
   }
 
-  /**
-   * 批量删除参数配置
-   */
   const handleBatchDelete = (): void => {
     if (selectedRows.value.length === 0) {
-      ElMessage.warning('请选择要删除的参数配置')
+      ElMessage.warning(t('common.pleaseSelect'))
       return
     }
-    const names = selectedRows.value.map((row) => row.configId).join('、')
-    ElMessageBox.confirm(`确定要删除以下参数配置吗？\n${names}`, '批量删除参数配置', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    ElMessageBox.confirm(t('system.config.deleteConfirm'), t('common.tips'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       type: 'error'
     })
       .then(async () => {
@@ -281,52 +263,42 @@
           .map((row) => row.configId)
           .filter((id): id is number => typeof id === 'number')
         if (ids.length === 0) {
-          ElMessage.warning('未找到可删除的参数ID')
+          ElMessage.warning(t('common.pleaseSelect'))
           return
         }
         await fetchDeleteConfig(ids)
         selectedRows.value = []
         refreshData()
-        ElMessage.success('删除成功')
+        ElMessage.success(t('common.deleteSuccess'))
       })
       .catch(() => {
         // 用户取消删除
       })
   }
 
-  /**
-   * 导出参数配置
-   */
   const handleExport = async (): Promise<void> => {
     try {
       exporting.value = true
       await fetchExportConfig(searchParams as Record<string, any>)
-      ElMessage.success('导出成功')
+      ElMessage.success(t('common.updateSuccess'))
     } catch (error) {
       console.error('导出参数配置失败:', error)
-      handleMutationError(error, '导出失败')
+      handleMutationError(error, t('system.config.loadFail'))
     } finally {
       exporting.value = false
     }
   }
 
-  /**
-   * 处理弹窗提交事件
-   */
   const handleDialogSubmit = async () => {
     try {
       dialogVisible.value = false
       currentConfigData.value = {}
-      // 刷新列表数据
       refreshData()
     } catch (error) {
       console.error('提交失败:', error)
     }
   }
 
-  /**
-   * 处理表格行选择变化
-   */
   const handleSelectionChange = (selection: Config[]): void => {
     selectedRows.value = selection
   }

@@ -19,16 +19,18 @@
         @refresh="handleRefresh"
       >
         <template #left>
-          <ElButton @click="handleAddMenu" v-ripple v-auth="'system:menu:add'"> 添加菜单 </ElButton>
+          <ElButton @click="handleAddMenu" v-ripple v-auth="'system:menu:add'">
+            {{ t('system.menu.addMenu') }}
+          </ElButton>
           <ElButton @click="toggleExpand" v-ripple>
-            {{ isExpanded ? '收起' : '展开' }}
+            {{ isExpanded ? t('system.menu.collapseAll') : t('system.menu.expandAll') }}
           </ElButton>
         </template>
       </ArtTableHeader>
 
       <ArtTable
         ref="tableRef"
-        rowKey="path"
+        :row-key="getMenuRowKey"
         :loading="loading"
         :columns="columns"
         :data="filteredTableData"
@@ -74,10 +76,24 @@
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
   import ArtTable from '@/components/core/tables/art-table/index.vue'
-  import { INITIAL_SEARCH_STATE, MENU_TYPE_CONFIG, STATUS_CONFIG } from './constants'
+  import { getMenuTypeConfig, getStatusConfig, INITIAL_SEARCH_STATE } from './constants'
   import { reloadDynamicRoutes } from '@/router/guards/dynamicRouteGuard'
+  import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'Menus' })
+
+  const { t } = useI18n()
+  const MENU_TYPE_CONFIG = computed(() => getMenuTypeConfig(t))
+  const STATUS_CONFIG = computed(() => getStatusConfig(t))
+
+  /** 树表行唯一键：按钮 path 常为空，不能用 path，否则展开箭头会错乱 */
+  const getMenuRowKey = (row: AppRouteRecord): string => {
+    if (row.id != null) return `id-${row.id}`
+    if (row.meta?.isAuthButton && row.meta?.authMark) {
+      return `auth-${row.meta.parentPath || ''}-${row.meta.authMark}`
+    }
+    return `path-${row.path || ''}-${row.name || ''}`
+  }
 
   // 权限检查
   const { hasAuth } = useAuth()
@@ -100,34 +116,34 @@
 
   const formItems = computed(() => [
     {
-      label: '菜单名称',
+      label: t('system.menu.menuName'),
       key: 'menuName',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入菜单名称' }
+      props: { clearable: true, placeholder: t('system.menu.namePlaceholder') }
     },
     {
-      label: '路由地址',
+      label: t('system.menu.routePath'),
       key: 'route',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入路由地址' }
+      props: { clearable: true, placeholder: t('system.menu.pathPlaceholder') }
     },
     {
-      label: '权限标识',
+      label: t('system.menu.perms'),
       key: 'perms',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入权限标识' }
+      props: { clearable: true, placeholder: t('system.menu.permsPlaceholder') }
     },
     {
-      label: '状态',
+      label: t('common.status'),
       key: 'status',
       type: 'select',
       props: {
         clearable: true,
-        placeholder: '请选择状态'
+        placeholder: t('common.pleaseSelect')
       },
       options: [
-        { label: '正常', value: '0' },
-        { label: '停用', value: '1' }
+        { label: t('common.normal'), value: '0' },
+        { label: t('common.disabled'), value: '1' }
       ]
     }
   ])
@@ -214,7 +230,7 @@
       tableData.value = normalizedList
     } catch (error) {
       safeError('获取菜单列表失败:', error)
-      handleMutationError(error, '获取菜单列表失败')
+      handleMutationError(error, t('system.menu.loadFail'))
     } finally {
       loading.value = false
     }
@@ -243,25 +259,25 @@
   const getMenuTypeInfo = (
     row: AppRouteRecord
   ): { text: string; color: 'primary' | 'success' | 'warning' | 'info' | 'danger' } => {
-    // 优先使用后端返回的 menuType 字段
-    if (row.menuType && row.menuType in MENU_TYPE_CONFIG) {
-      const config = MENU_TYPE_CONFIG[row.menuType as keyof typeof MENU_TYPE_CONFIG]
+    const menuTypeConfig = MENU_TYPE_CONFIG.value
+    if (row.menuType && row.menuType in menuTypeConfig) {
+      const config = menuTypeConfig[row.menuType as keyof typeof menuTypeConfig]
       return { text: config.text, color: config.color }
     }
-    // 兼容旧逻辑：如果没有 menuType，则根据其他字段推断
-    if (row.meta?.isAuthButton) return { text: '按钮', color: 'danger' }
-    if (row.children?.length) return { text: '目录', color: 'info' }
-    if (row.meta?.link && row.meta?.isIframe) return { text: '内嵌', color: 'success' }
-    if (row.path) return { text: '菜单', color: 'primary' }
-    if (row.meta?.link) return { text: '外链', color: 'warning' }
-    return { text: '未知', color: 'info' }
+    if (row.meta?.isAuthButton) return { text: t('system.menu.typeButton'), color: 'danger' }
+    if (row.children?.length) return { text: t('system.menu.typeDir'), color: 'info' }
+    if (row.meta?.link && row.meta?.isIframe)
+      return { text: t('system.menu.typeMenu'), color: 'success' }
+    if (row.path) return { text: t('system.menu.typeMenu'), color: 'primary' }
+    if (row.meta?.link) return { text: t('system.menu.externalLink'), color: 'warning' }
+    return { text: t('common.empty'), color: 'info' }
   }
 
   // 表格列配置
   const { columnChecks, columns } = useTableColumns(() => [
     {
       prop: 'meta.title',
-      label: '菜单名称',
+      label: t('system.menu.menuName'),
       minWidth: 120,
       formatter: (row: AppRouteRecord) => {
         const title = formatMenuTitle(row.meta?.title)
@@ -275,7 +291,7 @@
     },
     {
       prop: 'type',
-      label: '菜单类型',
+      label: t('system.menu.menuType'),
       formatter: (row: AppRouteRecord) => {
         const typeInfo = getMenuTypeInfo(row)
         return h(ElTag, { type: typeInfo.color }, () => typeInfo.text)
@@ -283,7 +299,7 @@
     },
     {
       prop: 'path',
-      label: '路由地址',
+      label: t('system.menu.routePath'),
       formatter: (row: AppRouteRecord) => {
         if (row.meta?.isAuthButton) return ''
         // 优先显示外链
@@ -298,7 +314,7 @@
     },
     {
       prop: 'perms',
-      label: '权限标识',
+      label: t('system.menu.perms'),
       minWidth: 150,
       formatter: (row: AppRouteRecord) => {
         if (row.meta?.isAuthButton) {
@@ -318,34 +334,35 @@
             )
           )
         }
-        return h('span', { style: 'color: var(--art-gray-500)' }, '无')
+        return h('span', { style: 'color: var(--art-gray-500)' }, t('common.empty'))
       }
     },
     {
       prop: 'createTime',
-      label: '创建时间',
+      label: t('common.createTime'),
       width: 180,
       formatter: (row: AppRouteRecord) => {
-        return row.createTime || h('span', { style: 'color: var(--art-gray-500)' }, '暂无')
+        return (
+          row.createTime || h('span', { style: 'color: var(--art-gray-500)' }, t('common.empty'))
+        )
       }
     },
     {
       prop: 'status',
-      label: '状态',
+      label: t('common.status'),
       width: 100,
       formatter: (row: AppRouteRecord) => {
-        // 按钮类型不显示状态
         if (row.meta?.isAuthButton) {
           return ''
         }
-        const status = (row.status || '0') as keyof typeof STATUS_CONFIG
-        const statusInfo = STATUS_CONFIG[status] || STATUS_CONFIG['0']
+        const status = (row.status || '0') as '0' | '1'
+        const statusInfo = STATUS_CONFIG.value[status] || STATUS_CONFIG.value['0']
         return h(ElTag, { type: statusInfo.type }, () => statusInfo.text)
       }
     },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('common.operation'),
       width: 180,
       align: 'right',
       formatter: (row: AppRouteRecord) => {
@@ -382,7 +399,7 @@
               h(ArtButtonTable, {
                 type: 'add',
                 onClick: () => handleAddAuth(row),
-                title: '新增权限'
+                title: t('common.add')
               })
             )
           }
@@ -455,6 +472,10 @@
 
       if (clonedItem.children?.length) {
         clonedItem.children = convertAuthListToChildren(clonedItem.children)
+      } else {
+        // 叶子节点去掉空 children，避免 Element Plus 树表画出展开箭头
+        delete clonedItem.children
+        clonedItem.hasChildren = false
       }
 
       // 如果菜单本身有 perms 字段，则不将 authList 转换为子节点
@@ -464,6 +485,7 @@
           (auth: { title: string; authMark: string }) => ({
             path: `${item.path}_auth_${auth.authMark}`,
             name: `${String(item.name)}_auth_${auth.authMark}`,
+            hasChildren: false,
             meta: {
               title: auth.title,
               authMark: auth.authMark,
@@ -476,6 +498,7 @@
         clonedItem.children = clonedItem.children?.length
           ? [...clonedItem.children, ...authChildren]
           : authChildren
+        clonedItem.hasChildren = true
       }
 
       return clonedItem
@@ -656,10 +679,10 @@
       const isEdit = !!formData.menuId
       if (isEdit) {
         await fetchUpdateMenu(formData)
-        ElMessage.success('修改菜单成功')
+        ElMessage.success(t('system.menu.updateSuccess'))
       } else {
         await fetchAddMenu(formData)
-        ElMessage.success('新增菜单成功')
+        ElMessage.success(t('system.menu.addSuccess'))
       }
       dialogVisible.value = false
       await getMenuList()
@@ -669,7 +692,7 @@
       await reloadDynamicRoutes()
     } catch (error) {
       safeError('保存菜单失败:', error)
-      handleMutationError(error, formData.menuId ? '修改菜单失败' : '新增菜单失败')
+      handleMutationError(error, formData.menuId ? t('common.updateFail') : t('common.addFail'))
     }
   }
 
@@ -680,24 +703,19 @@
    */
   const handleDelete = async (row: AppRouteRecord, isAuthButton = false): Promise<void> => {
     if (!row.id) {
-      ElMessage.warning(`${isAuthButton ? '权限' : '菜单'}ID不存在，无法删除`)
+      ElMessage.warning(t('common.deleteFail'))
       return
     }
 
     try {
-      // 使用 await 确保真正等待用户在确认框中的选择，避免误删
-      await ElMessageBox.confirm(
-        `确定要删除该${isAuthButton ? '权限' : '菜单'}吗？删除后无法恢复`,
-        '提示',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      )
+      await ElMessageBox.confirm(t('system.menu.deleteConfirm'), t('common.tips'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      })
 
       await fetchDeleteMenu(row.id)
-      ElMessage.success('删除成功')
+      ElMessage.success(t('common.deleteSuccess'))
       await getMenuList()
       // 清除前端菜单缓存，确保下次刷新或重新登录时获取最新数据
       menuStore.clearMenuCacheMeta()
@@ -707,7 +725,7 @@
       // 用户点击取消/关闭时，Element Plus 会抛出 'cancel' 或 'close' 等错误标识，这里统一视为正常中断
       if (error !== 'cancel' && error !== 'close') {
         safeError(`删除${isAuthButton ? '权限' : '菜单'}失败:`, error)
-        handleMutationError(error, '删除失败')
+        handleMutationError(error, t('common.deleteFail'))
       }
     }
   }

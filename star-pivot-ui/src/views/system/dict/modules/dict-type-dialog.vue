@@ -15,15 +15,15 @@
       :rules="rules"
       :span="24"
       :gutter="20"
-      label-width="100px"
+      label-width="auto"
       :show-reset="false"
       :show-submit="false"
     />
 
     <template #footer>
       <span class="dialog-footer">
-        <ElButton @click="handleCancel">取 消</ElButton>
-        <ElButton type="primary" @click="handleSubmit">确 定</ElButton>
+        <ElButton @click="handleCancel">{{ t('common.cancel') }}</ElButton>
+        <ElButton type="primary" @click="handleSubmit">{{ t('common.confirm') }}</ElButton>
       </span>
     </template>
   </ElDialog>
@@ -35,6 +35,7 @@
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { DictTypeFormData } from '@/api/dict/type'
+  import { useI18n } from 'vue-i18n'
 
   interface Props {
     visible: boolean
@@ -52,6 +53,7 @@
   })
 
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const formRef = ref()
   const isEdit = ref(false)
@@ -64,71 +66,66 @@
   })
 
   const dialogTitle = computed(() => {
-    return isEdit.value ? '编辑字典类型' : '新增字典类型'
+    return isEdit.value ? t('system.dict.editType') : t('system.dict.addType')
   })
 
-  // 字典类型验证函数
   const validateDictType = (rule: any, value: string, callback: any) => {
     if (!value) {
-      callback(new Error('请输入字典类型'))
+      callback(new Error(t('system.dict.typeRequired')))
       return
     }
-    // 字典类型只能包含字母、数字、下划线和横线
     if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
-      callback(new Error('字典类型只能包含字母、数字、下划线和横线'))
+      callback(new Error(t('system.dict.typeRequired')))
       return
     }
     callback()
   }
 
-  const rules = reactive<FormRules>({
+  const rules = computed<FormRules>(() => ({
     dictName: [
-      { required: true, message: '请输入字典名称', trigger: 'blur' },
-      { max: 100, message: '字典名称长度不能超过100个字符', trigger: 'blur' }
+      { required: true, message: t('system.dict.nameRequired'), trigger: 'blur' },
+      { max: 100, message: t('common.pleaseInput'), trigger: 'blur' }
     ],
     dictType: [{ validator: validateDictType, trigger: 'blur' }],
-    status: [{ required: true, message: '请选择状态', trigger: 'change' }]
-  })
+    status: [{ required: true, message: t('common.pleaseSelect'), trigger: 'change' }]
+  }))
 
   const formItems = computed<FormItem[]>(() => [
     {
-      label: '字典名称',
+      label: t('system.dict.dictName'),
       key: 'dictName',
       type: 'input',
-      props: { placeholder: '请输入字典名称' }
+      props: { placeholder: t('system.dict.namePlaceholder') }
     },
     {
-      label: '字典类型',
+      label: t('system.dict.dictType'),
       key: 'dictType',
       type: 'input',
       props: {
-        placeholder: '请输入字典类型，如：sys_user_sex',
+        placeholder: t('system.dict.typePlaceholder'),
         disabled: isEdit.value
       }
     },
     {
-      label: '状态',
+      label: t('common.status'),
       key: 'status',
       type: 'radiogroup',
       props: {
         options: [
-          { label: '正常', value: '0' },
-          { label: '停用', value: '1' }
+          { label: t('common.normal'), value: '0' },
+          { label: t('common.disabled'), value: '1' }
         ]
       }
     },
     {
-      label: '备注',
+      label: t('common.remark'),
       key: 'remark',
       type: 'input',
       span: 24,
-      props: { type: 'textarea', rows: 3, placeholder: '请输入备注' }
+      props: { type: 'textarea', rows: 3, placeholder: t('common.pleaseInput') }
     }
   ])
 
-  /**
-   * 加载表单数据（编辑模式）
-   */
   const loadFormData = (): void => {
     if (!props.editData) return
 
@@ -142,9 +139,6 @@
     })
   }
 
-  /**
-   * 重置表单数据
-   */
   const resetForm = (): void => {
     Object.assign(form, {
       dictId: undefined,
@@ -161,9 +155,6 @@
     isEdit.value = false
   }
 
-  /**
-   * 提交表单
-   */
   const handleSubmit = async (): Promise<void> => {
     if (!formRef.value) return
 
@@ -177,7 +168,6 @@
         remark: form.remark || ''
       }
 
-      // 如果是编辑模式，添加dictId
       if (isEdit.value && form.dictId) {
         submitData.dictId = form.dictId
       }
@@ -185,27 +175,18 @@
       emit('submit', submitData)
       handleCancel()
     } catch {
-      ElMessage.error('表单校验失败，请检查输入')
+      ElMessage.error(t('common.pleaseInput'))
     }
   }
 
-  /**
-   * 取消操作
-   */
   const handleCancel = (): void => {
     emit('update:visible', false)
   }
 
-  /**
-   * 对话框关闭后的回调
-   */
   const handleClosed = (): void => {
     resetForm()
   }
 
-  /**
-   * 监听对话框显示状态
-   */
   watch(
     () => props.visible,
     async (newVal) => {

@@ -1,7 +1,7 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    :title="dialogType === 'add' ? '新增定时任务' : '编辑定时任务'"
+    :title="dialogType === 'add' ? t('monitor.job.addTitle') : t('monitor.job.editTitle')"
     width="560px"
     align-center
   >
@@ -10,53 +10,57 @@
       :model="formData"
       :rules="rules"
       label-width="120px"
-      aria-label="定时任务表单"
+      aria-label="job form"
     >
-      <ElFormItem label="任务名称" prop="jobName">
-        <ElInput v-model="formData.jobName" placeholder="请输入任务名称" />
+      <ElFormItem :label="t('monitor.job.jobName')" prop="jobName">
+        <ElInput v-model="formData.jobName" :placeholder="t('monitor.job.jobNamePlaceholder')" />
       </ElFormItem>
-      <ElFormItem label="任务组名" prop="jobGroup">
+      <ElFormItem :label="t('monitor.job.jobGroup')" prop="jobGroup">
         <ElInput v-model="formData.jobGroup" placeholder="DEFAULT" />
       </ElFormItem>
-      <ElFormItem label="调用目标" prop="invokeTarget">
+      <ElFormItem :label="t('monitor.job.invokeTarget')" prop="invokeTarget">
         <ElInput
           v-model="formData.invokeTarget"
           type="textarea"
           :rows="2"
-          placeholder="如：com.star.pivot.quartz.task.SampleTask.hello()"
+          :placeholder="t('monitor.job.invokeTargetPlaceholder')"
         />
-        <div class="form-tip"
-          >格式：包名.类名.方法名()，仅允许白名单包：com.star.pivot.quartz.task</div
-        >
       </ElFormItem>
-      <ElFormItem label="Cron 表达式" prop="cronExpression">
-        <ElInput v-model="formData.cronExpression" placeholder="如：0 0/5 * * * ? 表示每5分钟">
+      <ElFormItem :label="t('monitor.job.cronExpression')" prop="cronExpression">
+        <ElInput v-model="formData.cronExpression" :placeholder="t('monitor.job.cronPlaceholder')">
           <template #append>
-            <ElButton type="primary" @click="handleTestCronExpression">配置</ElButton>
+            <ElButton type="primary" @click="handleTestCronExpression">{{
+              t('monitor.job.cronEditor')
+            }}</ElButton>
           </template>
         </ElInput>
       </ElFormItem>
-      <ElFormItem label="执行策略" prop="misfirePolicy">
-        <ElSelect v-model="formData.misfirePolicy" placeholder="请选择">
-          <ElOption label="立即执行" value="1" />
-          <ElOption label="执行一次" value="2" />
-          <ElOption label="放弃执行" value="3" />
+      <ElFormItem :label="t('monitor.job.misfirePolicy')" prop="misfirePolicy">
+        <ElSelect v-model="formData.misfirePolicy" :placeholder="t('common.pleaseSelect')">
+          <ElOption :label="t('monitor.job.misfireFire')" value="1" />
+          <ElOption :label="t('monitor.job.misfireDefault')" value="2" />
+          <ElOption :label="t('monitor.job.misfireIgnore')" value="3" />
         </ElSelect>
       </ElFormItem>
-      <ElFormItem label="是否并发" prop="concurrent">
+      <ElFormItem :label="t('monitor.job.concurrent')" prop="concurrent">
         <ElRadioGroup v-model="formData.concurrent">
-          <ElRadio value="0" label="允许">允许</ElRadio>
-          <ElRadio value="1" label="禁止">禁止</ElRadio>
+          <ElRadio value="0">{{ t('monitor.job.concurrentAllow') }}</ElRadio>
+          <ElRadio value="1">{{ t('monitor.job.concurrentForbid') }}</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
-      <ElFormItem label="状态" prop="status">
+      <ElFormItem :label="t('monitor.job.status')" prop="status">
         <ElRadioGroup v-model="formData.status">
-          <ElRadio value="0" label="正常">正常</ElRadio>
-          <ElRadio value="1" label="暂停">暂停</ElRadio>
+          <ElRadio value="0">{{ t('common.normal') }}</ElRadio>
+          <ElRadio value="1">{{ t('monitor.job.pause') }}</ElRadio>
         </ElRadioGroup>
       </ElFormItem>
-      <ElFormItem label="备注" prop="remark">
-        <ElInput v-model="formData.remark" type="textarea" :rows="2" placeholder="选填" />
+      <ElFormItem :label="t('common.remark')" prop="remark">
+        <ElInput
+          v-model="formData.remark"
+          type="textarea"
+          :rows="2"
+          :placeholder="t('common.pleaseInput')"
+        />
       </ElFormItem>
     </ElForm>
 
@@ -66,8 +70,8 @@
       @confirm="applyCron"
     />
     <template #footer>
-      <ElButton @click="dialogVisible = false">取消</ElButton>
-      <ElButton type="primary" @click="handleSubmit">确定</ElButton>
+      <ElButton @click="dialogVisible = false">{{ t('common.cancel') }}</ElButton>
+      <ElButton type="primary" @click="handleSubmit">{{ t('common.confirm') }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -75,6 +79,7 @@
 <script setup lang="ts">
   import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import { fetchAddJob, fetchUpdateJob, fetchJobById, type SysJob } from '@/api/monitor/job'
   import type { DialogType } from '@/types'
   import CronEditorDialog from './cron-editor-dialog.vue'
@@ -92,6 +97,7 @@
 
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
+  const { t } = useI18n()
 
   const dialogVisible = computed({
     get: () => props.visible,
@@ -112,17 +118,21 @@
     remark: ''
   })
 
-  const rules: FormRules = {
-    jobName: [{ required: true, message: '请输入任务名称', trigger: 'blur' }],
-    invokeTarget: [{ required: true, message: '请输入调用目标', trigger: 'blur' }],
-    cronExpression: [{ required: true, message: '请输入 Cron 表达式', trigger: 'blur' }]
-  }
+  const rules = computed<FormRules>(() => ({
+    jobName: [{ required: true, message: t('monitor.job.jobNamePlaceholder'), trigger: 'blur' }],
+    invokeTarget: [
+      { required: true, message: t('monitor.job.invokeTargetPlaceholder'), trigger: 'blur' }
+    ],
+    cronExpression: [
+      { required: true, message: t('monitor.job.cronPlaceholder'), trigger: 'blur' }
+    ]
+  }))
 
   const cronDialogVisible = ref(false)
 
   const applyCron = (expression: string) => {
     formData.cronExpression = expression
-    ElMessage.success('已应用 Cron 表达式')
+    ElMessage.success(t('common.updateSuccess'))
   }
 
   const initFormData = async () => {
@@ -159,15 +169,18 @@
     try {
       if (props.type === 'add') {
         await fetchAddJob(formData as SysJob)
-        ElMessage.success('新增成功')
+        ElMessage.success(t('common.addSuccess'))
       } else {
         await fetchUpdateJob(formData as SysJob)
-        ElMessage.success('修改成功')
+        ElMessage.success(t('common.updateSuccess'))
       }
       emit('submit')
       dialogVisible.value = false
     } catch (e) {
       console.error(e)
+      ElMessage.error(
+        props.type === 'add' ? t('common.addFail') : t('common.updateFail')
+      )
     }
   }
 
@@ -252,11 +265,5 @@
     &:hover {
       transform: translateY(-1px);
     }
-  }
-
-  .form-tip {
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
   }
 </style>
