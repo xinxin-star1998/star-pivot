@@ -132,7 +132,10 @@
                     v-if="activeTab === 'all'"
                     v-auth="'file:resource:tag'"
                     v-ripple
-                    @click="tagDialogMode = 'manage'; tagDialogVisible = true"
+                    @click="
+                      tagDialogMode = 'manage'
+                      tagDialogVisible = true
+                    "
                   >
                     {{ t('file.tagManage') }}
                   </ElButton>
@@ -234,7 +237,10 @@
       :default-folder-id="uploadTargetFolderId ?? selectedFolderId"
       :seed-files="uploadSeedFiles"
       @success="onUploadSuccess"
-      @closed="uploadSeedFiles = []; uploadTargetFolderId = undefined"
+      @closed="
+        uploadSeedFiles = []
+        uploadTargetFolderId = undefined
+      "
     />
 
     <FilePreviewDialog
