@@ -2,14 +2,15 @@
   <ElDialog
     v-model="dialogVisible"
     :title="dialogType === 'add' ? t('monitor.job.addTitle') : t('monitor.job.editTitle')"
-    width="560px"
+    :width="dialogWidth || '560px'"
     align-center
   >
     <ElForm
       ref="formRef"
       :model="formData"
       :rules="rules"
-      label-width="120px"
+      :label-width="labelWidth"
+      :label-position="labelPosition"
       aria-label="job form"
     >
       <ElFormItem :label="t('monitor.job.jobName')" prop="jobName">
@@ -77,10 +78,11 @@
 </template>
 
 <script setup lang="ts">
-  import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { ElMessage } from 'element-plus'
   import { useI18n } from 'vue-i18n'
-  import { fetchAddJob, fetchUpdateJob, fetchJobById, type SysJob } from '@/api/monitor/job'
+  import { useMobileFormLayout } from '@/hooks/core/useMobileFormLayout'
+  import { fetchAddJob, fetchJobById, fetchUpdateJob, type SysJob } from '@/api/monitor/job'
   import type { DialogType } from '@/types'
   import CronEditorDialog from './cron-editor-dialog.vue'
 
@@ -98,6 +100,9 @@
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
   const { t } = useI18n()
+  const { labelPosition, labelWidth, dialogWidth } = useMobileFormLayout({
+    desktopWidth: '120px'
+  })
 
   const dialogVisible = computed({
     get: () => props.visible,
@@ -123,9 +128,7 @@
     invokeTarget: [
       { required: true, message: t('monitor.job.invokeTargetPlaceholder'), trigger: 'blur' }
     ],
-    cronExpression: [
-      { required: true, message: t('monitor.job.cronPlaceholder'), trigger: 'blur' }
-    ]
+    cronExpression: [{ required: true, message: t('monitor.job.cronPlaceholder'), trigger: 'blur' }]
   }))
 
   const cronDialogVisible = ref(false)
@@ -178,9 +181,7 @@
       dialogVisible.value = false
     } catch (e) {
       console.error(e)
-      ElMessage.error(
-        props.type === 'add' ? t('common.addFail') : t('common.updateFail')
-      )
+      ElMessage.error(props.type === 'add' ? t('common.addFail') : t('common.updateFail'))
     }
   }
 

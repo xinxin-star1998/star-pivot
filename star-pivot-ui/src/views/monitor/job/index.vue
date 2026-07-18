@@ -125,7 +125,7 @@
         {
           prop: 'operation',
           label: t('common.operation'),
-          width: 300,
+          minWidth: 200,
           fixed: 'right',
           formatter: (row: SysJob) => {
             try {

@@ -7,8 +7,8 @@
       :key="locale"
       ref="formRef"
       :model="modelValue"
-      :label-position="labelPosition"
-      :label-width="labelWidth"
+      :label-position="effectiveLabelPosition"
+      :label-width="effectiveLabelWidth"
       v-bind="{ ...$attrs }"
     >
       <ElRow class="flex flex-wrap" :gutter="gutter">
@@ -146,6 +146,7 @@
   const { width } = useWindowSize()
   const { t, locale } = useI18n()
   const isMobile = computed(() => width.value < 500)
+  const isNarrow = computed(() => width.value < 768)
 
   const formInstance = useTemplateRef<FormInstance>('formRef')
 
@@ -219,6 +220,10 @@
   const emit = defineEmits<FormEmits>()
 
   const modelValue = defineModel<Record<string, any>>({ default: {} })
+
+  /** 窄屏强制顶部标签，避免固定 labelWidth 挤压输入框 */
+  const effectiveLabelPosition = computed(() => (isNarrow.value ? 'top' : props.labelPosition))
+  const effectiveLabelWidth = computed(() => (isNarrow.value ? 'auto' : props.labelWidth))
 
   const rootProps = ['label', 'labelWidth', 'key', 'type', 'hidden', 'span', 'slots']
 

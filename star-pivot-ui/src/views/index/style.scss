@@ -74,6 +74,12 @@
       #app-content {
         :deep(.layout-content) {
           width: calc(100% - 40px);
+
+          .page-content {
+            padding: 14px;
+            overflow-x: auto;
+            overflow-y: visible;
+          }
         }
       }
     }
@@ -86,6 +92,12 @@
       #app-content {
         :deep(.layout-content) {
           width: calc(100% - 30px);
+
+          .page-content {
+            padding: 10px 12px;
+            overflow-x: auto;
+            overflow-y: visible;
+          }
         }
       }
     }

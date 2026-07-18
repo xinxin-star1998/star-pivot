@@ -306,12 +306,11 @@
       remark: '',
       translations: emptyTranslations
     })
-    nextTick(() => {
-      if (formRef.value?.ref) {
-        formRef.value.ref.resetFields()
-      }
-    })
     isEdit.value = false
+    // 勿用 resetFields：会把已写入的 dictType 清回初始空值
+    nextTick(() => {
+      formRef.value?.ref?.clearValidate()
+    })
   }
 
   const handleSubmit = async (): Promise<void> => {

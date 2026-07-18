@@ -13,8 +13,8 @@
       <p class="mt-1 text-sm">{{ t('dashboard.activeUser.subtitle') }}</p>
       <p class="mt-1 text-sm">{{ t('dashboard.activeUser.description') }}</p>
     </div>
-    <div class="flex-b mt-2">
-      <div class="flex-1" v-for="(item, index) in list" :key="index">
+    <div class="flex-b max-sm:!flex-wrap mt-2 gap-y-2">
+      <div class="flex-1 min-w-20" v-for="(item, index) in list" :key="index">
         <p class="text-2xl text-g-900">{{ item.num }}</p>
         <p class="text-xs text-g-500">{{ item.name }}</p>
       </div>

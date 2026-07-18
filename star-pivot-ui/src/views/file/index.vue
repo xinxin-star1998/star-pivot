@@ -1,7 +1,8 @@
 <template>
   <div class="file-page art-full-height">
-    <div class="file-layout">
-      <ElCard v-if="activeTab === 'all'" class="file-sidebar" shadow="never">
+    <div class="file-layout" :class="{ 'is-mobile': isMobile }">
+      <!-- 桌面端侧栏 -->
+      <ElCard v-if="activeTab === 'all' && !isMobile" class="file-sidebar" shadow="never">
         <FileFolderTree
           :active-folder-id="selectedFolderId"
           :categories="categoryTree"
@@ -45,6 +46,15 @@
               </ElTabs>
 
               <div v-if="activeTab === 'all' && locationText" class="location-bar">
+                <ElButton
+                  v-if="isMobile"
+                  class="folder-nav-btn"
+                  size="small"
+                  @click="folderDrawerVisible = true"
+                >
+                  <ArtSvgIcon class="mr-1" icon="ri:menu-fold-line" />
+                  {{ t('file.rootFolder') }}
+                </ElButton>
                 <ArtSvgIcon class="location-icon" icon="ri:folder-open-line" />
                 <span class="location-text">{{ locationText }}</span>
               </div>
@@ -66,7 +76,7 @@
                 v-model="tagFilterId"
                 clearable
                 :placeholder="t('file.tagFilter')"
-                style="width: 140px"
+                class="tag-filter-select"
                 size="small"
                 @change="handleSearch"
               >
@@ -278,54 +288,82 @@
     />
 
     <FileVersionDialog v-model="versionDialogVisible" :file="versionFile" @success="refreshData" />
+
+    <!-- 移动端目录抽屉 -->
+    <ElDrawer
+      v-model="folderDrawerVisible"
+      :title="t('file.rootFolder')"
+      direction="ltr"
+      size="82%"
+      class="file-folder-drawer"
+    >
+      <FileFolderTree
+        :active-folder-id="selectedFolderId"
+        :categories="categoryTree"
+        :list-scope="fileListScope"
+        @select-all="onMobileSelectAll"
+        @select-favorite="onMobileSelectFavorite"
+        @select-recent="onMobileSelectRecent"
+        @select-folder="onMobileSelectFolder"
+        @add-folder="handleAddFolder"
+        @edit-folder="handleEditFolder"
+        @delete-folder="handleDeleteFolder"
+        @drop-files="onDropFilesToFolder"
+        @drop-move="onDropMoveToFolder"
+      />
+    </ElDrawer>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {
-  clearRecycleBin,
-  deleteFiles,
-  downloadFilesZip,
-  fetchFileList,
-  fetchFilePreviewUrl,
-  fetchFileTagList,
-  fetchRecycleList,
-  moveFiles,
-  purgeFiles,
-  renameFile,
-  restoreFiles,
-  toggleFileFavorite
-} from '@/api/file/file'
-import { deleteFolder, fetchFolderTree } from '@/api/file/folder'
-import type { FileCategoryNode, SysFile, SysFileFolderForm, SysFileTag } from '@/api/file/types'
-import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-import ArtTable from '@/components/core/tables/art-table/index.vue'
-import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
-import { useTable } from '@/hooks/core/useTable'
-import { useAuth } from '@/hooks/core/useAuth'
-import { formatFileSize, openFileUrl, resolveFileDisplayUrl } from '@/utils/file/file-center'
-import { findFolderInTree } from '@/utils/file/folder-tree'
-import { handleMutationError } from '@/utils/http/mutation'
-import { ElImage, ElMessage, ElMessageBox, ElTag } from 'element-plus'
-import { computed, h, onActivated, onMounted, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { getCategoryLabel, getMediaTypeIcon, MEDIA_TYPE_TAG, MEDIA_TYPES } from './constants'
-import FileFolderTree from './modules/file-folder-tree.vue'
-import FileGridView from './modules/file-grid-view.vue'
-import FileMoveDialog from './modules/file-move-dialog.vue'
-import FilePreviewDialog from './modules/file-preview-dialog.vue'
-import FileSearch from './modules/file-search.vue'
-import FileTagDialog from './modules/file-tag-dialog.vue'
-import FileVersionDialog from './modules/file-version-dialog.vue'
-import FileTimelineView from './modules/file-timeline-view.vue'
-import FileUploadDialog from './modules/file-upload-dialog.vue'
-import FolderDialog from './modules/folder-dialog.vue'
+  import {
+    clearRecycleBin,
+    deleteFiles,
+    downloadFilesZip,
+    fetchFileList,
+    fetchFilePreviewUrl,
+    fetchFileTagList,
+    fetchRecycleList,
+    moveFiles,
+    purgeFiles,
+    renameFile,
+    restoreFiles,
+    toggleFileFavorite
+  } from '@/api/file/file'
+  import { deleteFolder, fetchFolderTree } from '@/api/file/folder'
+  import type { FileCategoryNode, SysFile, SysFileFolderForm, SysFileTag } from '@/api/file/types'
+  import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import ArtTable from '@/components/core/tables/art-table/index.vue'
+  import ArtTableHeader from '@/components/core/tables/art-table-header/index.vue'
+  import { useTable } from '@/hooks/core/useTable'
+  import { useAuth } from '@/hooks/core/useAuth'
+  import { formatFileSize, openFileUrl, resolveFileDisplayUrl } from '@/utils/file/file-center'
+  import { findFolderInTree } from '@/utils/file/folder-tree'
+  import { handleMutationError } from '@/utils/http/mutation'
+  import { ElImage, ElMessage, ElMessageBox, ElTag } from 'element-plus'
+  import { useWindowSize } from '@vueuse/core'
+  import { computed, h, onActivated, onMounted, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { getCategoryLabel, getMediaTypeIcon, MEDIA_TYPE_TAG, MEDIA_TYPES } from './constants'
+  import FileFolderTree from './modules/file-folder-tree.vue'
+  import FileGridView from './modules/file-grid-view.vue'
+  import FileMoveDialog from './modules/file-move-dialog.vue'
+  import FilePreviewDialog from './modules/file-preview-dialog.vue'
+  import FileSearch from './modules/file-search.vue'
+  import FileTagDialog from './modules/file-tag-dialog.vue'
+  import FileVersionDialog from './modules/file-version-dialog.vue'
+  import FileTimelineView from './modules/file-timeline-view.vue'
+  import FileUploadDialog from './modules/file-upload-dialog.vue'
+  import FolderDialog from './modules/folder-dialog.vue'
 
-defineOptions({ name: 'FileManage' })
+  defineOptions({ name: 'FileManage' })
 
   const { hasAuth } = useAuth()
   const { t } = useI18n()
+  const { width } = useWindowSize()
+  const isMobile = computed(() => width.value < 768)
+  const folderDrawerVisible = ref(false)
 
   const activeTab = ref<'all' | 'recycle'>('all')
   /** 与 activeTab 同步，供 listApi 读取，避免 Tab 切换瞬间 API 选错 */
@@ -690,6 +728,34 @@ defineOptions({ name: 'FileManage' })
     selectedFolderName.value = payload.folderName
     resetColumns?.()
     handleSearch()
+  }
+
+  function closeFolderDrawer() {
+    folderDrawerVisible.value = false
+  }
+
+  function onMobileSelectAll() {
+    handleSelectAll()
+    closeFolderDrawer()
+  }
+
+  function onMobileSelectFavorite() {
+    handleSelectFavorite()
+    closeFolderDrawer()
+  }
+
+  function onMobileSelectRecent() {
+    handleSelectRecent()
+    closeFolderDrawer()
+  }
+
+  function onMobileSelectFolder(payload: {
+    folderId: number
+    category: string
+    folderName: string
+  }) {
+    handleSelectFolder(payload)
+    closeFolderDrawer()
   }
 
   function parseTimeRange(range: unknown) {
@@ -1215,6 +1281,7 @@ defineOptions({ name: 'FileManage' })
     display: inline-flex;
     gap: 6px;
     align-items: center;
+    max-width: 100%;
     padding: 4px 12px;
     font-size: 13px;
     color: var(--el-text-color-regular);
@@ -1222,7 +1289,12 @@ defineOptions({ name: 'FileManage' })
     border-radius: 6px;
   }
 
+  .folder-nav-btn {
+    flex-shrink: 0;
+  }
+
   .location-icon {
+    flex-shrink: 0;
     font-size: 16px;
     color: var(--el-color-primary);
   }
@@ -1232,6 +1304,10 @@ defineOptions({ name: 'FileManage' })
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .tag-filter-select {
+    width: 140px;
   }
 
   .media-filter {
@@ -1317,5 +1393,68 @@ defineOptions({ name: 'FileManage' })
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
+  }
+
+  @media (width <= 768px) {
+    .file-layout {
+      display: block;
+      height: auto;
+    }
+
+    .file-main {
+      width: 100%;
+    }
+
+    .location-bar {
+      width: 100%;
+      padding: 6px 10px;
+    }
+
+    .location-text {
+      max-width: none;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tag-filter-select {
+      width: 100%;
+      max-width: 160px;
+    }
+
+    .media-filter {
+      gap: 8px;
+
+      :deep(.el-radio-group) {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+      }
+    }
+
+    .view-pagination {
+      justify-content: center;
+
+      :deep(.el-pagination) {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+    :deep(.file-op-cell) {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 2px;
+    }
+  }
+
+  @media (width <= 640px) {
+    .panel-toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .tag-filter-select {
+      max-width: none;
+    }
   }
 </style>

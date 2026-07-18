@@ -1694,8 +1694,8 @@ INSERT INTO `sys_i18n` VALUES (587, 'ui', 'system.user.loadPostFail', '_', 'zh',
 INSERT INTO `sys_i18n` VALUES (588, 'ui', 'system.user.loadRoleFail', '_', 'zh', '获取角色列表失败', 'admin', '2026-07-17 18:00:00', '', NULL);
 INSERT INTO `sys_i18n` VALUES (589, 'ui', 'system.user.nickName', '_', 'zh', '用户昵称', 'admin', '2026-07-17 18:00:00', '', NULL);
 INSERT INTO `sys_i18n` VALUES (590, 'ui', 'system.user.nickNamePlaceholder', '_', 'zh', '请输入用户昵称', 'admin', '2026-07-17 18:00:00', '', NULL);
-INSERT INTO `sys_i18n` VALUES (591, 'ui', 'system.user.offline', '_', 'zh', '校验规则', 'admin', '2026-07-17 18:00:00', '', NULL);
-INSERT INTO `sys_i18n` VALUES (592, 'ui', 'system.user.online', '_', 'zh', '表单数据双向绑定', 'admin', '2026-07-17 18:00:00', '', NULL);
+INSERT INTO `sys_i18n` VALUES (591, 'ui', 'system.user.offline', '_', 'zh', '离线', 'admin', '2026-07-17 18:00:00', '', NULL);
+INSERT INTO `sys_i18n` VALUES (592, 'ui', 'system.user.online', '_', 'zh', '在线', 'admin', '2026-07-17 18:00:00', '', NULL);
 INSERT INTO `sys_i18n` VALUES (593, 'ui', 'system.user.password', '_', 'zh', '用户密码', 'admin', '2026-07-17 18:00:00', '', NULL);
 INSERT INTO `sys_i18n` VALUES (594, 'ui', 'system.user.passwordPlaceholder', '_', 'zh', '请输入用户密码', 'admin', '2026-07-17 18:00:00', '', NULL);
 INSERT INTO `sys_i18n` VALUES (595, 'ui', 'system.user.phone', '_', 'zh', '手机号', 'admin', '2026-07-17 18:00:00', '', NULL);

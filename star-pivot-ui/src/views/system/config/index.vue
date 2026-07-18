@@ -166,7 +166,8 @@
           prop: 'remark',
           label: t('common.remark'),
           minWidth: 120,
-          showOverflowTooltip: true
+          showOverflowTooltip: true,
+          hideOnMobile: true
         },
         {
           prop: 'operation',

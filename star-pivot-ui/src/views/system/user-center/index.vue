@@ -1,23 +1,30 @@
 <!-- 个人中心页面 -->
 <template>
-  <div class="w-full h-full p-0 bg-transparent border-none shadow-none">
-    <div v-loading="loading" class="relative flex-b mt-2.5 max-md:block max-md:mt-1">
-      <div class="w-112 mr-5 max-md:w-full max-md:mr-0">
+  <div class="user-center-page w-full h-full p-0 bg-transparent border-none shadow-none">
+    <div
+      v-loading="loading"
+      class="user-center-layout relative flex-b mt-2.5 max-md:!block max-md:mt-1"
+    >
+      <div class="user-center-profile w-112 mr-5 max-md:!w-full max-md:!mr-0">
         <div class="art-card-sm relative p-0 overflow-hidden">
-          <div class="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600">
+          <div
+            class="relative h-48 max-md:h-40 max-sm:h-32 bg-gradient-to-r from-blue-500 to-purple-600"
+          >
             <img
               class="absolute top-0 left-0 w-full h-full object-cover opacity-80"
               :src="bgImage"
             />
             <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black/30"></div>
           </div>
-          <div class="relative px-6 pb-8 -mt-16 text-center">
+          <div
+            class="relative px-6 pb-8 -mt-16 max-md:px-4 max-md:pb-6 max-md:-mt-12 max-sm:px-3 text-center"
+          >
             <div class="relative inline-block">
               <ArtAvatarUpload
                 class="user-center-top-avatar transition-all duration-300 hover:scale-105"
                 :model-value="topAvatarDisplayUrl"
                 :user-id="form.userId"
-                :size="112"
+                :size="avatarSize"
                 :auto-upload="true"
                 use-presigned-url
                 @update:model-value="(val) => (topAvatarDisplayUrl = val)"
@@ -25,84 +32,87 @@
                 @error="handleAvatarUploadError"
               />
               <div
-                class="absolute bottom-1 right-1 w-6 h-6 rounded-full border-2 transition-colors"
+                class="absolute bottom-1 right-1 w-6 h-6 max-sm:w-5 max-sm:h-5 rounded-full border-2 transition-colors"
                 :class="isDark ? 'bg-green-500 border-g-700' : 'bg-green-500 border-white'"
               ></div>
             </div>
             <h2
-              class="mt-4 text-2xl font-semibold transition-colors"
+              class="mt-4 text-2xl max-md:text-xl font-semibold transition-colors break-all"
               :class="isDark ? 'text-g-100' : 'text-g-900'"
             >
               {{ userDetail.userName || userInfo.user?.username }}
             </h2>
-            <p class="mt-2 text-sm transition-colors" :class="isDark ? 'text-g-400' : 'text-g-600'">
+            <p
+              class="mt-2 text-sm transition-colors break-words"
+              :class="isDark ? 'text-g-400' : 'text-g-600'"
+            >
               {{ userDetail.remark || t('system.userCenter.defaultRemark') }}
             </p>
 
-            <div class="mt-6 space-y-3">
+            <div class="mt-6 max-md:mt-4 space-y-3">
               <div
-                class="flex items-center justify-center p-3 rounded-lg transition-colors"
+                class="flex items-center justify-center gap-2 p-3 rounded-lg transition-colors min-w-0"
                 v-if="userDetail.email"
                 :class="isDark ? 'bg-g-800/50 hover:bg-g-800/70' : 'bg-g-100 hover:bg-g-200'"
               >
                 <ArtSvgIcon
                   icon="ri:mail-line"
-                  class="text-lg transition-colors"
+                  class="text-lg shrink-0 transition-colors"
                   :class="isDark ? 'text-blue-400' : 'text-blue-600'"
                 />
                 <span
-                  class="ml-3 text-sm font-medium transition-colors"
+                  class="text-sm font-medium transition-colors break-all"
                   :class="isDark ? 'text-g-200' : 'text-g-700'"
                 >
                   {{ userDetail.email }}
                 </span>
               </div>
               <div
-                class="flex items-center justify-center p-3 rounded-lg transition-colors"
+                class="flex items-center justify-center gap-2 p-3 rounded-lg transition-colors min-w-0"
                 v-if="userDetail.nickName"
                 :class="isDark ? 'bg-g-800/50 hover:bg-g-800/70' : 'bg-g-100 hover:bg-g-200'"
               >
                 <ArtSvgIcon
                   icon="ri:user-3-line"
-                  class="text-lg transition-colors"
+                  class="text-lg shrink-0 transition-colors"
                   :class="isDark ? 'text-purple-400' : 'text-purple-600'"
                 />
                 <span
-                  class="ml-3 text-sm font-medium transition-colors"
+                  class="text-sm font-medium transition-colors break-all"
                   :class="isDark ? 'text-g-200' : 'text-g-700'"
                 >
                   {{ userDetail.nickName }}
                 </span>
               </div>
               <div
-                class="flex items-center justify-center p-3 rounded-lg transition-colors"
+                class="flex items-center justify-center gap-2 p-3 rounded-lg transition-colors min-w-0"
                 v-if="userDetail.phonenumber"
                 :class="isDark ? 'bg-g-800/50 hover:bg-g-800/70' : 'bg-g-100 hover:bg-g-200'"
               >
                 <ArtSvgIcon
                   icon="ri:phone-line"
-                  class="text-lg transition-colors"
+                  class="text-lg shrink-0 transition-colors"
                   :class="isDark ? 'text-green-400' : 'text-green-600'"
                 />
                 <span
-                  class="ml-3 text-sm font-medium transition-colors"
+                  class="text-sm font-medium transition-colors break-all"
                   :class="isDark ? 'text-g-200' : 'text-g-700'"
                 >
                   {{ userDetail.phonenumber }}
                 </span>
               </div>
               <div
-                class="flex items-center justify-center p-3 rounded-lg transition-colors"
+                class="flex items-center justify-center gap-2 p-3 rounded-lg transition-colors min-w-0"
                 v-if="userDetail.roleName"
                 :class="isDark ? 'bg-g-800/50 hover:bg-g-800/70' : 'bg-g-100 hover:bg-g-200'"
               >
                 <ArtSvgIcon
                   icon="ri:dribbble-fill"
-                  class="text-lg transition-colors"
+                  class="text-lg shrink-0 transition-colors"
                   :class="isDark ? 'text-orange-400' : 'text-orange-600'"
                 />
                 <span
-                  class="ml-3 text-sm font-medium transition-colors"
+                  class="text-sm font-medium transition-colors break-all"
                   :class="isDark ? 'text-g-200' : 'text-g-700'"
                 >
                   {{ userDetail.roleName }}
@@ -110,7 +120,10 @@
               </div>
             </div>
 
-            <div class="mt-6" v-if="userDetail.userRoles && userDetail.userRoles.length > 0">
+            <div
+              class="mt-6 max-md:mt-4"
+              v-if="userDetail.userRoles && userDetail.userRoles.length > 0"
+            >
               <h3
                 class="mb-3 text-sm font-semibold transition-colors"
                 :class="isDark ? 'text-g-200' : 'text-g-800'"
@@ -135,11 +148,11 @@
           </div>
         </div>
       </div>
-      <div class="flex-1 overflow-hidden max-md:w-full max-md:mt-3.5">
+      <div class="user-center-main flex-1 min-w-0 overflow-hidden max-md:!w-full max-md:mt-3.5">
         <div class="art-card-sm">
-          <div class="px-6 pt-4 pb-2">
+          <div class="px-6 pt-4 pb-2 max-md:px-4 max-sm:px-3">
             <h1
-              class="text-xl font-semibold transition-colors"
+              class="text-xl max-md:text-lg font-semibold transition-colors"
               :class="isDark ? 'text-g-100' : 'text-g-900'"
             >
               {{ t('system.userCenter.basicSettings') }}
@@ -149,99 +162,98 @@
             </p>
           </div>
 
-          <ElTabs v-model="activeTab" class="px-6 pb-6 user-center-tabs">
+          <ElTabs v-model="activeTab" class="px-6 pb-6 max-md:px-4 max-sm:px-3 user-center-tabs">
             <ElTabPane :label="t('system.userCenter.basicInfo')" name="basic">
               <ElForm
                 :model="form"
-                class="box-border pt-4 space-y-6"
+                class="box-border pt-4 user-center-basic-form"
                 label-width="86px"
                 label-position="top"
               >
-                <ElRow class="gap-6">
-                  <ElFormItem :label="t('system.user.userName')" class="flex-1">
-                    <ElInput v-model="form.userName" class="transition-all duration-300">
-                      <template #prefix>
-                        <ArtSvgIcon
-                          icon="ri:user-line"
-                          class="transition-colors"
-                          :class="isDark ? 'text-g-500' : 'text-g-400'"
+                <ElRow :gutter="16">
+                  <ElCol :xs="24" :sm="12">
+                    <ElFormItem :label="t('system.user.userName')">
+                      <ElInput v-model="form.userName" class="transition-all duration-300">
+                        <template #prefix>
+                          <ArtSvgIcon
+                            icon="ri:user-line"
+                            class="transition-colors"
+                            :class="isDark ? 'text-g-500' : 'text-g-400'"
+                          />
+                        </template>
+                      </ElInput>
+                    </ElFormItem>
+                  </ElCol>
+                  <ElCol :xs="24" :sm="12">
+                    <ElFormItem :label="t('system.userCenter.sex')">
+                      <ElSelect v-model="form.sex" class="w-full transition-all duration-300">
+                        <ElOption
+                          v-for="item in options"
+                          :key="item.value"
+                          :label="item.label"
+                          :value="item.value"
                         />
-                      </template>
-                    </ElInput>
-                  </ElFormItem>
-                  <ElFormItem :label="t('system.userCenter.sex')" class="flex-1">
-                    <ElSelect v-model="form.sex" class="w-full transition-all duration-300">
-                      <ElOption
-                        v-for="item in options"
-                        :key="item.value"
-                        :label="item.label"
-                        :value="item.value"
+                      </ElSelect>
+                    </ElFormItem>
+                  </ElCol>
+                  <ElCol :xs="24" :sm="12">
+                    <ElFormItem :label="t('system.userCenter.nickName')">
+                      <ElInput v-model="form.nickName" class="transition-all duration-300">
+                        <template #prefix>
+                          <ArtSvgIcon
+                            icon="ri:user-smile-line"
+                            class="transition-colors"
+                            :class="isDark ? 'text-g-500' : 'text-g-400'"
+                          />
+                        </template>
+                      </ElInput>
+                    </ElFormItem>
+                  </ElCol>
+                  <ElCol :xs="24" :sm="12">
+                    <ElFormItem :label="t('system.userCenter.email')">
+                      <ElInput v-model="form.email" class="transition-all duration-300">
+                        <template #prefix>
+                          <ArtSvgIcon
+                            icon="ri:mail-line"
+                            class="transition-colors"
+                            :class="isDark ? 'text-g-500' : 'text-g-400'"
+                          />
+                        </template>
+                      </ElInput>
+                    </ElFormItem>
+                  </ElCol>
+                  <ElCol :xs="24" :sm="12">
+                    <ElFormItem :label="t('system.userCenter.phone')">
+                      <ElInput v-model="form.phonenumber" class="transition-all duration-300">
+                        <template #prefix>
+                          <ArtSvgIcon
+                            icon="ri:phone-line"
+                            class="transition-colors"
+                            :class="isDark ? 'text-g-500' : 'text-g-400'"
+                          />
+                        </template>
+                      </ElInput>
+                    </ElFormItem>
+                  </ElCol>
+                  <ElCol :span="24">
+                    <ElFormItem :label="t('system.userCenter.intro')">
+                      <ElInput
+                        type="textarea"
+                        :rows="4"
+                        v-model="form.remark"
+                        class="transition-all duration-300"
                       />
-                    </ElSelect>
-                  </ElFormItem>
+                    </ElFormItem>
+                  </ElCol>
+                  <ElCol :span="24">
+                    <ElFormItem class="user-center-form-actions">
+                      <ElButton type="primary" @click="submitBasicProfile">{{
+                        t('common.save')
+                      }}</ElButton>
+                      <ElButton plain @click="resetBasicProfile">{{ t('common.reset') }}</ElButton>
+                    </ElFormItem>
+                  </ElCol>
                 </ElRow>
-
-                <ElRow class="gap-6">
-                  <ElFormItem :label="t('system.userCenter.nickName')" class="flex-1">
-                    <ElInput v-model="form.nickName" class="transition-all duration-300">
-                      <template #prefix>
-                        <ArtSvgIcon
-                          icon="ri:user-smile-line"
-                          class="transition-colors"
-                          :class="isDark ? 'text-g-500' : 'text-g-400'"
-                        />
-                      </template>
-                    </ElInput>
-                  </ElFormItem>
-                  <ElFormItem :label="t('system.userCenter.email')" class="flex-1">
-                    <ElInput v-model="form.email" class="transition-all duration-300">
-                      <template #prefix>
-                        <ArtSvgIcon
-                          icon="ri:mail-line"
-                          class="transition-colors"
-                          :class="isDark ? 'text-g-500' : 'text-g-400'"
-                        />
-                      </template>
-                    </ElInput>
-                  </ElFormItem>
-                </ElRow>
-
-                <ElRow class="gap-6">
-                  <ElFormItem :label="t('system.userCenter.phone')" class="flex-1">
-                    <ElInput v-model="form.phonenumber" class="transition-all duration-300">
-                      <template #prefix>
-                        <ArtSvgIcon
-                          icon="ri:phone-line"
-                          class="transition-colors"
-                          :class="isDark ? 'text-g-500' : 'text-g-400'"
-                        />
-                      </template>
-                    </ElInput>
-                  </ElFormItem>
-                </ElRow>
-
-                <ElFormItem :label="t('system.userCenter.intro')" class="h-32">
-                  <ElInput
-                    type="textarea"
-                    :rows="4"
-                    v-model="form.remark"
-                    class="transition-all duration-300"
-                  >
-                    <template #prefix>
-                      <ArtSvgIcon
-                        icon="ri:file-text-line"
-                        class="transition-colors"
-                        :class="isDark ? 'text-g-500' : 'text-g-400'"
-                      />
-                    </template>
-                  </ElInput>
-                </ElFormItem>
-                <ElFormItem>
-                  <ElButton type="primary" @click="submitBasicProfile">{{
-                    t('common.save')
-                  }}</ElButton>
-                  <ElButton plain @click="resetBasicProfile">{{ t('common.reset') }}</ElButton>
-                </ElFormItem>
               </ElForm>
             </ElTabPane>
 
@@ -250,9 +262,9 @@
                 ref="passwordFormRef"
                 :model="passwordForm"
                 :rules="passwordRules"
-                class="pt-4"
-                label-width="90px"
-                label-position="left"
+                class="pt-4 user-center-password-form"
+                :label-width="isMobile ? 'auto' : '90px'"
+                :label-position="isMobile ? 'top' : 'left'"
               >
                 <ElFormItem :label="t('system.userCenter.oldPassword')" prop="oldPassword">
                   <ElInput
@@ -281,15 +293,14 @@
                     :placeholder="t('system.userCenter.confirmPwdPlaceholder')"
                   />
                 </ElFormItem>
-                <ElFormItem>
+                <ElFormItem class="user-center-form-actions">
                   <ElButton type="primary" @click="submitPassword">{{ t('common.save') }}</ElButton>
                 </ElFormItem>
               </ElForm>
             </ElTabPane>
             <ElTabPane :label="t('system.userCenter.sessionManagement')" name="session">
               <div class="session-management pt-4">
-                <!-- 操作按钮 -->
-                <div class="flex items-center gap-3 mb-4">
+                <div class="session-toolbar flex flex-wrap items-center gap-3 mb-4">
                   <el-button
                     type="danger"
                     :loading="logoutAllLoading"
@@ -303,13 +314,14 @@
                     <el-icon><Refresh /></el-icon>
                     {{ t('file.refresh') }}
                   </el-button>
-                  <el-tag v-if="sessionList.length > 0" type="info" size="small" class="ml-2">
+                  <el-tag v-if="sessionList.length > 0" type="info" size="small">
                     {{ t('system.userCenter.activeSessionCount', { count: sessionList.length }) }}
                   </el-tag>
                 </div>
 
-                <!-- 会话列表 -->
+                <!-- 桌面端：表格 -->
                 <el-table
+                  v-if="!isMobile"
                   v-loading="sessionLoading"
                   :data="sessionList"
                   style="width: 100%"
@@ -399,6 +411,61 @@
                     </template>
                   </el-table-column>
                 </el-table>
+
+                <!-- 移动端：卡片列表 -->
+                <div v-else v-loading="sessionLoading" class="session-card-list">
+                  <el-empty
+                    v-if="!sessionLoading && sessionList.length === 0"
+                    :description="t('system.userCenter.noActiveSession')"
+                  />
+                  <div
+                    v-for="row in sessionList"
+                    :key="row.deviceSessionId"
+                    class="session-card"
+                    :class="{ 'is-current': isCurrentSession(row) }"
+                  >
+                    <div class="session-card__header">
+                      <div class="min-w-0">
+                        <div class="session-card__title">{{ getDeviceText(row) }}</div>
+                        <div class="session-card__ip">
+                          <el-icon><Location /></el-icon>
+                          <span>{{ row.ipaddr || t('system.userCenter.unknownIp') }}</span>
+                        </div>
+                      </div>
+                      <el-tag v-if="isCurrentSession(row)" type="success" size="small">
+                        {{ t('system.userCenter.current') }}
+                      </el-tag>
+                      <el-tag v-else type="info" size="small">
+                        {{ t('system.userCenter.other') }}
+                      </el-tag>
+                    </div>
+                    <div class="session-card__meta">
+                      <div class="session-card__meta-item">
+                        <span class="label">{{ t('monitor.online.loginTime') }}</span>
+                        <span class="value">{{ formatDateTime(row.createdAt) }}</span>
+                      </div>
+                      <div class="session-card__meta-item">
+                        <span class="label">{{ t('system.userCenter.lastAccess') }}</span>
+                        <span class="value">{{ formatDateTime(row.lastAccessTime) }}</span>
+                      </div>
+                      <div class="session-card__meta-item">
+                        <span class="label">{{ t('system.userCenter.sessionDuration') }}</span>
+                        <span class="value">{{ row.sessionDuration || '-' }}</span>
+                      </div>
+                    </div>
+                    <div v-if="!isCurrentSession(row)" class="session-card__actions">
+                      <el-button
+                        type="danger"
+                        size="small"
+                        plain
+                        :loading="row.logoutLoading"
+                        @click="handleLogoutSession(row)"
+                      >
+                        {{ t('system.userCenter.logout') }}
+                      </el-button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </ElTabPane>
           </ElTabs>
@@ -425,6 +492,7 @@
   } from '@/api/auth'
   import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
   import { Location, Refresh, SwitchButton } from '@element-plus/icons-vue'
+  import { useWindowSize } from '@vueuse/core'
   import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
   import { handleMutationError } from '@/utils/http/mutation'
   import defaultAvatarImg from '@imgs/user/avatar.webp'
@@ -443,6 +511,14 @@
   // 主题状态
   const settingStore = useSettingStore()
   const { isDark } = storeToRefs(settingStore)
+
+  const { width } = useWindowSize()
+  const isMobile = computed(() => width.value < 768)
+  const avatarSize = computed(() => {
+    if (width.value < 640) return 80
+    if (width.value < 768) return 96
+    return 112
+  })
 
   // 默认头像和背景图片
   const defaultAvatar = defaultAvatarImg
@@ -874,6 +950,26 @@
 </script>
 
 <style scoped lang="scss">
+  .user-center-layout {
+    align-items: flex-start;
+  }
+
+  @media (width <= 768px) {
+    .user-center-layout {
+      display: block !important;
+    }
+
+    .user-center-profile {
+      width: 100% !important;
+      margin-right: 0 !important;
+    }
+
+    .user-center-main {
+      width: 100% !important;
+      margin-top: 14px;
+    }
+  }
+
   :deep(.art-card-sm) {
     overflow: hidden;
     border: 1px solid var(--art-card-border);
@@ -927,6 +1023,20 @@
     box-shadow: 0 10px 20px rgb(0 0 0 / 20%);
   }
 
+  .user-center-basic-form {
+    :deep(.el-form-item) {
+      margin-bottom: 18px;
+    }
+  }
+
+  .user-center-form-actions {
+    :deep(.el-form-item__content) {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  }
+
   .bg-gradient-to-r {
     background-size: 200% 200%;
     animation: gradientShift 8s ease infinite;
@@ -964,6 +1074,127 @@
 
       td {
         background-color: transparent !important;
+      }
+    }
+  }
+
+  .session-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 120px;
+  }
+
+  .session-card {
+    padding: 14px;
+    border: 1px solid var(--art-card-border);
+    border-radius: 12px;
+    background: var(--default-box-color, var(--el-bg-color));
+
+    &.is-current {
+      border-color: var(--el-color-success-light-5);
+      background: var(--el-color-success-light-9);
+    }
+
+    &__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    &__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--art-gray-800, var(--el-text-color-primary));
+      word-break: break-word;
+    }
+
+    &__ip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--art-gray-500, var(--el-text-color-secondary));
+    }
+
+    &__meta {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    &__meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .label {
+        font-size: 12px;
+        color: var(--art-gray-500, var(--el-text-color-secondary));
+      }
+
+      .value {
+        font-size: 13px;
+        color: var(--art-gray-800, var(--el-text-color-primary));
+        word-break: break-all;
+      }
+    }
+
+    &__actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+  }
+
+  @media (width <= 768px) {
+    .user-center-tabs {
+      :deep(.el-tabs__header) {
+        margin-bottom: 8px;
+      }
+
+      :deep(.el-tabs__nav-wrap) {
+        overflow-x: auto;
+
+        &::after {
+          display: none;
+        }
+      }
+
+      :deep(.el-tabs__nav-scroll) {
+        overflow: visible;
+      }
+
+      :deep(.el-tabs__item) {
+        padding: 0 12px;
+        font-size: 13px;
+        height: 40px;
+      }
+    }
+
+    .session-toolbar {
+      :deep(.el-button) {
+        flex: 1 1 auto;
+        min-width: calc(50% - 6px);
+      }
+    }
+
+    :deep(.el-button:hover) {
+      transform: none;
+    }
+  }
+
+  @media (width <= 640px) {
+    :deep(.art-card-sm) {
+      border-radius: 12px;
+    }
+
+    .session-toolbar {
+      :deep(.el-button) {
+        width: 100%;
+        min-width: 100%;
       }
     }
   }

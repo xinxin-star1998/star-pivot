@@ -200,6 +200,7 @@
       prop: 'createTime',
       label: t('common.createTime'),
       width: 180,
+      hideOnMobile: true,
       formatter: (row: SysDept) => {
         return row.createTime || t('common.empty')
       }

@@ -3,7 +3,7 @@
     :title="dialogTitle"
     :model-value="visible"
     @update:model-value="handleCancel"
-    width="860px"
+    :width="width > 768 ? '860px' : '95%'"
     align-center
     class="menu-dialog"
     @closed="handleClosed"
@@ -78,7 +78,7 @@
   import ArtIconPicker from '@/components/core/base/art-icon-picker/index.vue'
   import { useWindowSize } from '@vueuse/core'
   import type { MenuFormData } from '../types'
-  import { fetchGetParentMenu, fetchGetMenuById, type SysMenu } from '@/api/menu/menu'
+  import { fetchGetMenuById, fetchGetParentMenu, type SysMenu } from '@/api/menu/menu'
   import { useI18n } from 'vue-i18n'
 
   const { width } = useWindowSize()

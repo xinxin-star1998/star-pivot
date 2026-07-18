@@ -37,3 +37,6 @@ export { useLayoutHeight, useAutoLayoutHeight } from './core/useLayoutHeight'
 
 // 页面可见性检测
 export { usePageVisibility } from './core/usePageVisibility'
+
+// 移动端表单布局（弹窗 label top）
+export { useMobileFormLayout } from './core/useMobileFormLayout'

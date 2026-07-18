@@ -2,14 +2,15 @@
   <ElDialog
     v-model="dialogVisible"
     :title="dialogType === 'add' ? t('system.user.addTitle') : t('system.user.editTitle')"
-    width="40%"
+    :width="dialogWidth || '520px'"
     align-center
   >
     <ElForm
       ref="formRef"
       :model="formData"
       :rules="rules"
-      label-width="80px"
+      :label-width="labelWidth"
+      :label-position="labelPosition"
       aria-label="用户信息表单"
     >
       <ElFormItem :label="t('system.user.userName')" prop="username">
@@ -97,16 +98,16 @@
 </template>
 
 <script setup lang="ts">
-  import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { ElTreeSelect } from 'element-plus'
+  import { ElMessage, ElTreeSelect } from 'element-plus'
   import { useUserStore } from '@/store/modules/user'
   import { fetchGetRoleSelect } from '@/api/role/role'
   import { fetchGetPostSelect } from '@/api/post/post'
   import { fetchGetDeptTree, type SysDept } from '@/api/dept/dept'
-  import { fetchAddUser, fetchUpdateUser, fetchGetUserById } from '@/api/user/user'
+  import { fetchAddUser, fetchGetUserById, fetchUpdateUser } from '@/api/user/user'
   import { handleMutationError } from '@/utils/http/mutation'
   import ArtAvatarUpload from '@/components/core/media/art-avatar-upload/index.vue'
+  import { useMobileFormLayout } from '@/hooks/core/useMobileFormLayout'
   import { useI18n } from 'vue-i18n'
 
   // 角色列表项类型（扩展 RoleListItem，添加 roleCode 字段）
@@ -127,6 +128,9 @@
   const emit = defineEmits<Emits>()
   const userStore = useUserStore()
   const { t } = useI18n()
+  const { labelPosition, labelWidth, dialogWidth } = useMobileFormLayout({
+    desktopWidth: '80px'
+  })
 
   // 角色列表数据
   const roleList = ref<RoleOption[]>([])
@@ -334,12 +338,17 @@
             }
           }
 
-          ElMessage.success(dialogType.value === 'add' ? t('common.addSuccess') : t('common.updateSuccess'))
+          ElMessage.success(
+            dialogType.value === 'add' ? t('common.addSuccess') : t('common.updateSuccess')
+          )
           dialogVisible.value = false
           emit('submit')
         } catch (error) {
           console.error('提交失败:', error)
-          handleMutationError(error, dialogType.value === 'add' ? t('common.addFail') : t('common.updateFail'))
+          handleMutationError(
+            error,
+            dialogType.value === 'add' ? t('common.addFail') : t('common.updateFail')
+          )
         }
       }
     })

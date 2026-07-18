@@ -73,6 +73,8 @@ export interface ColumnOption<T = Record<string, unknown>> {
   visible?: boolean
   // 是否选中显示
   checked?: boolean
+  // 窄屏（<768）隐藏该列，缓解宽表横向溢出
+  hideOnMobile?: boolean
   // 自定义渲染函数
   formatter?: (row: T) => unknown
   // 插槽相关配置

@@ -156,7 +156,8 @@
           prop: 'createTime',
           label: t('common.createTime'),
           width: 180,
-          sortable: true
+          sortable: true,
+          hideOnMobile: true
         },
         {
           prop: 'operation',

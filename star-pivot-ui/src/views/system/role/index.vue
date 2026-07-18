@@ -165,7 +165,8 @@
           prop: 'createTime',
           label: t('system.role.createDate'),
           width: 180,
-          sortable: true
+          sortable: true,
+          hideOnMobile: true
         },
         {
           prop: 'operation',

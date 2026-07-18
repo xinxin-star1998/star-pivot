@@ -208,8 +208,8 @@ html.dark .el-card {
   outline: none !important;
 }
 
-// 处理移动端组件兼容性
-@media screen and (max-width: 640px) {
+// 处理移动端组件兼容性（含平板窄屏）
+@media screen and (max-width: 768px) {
   .el-message-box,
   .el-dialog {
     width: calc(100% - 24px) !important;

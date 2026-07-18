@@ -2,11 +2,17 @@
   <ElDialog
     v-model="visible"
     :title="dialogType === 'add' ? t('system.role.addTitle') : t('system.role.editTitle')"
-    width="30%"
+    :width="dialogWidth || '480px'"
     align-center
     @close="handleClose"
   >
-    <ElForm ref="roleForm" :model="form" :rules="rules" label-width="120px">
+    <ElForm
+      ref="roleForm"
+      :model="form"
+      :rules="rules"
+      :label-width="labelWidth"
+      :label-position="labelPosition"
+    >
       <ElFormItem :label="t('system.role.roleName')" prop="roleName">
         <ElInput v-model="form.roleName" :placeholder="t('system.role.roleNamePlaceholder')" />
       </ElFormItem>
@@ -17,7 +23,12 @@
         <ElInput v-model="form.roleSort" :placeholder="t('common.pleaseInput')" />
       </ElFormItem>
       <ElFormItem :label="t('common.remark')" prop="description">
-        <ElInput v-model="form.remark" type="textarea" :rows="3" :placeholder="t('system.role.roleDescPlaceholder')" />
+        <ElInput
+          v-model="form.remark"
+          type="textarea"
+          :rows="3"
+          :placeholder="t('system.role.roleDescPlaceholder')"
+        />
       </ElFormItem>
       <ElFormItem :label="t('common.status')">
         <ElSwitch v-model="statusSwitch" />
@@ -25,7 +36,9 @@
       <ElFormItem :label="t('system.role.menuPerms')">
         <div class="permission-tree-wrapper">
           <div class="permission-controls">
-            <ElCheckbox v-model="menuExpandAll" @change="toggleMenuExpandAll">{{ t('common.expand') }}/{{ t('common.collapse') }}</ElCheckbox>
+            <ElCheckbox v-model="menuExpandAll" @change="toggleMenuExpandAll"
+              >{{ t('common.expand') }}/{{ t('common.collapse') }}</ElCheckbox
+            >
             <ElCheckbox
               v-model="menuSelectAll"
               :indeterminate="menuSelectAllIndeterminate"
@@ -72,12 +85,12 @@
 
 <script setup lang="ts">
   import type { FormInstance, FormRules } from 'element-plus'
-  import { fetchAddRole, fetchUpdateRole } from '@/api/role/role'
+  import { fetchAddRole, fetchGetRoleMenus, fetchUpdateRole } from '@/api/role/role'
   import { fetchGetMenuTree, type SysMenu } from '@/api/menu/menu'
-  import { fetchGetRoleMenus } from '@/api/role/role'
   import { useSettingStore } from '@/store/modules/setting'
   import { useCheckableTree } from '@/composables/useCheckableTree'
   import { useI18n } from 'vue-i18n'
+  import { useMobileFormLayout } from '@/hooks/core/useMobileFormLayout'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -100,6 +113,9 @@
 
   const emit = defineEmits<Emits>()
   const { t } = useI18n()
+  const { labelPosition, labelWidth, dialogWidth } = useMobileFormLayout({
+    desktopWidth: '120px'
+  })
 
   const roleForm = ref<FormInstance>()
   const menuTree = useCheckableTree<SysMenu>({ keyField: 'menuId', childrenField: 'children' })

@@ -2,14 +2,15 @@
   <ElDialog
     v-model="dialogVisible"
     :title="dialogType === 'add' ? t('system.notice.addTitle') : t('system.notice.editTitle')"
-    width="60%"
+    :width="dialogWidth || '720px'"
     align-center
   >
     <ElForm
       ref="formRef"
       :model="formData"
       :rules="rules"
-      label-width="100px"
+      :label-width="labelWidth"
+      :label-position="labelPosition"
       aria-label="通知公告表单"
     >
       <ElFormItem :label="t('system.notice.noticeTitle')" prop="noticeTitle">
@@ -44,13 +45,14 @@
 </template>
 
 <script setup lang="ts">
-  import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
+  import { ElMessage } from 'element-plus'
   import { useI18n } from 'vue-i18n'
+  import { useMobileFormLayout } from '@/hooks/core/useMobileFormLayout'
   import {
     fetchAddNotice,
-    fetchUpdateNotice,
     fetchGetNoticeById,
+    fetchUpdateNotice,
     type Notice
   } from '@/api/system/notice/notice'
   import { handleMutationError } from '@/utils/http/mutation'
@@ -70,6 +72,9 @@
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
   const { t } = useI18n()
+  const { labelPosition, labelWidth, dialogWidth } = useMobileFormLayout({
+    desktopWidth: '100px'
+  })
 
   const dialogVisible = computed({
     get: () => props.visible,

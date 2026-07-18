@@ -2,13 +2,19 @@
   <ElDialog
     v-model="visible"
     :title="t('system.role.dataScopeTitle')"
-    width="800px"
+    :width="dialogWidth || '800px'"
     align-center
     class="el-dialog-border"
     @close="handleClose"
   >
     <div class="permission-dialog">
-      <ElForm ref="roleForm" :model="form" :rules="rules" label-width="120px">
+      <ElForm
+        ref="roleForm"
+        :model="form"
+        :rules="rules"
+        :label-width="labelWidth"
+        :label-position="labelPosition"
+      >
         <ElFormItem :label="t('system.role.roleName')" prop="roleName">
           <ElInput
             v-model="form.roleName"
@@ -107,6 +113,7 @@
   import { useSettingStore } from '@/store/modules/setting'
   import { useCheckableTree } from '@/composables/useCheckableTree'
   import { useI18n } from 'vue-i18n'
+  import { useMobileFormLayout } from '@/hooks/core/useMobileFormLayout'
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
@@ -127,6 +134,9 @@
 
   const emit = defineEmits<Emits>()
   const { t } = useI18n()
+  const { labelPosition, labelWidth, dialogWidth } = useMobileFormLayout({
+    desktopWidth: '120px'
+  })
 
   // 主题状态
   const settingStore = useSettingStore()

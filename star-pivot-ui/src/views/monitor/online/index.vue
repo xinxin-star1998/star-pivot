@@ -5,14 +5,14 @@
   <div class="online-user-page art-full-height">
     <ElCollapseTransition>
       <div v-show="showSearchBar">
-        <ElCard shadow="never" style="margin-bottom: 12px">
-          <ElForm :model="searchForm" :inline="true">
+        <ElCard shadow="never" class="search-card">
+          <ElForm :model="searchForm" class="online-search-form" label-position="top">
             <ElFormItem :label="t('monitor.online.userName')">
               <ElInput
                 v-model="searchForm.userName"
                 :placeholder="t('common.pleaseInput')"
                 clearable
-                style="width: 200px"
+                class="search-input"
               />
             </ElFormItem>
             <ElFormItem :label="t('monitor.online.ipaddr')">
@@ -20,10 +20,10 @@
                 v-model="searchForm.ipaddr"
                 :placeholder="t('common.pleaseInput')"
                 clearable
-                style="width: 200px"
+                class="search-input"
               />
             </ElFormItem>
-            <ElFormItem>
+            <ElFormItem class="search-actions" label-width="0">
               <ElButton type="primary" :icon="Search" @click="handleSearch">{{
                 t('table.searchBar.search')
               }}</ElButton>
@@ -121,10 +121,10 @@
     { prop: 'deptName', label: t('monitor.online.deptName'), width: 120 },
     { prop: 'ipaddr', label: t('monitor.online.ipaddr'), width: 150 },
     { prop: 'loginLocation', label: t('monitor.online.loginLocation'), width: 150 },
-    { prop: 'browser', label: t('monitor.online.browser'), width: 120 },
-    { prop: 'os', label: t('monitor.online.os'), width: 120 },
+    { prop: 'browser', label: t('monitor.online.browser'), width: 120, hideOnMobile: true },
+    { prop: 'os', label: t('monitor.online.os'), width: 120, hideOnMobile: true },
     { prop: 'loginTime', label: t('monitor.online.loginTime'), width: 180 },
-    { prop: 'lastAccessTime', label: t('common.createTime'), width: 180 }
+    { prop: 'lastAccessTime', label: t('common.createTime'), width: 180, hideOnMobile: true }
   ])
 
   const columnChecks = ref<ColumnOption[]>([])
@@ -303,6 +303,60 @@
 
     &:hover {
       box-shadow: 0 2px 8px 0 rgb(0 0 0 / 8%);
+    }
+  }
+
+  .search-card {
+    margin-bottom: 12px;
+  }
+
+  .online-search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 16px;
+
+    .search-input {
+      width: 200px;
+    }
+
+    .search-actions {
+      display: flex;
+      align-items: flex-end;
+
+      :deep(.el-form-item__content) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+    }
+  }
+
+  @media (width <= 768px) {
+    .online-search-form {
+      display: block;
+
+      .el-form-item {
+        width: 100%;
+        margin-right: 0;
+      }
+
+      .search-input {
+        width: 100%;
+      }
+
+      .search-actions {
+        :deep(.el-form-item__content) {
+          width: 100%;
+        }
+
+        :deep(.el-button) {
+          flex: 1;
+        }
+      }
+    }
+
+    :deep(.el-button:hover) {
+      transform: none;
     }
   }
 </style>

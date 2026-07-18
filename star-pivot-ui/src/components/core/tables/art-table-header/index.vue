@@ -5,7 +5,7 @@
       <slot name="left"></slot>
     </div>
 
-    <div class="flex-c md:justify-end max-md:mt-3 max-sm:!hidden">
+    <div class="flex-c flex-wrap md:justify-end max-md:mt-3">
       <div
         v-if="showSearchBar != null"
         class="button"

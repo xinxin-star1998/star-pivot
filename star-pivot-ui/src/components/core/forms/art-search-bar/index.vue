@@ -7,8 +7,8 @@
       :key="locale"
       ref="formRef"
       :model="modelValue"
-      :label-position="labelPosition"
-      :label-width="labelWidth"
+      :label-position="effectiveLabelPosition"
+      :label-width="effectiveLabelWidth"
       v-bind="{ ...$attrs }"
     >
       <ElRow :gutter="gutter">
@@ -152,6 +152,7 @@
   const { width } = useWindowSize()
   const { t, locale } = useI18n()
   const isMobile = computed(() => width.value < 500)
+  const isNarrow = computed(() => width.value < 768)
 
   const formInstance = useTemplateRef<FormInstance>('formRef')
 
@@ -360,6 +361,9 @@
 
   // 解构 props 以便在模板中直接使用
   const { span, gutter, labelPosition, labelWidth } = toRefs(props)
+
+  const effectiveLabelPosition = computed(() => (isNarrow.value ? 'top' : labelPosition.value))
+  const effectiveLabelWidth = computed(() => (isNarrow.value ? 'auto' : labelWidth.value))
 </script>
 
 <style lang="scss" scoped>

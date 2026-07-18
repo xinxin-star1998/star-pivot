@@ -2,10 +2,16 @@
   <ElDialog
     v-model="dialogVisible"
     :title="dialogType === 'add' ? t('system.dept.addTitle') : t('system.dept.editTitle')"
-    width="40%"
+    :width="dialogWidth || '520px'"
     align-center
   >
-    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="100px">
+    <ElForm
+      ref="formRef"
+      :model="formData"
+      :rules="rules"
+      :label-width="labelWidth"
+      :label-position="labelPosition"
+    >
       <ElFormItem :label="t('system.dept.parentDept')" prop="parentId">
         <ElTreeSelect
           v-model="formData.parentId"
@@ -65,6 +71,7 @@
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElTreeSelect } from 'element-plus'
   import { useI18n } from 'vue-i18n'
+  import { useMobileFormLayout } from '@/hooks/core/useMobileFormLayout'
   import {
     fetchAddDept,
     fetchGetDeptById,
@@ -89,6 +96,9 @@
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
   const { t } = useI18n()
+  const { labelPosition, labelWidth, dialogWidth } = useMobileFormLayout({
+    desktopWidth: '100px'
+  })
 
   const deptTreeData = ref<SysDept[]>([])
   const deptTreeProps = {

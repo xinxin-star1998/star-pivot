@@ -3,13 +3,15 @@
     <ElCard class="art-table-card" shadow="never">
       <ArtTableHeader :loading="loading" @refresh="loadData">
         <template #left>
-          <span class="page-title">{{ t('file.myShares') }}</span>
-          <ElInput
-            v-model="keyword"
-            clearable
-            :placeholder="t('file.searchFileNamePlaceholder')"
-            style="width: 220px; margin-left: 12px"
-          />
+          <div class="shares-toolbar">
+            <span class="page-title">{{ t('file.myShares') }}</span>
+            <ElInput
+              v-model="keyword"
+              clearable
+              :placeholder="t('file.searchFileNamePlaceholder')"
+              class="shares-search"
+            />
+          </div>
         </template>
       </ArtTableHeader>
 
@@ -127,9 +129,21 @@
     flex-direction: column;
   }
 
+  .shares-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+  }
+
   .page-title {
     font-size: 15px;
     font-weight: 600;
+  }
+
+  .shares-search {
+    width: 220px;
   }
 
   .link-cell {
@@ -144,5 +158,15 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--el-text-color-regular);
+  }
+
+  @media (width <= 768px) {
+    .shares-search {
+      width: 100%;
+    }
+
+    .link-cell {
+      flex-wrap: wrap;
+    }
   }
 </style>

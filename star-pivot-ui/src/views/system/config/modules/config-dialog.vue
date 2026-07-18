@@ -3,9 +3,15 @@
     v-model="dialogVisible"
     :title="dialogType === 'add' ? t('system.config.addTitle') : t('system.config.editTitle')"
     align-center
-    width="30%"
+    :width="dialogWidth || '480px'"
   >
-    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="100px">
+    <ElForm
+      ref="formRef"
+      :model="formData"
+      :rules="rules"
+      :label-width="labelWidth"
+      :label-position="labelPosition"
+    >
       <ElFormItem :label="t('system.config.configName')" prop="configName">
         <ElInput v-model="formData.configName" :placeholder="t('system.config.namePlaceholder')" />
       </ElFormItem>
@@ -48,6 +54,7 @@
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage } from 'element-plus'
   import { useI18n } from 'vue-i18n'
+  import { useMobileFormLayout } from '@/hooks/core/useMobileFormLayout'
   import {
     type Config,
     fetchAddConfig,
@@ -71,6 +78,9 @@
   const props = defineProps<Props>()
   const emit = defineEmits<Emits>()
   const { t } = useI18n()
+  const { labelPosition, labelWidth, dialogWidth } = useMobileFormLayout({
+    desktopWidth: '100px'
+  })
 
   const dialogVisible = computed({
     get: () => props.visible,

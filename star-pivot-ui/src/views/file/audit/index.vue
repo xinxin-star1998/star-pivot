@@ -1,13 +1,13 @@
 <template>
   <div class="file-audit-page art-full-height">
     <ElCard shadow="never" class="search-card">
-      <ElForm :inline="true" :model="searchForm">
+      <ElForm class="audit-search-form" label-position="top" :model="searchForm">
         <ElFormItem :label="t('file.action')">
           <ElSelect
             v-model="searchForm.action"
             clearable
             :placeholder="t('file.all')"
-            style="width: 140px"
+            class="audit-field"
           >
             <ElOption
               v-for="item in actionOptions"
@@ -18,21 +18,32 @@
           </ElSelect>
         </ElFormItem>
         <ElFormItem :label="t('file.fileName')">
-          <ElInput v-model="searchForm.fileName" clearable :placeholder="t('file.fileName')" />
+          <ElInput
+            v-model="searchForm.fileName"
+            clearable
+            :placeholder="t('file.fileName')"
+            class="audit-field"
+          />
         </ElFormItem>
         <ElFormItem :label="t('file.operBy')">
-          <ElInput v-model="searchForm.operBy" clearable :placeholder="t('file.operBy')" />
+          <ElInput
+            v-model="searchForm.operBy"
+            clearable
+            :placeholder="t('file.operBy')"
+            class="audit-field"
+          />
         </ElFormItem>
-        <ElFormItem :label="t('file.time')">
+        <ElFormItem :label="t('file.time')" class="audit-time-item">
           <ElDatePicker
             v-model="timeRange"
             type="datetimerange"
             value-format="YYYY-MM-DD HH:mm:ss"
             :start-placeholder="t('file.startTime')"
             :end-placeholder="t('file.endTime')"
+            class="audit-date"
           />
         </ElFormItem>
-        <ElFormItem>
+        <ElFormItem class="audit-actions" label-width="0">
           <ElButton type="primary" @click="handleQuery">{{ t('file.query') }}</ElButton>
           <ElButton @click="handleReset">{{ t('common.reset') }}</ElButton>
         </ElFormItem>
@@ -148,3 +159,57 @@
 
   onMounted(() => handleQuery())
 </script>
+
+<style lang="scss" scoped>
+  .file-audit-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .audit-search-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 16px;
+
+    .audit-field {
+      width: 160px;
+    }
+
+    .audit-date {
+      width: 360px;
+      max-width: 100%;
+    }
+
+    .audit-actions {
+      display: flex;
+      align-items: flex-end;
+
+      :deep(.el-form-item__content) {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+    }
+  }
+
+  @media (width <= 768px) {
+    .audit-search-form {
+      display: block;
+
+      .el-form-item {
+        width: 100%;
+        margin-right: 0;
+      }
+
+      .audit-field,
+      .audit-date {
+        width: 100%;
+      }
+
+      .audit-actions :deep(.el-button) {
+        flex: 1;
+      }
+    }
+  }
+</style>

@@ -33,23 +33,6 @@
 
   const rules = {}
 
-  const statusOptions = ref<{ label: string; value: string; disabled?: boolean }[]>([])
-
-  function fetchStatusOptions(): Promise<typeof statusOptions.value> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          { label: t('system.user.online'), value: '0' },
-          { label: t('system.user.offline'), value: '1' }
-        ])
-      }, 1000)
-    })
-  }
-
-  onMounted(async () => {
-    statusOptions.value = await fetchStatusOptions()
-  })
-
   const formItems = computed(() => [
     {
       label: t('system.user.userName'),
@@ -76,7 +59,10 @@
       type: 'select',
       props: {
         placeholder: t('common.pleaseSelect'),
-        options: statusOptions.value
+        options: [
+          { label: t('common.normal'), value: '0' },
+          { label: t('common.disabled'), value: '1' }
+        ]
       }
     },
     {

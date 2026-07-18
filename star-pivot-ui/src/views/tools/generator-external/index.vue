@@ -37,7 +37,7 @@
       <div v-show="currentStep === 0" class="step-panel">
         <ElForm label-width="100px" class="conn-preset-bar mb-4">
           <ElRow :gutter="16">
-            <ElCol :span="8">
+            <ElCol :xs="24" :sm="12" :md="8">
               <ElFormItem :label="t('tools.genExt.connPreset')">
                 <ElSelect
                   v-model="selectedConnPreset"
@@ -55,14 +55,20 @@
                 </ElSelect>
               </ElFormItem>
             </ElCol>
-            <ElCol :span="10">
+            <ElCol :xs="24" :sm="12" :md="10">
               <ElFormItem :label="t('tools.genExt.savePreset')">
-                <ElInput v-model="newConnPresetName" :placeholder="t('tools.genExt.presetName')" maxlength="32" />
+                <ElInput
+                  v-model="newConnPresetName"
+                  :placeholder="t('tools.genExt.presetName')"
+                  maxlength="32"
+                />
               </ElFormItem>
             </ElCol>
-            <ElCol :span="6">
+            <ElCol :xs="24" :sm="12" :md="6">
               <ElFormItem label-width="0">
-                <ElCheckbox v-model="saveConnPassword">{{ t('tools.genExt.rememberPassword') }}</ElCheckbox>
+                <ElCheckbox v-model="saveConnPassword">{{
+                  t('tools.genExt.rememberPassword')
+                }}</ElCheckbox>
                 <ExternalActionBtn
                   :what="t('tools.genExt.saveConnWhat')"
                   :usage="t('tools.genExt.saveConnUsage')"
@@ -95,7 +101,7 @@
           class="conn-form"
         >
           <ElRow :gutter="16">
-            <ElCol :span="8">
+            <ElCol :xs="24" :sm="12" :md="8">
               <ElFormItem :label="t('tools.genExt.dbType')">
                 <ElSelect v-model="connection.dbType" class="w-full" @change="onDbTypeChange">
                   <ElOption label="MySQL" value="mysql" />
@@ -105,17 +111,17 @@
                 </ElSelect>
               </ElFormItem>
             </ElCol>
-            <ElCol :span="8">
+            <ElCol :xs="24" :sm="12" :md="8">
               <ElFormItem :label="t('tools.genExt.host')" prop="host">
                 <ElInput v-model="connection.host" placeholder="127.0.0.1" />
               </ElFormItem>
             </ElCol>
-            <ElCol :span="8">
+            <ElCol :xs="24" :sm="12" :md="8">
               <ElFormItem :label="t('tools.genExt.port')" prop="port">
                 <ElInputNumber v-model="connection.port" :min="1" :max="65535" class="w-full" />
               </ElFormItem>
             </ElCol>
-            <ElCol v-if="connection.dbType === 'oracle'" :span="8">
+            <ElCol v-if="connection.dbType === 'oracle'" :xs="24" :sm="12" :md="8">
               <ElFormItem :label="t('tools.genExt.connectMode')">
                 <ElSelect v-model="connection.oracleConnectMode" class="w-full">
                   <ElOption :label="t('tools.genExt.oracleService')" value="service" />
@@ -124,30 +130,32 @@
                 </ElSelect>
               </ElFormItem>
             </ElCol>
-            <ElCol :span="8">
+            <ElCol :xs="24" :sm="12" :md="8">
               <ElFormItem :label="oracleDatabaseLabel" prop="database">
                 <ElInput v-model="connection.database" :placeholder="oracleDatabasePlaceholder" />
               </ElFormItem>
             </ElCol>
             <ElCol
               v-if="['postgresql', 'oracle', 'sqlserver'].includes(connection.dbType || 'mysql')"
-              :span="8"
+              :xs="24"
+              :sm="12"
+              :md="8"
             >
               <ElFormItem label="Schema">
                 <ElInput v-model="connection.schema" :placeholder="schemaPlaceholder" />
               </ElFormItem>
             </ElCol>
-            <ElCol :span="8">
+            <ElCol :xs="24" :sm="12" :md="8">
               <ElFormItem :label="t('tools.genExt.username')" prop="username">
                 <ElInput v-model="connection.username" />
               </ElFormItem>
             </ElCol>
-            <ElCol :span="8">
+            <ElCol :xs="24" :sm="12" :md="8">
               <ElFormItem :label="t('tools.genExt.password')" prop="password">
                 <ElInput v-model="connection.password" type="password" show-password />
               </ElFormItem>
             </ElCol>
-            <ElCol :span="16">
+            <ElCol :xs="24" :md="16">
               <ElFormItem :label="t('tools.genExt.jdbcParams')">
                 <ElInput v-model="connection.params" :placeholder="jdbcParamsPlaceholder" />
               </ElFormItem>
@@ -160,10 +168,18 @@
       <div v-show="currentStep === 1" class="step-panel">
         <ElForm :inline="true" :model="tableSearch" class="mb-3">
           <ElFormItem :label="t('tools.gen.tableName')">
-            <ElInput v-model="tableSearch.tableName" clearable :placeholder="t('tools.genExt.fuzzySearch')" />
+            <ElInput
+              v-model="tableSearch.tableName"
+              clearable
+              :placeholder="t('tools.genExt.fuzzySearch')"
+            />
           </ElFormItem>
           <ElFormItem :label="t('tools.gen.tableComment')">
-            <ElInput v-model="tableSearch.tableComment" clearable :placeholder="t('tools.genExt.fuzzySearch')" />
+            <ElInput
+              v-model="tableSearch.tableComment"
+              clearable
+              :placeholder="t('tools.genExt.fuzzySearch')"
+            />
           </ElFormItem>
           <ElFormItem>
             <ExternalActionBtn
@@ -199,10 +215,12 @@
       <div v-show="currentStep === 2" class="step-panel">
         <ElForm label-width="120px" class="tpl-form">
           <ElFormItem :label="t('tools.genExt.selectedTables')">
-            <ElTag v-for="tName in selectedTableNames" :key="tName" class="mr-2 mb-2">{{ tName }}</ElTag>
+            <ElTag v-for="tName in selectedTableNames" :key="tName" class="mr-2 mb-2">{{
+              tName
+            }}</ElTag>
           </ElFormItem>
           <ElRow :gutter="16">
-            <ElCol :span="12">
+            <ElCol :xs="24" :sm="12">
               <ElFormItem :label="t('tools.gen.genType')">
                 <ElSelect v-model="genConfig.tplCategory" :placeholder="t('common.pleaseSelect')">
                   <ElOption
@@ -214,7 +232,7 @@
                 </ElSelect>
               </ElFormItem>
             </ElCol>
-            <ElCol :span="12">
+            <ElCol :xs="24" :sm="12">
               <ElFormItem :label="t('tools.gen.frontendType')">
                 <ElSelect v-model="genConfig.tplWebType" :placeholder="t('common.pleaseSelect')">
                   <ElOption
@@ -260,14 +278,22 @@
       <div v-show="currentStep === 4" class="step-panel">
         <ElForm label-width="100px" class="mb-4">
           <ElFormItem :label="t('tools.genExt.genScope')">
-            <ElCheckbox v-model="genScope.genBackend">{{ t('tools.genExt.genBackend') }}</ElCheckbox>
-            <ElCheckbox v-model="genScope.genFrontend">{{ t('tools.genExt.genFrontend') }}</ElCheckbox>
+            <ElCheckbox v-model="genScope.genBackend">{{
+              t('tools.genExt.genBackend')
+            }}</ElCheckbox>
+            <ElCheckbox v-model="genScope.genFrontend">{{
+              t('tools.genExt.genFrontend')
+            }}</ElCheckbox>
             <ElCheckbox v-model="genScope.genSql">{{ t('tools.genExt.genSql') }}</ElCheckbox>
           </ElFormItem>
         </ElForm>
         <ElForm :inline="true" class="mb-4">
           <ElFormItem :label="t('tools.genExt.previewTable')">
-            <ElSelect v-model="previewTableName" :placeholder="t('tools.genExt.selectTable')" style="width: 240px">
+            <ElSelect
+              v-model="previewTableName"
+              :placeholder="t('tools.genExt.selectTable')"
+              style="width: 240px"
+            >
               <ElOption v-for="t in selectedTableNames" :key="t" :label="t" :value="t" />
             </ElSelect>
           </ElFormItem>
@@ -370,12 +396,16 @@
           <ElForm :inline="true" class="mb-4">
             <ElFormItem>
               <ElTooltip :content="t('tools.genExt.backupTooltip')" placement="top">
-                <ElCheckbox v-model="backupBeforeWrite">{{ t('tools.genExt.backupBeforeWrite') }}</ElCheckbox>
+                <ElCheckbox v-model="backupBeforeWrite">{{
+                  t('tools.genExt.backupBeforeWrite')
+                }}</ElCheckbox>
               </ElTooltip>
             </ElFormItem>
             <ElFormItem>
               <ElTooltip :content="t('tools.genExt.skipUnchangedTooltip')" placement="top">
-                <ElCheckbox v-model="writeOnlyChanged">{{ t('tools.genExt.skipExisting') }}</ElCheckbox>
+                <ElCheckbox v-model="writeOnlyChanged">{{
+                  t('tools.genExt.skipExisting')
+                }}</ElCheckbox>
               </ElTooltip>
             </ElFormItem>
             <ElFormItem v-if="lastWriteBackup">
@@ -414,14 +444,22 @@
           <ElDescriptionsItem :label="t('tools.genExt.effectiveTemplateDir')">{{
             effectiveTemplateDir || t('tools.genExt.builtinTemplate')
           }}</ElDescriptionsItem>
-          <ElDescriptionsItem :label="t('tools.gen.packageName')">{{ pathProfile.basePackage }}</ElDescriptionsItem>
-          <ElDescriptionsItem :label="t('tools.genExt.apiPath')">{{ pathProfile.apiPath }}</ElDescriptionsItem>
-          <ElDescriptionsItem :label="t('tools.genExt.vuePagePath')">{{ pathProfile.vuePagePath }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="t('tools.gen.packageName')">{{
+            pathProfile.basePackage
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="t('tools.genExt.apiPath')">{{
+            pathProfile.apiPath
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="t('tools.genExt.vuePagePath')">{{
+            pathProfile.vuePagePath
+          }}</ElDescriptionsItem>
         </ElDescriptions>
       </div>
 
       <div class="step-footer">
-        <ElButton v-if="currentStep > 0" @click="prevStep">{{ t('tools.genExt.prevStep') }}</ElButton>
+        <ElButton v-if="currentStep > 0" @click="prevStep">{{
+          t('tools.genExt.prevStep')
+        }}</ElButton>
         <ElButton v-if="currentStep < 4" type="primary" :loading="stepLoading" @click="nextStep">
           {{ t('tools.genExt.nextStep') }}
         </ElButton>
@@ -1407,6 +1445,43 @@
 
     .w-full {
       width: 100%;
+    }
+  }
+
+  @media (width <= 768px) {
+    .gen-external-page {
+      :deep(.el-steps) {
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+
+      :deep(.el-step__title) {
+        font-size: 12px;
+      }
+
+      .conn-form,
+      .conn-preset-bar,
+      .tpl-form {
+        max-width: 100%;
+      }
+
+      .conn-preset-bar,
+      .conn-form,
+      .tpl-form {
+        :deep(.el-form-item) {
+          margin-bottom: 14px;
+        }
+      }
+
+      .step-footer {
+        flex-wrap: wrap;
+      }
+
+      :deep(.el-form--inline .el-form-item) {
+        display: block;
+        margin-right: 0;
+        width: 100%;
+      }
     }
   }
 </style>

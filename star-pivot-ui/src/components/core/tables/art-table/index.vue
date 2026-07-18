@@ -19,7 +19,7 @@
       }"
     >
       <template #default>
-        <template v-for="col in columns" :key="col.prop || col.type">
+        <template v-for="col in displayColumns" :key="col.prop || col.type">
           <!-- 渲染全局序号列 -->
           <ElTableColumn v-if="col.type === 'globalIndex'" v-bind="cleanColumnProps(col)">
             <template #default="{ $index }">
@@ -277,6 +277,19 @@
   // 是否显示分页器
   const showPagination = computed(() => props.pagination && !isEmpty.value)
 
+  /** 窄屏：隐藏 hideOnMobile 列，并取消 fixed 避免横向滚动异常 */
+  const displayColumns = computed(() => {
+    const mobile = width.value < 768
+    return (props.columns || [])
+      .filter((col) => !(mobile && col.hideOnMobile))
+      .map((col) => {
+        if (!mobile || !col.fixed) return col
+        const next = { ...col }
+        delete next.fixed
+        return next
+      })
+  })
+
   // 清理列属性，移除插槽相关的自定义属性，确保它们不会被 ElTableColumn 错误解释
   const cleanColumnProps = (
     col: ColumnOption
@@ -287,6 +300,7 @@
     delete columnProps.useSlot
     delete columnProps.slotName
     delete columnProps.formatter
+    delete columnProps.hideOnMobile
     return columnProps as Partial<TableColumnCtx<Record<string, unknown>>>
   }
 

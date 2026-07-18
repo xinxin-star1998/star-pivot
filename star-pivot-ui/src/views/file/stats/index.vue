@@ -5,7 +5,7 @@
         <ElRadioButton value="user">{{ t('file.groupByUser') }}</ElRadioButton>
         <ElRadioButton value="dept">{{ t('file.groupByDept') }}</ElRadioButton>
       </ElRadioGroup>
-      <ElButton class="ml-3" :loading="loading" @click="loadData">{{ t('file.refresh') }}</ElButton>
+      <ElButton :loading="loading" @click="loadData">{{ t('file.refresh') }}</ElButton>
     </ElCard>
 
     <div class="summary-grid">
@@ -115,6 +115,8 @@
   .toolbar-card {
     :deep(.el-card__body) {
       display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       align-items: center;
     }
   }
@@ -137,6 +139,14 @@
   }
 
   @media (max-width: 768px) {
+    .toolbar-card {
+      :deep(.el-card__body) {
+        .el-button {
+          margin-left: 0 !important;
+        }
+      }
+    }
+
     .summary-grid {
       grid-template-columns: 1fr;
     }

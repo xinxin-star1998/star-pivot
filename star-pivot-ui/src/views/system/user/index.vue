@@ -5,9 +5,12 @@
 <!-- useTable 文档：https://www.artd.pro/docs/zh/guide/hooks/use-table.html -->
 <template>
   <div class="user-page art-full-height">
-    <div :class="{ 'is-left-collapsed': deptPanelCollapsed }" class="user-layout">
-      <!-- 左侧部门树 -->
-      <div :class="{ collapsed: deptPanelCollapsed }" class="left-panel">
+    <div
+      :class="{ 'is-left-collapsed': deptPanelCollapsed, 'is-mobile': isMobile }"
+      class="user-layout"
+    >
+      <!-- 桌面端左侧部门树 -->
+      <div v-if="!isMobile" :class="{ collapsed: deptPanelCollapsed }" class="left-panel">
         <ElCard shadow="never" class="department-tree-card">
           <div class="department-tree-header">
             <div class="dept-title-row">
@@ -106,6 +109,22 @@
 
       <!-- 右侧用户列表 -->
       <div class="right-panel">
+        <div v-if="isMobile" class="mobile-dept-bar">
+          <ElButton size="small" @click="deptDrawerVisible = true">
+            <el-icon class="mr-1"><OfficeBuilding /></el-icon>
+            {{ t('system.user.deptTree') }}
+          </ElButton>
+          <ElTag
+            v-if="selectedDeptLabel"
+            size="small"
+            type="info"
+            effect="plain"
+            closable
+            @close="handleDeptSelect(undefined)"
+          >
+            {{ selectedDeptLabel }}
+          </ElTag>
+        </div>
         <!-- 搜索栏 -->
         <UserSearch
           v-model="searchForm"
@@ -184,6 +203,77 @@
         </ElCard>
       </div>
     </div>
+
+    <ElDrawer
+      v-model="deptDrawerVisible"
+      :title="t('system.user.deptTree')"
+      direction="ltr"
+      size="82%"
+      class="user-dept-drawer"
+    >
+      <div class="department-tree-header drawer-dept-header">
+        <div class="dept-title-row">
+          <div class="dept-tools">
+            <ElButton
+              :aria-label="
+                deptTreeExpandAll ? t('system.user.collapseDept') : t('system.user.expandDept')
+              "
+              class="dept-tool-btn"
+              text
+              @click="toggleDeptTreeExpand"
+            >
+              <el-icon :class="{ 'is-collapsed': !deptTreeExpandAll }" class="dept-arrow-icon">
+                <ArrowDown />
+              </el-icon>
+            </ElButton>
+            <ElButton
+              :loading="deptLoading"
+              :aria-label="t('system.user.refreshDept')"
+              class="dept-tool-btn"
+              text
+              @click="handleRefreshDeptTree"
+            >
+              <el-icon>
+                <RefreshRight />
+              </el-icon>
+            </ElButton>
+          </div>
+        </div>
+        <div class="dept-search-box">
+          <ElInput
+            v-model="deptSearchText"
+            :placeholder="t('system.user.searchDept')"
+            size="small"
+            clearable
+            @input="handleDeptSearch"
+          >
+            <template #prefix>
+              <el-icon class="el-input__icon"><Search /></el-icon>
+            </template>
+          </ElInput>
+        </div>
+      </div>
+      <div class="department-tree-wrapper drawer-dept-tree">
+        <ElTree
+          :key="deptTreeRenderKey"
+          :data="deptTree"
+          :props="deptTreeProps"
+          :default-expand-all="deptTreeExpandAll"
+          :expand-on-click-node="false"
+          node-key="deptId"
+          :default-checked-keys="selectedDeptId ? [selectedDeptId] : []"
+          :filter-node-method="filterDeptNode"
+          ref="deptTreeRef"
+          @node-click="(data: SysDept) => handleMobileDeptSelect(data.deptId)"
+        >
+          <template #default="{ node }">
+            <span class="custom-tree-node">
+              <span>{{ node.label }}</span>
+            </span>
+          </template>
+        </ElTree>
+      </div>
+    </ElDrawer>
   </div>
 </template>
 
@@ -229,11 +319,15 @@
   import ArtAvatarDisplay from '@/components/core/media/art-avatar-display/index.vue'
   import { useAuth } from '@/hooks/core/useAuth'
   import { useUserStore } from '@/store/modules/user'
+  import { useWindowSize } from '@vueuse/core'
 
   defineOptions({ name: 'User' })
 
   const { t } = useI18n()
   const { hasAuth } = useAuth()
+  const { width } = useWindowSize()
+  const isMobile = computed(() => width.value < 768)
+  const deptDrawerVisible = ref(false)
   const userStore = useUserStore()
   const currentUserId = computed(() => {
     const info = userStore.getUserInfo as any
@@ -330,11 +424,32 @@
     deptPanelCollapsed.value = !deptPanelCollapsed.value
   }
 
+  const findDeptName = (nodes: SysDept[], deptId: number): string | undefined => {
+    for (const node of nodes) {
+      if (node.deptId === deptId) return node.deptName
+      if (node.children?.length) {
+        const found = findDeptName(node.children, deptId)
+        if (found) return found
+      }
+    }
+    return undefined
+  }
+
+  const selectedDeptLabel = computed(() => {
+    if (!selectedDeptId.value) return ''
+    return findDeptName(deptTree.value, selectedDeptId.value) || ''
+  })
+
   // 处理部门选择
   const handleDeptSelect = (deptId: number | undefined) => {
     selectedDeptId.value = deptId
     searchForm.value.deptId = deptId
     handleSearch(searchForm.value)
+  }
+
+  const handleMobileDeptSelect = (deptId: number | undefined) => {
+    handleDeptSelect(deptId)
+    deptDrawerVisible.value = false
   }
 
   // 组件初始化
@@ -505,7 +620,8 @@
         {
           prop: 'createTime',
           label: '创建日期',
-          sortable: true
+          sortable: true,
+          hideOnMobile: true
         },
         {
           prop: 'operation',
@@ -896,6 +1012,7 @@
     display: flex;
     flex: 1;
     flex-direction: column;
+    min-width: 0;
     overflow: hidden;
     background-color: var(--default-box-color);
     border: var(--panel-border);
@@ -906,6 +1023,14 @@
     &:hover {
       box-shadow: var(--panel-shadow-hover);
     }
+  }
+
+  .mobile-dept-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px 0;
   }
 
   .dark .right-panel {
@@ -1113,6 +1238,18 @@
     animation: pulse 2s infinite;
   }
 
+  .drawer-dept-header {
+    padding: 0 0 12px;
+    margin-bottom: 8px;
+    background: none;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+  }
+
+  .drawer-dept-tree {
+    height: calc(100vh - 180px);
+    padding: 0;
+  }
+
   @keyframes pulse {
     0%,
     100% {
@@ -1121,6 +1258,23 @@
 
     50% {
       opacity: 0.5;
+    }
+  }
+
+  @media (width <= 768px) {
+    .user-layout {
+      display: block;
+      overflow: visible;
+      height: auto;
+    }
+
+    .right-panel {
+      width: 100%;
+      overflow: visible;
+    }
+
+    :deep(.el-button:hover) {
+      transform: none;
     }
   }
 </style>

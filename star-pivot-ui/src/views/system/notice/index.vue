@@ -163,7 +163,8 @@
           prop: 'createTime',
           label: t('common.createTime'),
           width: 150,
-          showOverflowTooltip: true
+          showOverflowTooltip: true,
+          hideOnMobile: true
         },
         {
           prop: 'operation',

@@ -466,12 +466,14 @@
     display: flex;
     flex-direction: column;
     width: 400px;
+    min-width: 0;
   }
 
   .key-list-panel {
     display: flex;
     flex-direction: column;
     width: 500px;
+    min-width: 0;
   }
 
   .panel-card {
@@ -636,6 +638,49 @@
 
     &:hover {
       transform: translateY(-1px);
+    }
+  }
+
+  @media (width <= 1200px) {
+    .cache-container {
+      flex-wrap: wrap;
+      height: auto;
+      min-height: 420px;
+    }
+
+    .cache-list-panel,
+    .key-list-panel,
+    .cache-content-panel {
+      width: calc(50% - 10px);
+      min-height: 360px;
+    }
+
+    .cache-content-panel {
+      width: 100%;
+    }
+  }
+
+  @media (width <= 768px) {
+    .card-header {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .cache-container {
+      flex-direction: column;
+      gap: 12px;
+      height: auto;
+    }
+
+    .cache-list-panel,
+    .key-list-panel,
+    .cache-content-panel {
+      width: 100%;
+      min-height: 280px;
+    }
+
+    :deep(.el-button:hover) {
+      transform: none;
     }
   }
 </style>

@@ -729,4 +729,22 @@
     color: var(--el-text-color-secondary);
     font-size: 13px;
   }
+
+  @media (width <= 768px) {
+    .ui-pagination {
+      justify-content: center;
+
+      :deep(.el-pagination) {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+    .i18n-tabs {
+      :deep(.el-tabs__item) {
+        padding: 0 12px;
+        font-size: 13px;
+      }
+    }
+  }
 </style>

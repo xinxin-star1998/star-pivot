@@ -66,7 +66,7 @@
           <div class="drawer-title">
             <span class="title">{{ t('system.dict.dataTitle') }}</span>
             <div v-if="selectedDictType" class="selected-meta">
-              <span class="label">{{ t('system.dict.dictName') }}：</span>
+              <span class="label">{{ t('system.dict.dictType') }}：</span>
               <span class="name">{{ selectedDictName || '-' }}</span>
               <ElTag type="info" effect="plain">{{ selectedDictType }}</ElTag>
             </div>
@@ -154,13 +154,13 @@
 
   const formItems = computed(() => [
     {
-      label: t('system.dict.searchName'),
+      label: t('system.dict.dictName'),
       key: 'dictName',
       type: 'input',
       props: { clearable: true, placeholder: t('system.dict.namePlaceholder') }
     },
     {
-      label: t('system.dict.searchType'),
+      label: t('system.dict.dictType'),
       key: 'dictType',
       type: 'input',
       props: { clearable: true, placeholder: t('system.dict.typePlaceholder') }
